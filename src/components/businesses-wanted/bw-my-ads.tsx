@@ -7,7 +7,6 @@ import { myBuyOrders, sendBuyOrder, type BoCard } from "@/lib/buy-orders.functio
 import { BuyOrderCard, useBw } from "./bw-card";
 import { BuyOrderDetails } from "./bw-details";
 import { BuyOrderForm } from "./bw-form";
-import "@/styles/businesses-wanted.css";
 
 export const MY_ADS_QUERY = ["buy-orders", "mine"] as const;
 

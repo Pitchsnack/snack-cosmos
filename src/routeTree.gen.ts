@@ -82,6 +82,7 @@ import { Route as AuthenticatedInvestorsIdRouteImport } from './routes/_authenti
 import { Route as AuthenticatedInvestorsInvestorImagesRouteImport } from './routes/_authenticated/investors.investor-images'
 import { Route as AuthenticatedInvestorsNewRouteImport } from './routes/_authenticated/investors.new'
 import { Route as AuthenticatedMarketplaceIndexRouteImport } from './routes/_authenticated/marketplace.index'
+import { Route as AuthenticatedMarketplaceAdvertisementRouteImport } from './routes/_authenticated/marketplace.advertisement'
 import { Route as AuthenticatedMarketplaceAdvisorsRouteImport } from './routes/_authenticated/marketplace.advisors'
 import { Route as AuthenticatedMarketplaceBrowseRouteImport } from './routes/_authenticated/marketplace.browse'
 import { Route as AuthenticatedMarketplaceBusinessesWantedRouteImport } from './routes/_authenticated/marketplace.businesses-wanted'
@@ -536,6 +537,12 @@ const AuthenticatedMarketplaceIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedMarketplaceRoute,
   } as any)
+const AuthenticatedMarketplaceAdvertisementRoute =
+  AuthenticatedMarketplaceAdvertisementRouteImport.update({
+    id: '/advertisement',
+    path: '/advertisement',
+    getParentRoute: () => AuthenticatedMarketplaceRoute,
+  } as any)
 const AuthenticatedMarketplaceAdvisorsRoute =
   AuthenticatedMarketplaceAdvisorsRouteImport.update({
     id: '/advisors',
@@ -909,6 +916,7 @@ export interface FileRoutesByFullPath {
   '/investors/$id': typeof AuthenticatedInvestorsIdRouteWithChildren
   '/investors/investor-images': typeof AuthenticatedInvestorsInvestorImagesRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
+  '/marketplace/advertisement': typeof AuthenticatedMarketplaceAdvertisementRoute
   '/marketplace/advisors': typeof AuthenticatedMarketplaceAdvisorsRoute
   '/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
   '/marketplace/businesses-wanted': typeof AuthenticatedMarketplaceBusinessesWantedRoute
@@ -1027,6 +1035,7 @@ export interface FileRoutesByTo {
   '/global-startups/browse': typeof AuthenticatedGlobalStartupsBrowseRoute
   '/investors/investor-images': typeof AuthenticatedInvestorsInvestorImagesRoute
   '/investors/new': typeof AuthenticatedInvestorsNewRoute
+  '/marketplace/advertisement': typeof AuthenticatedMarketplaceAdvertisementRoute
   '/marketplace/advisors': typeof AuthenticatedMarketplaceAdvisorsRoute
   '/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
   '/marketplace/businesses-wanted': typeof AuthenticatedMarketplaceBusinessesWantedRoute
@@ -1151,6 +1160,7 @@ export interface FileRoutesById {
   '/_authenticated/investors/$id': typeof AuthenticatedInvestorsIdRouteWithChildren
   '/_authenticated/investors/investor-images': typeof AuthenticatedInvestorsInvestorImagesRoute
   '/_authenticated/investors/new': typeof AuthenticatedInvestorsNewRoute
+  '/_authenticated/marketplace/advertisement': typeof AuthenticatedMarketplaceAdvertisementRoute
   '/_authenticated/marketplace/advisors': typeof AuthenticatedMarketplaceAdvisorsRoute
   '/_authenticated/marketplace/browse': typeof AuthenticatedMarketplaceBrowseRoute
   '/_authenticated/marketplace/businesses-wanted': typeof AuthenticatedMarketplaceBusinessesWantedRoute
@@ -1279,6 +1289,7 @@ export interface FileRouteTypes {
     | '/investors/$id'
     | '/investors/investor-images'
     | '/investors/new'
+    | '/marketplace/advertisement'
     | '/marketplace/advisors'
     | '/marketplace/browse'
     | '/marketplace/businesses-wanted'
@@ -1397,6 +1408,7 @@ export interface FileRouteTypes {
     | '/global-startups/browse'
     | '/investors/investor-images'
     | '/investors/new'
+    | '/marketplace/advertisement'
     | '/marketplace/advisors'
     | '/marketplace/browse'
     | '/marketplace/businesses-wanted'
@@ -1520,6 +1532,7 @@ export interface FileRouteTypes {
     | '/_authenticated/investors/$id'
     | '/_authenticated/investors/investor-images'
     | '/_authenticated/investors/new'
+    | '/_authenticated/marketplace/advertisement'
     | '/_authenticated/marketplace/advisors'
     | '/_authenticated/marketplace/browse'
     | '/_authenticated/marketplace/businesses-wanted'
@@ -2121,6 +2134,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketplaceIndexRouteImport
       parentRoute: typeof AuthenticatedMarketplaceRoute
     }
+    '/_authenticated/marketplace/advertisement': {
+      id: '/_authenticated/marketplace/advertisement'
+      path: '/advertisement'
+      fullPath: '/marketplace/advertisement'
+      preLoaderRoute: typeof AuthenticatedMarketplaceAdvertisementRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRoute
+    }
     '/_authenticated/marketplace/advisors': {
       id: '/_authenticated/marketplace/advisors'
       path: '/advisors'
@@ -2621,6 +2641,7 @@ const AuthenticatedMarketplacePipelineRouteWithChildren =
   )
 
 interface AuthenticatedMarketplaceRouteChildren {
+  AuthenticatedMarketplaceAdvertisementRoute: typeof AuthenticatedMarketplaceAdvertisementRoute
   AuthenticatedMarketplaceAdvisorsRoute: typeof AuthenticatedMarketplaceAdvisorsRoute
   AuthenticatedMarketplaceBrowseRoute: typeof AuthenticatedMarketplaceBrowseRoute
   AuthenticatedMarketplaceBusinessesWantedRoute: typeof AuthenticatedMarketplaceBusinessesWantedRoute
@@ -2636,6 +2657,8 @@ interface AuthenticatedMarketplaceRouteChildren {
 
 const AuthenticatedMarketplaceRouteChildren: AuthenticatedMarketplaceRouteChildren =
   {
+    AuthenticatedMarketplaceAdvertisementRoute:
+      AuthenticatedMarketplaceAdvertisementRoute,
     AuthenticatedMarketplaceAdvisorsRoute:
       AuthenticatedMarketplaceAdvisorsRoute,
     AuthenticatedMarketplaceBrowseRoute: AuthenticatedMarketplaceBrowseRoute,
