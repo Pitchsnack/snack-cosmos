@@ -29,7 +29,7 @@ export function applicationsLine(seller: boolean, control: boolean, c: (e: strin
     : c("Sellers who applied to your advertisements. Open their listing, then Request NDA or Not a fit.", "ผู้ขายที่สมัครประกาศของคุณ เปิดดูประกาศ แล้วขอ NDA หรือแจ้งว่าไม่เหมาะ");
 }
 
-export function ApplicationsTab({ seller }: { seller: boolean }) {
+export function ApplicationsTab({ seller, control = false }: { seller: boolean; control?: boolean }) {
   const { c } = useBw();
   const fn = useServerFn(listApplications);
   const q = useQuery({ queryKey: [...APPS_QUERY, seller ? "seller" : "buyer"], queryFn: () => fn({ data: { as: seller ? "seller" : "buyer" } }) });
@@ -48,10 +48,10 @@ export function ApplicationsTab({ seller }: { seller: boolean }) {
       </>
     );
   }
-  return <ReviewList rows={d.rows} />;
+  return <ReviewList rows={d.rows} control={control} />;
 }
 
-function ReviewList({ rows }: { rows: AppRow[] }) {
+function ReviewList({ rows, control: isControl }: { rows: AppRow[]; control: boolean }) {
   const { c, th } = useBw();
   const sectorName = useSectorName();
   const qc = useQueryClient();
@@ -72,7 +72,7 @@ function ReviewList({ rows }: { rows: AppRow[] }) {
       toast.error(m.startsWith("BO_CHANGED") ? c("This buy order has changed. Refresh and try again.", "ประกาศนี้มีการเปลี่ยนแปลง กรุณารีเฟรชแล้วลองอีกครั้ง") : m);
     } finally { setBusy(false); refresh(); }
   };
-  const control = rows.some((r) => r.client);
+  const control = isControl || rows.some((r) => r.client);
   if (!rows.length)
     return <div className="bw-empty mt-4"><b>{c("No applications yet.", "ยังไม่มีใบสมัคร")}</b><span>{control ? c("Sellers who apply to your sealed buy orders show here.", "ผู้ขายที่สมัครประกาศแบบปิดผนึกของคุณจะแสดงที่นี่") : c("Sellers who apply to your advertisements show here.", "ผู้ขายที่สมัครประกาศของคุณจะแสดงที่นี่")}</span></div>;
   const names = { industry: c("Industry", "อุตสาหกรรม"), location: c("Location", "ที่ตั้ง"), revenue: c("Target revenue", "รายได้เป้าหมาย"), deal: c("Deal type", "รูปแบบดีล") };
