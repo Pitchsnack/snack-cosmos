@@ -67,6 +67,9 @@ function AccessCodesPage() {
   const [askGate, setAskGate] = useState(false);
   const [askOff, setAskOff] = useState(false);
   useEffect(() => setAskOff(false), [open]);
+  type SortKey = 'client' | 'role' | 'accounts' | 'until' | 'visit' | 'status';
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   const d = q.data as any;
   const codes: AccessCode[] = d?.codes ?? [];
@@ -77,7 +80,21 @@ function AccessCodesPage() {
   const devices = (d?.devices ?? []) as any[];
   const statuses = useMemo(() => new Map(codes.map((c) => [c.id, codeStatus(c)])), [codes]);
   const count = (f: typeof filter) => codes.filter((c) => { const s = statuses.get(c.id)!; return f === 'all' || (f === 'active' && (s === 'active' || s === 'ending')) || (f === 'ending' && s === 'ending') || (f === 'gone' && (s === 'ended' || s === 'off')); }).length;
-  const shown = codes.filter((c) => { const s = statuses.get(c.id)!; return filter === 'all' || (filter === 'active' && (s === 'active' || s === 'ending')) || (filter === 'ending' && s === 'ending') || (filter === 'gone' && (s === 'ended' || s === 'off')); });
+  const filtered = codes.filter((c) => { const s = statuses.get(c.id)!; return filter === 'all' || (filter === 'active' && (s === 'active' || s === 'ending')) || (filter === 'ending' && s === 'ending') || (filter === 'gone' && (s === 'ended' || s === 'off')); });
+  const sortVal = (c: AccessCode): string | number => {
+    switch (sortKey) {
+      case 'client': return c.client_name.toLowerCase();
+      case 'role': return c.role;
+      case 'accounts': return accounts.filter((a) => a.access_code_id === c.id).length;
+      case 'until': return c.ends_on ?? '9999-12-31';
+      case 'visit': return devices.filter((x) => x.code_id === c.id).map((x) => x.last_seen_at).sort().pop() ?? '';
+      case 'status': return ['active', 'ending', 'ended', 'off'].indexOf(statuses.get(c.id)!);
+      default: return 0;
+    }
+  };
+  const shown = sortKey ? [...filtered].sort((a, b) => { const x = sortVal(a), y = sortVal(b); return (x < y ? -1 : x > y ? 1 : 0) * (sortDir === 'asc' ? 1 : -1); }) : filtered;
+  const toggleSort = (k: SortKey) => { if (sortKey === k) setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); else { setSortKey(k); setSortDir(k === 'visit' || k === 'accounts' ? 'desc' : 'asc'); } };
+  const SortHead = ({ k, label }: { k: SortKey; label: string }) => <button type="button" onClick={() => toggleSort(k)} className={`inline-flex items-center gap-1 text-left uppercase tracking-[.06em] hover:text-[#111827] ${sortKey === k ? 'text-[#111827]' : ''}`}>{label}{sortKey === k ? (sortDir === 'asc' ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />) : <ArrowUpDown className="size-3 opacity-40" />}</button>;
   const totalVisits = devices.reduce((n, x) => n + (x.visits ?? 0), 0);
   const firstDate = codes.length ? codes[codes.length - 1].created_at : null;
   const gateOn = !!d?.settings?.gate_on;
@@ -134,7 +151,7 @@ function AccessCodesPage() {
     </div>
 
     <div className="overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-white">
-      <div className="hidden md:grid grid-cols-[1fr_112px_124px_100px_112px_112px_132px_16px] gap-3 bg-[#FAFAFB] px-4 py-[9px] text-[10.5px] font-bold uppercase tracking-[.06em] text-[#9CA3AF]"><span>Client</span><span>Code</span><span>Role · free plan</span><span>Accounts</span><span>Works until</span><span>Last visit</span><span>Status</span><span /></div>
+      <div className="hidden md:grid grid-cols-[1fr_112px_124px_100px_112px_112px_132px_16px] gap-3 bg-[#FAFAFB] px-4 py-[9px] text-[10.5px] font-bold uppercase tracking-[.06em] text-[#9CA3AF]"><SortHead k="client" label="Client" /><span>Code</span><SortHead k="role" label="Role · free plan" /><SortHead k="accounts" label="Accounts" /><SortHead k="until" label="Works until" /><SortHead k="visit" label="Last visit" /><SortHead k="status" label="Status" /><span /></div>
       {q.isLoading && <p className="px-4 py-6 text-sm text-muted-foreground">Loading…</p>}
       {q.error && <p className="px-4 py-6 text-sm text-destructive">{(q.error as Error).message}</p>}
       {d && !shown.length && <p className="px-4 py-6 text-sm text-muted-foreground">No codes here yet.</p>}
