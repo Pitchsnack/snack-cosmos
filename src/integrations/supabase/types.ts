@@ -6013,6 +6013,7 @@ export type Database = {
       }
       share_invitations: {
         Row: {
+          buy_order_id: string | null
           email: string
           id: string
           joined_at: string | null
@@ -6022,6 +6023,7 @@ export type Database = {
           token: string
         }
         Insert: {
+          buy_order_id?: string | null
           email: string
           id?: string
           joined_at?: string | null
@@ -6031,6 +6033,7 @@ export type Database = {
           token: string
         }
         Update: {
+          buy_order_id?: string | null
           email?: string
           id?: string
           joined_at?: string | null
@@ -7882,6 +7885,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      close_due_buy_orders: { Args: never; Returns: number }
       company_type_for_relation: { Args: { _rel: string }; Returns: string }
       current_term_start: { Args: { _uid: string }; Returns: string }
       dbd_apply_edit: {
