@@ -32,11 +32,11 @@ export function MyAdvertisementsPage() {
   };
   const n = cards.length;
   return (
-    <div className="bw-page mx-auto w-full max-w-[1240px] px-4 py-8 sm:px-8">
+    <div className="bw-page">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-[760px]">
           <div className="bw-eyebrow"><Megaphone className="h-3.5 w-3.5" />{c("ADVERTISEMENT", "ประกาศ")}</div>
-          <h1 className="bw-title">{c("My advertisements", "ประกาศของฉัน")}</h1>
+          <h1 className="bw-h1">{c("My advertisements", "ประกาศของฉัน")}</h1>
           <p className="bw-sub">{control
             ? c("Sealed buy orders you write for the buyers PitchSnack looks after. Admin checks each one before it’s posted. Sellers who apply show in Pipeline › NDA Invitations › Applications.", "ประกาศซื้อแบบปิดผนึกที่คุณเขียนให้ผู้ซื้อที่ PitchSnack ดูแล แอดมินจะตรวจทุกประกาศก่อนลง ผู้ขายที่สมัครจะแสดงใน ดีล › คำเชิญ NDA › ใบสมัคร")
             : c("Post an advertisement for a business you want to buy. Sellers find it in Businesses Wanted and apply with their listing, and you review them.", "ลงประกาศสำหรับธุรกิจที่คุณต้องการซื้อ ผู้ขายจะพบในธุรกิจที่ผู้ซื้อต้องการ และสมัครด้วยประกาศของตน แล้วคุณพิจารณา")}</p>
