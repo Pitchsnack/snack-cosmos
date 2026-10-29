@@ -41,16 +41,17 @@ export async function verificationState(sb: any, userId: string, companyId: stri
   let checks: VerificationState['checks'] = [];
   let hubAllowed=false;
   if(buyer&&hubShared&&pipelineId){const [{data:grant},{data:share}]=await Promise.all([sb.from('buyer_report_access').select('id').eq('company_id',companyId).eq('buyer_id',userId).eq('report_key','verification').maybeSingle(),sb.from('report_shares').select('report_keys').eq('pipeline_id',pipelineId).eq('buyer_id',userId).is('revoked_at',null).maybeSingle()]);hubAllowed=!!grant||share?.report_keys?.includes('verification')===true;}
-  if ((!buyer || canRead || hubAllowed) && ['certified','needs_fix'].includes(status)) {
+  // Admin preview: Admins see stored record data and any partial checks before certification.
+  if (((!buyer || canRead || hubAllowed) && ['certified','needs_fix'].includes(status)) || (isAdmin && !buyer)) {
     const [{data:ci,error:ciError},{data:ds,error:dsError},{data:business},{data:cs,error:csError}] = await Promise.all([
       sb.from('company_info_th').select('id,legal_name_th,legal_name_en,registration_number,legal_entity_type_th,legal_entity_status_th,registration_date_th_raw,registered_capital_th_raw,business_size,head_office_address_th,authorized_signatory_th').eq('startup_id',companyId).maybeSingle(),
       sb.from('company_director_th').select('director_name_th,display_order').eq('startup_id',companyId).eq('is_active',true).order('display_order'),
       sb.from('company_registered_business_th').select('business_code,business_description_th,business_objective_th').eq('startup_id',companyId).maybeSingle(),
-      sb.from('company_verification_checks').select('key,result,values,source_label').eq('verification_id',v.id).order('key'),
+      sb.from('company_verification_checks').select('key,result,values,source_label').eq('verification_id',v?.id??'00000000-0000-0000-0000-000000000000').order('key'),
     ]);
     if (ciError || dsError || csError) throw new Error('The company record could not be loaded');
     // Deliberately whitelist every field. Shareholders and arbitrary analyst JSON never cross this boundary.
-    const x = v.record_details ?? {};
+    const x = v?.record_details ?? {};
     record = { nameTh:ci?.legal_name_th??null,nameEn:ci?.legal_name_en??null,profileName:s.registered_name??null,registration:ci?.registration_number??s.registered_number??null,type:ci?.legal_entity_type_th??null,status:ci?.legal_entity_status_th??null,registeredDate:ci?.registration_date_th_raw??null,capital:ci?.registered_capital_th_raw??null,size:ci?.business_size??null,formerName:text(x.former_name),nameChangedOn:text(x.name_changed_on),shares:text(x.shares),par:text(x.par_value),fiscalYearEnd:text(x.fiscal_year_end),businessType:business?.business_description_th??null,tsic:business?.business_code??null,objective:business?.business_objective_th??null,address:ci?.head_office_address_th??null,auditor:text(x.auditor),latestFiling:text(x.latest_filing),signingTh:ci?.authorized_signatory_th??null,signingEn:text(x.signing_rule_en),sellerRole:text(x.seller_role),directors:(ds??[]).map((d:any,i:number)=>{const extra=Array.isArray(x.directors)?x.directors.find((e:any)=>e.name_th===d.director_name_th):null;return {nameTh:d.director_name_th,nameEn:text(extra?.name_en),role:text(extra?.role),canSignAlone:extra?.can_sign_alone===true,isSeller:extra?.is_seller===true};}) };
     checks=(cs??[]).map((c:any)=>({key:c.key,result:c.result,detail:text(c.values?.detail),source:text(c.source_label)?.replace(/DBD/gi,'Company record')??null}));
   }
