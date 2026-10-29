@@ -7,7 +7,7 @@
 type Sb = any;
 
 let controlId: string | null | undefined;
-async function controlTenantId(sb: Sb): Promise<string | null> {
+export async function controlTenantId(sb: Sb): Promise<string | null> {
   if (controlId !== undefined) return controlId;
   const { data } = await sb.from("tenants").select("id").ilike("tenant_code", "control").maybeSingle();
   controlId = (data?.id as string | undefined) ?? null;

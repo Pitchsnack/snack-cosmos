@@ -480,10 +480,8 @@ function rowToDraft(r: any): BoDraft {
 
 // ---------- Stage 3: Admin › Approvals › Advertisement ----------
 
-async function requireControlAdmin(userId: string) {
-  const { requireControlAdmin: req } = await import("@/lib/admin-guard.server").catch(() => ({ requireControlAdmin: null as any }));
-  if (req) { await req(userId); return; }
-  if ((await viewerRole(userId)) !== "admin") throw new Error("Not allowed");
+async function requireControlAdmin(context: { supabase: any; userId: string }) {
+  await (await import("@/lib/profile-handover.server")).requireControlAdmin(context);
 }
 
 export type AdminBoRow = BoCard & { writerKind: "control" | "buyer"; company: string | null; ndaRequested: number; notAFit: number };
@@ -497,7 +495,7 @@ export const adminBuyOrders = createServerFn({ method: "GET" })
     sort: z.enum(["closes", "newest", "most", "mostNew"]).optional(), page: z.number().int().min(1).optional(), size: z.number().int().min(5).max(50).optional(),
   }).parse(d))
   .handler(async ({ context, data }) => {
-    await requireControlAdmin(context.userId);
+    await requireControlAdmin(context);
     const sb = await admin();
     const { data: rows } = await sb.from("buy_orders").select("*").neq("status", "draft");
     const cards = await cardsFor(sb, rows ?? [], context.userId, true, null);
@@ -507,7 +505,7 @@ export const adminBuyOrders = createServerFn({ method: "GET" })
     const company = new Map((invs ?? []).map((i: any) => [i.id, i.legal_name ?? i.firm_name ?? i.investor_name ?? null]));
     const rowBy = new Map((rows ?? []).map((r: any) => [r.id, r]));
     const today = bkkToday();
-    const in30 = addMonths(today, 0) && new Date(Date.parse(today) + 30 * 86400_000).toISOString().slice(0, 10);
+    const in30 = new Date(Date.parse(today) + 30 * 86400_000).toISOString().slice(0, 10);
     const all: AdminBoRow[] = cards.map((c) => ({
       ...c, writerKind: c.kind === "sealed" ? "control" : "buyer", company: company.get((rowBy.get(c.id) as any).investor_profile_id) ?? null,
       appsTotal: c.applied, appsNew: (aps ?? []).filter((a: any) => a.buy_order_id === c.id && a.status === "new").length,
@@ -562,7 +560,7 @@ export const adminDecideBuyOrder = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; action: "post" | "send_back"; draft: BoDraft; note?: string }) =>
     z.object({ id: z.string().uuid(), action: z.enum(["post", "send_back"]), draft: draftSchema, note: z.string().trim().max(1000).optional() }).parse(d))
   .handler(async ({ context, data }) => {
-    await requireControlAdmin(context.userId);
+    await requireControlAdmin(context);
     const sb = await admin();
     const { data: bo } = await sb.from("buy_orders").select("*").eq("id", data.id).maybeSingle();
     if (!bo || bo.status !== "waiting") throw new Error(BO_CHANGED);
@@ -591,7 +589,7 @@ export const adminExtendBuyOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string; months: number }) => z.object({ id: z.string().uuid(), months: z.number().int() }).parse(d))
   .handler(async ({ context, data }) => {
-    await requireControlAdmin(context.userId);
+    await requireControlAdmin(context);
     if (!(PERIODS as readonly number[]).includes(data.months)) throw new Error("Pick a period.");
     const sb = await admin();
     const { data: bo } = await sb.from("buy_orders").select("*").eq("id", data.id).maybeSingle();
@@ -611,7 +609,7 @@ export const adminBuyOrderApplicants = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    await requireControlAdmin(context.userId);
+    await requireControlAdmin(context);
     const sb = await admin();
     const rows = await reviewRows(sb, context.userId, "admin", data.id);
     return { rows };
