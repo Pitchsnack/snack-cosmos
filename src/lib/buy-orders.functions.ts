@@ -25,6 +25,8 @@ export type BoCard = {
   buyerType: string; country: string | null; aboutBuyer: string | null;
   views: number; applied: number; yours: boolean;
   myApp: { status: BoAppStatus; appliedAt: string } | null;
+  /** The buy order's own side only: applications in all, and waiting for a decision. */
+  appsTotal: number | null; appsNew: number | null;
   /** Admins only. */
   client: { name: string | null; ref: string | null; writer: string | null } | null;
 };
@@ -69,7 +71,7 @@ async function viewerRole(userId: string) {
   return (await import("@/lib/plan-access.server")).roleOf(userId);
 }
 
-function toCard(r: any, ctx: { inv: Map<string, any>; bp: Map<string, any>; views: Map<string, number>; apps: Map<string, number>; mine: Set<string>; myApps: Map<string, any>; isAdmin: boolean; writers: Map<string, string> }, bands: any): BoCard {
+function toCard(r: any, ctx: { inv: Map<string, any>; bp: Map<string, any>; views: Map<string, number>; apps: Map<string, number>; mine: Set<string>; myApps: Map<string, any>; appsNew: Map<string, number>; isAdmin: boolean; writers: Map<string, string> }, bands: any): BoCard {
   const { typeName, sortActsFor } = bands;
   const i = ctx.inv.get(r.investor_profile_id) ?? {};
   const b = ctx.bp.get(r.investor_profile_id) ?? null;
@@ -81,6 +83,7 @@ function toCard(r: any, ctx: { inv: Map<string, any>; bp: Map<string, any>; view
     about = about ? about.replace(new RegExp(esc, "gi"), buyerType) : about;
   }
   const a = ctx.myApps.get(r.id);
+  const own = r.kind === "sealed" ? ctx.isAdmin : ctx.mine.has(r.investor_profile_id);
   return {
     id: r.id, ref: r.ref, kind: r.kind, status: effectiveStatus(r.status, r.closes_on),
     sector: r.sector, name: r.name_on_card, description: r.description, location: r.location, cities: r.cities || "Any",
@@ -92,6 +95,7 @@ function toCard(r: any, ctx: { inv: Map<string, any>; bp: Map<string, any>; view
     views: ctx.views.get(r.id) ?? 0, applied: ctx.apps.get(r.id) ?? 0,
     yours: ctx.mine.has(r.investor_profile_id),
     myApp: a ? { status: a.status, appliedAt: a.applied_at } : null,
+    appsTotal: own ? ctx.apps.get(r.id) ?? 0 : null, appsNew: own ? ctx.appsNew.get(r.id) ?? 0 : null,
     client: ctx.isAdmin ? { name: i.investor_name ?? i.firm_name ?? null, ref: b?.ref_no ?? null, writer: ctx.writers.get(r.written_by_user_id) ?? null } : null,
   };
 }
@@ -114,7 +118,7 @@ async function cardsFor(sb: any, rows: any[], userId: string, isAdmin: boolean, 
   if (sellerListingId) for (const a of (aps ?? []) as any[]) if (a.business_id === sellerListingId) myApps.set(a.buy_order_id, a);
   return rows.map((r) => toCard(r, {
     inv: new Map((invs ?? []).map((x: any) => [x.id, x])), bp: new Map((bps ?? []).map((x: any) => [x.investor_id, x])),
-    views: count(vs ?? []), apps: count(aps ?? []), mine: new Set(mine), myApps, isAdmin,
+    views: count(vs ?? []), apps: count(aps ?? []), appsNew: count((aps ?? []).filter((x: any) => x.status === "new")), mine: new Set(mine), myApps, isAdmin,
     writers: new Map((ws ?? []).map((w: any) => [w.id, w.full_name || w.email])),
   }, bands));
 }
@@ -126,7 +130,10 @@ export const listBuyOrders = createServerFn({ method: "GET" })
     const role = await viewerRole(context.userId);
     if (!role) throw new Error("This page isn't available for your account");
     const sb = await admin();
-    const { data, error } = await sb.from("buy_orders").select("*").in("status", ["posted", "closed"]).order("posted_at", { ascending: false });
+    let q = sb.from("buy_orders").select("*").in("status", ["posted", "closed"]).order("posted_at", { ascending: false });
+    // PitchSnack Control (admins, Buyer tab) sees Sealed buy orders only.
+    if (role === "admin") q = q.eq("kind", "sealed");
+    const { data, error } = await q;
     if (error) throw new Error(error.message);
     const seller = role === "seller" || role === "admin" ? await mySellerListing(context.userId) : null;
     return { cards: await cardsFor(sb, data ?? [], context.userId, role === "admin", seller?.facts.id ?? null), isAdmin: role === "admin" };
@@ -139,7 +146,9 @@ export const newBuyOrderCount = createServerFn({ method: "GET" })
     if (!(await viewerRole(context.userId))) return { n: 0 };
     const sb = await admin();
     const since = new Date(Date.now() - 7 * 86400_000).toISOString();
-    const { count } = await sb.from("buy_orders").select("id", { count: "exact", head: true }).eq("status", "posted").gte("posted_at", since);
+    let q = sb.from("buy_orders").select("id", { count: "exact", head: true }).eq("status", "posted").gte("posted_at", since);
+    if ((await viewerRole(context.userId)) === "admin") q = q.eq("kind", "sealed");
+    const { count } = await q;
     return { n: count ?? 0 };
   });
 
