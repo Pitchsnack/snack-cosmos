@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronDown, Search, Target } from "lucide-react";
-import { toast } from "sonner";
 import { usePersona } from "@/hooks/use-marketplace";
 import { BO_SECTORS, SELLER_BANDS, boSector, citiesOf, overlaps, rangeOf, sectorOrder } from "@/lib/buy-orders";
 import { listBuyOrders, myApplyContext, type BoCard } from "@/lib/buy-orders.functions";
@@ -133,7 +132,7 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
         )}
 
       <ChooseIndustry open={choose} counts={counts} total={base.length} picked={sector} onClose={() => setChoose(false)} onPick={(s) => { setSector(s); setChoose(false); }} />
-      {detailCard && !applyCard && !shareCard && <BuyOrderDetails card={detailCard} persona={p} applyCtx={ctxQ.data} onClose={() => setDetails(null)} onApply={(x) => setApplyId(x.id)} onShare={share} />}
+      {detailCard && !applyCard && <BuyOrderDetails card={detailCard} persona={p} applyCtx={ctxQ.data} onClose={() => setDetails(null)} onApply={(x) => setApplyId(x.id)} onShare={share} />}
       {applyCard && ctxQ.data?.listing && <ApplyDialog card={applyCard} ctx={ctxQ.data} onClose={() => setApplyId(null)} onDone={() => { setApplyId(null); refresh(); }} />}
       {shareCard && <ShareDialog card={shareCard} onClose={() => setShareId(null)} />}
       <span hidden>{BO_SECTORS.length}</span>
