@@ -36,7 +36,7 @@ describe("seller review rows use the stored vocabulary", () => {
   it("the stored band key shows the buyer-facing range, not the key", async () => {
     const r = await review(hp(), st());
     expect(row(r.listingRows, "Asking price")).toBe("Under ฿50M");
-    expect(row(r.card.figs, "Asking price")).toBe("Under ฿100M – 250M".replace("Under ", ""));
+    expect(row(r.card.figs, "Asking price")).toBe("Under ฿50M");
   });
   it("a missing band key falls back to the amount's own range", async () => {
     const r = await review(hp({ asking_price_band: null, asking_price_thb: 120000000 }), st());
