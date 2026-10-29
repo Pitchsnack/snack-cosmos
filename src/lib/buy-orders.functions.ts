@@ -151,7 +151,7 @@ export const listBuyOrders = createServerFn({ method: "GET" })
         const nm = new Map((us ?? []).map((u: any) => [u.id, [u.first_name, u.last_name].filter(Boolean).join(" ") || "PitchSnack member"]));
         const first = new Map<string, any>();
         for (const r of rows) if (!first.has(r.buy_order_id)) first.set(r.buy_order_id, r);
-        for (const c of cards) { const r = first.get(c.id); if (r && !c.yours) { c.sharedBy = nm.get(r.sender_user_id) ?? "PitchSnack member"; c.sharedAt = r.sent_at; } }
+        for (const c of cards) { const r = first.get(c.id); if (r && !c.yours) { c.sharedBy = String(nm.get(r.sender_user_id) ?? "PitchSnack member"); c.sharedAt = r.sent_at; } }
       }
     }
     return { cards, isAdmin: role === "admin" };
