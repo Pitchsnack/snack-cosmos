@@ -21,6 +21,7 @@ export type ApprovalNotice = {
   itemType: "listing" | "buyer_profile" | "advisor";
   itemId: string;
   role: ApprovalRole;
+  ref?: string | null;
   state: ApprovalState;
   submittedAt: string | null;
   decidedAt: string | null;
@@ -50,9 +51,9 @@ export const getMyApprovalNotice = createServerFn({ method: "GET" })
 
     // Newest activity wins across the user's listings/profiles.
     const [{ data: bp }, { data: hps }, { data: firms }, { data: me }] = await Promise.all([
-      sb.from("buyer_profiles").select("user_id, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline").eq("user_id", uid).maybeSingle(),
-      sb.from("hidden_profiles").select("id, approval_status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, code_name, startups!inner(startup_users!inner(user_id))").eq("startups.startup_users.user_id", uid),
-      sb.from("advisor_firms").select("id, advisor_verification, status, verification_requested_at, more_info_at, more_info_note, more_info_fields, declined_at, decline_note, decline_reason, verified_at, suggested_listing_name, suggested_headline, published_listing_name, published_headline").eq("owner_user_id", uid),
+      sb.from("buyer_profiles").select("user_id, ref_no, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline").eq("user_id", uid).maybeSingle(),
+      sb.from("hidden_profiles").select("id, ref_no, approval_status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, code_name, startups!inner(startup_users!inner(user_id))").eq("startups.startup_users.user_id", uid),
+      sb.from("advisor_firms").select("id, ref_no, advisor_verification, status, verification_requested_at, more_info_at, more_info_note, more_info_fields, declined_at, decline_note, decline_reason, verified_at, suggested_listing_name, suggested_headline, published_listing_name, published_headline").eq("owner_user_id", uid),
       sb.from("users").select("first_name, email").eq("id", uid).maybeSingle(),
     ]);
 
@@ -67,7 +68,7 @@ export const getMyApprovalNotice = createServerFn({ method: "GET" })
         : bp.approval_status === "approved" ? (bp.status === "paused" ? "paused" : bp.status === "live" ? "live" : "pending")
         : "draft";
       cands.push({
-        itemType: "buyer_profile", itemId: uid, role: "buyer", state,
+        itemType: "buyer_profile", itemId: uid, role: "buyer", ref: bp.ref_no, state,
         submittedAt: bp.submitted_at, decidedAt: bp.decided_at, decisionNote: bp.decision_note,
         reasons: (bp.decision_reasons ?? []) as string[],
         suggestedName: bp.suggested_listing_name, suggestedHeadline: bp.suggested_headline,
@@ -86,7 +87,7 @@ export const getMyApprovalNotice = createServerFn({ method: "GET" })
         : hp.approval_status === "live" || hp.approval_status === "live_edits_pending" ? "live"
         : "draft";
       cands.push({
-        itemType: "listing", itemId: hp.id, role: "seller", state,
+        itemType: "listing", itemId: hp.id, role: "seller", ref: hp.ref_no, state,
         submittedAt: hp.submitted_at, decidedAt: hp.decided_at, decisionNote: hp.decision_note,
         reasons: (hp.decision_reasons ?? []) as string[],
         suggestedName: hp.suggested_listing_name, suggestedHeadline: hp.suggested_headline,
@@ -104,7 +105,7 @@ export const getMyApprovalNotice = createServerFn({ method: "GET" })
         : f.advisor_verification === "verified" ? (f.status === "paused" ? "paused" : f.status === "live" ? "live" : "pending")
         : "draft";
       cands.push({
-        itemType: "advisor", itemId: f.id, role: "advisor", state,
+        itemType: "advisor", itemId: f.id, role: "advisor", ref: f.ref_no, state,
         submittedAt: f.verification_requested_at,
         decidedAt: f.advisor_verification === "more_info" ? f.more_info_at : f.advisor_verification === "declined" ? f.declined_at : f.verified_at,
         decisionNote: f.advisor_verification === "more_info" ? f.more_info_note : f.advisor_verification === "declined" ? f.decline_note : null,

@@ -10,7 +10,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowLeft, Check, Globe, Plus, Shield, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, Check, Globe, Pencil, Plus, Shield, Trash2, Upload, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -323,14 +323,14 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           agnostic={{ on: f.sectorAgnostic, onToggle: (on) => set("sectorAgnostic", on), line: "I work with companies in every industry",
             summary: <>Sellers and buyers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} /></F>
         <div className="grid gap-4 sm:grid-cols-2">
-          <F label="Listing name — your suggestion" hint={`${f.suggestedListingName.length} / 120`} htmlFor="fe-sug-name">
+          <F label="Listing name" hint={`${f.suggestedListingName.length} / 120`} htmlFor="fe-sug-name">
             <Input id="fe-sug-name" maxLength={120} value={f.suggestedListingName} onChange={(e) => set("suggestedListingName", e.target.value)} placeholder={f.name || ""} />
           </F>
-          <F label="Headline — your suggestion" hint={`${f.suggestedHeadline.length} / 120`} htmlFor="fe-sug-head">
+          <F label="Headline" hint={`${f.suggestedHeadline.length} / 120`} htmlFor="fe-sug-head">
             <Input id="fe-sug-head" maxLength={120} value={f.suggestedHeadline} onChange={(e) => set("suggestedHeadline", e.target.value)} />
           </F>
         </div>
-        <p className="-mt-2 text-[12.5px] text-muted-foreground">PitchSnack may adjust them to reduce duplication and make your listing easier to distinguish.</p>
+        <p className="-mt-2 flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.")}</p>
         <F label="Description" req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={`${f.description.length} / 300 · your card shows 3 lines`} htmlFor="fe-desc">
           <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} value={f.description} onBlur={blur("desc")} onChange={(e) => set("description", e.target.value)} />
         </F>
@@ -344,7 +344,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <F label={tr("Country")} req><select id="fe-country" className={sel} value={f.country} onChange={e=>changeCountry(e.target.value)}><option value="">{tr("Choose a country")}</option>{COUNTRIES.map(c=><option key={c} value={c}>{tr(c)}</option>)}</select></F>
           <F label={tr("City / province")} req err={show("city")}><Input id="fe-city" value={thai ? f.addr.province : f.city} onChange={e=>thai ? set("addr", {...f.addr,province:e.target.value}) : set("city",e.target.value)} /></F>
         </CompactFields><div>
-          <AddressBox noteOutside compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("Sellers and buyers see it as a link that opens a map.")}
+          <AddressBox noteOutside compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("Sellers and buyers see it as a link that opens a map. PitchSnack checks it against your registered address.")}
             onChange={(p) => set("addr", { ...f.addr, ...p })} show={showAddr} onBlur={(k) => setTouched((t) => ({ ...t, [`a-${k}`]: true }))} />
           {src.addr && f.addr.street && <div className="mt-1.5"><Tag t={src.addr} /></div>}
         </div>
@@ -366,6 +366,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
 
 </div>}
         {visible("team") && <div className="space-y-4"><TabHead title={tr("Team")} />      <Section id="team" active={!setup && section === "team"} title="Team" setup={!!setup}>
+        <p className="text-[12.5px] text-muted-foreground">{tr("Your name is checked against your firm's list of directors.")}</p>
         {f.team.map((t, i) => (
           <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
             <F label="Name" req><Input className={inp} value={t.name} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></F>
@@ -495,7 +496,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <F label="Phone" req tag={src.phone} err={show("phone")} htmlFor="fe-phone"><Input id="fe-phone" aria-required className={cn(inp, show("phone") && errB)} maxLength={30} placeholder="+66 2 123 4567" value={f.phone} onBlur={blur("phone")} onChange={(e) => set("phone", e.target.value)} /></F>
         </div>
         <div>
-          <AddressBox compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={asAdmin ? "Sellers see the country and province, never the full address, until they approve this firm's NDA." : tr("Sellers see your country and province, never the full address, until they approve your NDA.")}
+          <AddressBox compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("Sellers and buyers see it as a link that opens a map. PitchSnack checks it against your registered address.")}
             country={f.country} onCountry={changeCountry}
             onChange={(p) => set("addr", { ...f.addr, ...p })} show={showAddr} onBlur={(k) => setTouched((t) => ({ ...t, [`a-${k}`]: true }))} />
           {src.addr && f.addr.street && <div className="mt-1.5"><Tag t={src.addr} /></div>}
@@ -503,6 +504,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       </Section>
 
       <Section id="team" active={!setup && section === "team"} title="Team" setup={!!setup}>
+        <p className="text-[12.5px] text-muted-foreground">{tr("Your name is checked against your firm's list of directors.")}</p>
         {f.team.map((t, i) => (
           <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
             <F label="Name" req><Input className={inp} value={t.name} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></F>

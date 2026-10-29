@@ -1529,7 +1529,7 @@ export function StartupForm({
           <AddressBox noteOutside a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
             onCity={(v) => setAddr((x) => ({ ...x, district: v }))}
             onChange={(p) => setAddr((x) => ({ ...x, ...p }))} show={() => null} onBlur={() => {}}
-            note={ctAdmin ? "Buyers see the country and province, never the full address, until the seller approves their NDA." : tr("Buyers see your country and province, never the full address, until you approve their NDA.", "ผู้ซื้อจะเห็นเพียงประเทศและจังหวัดของท่าน ไม่เห็นที่อยู่เต็ม จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")} />
+            note={tr("PitchSnack checks your registered address.", "PitchSnack ตรวจสอบที่อยู่ที่จดทะเบียนไว้")} />
         </div>
   </div>);
   const marketJsx = (<>
@@ -1630,6 +1630,7 @@ export function StartupForm({
       )}
       <EditSec id="founders" tone="seller" active={secOn("founders")}>
         <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} year={yearFounded} sales={founderRevenueLabel(lastYearRevenue, th ? "th" : "en")} addOnOpen={section === "founders-add"} />
+        <p className="mt-2 flex gap-1.5 text-[12.5px] text-muted-foreground"><Shield size={14} className="shrink-0" />{tr("PitchSnack checks the owner's name against your company's list of directors, and the year founded and the sales against your company's records.", "PitchSnack ตรวจสอบชื่อเจ้าของกับรายชื่อกรรมการของบริษัท และตรวจสอบปีที่ก่อตั้งและยอดขายกับข้อมูลของบริษัท")}</p>
       </EditSec>
 
   </>);

@@ -1,5 +1,13 @@
 # One-step approval — roadmap
 
+## Second pass — 29 October 2026
+- [ ] Fix company-name, website, revenue and date comparisons across roles.
+- [ ] Replace Admin queue/review and decision pop-ups per the second-pass brief.
+- [ ] Finish user review, editor labels/help, sidebar badge and approved messages.
+- [ ] Apply full Thai text table and report added/replaced counts.
+- [ ] Return INV-1008 and INV-1015 to pending without email; list legacy live seller refs without changing them.
+- [ ] Review compilation signals only; no test accounts/data or screenshots.
+
 Brief: /mnt/user-uploads/lovable-one-step-approval_2.md. No tests, no test accounts, no screenshots (user's instruction).
 
 - [x] A. Data: migration 0113 (suggested/published name+headline per role, revenue band, contact number, decision reasons, review checks, approval_notices)

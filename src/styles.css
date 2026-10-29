@@ -17,6 +17,7 @@
 @import "./styles/pipeline-chat.css";
 @import "./styles/standard-browse-card.css";
 @import "./styles/approval-banners.css";
+@import "./styles/approval-review.css";
 @source "../src";
 @import "tw-animate-css";
 

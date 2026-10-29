@@ -1,7 +1,7 @@
 import { Lock } from "lucide-react";
 import { bandOf, bandInText, fmtThb, thbWords, thbWordsTh } from "@/lib/asking-price";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, Check, ChevronDown, CircleCheck, Eye, Info, Plus, RefreshCw, Sparkles } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, CircleCheck, Eye, Info, Pencil, Plus, RefreshCw, Sparkles } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -205,7 +205,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
               {pd.canName ? <ListingNameField pd={pd} refNo={refNo} /> : <SuggestedNameField pd={pd} refNo={refNo} />}
             </EditSec>
             <EditSec id="headline" tone="seller" active={section === "headline"}>
-              <FieldRow label={tr("Headline", "หัวข้อประกาศ")} htmlFor="hp-headline" missing={!d.headline.trim()} right={`${d.headline.length}/120`} suggest={ideas.headlineIdea ? () => set("headline", ideas.headlineIdea) : undefined}>
+              <FieldRow label={tr("Headline", "พาดหัว")} htmlFor="hp-headline" missing={!d.headline.trim()} right={`${d.headline.length}/120`} suggest={ideas.headlineIdea ? () => set("headline", ideas.headlineIdea) : undefined}>
                 <Input id="hp-headline" maxLength={120} value={d.headline} placeholder={ideas.headlineIdea} onChange={(e) => set("headline", e.target.value)} className={cn(BOX, !d.headline.trim() && MISS_BOX, flag("headline"))} />
               </FieldRow>
               <FlagMsg pd={pd} k="headline" />
@@ -391,10 +391,10 @@ function SuggestedNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: strin
   return (
     <div className="space-y-4">
       {published ? <ListingNameRow name={published} refNo={refNo} /> : null}
-      <FieldRow label={tr("Listing name — your suggestion", "ชื่อประกาศ — ข้อเสนอของท่าน")} htmlFor="hp-suggested-name" right={`${val.length}/120`}>
+      <FieldRow label={tr("Listing name", "ชื่อประกาศ")} htmlFor="hp-suggested-name" right={`${val.length}/120`}>
         <Input id="hp-suggested-name" maxLength={120} value={val} placeholder={refNo || ""}
           onChange={(e) => setD((p) => ({ ...p, suggested_listing_name: e.target.value }))} className={BOX} />
-        <p className="mt-1 text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{tr("PitchSnack may adjust it to reduce duplication and make your listing easier to distinguish.", "PitchSnack อาจปรับชื่อเพื่อลดความซ้ำและทำให้ประกาศของท่านโดดเด่นขึ้น")}</p>
+        <p className="mt-1 flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.", "ข้อเสนอของท่าน เราได้ปรับชื่อประกาศและพาดหัวของท่าน เพื่อลดความซ้ำซ้อนและให้ประกาศของท่านแยกแยะได้ง่ายขึ้น")}</p>
       </FieldRow>
     </div>
   );

@@ -15,7 +15,8 @@ import { advisorReview, buyerReview, sellerReview, waitingDays, type OneStepItem
 type Ctx = { supabase: any; userId: string };
 async function assertAdmin(ctx: Ctx) {
   const { data } = await ctx.supabase.rpc("is_control", { _user_id: ctx.userId });
-  if (!data) throw new Error("Admin only");
+  const { data: role } = await ctx.supabase.rpc("account_role_of", { _uid: ctx.userId });
+  if (!data || role !== "admin") throw new Error("Admin only");
 }
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -59,24 +60,26 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
     const sb = await admin();
 
     // ---- sellers: hidden_profiles waiting or sent back
-    const { data: hps } = await sb.from("hidden_profiles")
+    const { data: hps, error: hpError } = await sb.from("hidden_profiles")
       .select("id, startup_id, ref_no, code_name, description, highlights, customers_summary, deal_type, owner_stays, handover_months, asking_price_thb, asking_price_band, approval_status, submitted_at, submitted_by, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, review_checks")
       .in("approval_status", ["in_review", "changes_requested"]).order("submitted_at", { ascending: true });
+    if (hpError) throw new Error(hpError.message);
     const stIds = [...new Set((hps ?? []).map((h: any) => h.startup_id).filter(Boolean))];
     const { data: sts } = stIds.length
       ? await sb.from("startups").select("id, startup_name, registered_name, registered_number, website_url, email, city, sector, year_founded, last_year_revenue, business_address, contact_number").in("id", stIds)
       : { data: [] };
     const stBy = new Map<string, any>((sts ?? []).map((s: any) => [s.id, s]));
     const { data: founders } = stIds.length
-      ? await sb.from("startup_founders").select("startup_id, full_name, role_title, bio, bio_story").in("startup_id", stIds).order("created_at", { ascending: true })
+      ? await sb.from("startup_founders").select("startup_id, full_name, position, bio, bio_story").in("startup_id", stIds).order("created_at", { ascending: true })
       : { data: [] };
     const founderBy = new Map<string, any>();
     for (const f of founders ?? []) if (!founderBy.has(f.startup_id)) founderBy.set(f.startup_id, f);
 
     // ---- buyers: buyer_profiles waiting or sent back
-    const { data: bps } = await sb.from("buyer_profiles")
+    const { data: bps, error: bpError } = await sb.from("buyer_profiles")
       .select("user_id, ref_no, investor_id, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline, description, geography, sectors, city, country, people, buyer_relation, revenue_band, contact_number, address")
       .in("approval_status", ["in_review", "changes_requested"]).order("submitted_at", { ascending: true });
+    if (bpError) throw new Error(bpError.message);
     const invIds = [...new Set((bps ?? []).map((b: any) => b.investor_id).filter(Boolean))];
     const { data: invs } = invIds.length
       ? await sb.from("investors").select("id, investor_name, investor_type, country, website_url, registration_no, year_founded, email, aum_band, ticket_band, revenue_min_band, investment_focus, preferred_industries, preferred_stages, address_line1, address_line2, address_city_district, address_province_state, postal_code").in("id", invIds)
@@ -94,16 +97,19 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
     for (const b of bps ?? []) uids.add(b.user_id);
     for (const f of firms ?? []) if (f.owner_user_id) uids.add(f.owner_user_id);
     const { data: us } = uids.size ? await sb.from("users").select("id, first_name, last_name, email").in("id", [...uids]) : { data: [] };
-    const uBy = new Map<string, any>((us ?? []).map((u: any) => [u.id, u]));
+    const { data: profiles } = uids.size ? await sb.from("user_profiles").select("user_id, title, phone").in("user_id", [...uids]) : { data: [] };
+    const pBy = new Map<string, any>((profiles ?? []).map((p: any) => [p.user_id, p]));
+    const uBy = new Map<string, any>((us ?? []).map((u: any) => [u.id, { ...u, ...pBy.get(u.id) }]));
 
     const sellers: OneStepItem[] = [];
     for (const hp of hps ?? []) {
       const st = stBy.get(hp.startup_id);
-      const review = await sellerReview(sb, hp, st, founderBy.get(hp.startup_id), (hp.review_checks ?? []) as string[]);
+      const review = await sellerReview(sb, { ...hp, __personName: fullName(uBy.get(hp.submitted_by)), __personTitle: uBy.get(hp.submitted_by)?.title }, st, founderBy.get(hp.startup_id), (hp.review_checks ?? []) as string[]);
       sellers.push({
         kind: "seller", id: hp.id, ref: hp.ref_no, name: st?.startup_name ?? hp.code_name ?? hp.ref_no,
         type: st?.sector ?? null, place: st?.city ?? null,
         person: fullName(uBy.get(hp.submitted_by)), submittedAt: hp.submitted_at,
+        decisionNote: hp.decision_note,
         sentBackAt: hp.approval_status === "changes_requested" ? hp.decided_at : null,
         chip: hp.approval_status === "changes_requested" ? "sent_back" : "waiting",
         suggestedName: hp.suggested_listing_name, suggestedHeadline: hp.suggested_headline,
@@ -120,6 +126,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
         kind: "buyer", id: p.user_id, ref: p.ref_no ?? "—", name: inv?.investor_name ?? "Investor profile",
         type: inv?.investor_type ?? null, place: [p.city, inv?.country ?? p.country].filter(Boolean).join(" · ") || null,
         person: fullName(uBy.get(p.user_id)), submittedAt: p.submitted_at,
+        decisionNote: p.decision_note,
         sentBackAt: p.approval_status === "changes_requested" ? p.decided_at : null,
         chip: p.approval_status === "changes_requested" ? "sent_back" : "waiting",
         suggestedName: p.suggested_listing_name, suggestedHeadline: p.suggested_headline,
@@ -134,6 +141,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
         kind: "advisor", id: f.id, ref: f.ref_no, name: f.name,
         type: f.firm_type ?? null, place: [f.city, f.country].filter(Boolean).join(" · ") || null,
         person: fullName(uBy.get(f.owner_user_id)), submittedAt: f.verification_requested_at,
+        decisionNote: f.more_info_note,
         sentBackAt: f.advisor_verification === "more_info" ? f.more_info_at : null,
         chip: f.advisor_verification === "more_info" ? "sent_back" : "waiting",
         suggestedName: f.suggested_listing_name, suggestedHeadline: f.suggested_headline,
@@ -141,8 +149,12 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
       });
     }
 
+    for (const queue of [sellers, buyers, advisors]) queue.sort((a, b) => Number(a.chip === "sent_back") - Number(b.chip === "sent_back") || (a.submittedAt ?? "").localeCompare(b.submittedAt ?? ""));
     const { data: history } = await sb.from("approval_events").select("*").order("created_at", { ascending: false }).limit(500);
-    return { sellers, buyers, advisors, history: history ?? [], me: context.userId };
+    const actorIds = [...new Set((history ?? []).map((h: any) => h.actor_id).filter(Boolean))];
+    const { data: actors } = actorIds.length ? await sb.from("users").select("id, first_name, last_name, email").in("id", actorIds) : { data: [] };
+    const actorNames = Object.fromEntries((actors ?? []).map((u: any) => [u.id, fullName(u)]));
+    return { sellers, buyers, advisors, history: (history ?? []).map((h: any) => ({ ...h, actor_name: actorNames[h.actor_id], subject_name: [...sellers, ...buyers, ...advisors].find(i => i.id === h.item_id)?.name ?? h.item_id })), me: context.userId };
   });
 
 /* ================================================================ decide */
@@ -187,7 +199,7 @@ export const decideOneStep = createServerFn({ method: "POST" })
         const { error } = await sb.from("buyer_profiles").update({
           approval_status: "approved", status: "live", live_since: p.live_since ?? now,
           decided_at: now, decided_by: context.userId, decision_note: null, decision_reasons: [],
-          published_listing_name: data.publishedName!.trim(), published_headline: data.publishedHeadline!.trim(), updated_at: now,
+          published_listing_name: (data.publishedName ?? "").trim(), published_headline: (data.publishedHeadline ?? "").trim(), updated_at: now,
         }).eq("user_id", p.user_id);
         if (error) throw new Error(error.message);
         // The verification moves with the profile, in the same decision.
@@ -201,15 +213,15 @@ export const decideOneStep = createServerFn({ method: "POST" })
         await resetApprovalNotice(sb, p.user_id, "buyer_profile", p.user_id, now);
         await logEvent({ item_type: "buyer_profile", item_id: p.user_id, subject_user_id: p.user_id, action: "approve", actor_id: context.userId, note: null, reasons: [],
           ...(await dbdStamp(p.investor_id ? (await sb.from("investors").select("registration_no").eq("id", p.investor_id).maybeSingle()).data?.registration_no : null)) });
-        await notify(p.user_id, "Your profile is approved", "Sellers can now find you in Browse investors, and you can sign NDAs.", "/marketplace/my-company");
+        await notify(p.user_id, "Your profile is approved", `Sellers can now find your firm as ${data.publishedName} (${p.ref_no}) in Browse investors, and you can request NDAs.`, "/marketplace/my-company");
         const { sendAlert } = await import("./email-alerts.server");
         const { bandText } = await import("@/lib/investor-bands");
         const { data: inv } = p.investor_id ? await sb.from("investors").select("ticket_band").eq("id", p.investor_id).maybeSingle() : { data: null };
-        const rewrote = (p.suggested_listing_name ?? "").trim() !== data.publishedName!.trim() || (p.suggested_headline ?? "").trim() !== data.publishedHeadline!.trim();
+        const rewrote = (p.suggested_listing_name ?? "").trim() !== (data.publishedName ?? "").trim() || (p.suggested_headline ?? "").trim() !== (data.publishedHeadline ?? "").trim();
         await sendAlert({
           alert: "approved", role: "buyer", userIds: [p.user_id],
-          vars: { "listing name": data.publishedName!, ref: p.ref_no ?? "", rewrote: rewrote ? " PitchSnack rewrote your listing name and headline." : "" },
-          details: [["Listing name", data.publishedName!], ["Headline", data.publishedHeadline!], ["Verified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })], ["Ticket size", bandText(inv?.ticket_band) ?? "—"]],
+          vars: { "listing name": (data.publishedName ?? ""), ref: p.ref_no ?? "", rewrote: rewrote ? " PitchSnack rewrote your listing name and headline." : "" },
+          details: [["Listing name", (data.publishedName ?? "")], ["Headline", (data.publishedHeadline ?? "")], ["Verified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })], ["Ticket size", bandText(inv?.ticket_band) ?? "—"]],
           refKey: `buyer_profile:${p.user_id}:approved:${now}`,
         });
         return { ok: true };
@@ -252,11 +264,11 @@ export const decideOneStep = createServerFn({ method: "POST" })
         const { data: sub } = await sb.from("listing_submissions").select("snapshot").eq("hidden_profile_id", hp.id).eq("version", hp.version).maybeSingle();
         const cover = hp.pending_cover ?? hp.cover_image_url ?? null;
         const { pickDraft } = await import("@/lib/hidden-profile");
-        const pub = { ...pickDraft(hp), code_name: data.publishedName!.trim(), headline: data.publishedHeadline!.trim(), cover_image_url: cover };
+        const pub = { ...pickDraft(hp), code_name: (data.publishedName ?? "").trim(), headline: (data.publishedHeadline ?? "").trim(), cover_image_url: cover };
         const { error } = await sb.from("hidden_profiles").update({
           approval_status: "live", status: "live", live: pub,
           live_snapshot: sub?.snapshot ? { ...sub.snapshot, public: pub } : null,
-          code_name: data.publishedName!.trim(), published_headline: data.publishedHeadline!.trim(),
+          code_name: (data.publishedName ?? "").trim(), published_headline: (data.publishedHeadline ?? "").trim(),
           cover_image_url: cover, decided_at: now, decision_note: null, decision_reasons: [], decision_fields: [],
           has_unpublished_changes: false, published_at: hp.live && hp.published_at ? hp.published_at : now, published_by: context.userId,
         }).eq("id", hp.id);
@@ -268,12 +280,12 @@ export const decideOneStep = createServerFn({ method: "POST" })
         await resetApprovalNotice(sb, hp.submitted_by, "listing", hp.id, now);
         await logEvent({ item_type: "listing", item_id: hp.id, startup_id: hp.startup_id, subject_user_id: hp.submitted_by, version: hp.version, action: "approve", actor_id: context.userId,
           ...(await dbdStamp(hp.startup_id ? (await sb.from("startups").select("registered_number").eq("id", hp.startup_id).maybeSingle()).data?.registered_number : null)) });
-        await notify(hp.submitted_by, "Your listing is approved", "Buyers can now find it in Browse listings, and you can connect with buyers.", "/my-startups");
+        await notify(hp.submitted_by, "Your listing is approved", `Buyers can now find it as ${data.publishedName} (${hp.ref_no}) in Browse listings, and you can connect with buyers.`, "/my-startups");
         const { sendAlert, sellerTeam } = await import("./email-alerts.server");
         await sendAlert({
           alert: "approved", role: "seller", userIds: [hp.submitted_by, ...(await sellerTeam(hp.startup_id))],
-          vars: { "listing name": data.publishedName!, ref: hp.ref_no ?? "", "listing code name": data.publishedName! },
-          details: [["Listing name", data.publishedName!], ["Headline", data.publishedHeadline!], ["Certified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })], ["Asking price", hp.asking_price_band ?? "—"]],
+          vars: { "listing name": (data.publishedName ?? ""), ref: hp.ref_no ?? "", "listing code name": (data.publishedName ?? ""), rewrote: (hp.suggested_listing_name ?? "").trim() !== (data.publishedName ?? "").trim() || (hp.suggested_headline ?? "").trim() !== (data.publishedHeadline ?? "").trim() ? " PitchSnack rewrote your listing name and headline." : "" },
+          details: [["Listing name", (data.publishedName ?? "")], ["Headline", (data.publishedHeadline ?? "")], ["Certified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })], ["Asking price", hp.asking_price_band ?? "—"]],
           refKey: `listing:${hp.id}:v${hp.version}:approved`,
         });
         return { ok: true };
@@ -312,19 +324,19 @@ export const decideOneStep = createServerFn({ method: "POST" })
         advisor_verification: "verified", verification_reason: null, verified_at: now, verified_by: context.userId,
         assigned_admin_id: null, more_info_note: null, more_info_fields: [], review_checklist: [],
         status: "live", live_since: f.live_since ?? now,
-        published_listing_name: data.publishedName!.trim(), published_headline: data.publishedHeadline!.trim(),
+        published_listing_name: (data.publishedName ?? "").trim(), published_headline: (data.publishedHeadline ?? "").trim(),
         updated_at: now,
       }).eq("id", f.id);
       if (error) throw new Error(error.message);
       await resetApprovalNotice(sb, f.owner_user_id, "advisor", f.id, now);
       await logEvent({ item_type: "advisor", item_id: f.id, subject_user_id: f.owner_user_id, action: "approve", actor_id: context.userId, ...(await dbdStamp(f.registration_no)) });
-      await notify(f.owner_user_id, "Your profile is approved", "Sellers and buyers can now find you in Browse advisors.", "/marketplace/my-company");
+      await notify(f.owner_user_id, "Your profile is approved", `Sellers and buyers can now find ${data.publishedName} in Browse advisors.`, "/marketplace/my-company");
       if (f.owner_user_id) {
         const { sendAlert } = await import("./email-alerts.server");
         await sendAlert({
           alert: "approved", role: "advisor", userIds: [f.owner_user_id],
-          vars: { firm: f.name, "listing name": data.publishedName! },
-          details: [["Listing name", data.publishedName!], ["Headline", data.publishedHeadline!], ["Verified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })]],
+          vars: { firm: f.name, "listing name": (data.publishedName ?? ""), ref: f.ref_no, rewrote: (f.suggested_listing_name ?? "").trim() !== (data.publishedName ?? "").trim() || (f.suggested_headline ?? "").trim() !== (data.publishedHeadline ?? "").trim() ? " PitchSnack rewrote your listing name and headline." : "" },
+          details: [["Listing name", (data.publishedName ?? "")], ["Headline", (data.publishedHeadline ?? "")], ["Verified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })]],
           refKey: `advisor:${f.id}:approved:${now}`,
         });
       }
@@ -355,7 +367,7 @@ export const decideOneStep = createServerFn({ method: "POST" })
 
 export const markReviewCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ kind: z.enum(["seller", "buyer", "advisor"]), id: z.string().uuid(), row: z.string().max(40) }).parse(d))
+  .inputValidator((d) => z.object({ kind: z.enum(["seller", "buyer", "advisor"]), id: z.string().uuid(), row: z.enum(["name", "address", "year", "director", "revenue"]) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as Ctx);
     const sb = await admin();

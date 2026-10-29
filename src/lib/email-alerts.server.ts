@@ -21,10 +21,13 @@ export type SendAlertInput = {
 export function buildAlert(alert: string, role: AlertRole, lang: AlertLang, ov: AlertOverrides | undefined, vars: Record<string, any>, details?: [string, string][], quote?: string | null) {
   const def = ALERT_BY_KEY[alert];
   const t = alertText(def, role, lang, ov);
-  const ver = def[role] ?? def[rolesOf(def)[0]!]!;
+  const fallback = rolesOf(def)[0];
+  const ver = def[role] ?? (fallback ? def[fallback] : undefined);
+  if (!ver) throw new Error("Alert role is unavailable");
+  const localVars = { ...vars, ...(lang === "th" && vars.rewrote ? { rewrote: " PitchSnack ได้ปรับชื่อประกาศและพาดหัวของท่าน" } : {}) };
   return {
     role, lang,
-    subject: fill(t.subject, vars), title: fill(t.title, vars), body: fill(t.body, vars),
+    subject: fill(t.subject, vars), title: fill(t.title, vars), body: fill(t.body, localVars),
     button: t.button, place: ver.place, url: SITE + (vars.pipeline ? (alert==='deal_withdrawn'?`/marketplace/pipeline/history?deal=${encodeURIComponent(vars.pipeline)}`:alert==='nda_declined'?`/marketplace/pipeline/invitations?open=${encodeURIComponent(vars.pipeline)}`:`/marketplace/pipeline/all-deals?deal=${encodeURIComponent(vars.pipeline)}`) : fill(ver.path, Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, encodeURIComponent(String(v))])))), color: def.color,
     details, quote: quote ? quote.slice(0, 300) : undefined,
   };

@@ -1,3 +1,4 @@
+import { TH_APPROVAL } from "./th-approval";
 import { TH_WIZARDS } from "./th-wizards";
 import { TH_ADVISORS } from "./th-advisors";
 
@@ -603,9 +604,9 @@ export const TH: Record<string, string> = { ...TH_ADVISORS, ...TH_WIZARDS, ...TH
   "Find investors looking for businesses like yours.": "ค้นหาผู้ลงทุนที่มองหากิจการแบบของท่าน",
   "Find businesses for sale across Thailand.": "ค้นหากิจการที่ประกาศขายทั่วประเทศไทย",
   "See the sellers and buyers on PitchSnack.": "ดูผู้ขายและผู้ซื้อบน PitchSnack",
-  "Add buyers to your watchlist": "เพิ่มผู้ซื้อลงในรายการเฝ้าดู",
-  "Add listings to your watchlist": "เพิ่มประกาศลงในรายการเฝ้าดู",
-  "Add companies to your watchlist": "เพิ่มบริษัทลงในรายการเฝ้าดู",
+  "Add buyers to your watchlist": "เพิ่มผู้ซื้อลงในรายการที่ติดตาม",
+  "Add listings to your watchlist": "เพิ่มประกาศลงในรายการที่ติดตาม",
+  "Add companies to your watchlist": "เพิ่มบริษัทลงในรายการที่ติดตาม",
   "Save the ones you like and come back to them.": "บันทึกรายการที่สนใจและกลับมาดูภายหลัง",
   "Contact investors": "ติดต่อผู้ลงทุน",
   "Contact sellers": "ติดต่อผู้ขาย",
@@ -711,4 +712,5 @@ export const TH: Record<string, string> = { ...TH_ADVISORS, ...TH_WIZARDS, ...TH
   "Not shown publicly": "ไม่แสดงต่อสาธารณะ",
   "Verified with the Department of Business Development": "ตรวจสอบกับกรมพัฒนาธุรกิจการค้าแล้ว",
   "PitchSnack checks this with the Department of Business Development": "PitchSnack จะตรวจสอบกับกรมพัฒนาธุรกิจการค้า",
+  ...TH_APPROVAL,
 };
