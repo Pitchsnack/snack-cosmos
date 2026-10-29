@@ -70,7 +70,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
       : { data: [] };
     const stBy = new Map<string, any>((sts ?? []).map((s: any) => [s.id, s]));
     const { data: founders } = stIds.length
-      ? await sb.from("startup_founders").select("startup_id, full_name, role_title, bio, bio_story").in("startup_id", stIds).order("created_at", { ascending: true })
+      ? await sb.from("startup_founders").select("startup_id, full_name, position, bio, bio_story").in("startup_id", stIds).order("created_at", { ascending: true })
       : { data: [] };
     const founderBy = new Map<string, any>();
     for (const f of founders ?? []) if (!founderBy.has(f.startup_id)) founderBy.set(f.startup_id, f);

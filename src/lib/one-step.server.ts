@@ -267,7 +267,7 @@ export async function sellerReview(sb: any, hp: any, st: any, founder: any, chec
       { label: "Address", value: st?.business_address ?? "", note: "PitchSnack checks your registered address." },
       { label: "Year founded", value: st?.year_founded ? String(st.year_founded) : "", note: null },
       { label: `Revenue in ${year}`, value: st?.last_year_revenue ?? "", note: "Checked against the accounts your company filed." },
-      { label: "Owner", value: founder ? [founder.full_name, founder.role_title].filter(Boolean).join(" · ") : "", note: "Checked against your company's list of directors." },
+      { label: "Owner", value: founder ? [founder.full_name, founder.position].filter(Boolean).join(" · ") : "", note: "Checked against your company's list of directors." },
       { label: "About the owner", value: founder?.bio ?? "", note: "PitchSnack checks the year founded and the sales against your company's records." },
       { label: "Website", value: st?.website_url ?? "", note: "PitchSnack checks that the link opens." },
       { label: "Email address", value: st?.email ?? "", note: "PitchSnack checks for corporate email." },
@@ -297,7 +297,7 @@ export async function sellerReview(sb: any, hp: any, st: any, founder: any, chec
       ],
       realName: st?.startup_name ?? null, website: st?.website_url ?? null, address: st?.business_address ?? null,
       founded: st?.year_founded ? String(st.year_founded) : null,
-      contact: founder ? [founder.full_name, founder.role_title].filter(Boolean).join(" · ") : null,
+      contact: founder ? [founder.full_name, founder.position].filter(Boolean).join(" · ") : null,
       sector: st?.sector ?? null, city: st?.city ?? null,
     },
   };

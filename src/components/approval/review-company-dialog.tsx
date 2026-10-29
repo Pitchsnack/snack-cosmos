@@ -28,7 +28,7 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
   /** Red "Before you register: …" failures from the last submit attempt. */
   failures: string[];
   submitting?: boolean;
-  onEdit: () => void;
+  onEdit: (section?: "description" | "company") => void;
   onSubmit: () => void;
   onClose: () => void;
 }) {
@@ -54,7 +54,7 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
             <div className="ap-dbh">
               <span className="ap-stepn" aria-hidden>1</span>
               <span className="ap-cap">{t("Listing name and headline")} · {t("your suggestion")}</span>
-              <button type="button" onClick={onEdit}>{t("Edit")}</button>
+              <button type="button" onClick={() => onEdit("description")}>{t("Edit")}</button>
             </div>
             <div className="ap-rows">
               <div className="ap-rw"><span>{t("Listing name")}</span><span>{data?.suggestedName?.trim() || t("Not added")}</span></div>
@@ -74,11 +74,11 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
             <div className="ap-dbh">
               <span className="ap-stepn" aria-hidden>2</span>
               <span className="ap-cap">{t("Listing view")} · {seeLabel}</span>
-              <button type="button" onClick={onEdit}>{t("Edit")}</button>
+              <button type="button" onClick={() => onEdit("description")}>{t("Edit")}</button>
             </div>
             <div className="ap-rows">
               {(data?.listingRows ?? []).map(([l, v]) => (
-                <div className="ap-rw" key={l}><span>{l}</span><span>{v || t("Not added")}</span></div>
+                <div className="ap-rw" key={l}><span>{t(l)}</span><span>{v || t("Not added")}</span></div>
               ))}
               {data?.identityApplies && (
                 <div className="ap-rw">
@@ -103,15 +103,15 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
                 {role === "advisor" ? <ShieldCheck className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
                 {role === "advisor" ? t("What PitchSnack checks") : <>{t("Exclusive view")} · {t("what PitchSnack checks")}</>}
               </span>
-              <button type="button" onClick={onEdit}>{t("Edit")}</button>
+              <button type="button" onClick={() => onEdit("company")}>{t("Edit")}</button>
             </div>
             <div className="ap-rows">
               {(data?.exclusiveRows ?? []).map((r) => (
                 <div className="ap-rw" key={r.label}>
-                  <span>{r.label}</span>
+                  <span>{t(r.label)}</span>
                   <span>
                     {r.value?.trim() || t("Not added")}
-                    {r.note && <span className="ap-sm">{r.note}</span>}
+                    {r.note && <span className="ap-sm">{t(r.note)}</span>}
                   </span>
                 </div>
               ))}
@@ -126,7 +126,7 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
             <span>{decl}</span>
           </label>
           <div className="ap-btnrow">
-            <button type="button" className="ap-btn ap-line" onClick={onEdit}><Pencil className="h-4 w-4" />{t("Back to edit")}</button>
+            <button type="button" className="ap-btn ap-line" onClick={() => onEdit("description")}><Pencil className="h-4 w-4" />{t("Back to edit")}</button>
             <button type="button" className="ap-btn ap-navy" disabled={!tick || submitting} onClick={onSubmit}>
               <Send className="h-4 w-4" />{t("Register your company")}
             </button>

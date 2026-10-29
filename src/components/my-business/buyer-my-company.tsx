@@ -1,3 +1,5 @@
+import { revenueBandLabel } from "@/lib/revenue-bands";
+import { useTranslation } from "@/i18n/language";
 import { useManagedIds } from "@/hooks/use-managed-ids";
 import { OwnerHandoverBox } from "@/components/handover/owner-check";
 import { useEffect, useRef, useState } from "react";
@@ -463,6 +465,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
     onSuccess: (d: any, s) => { toast.success(d?.submitted ? "Sent to Admin for review. You'll be notified when it's approved." : s === "live" ? "Live again in Browse investors." : "Paused. Sellers can't find you in Browse investors."); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
+  const { t } = useTranslation();
   const appr = (p as any).approval_status as string | undefined;
   const tone = typeTone(org.type);
   const { iv, inv, props } = useOwnCard(p, org);
@@ -474,7 +477,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const prog = buyerProgressFor(rel, iv);
   const setupDone = !!iv?.setup_done_at;
   const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
-  const leaks = descriptionLeaks(p.description ?? "", org.name ?? "", org.website ?? "");
+  const leaks = descriptionLeaks([(p as any).suggested_listing_name, (p as any).suggested_headline, p.description].filter(Boolean).join("\n"), org.name ?? "", org.website ?? "");
   const since = p.status === "live" && p.live_since ? `Live since ${fmtDate(p.live_since)}` : p.status === "paused" ? `Paused since ${fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}` : "Not published yet";
   // One-step approval: Register your company opens the review pop-up.
   const registerFn = useServerFn(registerBuyerCompany);
@@ -487,33 +490,33 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
     onSuccess: () => { setReviewOpen(false); setFailures([]); setSentOpen(true); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
     onError: (e: Error) => setFailures([e.message]),
   });
-  const state = p.status === "live" ? "live" : p.status === "paused" ? "paused" : appr === "in_review" ? "pending" : appr === "changes_requested" ? "changes" : appr === "declined" ? "declined" : "draft";
+  const state = appr === "in_review" ? "pending" : appr === "changes_requested" ? "changes" : appr === "declined" ? "declined" : p.status === "live" ? "live" : p.status === "paused" ? "paused" : "draft";
   // Review your company data pop-up: what sellers see + what PitchSnack checks.
   const invRow = inv.data?.investor as any;
   const reviewData: ReviewCompanyData = {
     suggestedName: (p as any).suggested_listing_name ?? null,
     suggestedHeadline: (p as any).suggested_headline ?? null,
     listingRows: [
-      ["Type", org.type || ""],
-      ["Industries", Array.isArray(invRow?.industries) ? invRow.industries.join(", ") : ""],
-      ["Ticket size", invRow?.ticket_min != null || invRow?.ticket_max != null ? `฿${Number(invRow?.ticket_min ?? 0).toLocaleString()} – ฿${Number(invRow?.ticket_max ?? 0).toLocaleString()}` : ""],
-      ["Country", invRow?.country ?? ""],
-      ["Headline", (p as any).suggested_headline ?? ""],
-      ["Description", (p.description ?? "").slice(0, 400)],
-    ],
-    identityWords: leaks,
-    identityApplies: true,
+      ["Reference", [p.ref_no, org.type, invRow?.country ?? p.country].filter(Boolean).join(" · ")],
+      ["Ticket size", bandText(invRow?.ticket_band) ?? ""], ["AUM", bandText(invRow?.aum_band) ?? ""],
+      ["Min. target revenue", bandText(invRow?.revenue_min_band) ?? ""],
+      ["Investment Focus", (invRow?.investment_focus ?? []).join(" · ")], ["Geography", p.geography ?? ""],
+      ["Industries", (invRow?.preferred_industries ?? p.sectors ?? []).join(" · ")], ["Public description", p.description ?? ""],
+    ], identityWords: leaks, identityApplies: true,
     exclusiveRows: [
-      { label: "Firm name", value: org.name ?? "", note: null },
-      { label: "Company type", value: org.type ?? "", note: null },
-      { label: "Registration Number", value: invRow?.registration_no ?? "", note: null },
-      { label: "Registered address", value: [invRow?.city, invRow?.country].filter(Boolean).join(", "), note: null },
-      { label: "Year founded", value: invRow?.year_founded != null ? String(invRow.year_founded) : "", note: null },
-      { label: "Revenue", value: (p as any).revenue_band ?? "", note: null },
-      { label: "Your name", value: invRow?.investor_name ?? "", note: "Not shown publicly" },
-      { label: "Website", value: org.website ?? "", note: "Not shown publicly" },
-      { label: "Email", value: invRow?.email ?? "", note: "Not shown publicly" },
-      { label: "Contact number", value: (p as any).contact_number ?? "", note: "Not shown publicly" },
+      ...(rel === "individual" ? [{ label: "Your name", value: inv.data?.account.name ?? "", note: "PitchSnack checks your name and address against your ID." }] : [
+        { label: "Firm name", value: org.name ?? "", note: "PitchSnack checks your registration." },
+        { label: "Registration number", value: invRow?.registration_no ?? "", note: null },
+      ]),
+      { label: "Address", value: invRow?.business_address || [invRow?.address_line1,invRow?.address_line2,invRow?.address_city_district,invRow?.address_province_state,invRow?.postal_code].filter(Boolean).join(", "), note: rel === "individual" ? null : "PitchSnack checks your registered address." },
+      ...(rel === "individual" ? [] : [
+        { label: "Year founded", value: invRow?.year_founded ? String(invRow.year_founded) : "", note: null },
+        { label: `Revenue in ${new Date().getFullYear()-1}`, value: revenueBandLabel((p as any).revenue_band) ?? "", note: "Checked against the accounts your company filed." },
+        { label: "Your name", value: [inv.data?.account.name, inv.data?.account.title].filter(Boolean).join(" · "), note: "Checked against your company's list of directors." },
+      ]),
+      ...(rel !== "individual" || org.website ? [{ label: "Website", value: org.website ?? "", note: "PitchSnack checks that the link opens." }] : []),
+      { label: "Email address", value: invRow?.email ?? "", note: "PitchSnack checks for corporate email." },
+      { label: "Contact number", value: (p as any).contact_number ?? "", note: "Your email and phone number are kept private and are never shared with other users." },
     ],
   };
   return (
@@ -561,7 +564,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
             : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />Register your company</Button>}
       </div>
       <ReviewCompanyDialog open={reviewOpen} role="buyer" data={reviewData} failures={failures} submitting={reg.isPending}
-        onEdit={() => { setReviewOpen(false); openProfileEdit({ section: "description", from: "public" }); }}
+        onEdit={(section) => { setReviewOpen(false); openProfileEdit({ section: section === "company" ? "company" : "description", from: section === "company" ? "private" : "public" }); }}
         onSubmit={() => reg.mutate()} onClose={() => setReviewOpen(false)} />
       <SentForApprovalDialog open={sentOpen} role="buyer" onClose={() => setSentOpen(false)} />
       <WithdrawDialog open={withdrawOpen} role="buyer" busy={listing.isPending} onClose={() => setWithdrawOpen(false)}

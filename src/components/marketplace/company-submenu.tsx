@@ -18,9 +18,9 @@ export function CompanySubmenu({ collapsed = false }: { collapsed?: boolean }) {
     heading={th ? t('My Company') : 'MY COMPANY'} icon={Building2}
     groupLabel={th ? 'หน้าบริษัทของฉัน' : 'My Company pages'}
     destination={destination} active={company || profile} collapsed={collapsed} company
-    focusSelector="main h1" badge={badge} railBadge={badge}
+    focusSelector="main h1" badge={persona === "buyer" ? undefined : badge} railBadge={badge}
     items={[
-      { to: destination, label: th ? 'โปรไฟล์บริษัท' : 'Company profile', current: company },
+      { to: destination, label: th ? 'โปรไฟล์บริษัท' : 'Company profile', current: company, suffix: persona === "buyer" ? badge : undefined },
       { to: '/my-page', label: t('My Profile'), current: profile },
     ]} />;
 }

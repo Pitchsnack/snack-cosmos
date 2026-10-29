@@ -353,22 +353,20 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
     suggestedName: f.suggestedListingName ?? null,
     suggestedHeadline: f.suggestedHeadline ?? null,
     listingRows: [
-      ["Firm type", f.firmType || ""],
-      ["Services", f.services.join(", ")],
-      ["Sectors", f.sectorAgnostic ? "Sector agnostic" : f.sectors.join(", ")],
-      ["Headline", f.suggestedHeadline ?? ""],
-      ["Description", (f.description ?? "").slice(0, 400)],
-    ],
-    identityWords: descriptionLeaks(`${f.suggestedListingName ?? ""} ${f.suggestedHeadline ?? ""} ${f.description ?? ""}`, f.name ?? "", f.website ?? ""),
-    identityApplies: true,
+      ["Reference", [f.refNo,f.firmType,f.city ?? f.country].filter(Boolean).join(" · ")],
+      ["Firm type", f.firmType || ""], ["Team size", f.teamSize ? String(f.teamSize) : ""],
+      ["Typical deal size", dealBandLabels(f.dealBand)?.thb ?? ""],
+      ["Services", f.services.join(" · ")], ["Languages", f.languages.join(" · ")], ["Description", f.description ?? ""],
+    ], identityWords: [], identityApplies: false,
     exclusiveRows: [
-      { label: "Firm name", value: f.name ?? "", note: null },
-      { label: "Registration Number", value: f.registrationNo ?? "", note: null },
-      { label: "Registered address", value: fullAddress(f), note: null },
-      { label: "Year founded", value: f.yearFounded != null ? String(f.yearFounded) : "", note: null },
-      { label: "Website", value: f.website ?? "", note: "Not shown publicly" },
-      { label: "Email", value: f.email ?? "", note: "Not shown publicly" },
-      { label: "Contact number", value: f.phone ?? "", note: "Not shown publicly" },
+      { label: "Firm name", value: f.name ?? "", note: "PitchSnack checks your registration." },
+      { label: "Registration no.", value: f.registrationNo ?? "", note: null },
+      { label: "Address", value: fullAddress(f), note: "PitchSnack checks your registered address." },
+      { label: "Year founded", value: f.yearFounded ? String(f.yearFounded) : "", note: null },
+      { label: "Your name", value: f.team?.[0]?.name ?? "", note: "Checked against your firm's list of directors." },
+      { label: "Website", value: f.website ?? "", note: "PitchSnack checks that the link opens." },
+      { label: "Email", value: f.email ?? "", note: "PitchSnack checks for corporate email." },
+      { label: "Phone", value: f.phone ?? "", note: "Sellers and buyers see your website, email and phone on your profile." },
     ],
   };
   const checklist = firmChecklist(f);
@@ -570,7 +568,6 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
             <span>Live in Browse advisors since {fmtDate(f.liveSince)}{views != null && ` · ${views} profile ${views === 1 ? "view" : "views"} this week`}</span>
             <span className="flex flex-col items-end gap-1">
               <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)}>Remove your company profile from listing</Button>
-              <span className="text-[12.5px] text-muted-foreground">Your profile becomes private, and new sellers and buyers can't contact you.</span>
             </span>
           </>
         ) : f.verification?.state === "pending" ? (
@@ -600,7 +597,7 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
       <AddressDialog f={f} open={addrOpen} onOpenChange={(o) => { setAddrOpen(o); if (!o) setTimeout(() => addrBtn.current?.focus(), 0); }} />
       {!client && <>
         <ReviewCompanyDialog open={reviewOpen} role="advisor" data={reviewData} failures={failures} submitting={reg.isPending}
-          onEdit={() => { setReviewOpen(false); edit("firm"); }} onSubmit={() => reg.mutate()} onClose={() => setReviewOpen(false)} />
+          onEdit={(section) => { setReviewOpen(false); edit("firm"); }} onSubmit={() => reg.mutate()} onClose={() => setReviewOpen(false)} />
         <SentForApprovalDialog open={sentOpen} role="advisor" onClose={() => setSentOpen(false)} />
         <WithdrawDialog open={withdrawOpen} role="advisor" busy={busy} onClose={() => setWithdrawOpen(false)}
           onConfirm={() => { setWithdrawOpen(false); void changeStatus("paused"); }} />
