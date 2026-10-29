@@ -1,3 +1,4 @@
+import { useApplicationsToCheck } from "@/components/businesses-wanted/bw-applications";
 import { adminHelpCount } from "@/lib/admin-help.functions";
 import { useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
@@ -77,7 +78,10 @@ export function PipelineCountBadge({ collapsed = false }: { collapsed?: boolean 
   const { persona } = usePersona();
   const fn = useServerFn(pipelineBadgeCount);
   // Own light count query; cached 60s, refreshed on focus and whenever ["pipeline"] is invalidated.
-  const { data: n } = useQuery({ queryKey: ["pipeline", "count", persona], queryFn: () => fn({ data: { as: persona } }), staleTime: 60_000, refetchOnWindowFocus: true });
+  const { data: base } = useQuery({ queryKey: ["pipeline", "count", persona], queryFn: () => fn({ data: { as: persona } }), staleTime: 60_000, refetchOnWindowFocus: true });
+  // Businesses Wanted applications waiting on a buyer (or PitchSnack Control) add to the count.
+  const apps = useApplicationsToCheck(persona === "buyer");
+  const n = (base ?? 0) + (persona === "buyer" ? apps : 0);
   if (!n) return null;
   return <CountPill count={n} collapsed={collapsed} />;
 }
