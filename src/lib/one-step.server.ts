@@ -1,10 +1,8 @@
 /**
  * One-step approval (server-only): queue + review assembly for Admin ›
  * Approvals, shared by sellers, buyers and advisors. DBD comparison data comes
- * from the imported company_info_th / company_director_th tables (sellers) or a
- * live DBD lookup by registration number (buyers, advisors). Revenue filed with
- * DBD is not part of the imported data, so the Revenue row is "by hand" unless
- * a filed amount is available.
+ * from the shared registration-keyed store only. Missing stored facts are
+ * checked by hand; opening the review never extracts DBD data.
  */
 
 export type OneStepKind = "seller" | "buyer" | "advisor";
@@ -32,6 +30,8 @@ export type OneStepReview = {
   verification: ReviewRow[];
   email: string | null;
   phone: string | null;
+  personName?: string | null;
+  personTitle?: string | null;
   directory: string;
   directoryId: string | null;
   card: {
@@ -49,6 +49,7 @@ export type OneStepItem = {
   type: string | null;
   place: string | null;
   person: string | null;
+  decisionNote?: string | null;
   submittedAt: string | null;
   sentBackAt: string | null;
   chip: "waiting" | "sent_back";
@@ -67,35 +68,59 @@ import { handoverLine } from "@/lib/hidden-profile";
 import { PRICE_BANDS, bandOf, thbOf } from "@/lib/asking-price";
 
 /** The stored band key as the buyer-facing range text, or the amount's own range. */
-const priceLabel = (hp: any) =>
+export const priceLabel = (hp: any) =>
   (PRICE_BANDS.find((b) => b.key === hp?.asking_price_band) ?? bandOf(thbOf(hp)))?.label ?? null;
 
 /** Case/punctuation/space-insensitive compare, Thai-aware. */
 export const normText = (s: string | null | undefined) =>
-  String(s ?? "").toLowerCase().replace(/[^a-z0-9฀-๿]+/g, " ").trim();
+  String(s ?? "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "").trim();
 
 const sameText = (a: string | null | undefined, b: string | null | undefined) => {
   const na = normText(a), nb = normText(b);
   return !!na && !!nb && na === nb;
 };
 
-export const waitingDays = (iso: string | null | undefined) =>
-  iso ? Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)) : 0;
+export const waitingDays = (iso: string | null | undefined) => {
+  const day = (date: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  if (!iso || !Number.isFinite(Date.parse(iso))) return 0;
+  return Math.max(0, Math.round((Date.parse(day(new Date())) - Date.parse(day(new Date(iso)))) / 86_400_000));
+};
 
-/** Server-side website check: the link opens when it answers under 400. */
+/** Only public HTTP(S) destinations are checked; each redirect is revalidated. */
+export function publicWebsite(value: string): URL | null {
+  try {
+    const u = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+    const host = u.hostname.toLowerCase().replace(/\.$/, "");
+    if (!['http:', 'https:'].includes(u.protocol) || u.username || u.password || (u.port && !['80','443'].includes(u.port))) return null;
+    if (!host.includes('.') || host.endsWith('.local') || host.endsWith('.internal') || host.endsWith('.localhost') || host.endsWith('.test') || host.includes(':') || /^[\d.]+$/.test(host)) return null;
+    return u;
+  } catch { return null; }
+}
 export async function checkWebsite(url: string | null | undefined): Promise<"works" | "dead" | "none"> {
   if (!url?.trim()) return "none";
-  const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  let target = publicWebsite(url.trim());
+  if (!target) return "dead";
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 8_000);
   try {
-    const res = await fetch(href, { method: "GET", redirect: "follow", signal: ctrl.signal });
-    return res.status < 400 ? "works" : "dead";
-  } catch {
+    for (let hop = 0; hop < 6; hop++) {
+      // Resolve through public DNS before fetching, rejecting private/rebinding targets.
+      const dns = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(target.hostname)}&type=A`, { headers: { accept: "application/dns-json" }, signal: ctrl.signal });
+      const answer = await dns.json() as { Answer?: { type: number; data: string }[] };
+      const addresses = (answer.Answer ?? []).filter(a => a.type === 1).map(a => a.data);
+      if (!addresses.length || addresses.some(ip => /^(0\.|10\.|127\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|192\.0\.|198\.(1[89])\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|2[2-5]\d\.)/.test(ip))) return "dead";
+      const res = await fetch(target.href, { method: "GET", redirect: "manual", signal: ctrl.signal });
+      const location = res.headers.get("location");
+      void res.body?.cancel();
+      if (res.status >= 300 && res.status < 400 && location) {
+        target = publicWebsite(new URL(location, target).href);
+        if (!target) return "dead";
+        continue;
+      }
+      return res.status < 400 || res.status === 401 || res.status === 403 ? "works" : "dead";
+    }
     return "dead";
-  } finally {
-    clearTimeout(timer);
-  }
+  } catch { return "dead"; } finally { clearTimeout(timer); }
 }
 
 type DbdFacts = import("./dbd-store.server").DbdFacts & { manual?: boolean };
@@ -120,13 +145,14 @@ const yearOf = (iso: string | null | undefined) => {
 
 const fmtM = (m: number) => `฿${m >= 1000 ? `${(m / 1000).toFixed(m % 1000 ? 1 : 0)}B` : `${Math.round(m)}M`}`;
 
-function nameRow(label: string, from: string | null, dbd: DbdFacts | null, checked: boolean): ReviewRow {
+export function nameRow(label: string, from: string | null, dbd: DbdFacts | null, checked: boolean): ReviewRow {
   const found = dbd ? [dbd.nameEn, dbd.nameTh].filter(Boolean).join(" / ") || null : null;
+  const hasName = !!(dbd?.nameEn || dbd?.nameTh);
   const match = dbd && (sameText(from, dbd.nameEn) || sameText(from, dbd.nameTh));
   return {
     key: "name", label, from, found: found ?? "Check by hand", source: dbd ? (dbd.manual ? "Entered by hand" : "DBD register") : null,
-    result: !from ? "not_given" : !dbd ? "by_hand" : match ? "match" : "differs",
-    resultLabel: !from ? "Not given" : !dbd ? "By hand" : match ? "Matches" : "Differs",
+    result: !from ? "not_given" : !hasName ? "by_hand" : match ? "match" : "differs",
+    resultLabel: !from ? "Not given" : !hasName ? "By hand" : match ? "Matches" : "Differs",
     link: null, checked,
   };
 }
@@ -167,8 +193,13 @@ function directorRow(label: string, person: string | null, who: string, dbd: Dbd
   };
 }
 
-function revenueRow(bandKey: string | null, bandYear: string, storySales: string | null, dbd: DbdFacts | null, checked: boolean): ReviewRow {
-  const band = REVENUE_BANDS.find((b) => b[0] === bandKey);
+export function revenueRow(bandKey: string | null, bandYear: string, storySales: string | null, dbd: DbdFacts | null, checked: boolean): ReviewRow {
+  const sellerBands: [string, string, number, number][] = [
+    ["Below ฿50M", "Below ฿50M", 0, 50], ["฿50M – 100M", "฿50M – 100M", 50, 100],
+    ["฿100M – 250M", "฿100M – 250M", 100, 250], ["฿250M – 500M", "฿250M – 500M", 250, 500],
+    ["฿500M – 1B", "฿500M – 1B", 500, 1000], ["฿1B +", "฿1B +", 1000, Infinity],
+  ];
+  const band = [...REVENUE_BANDS, ...sellerBands].find((b) => b[0] === bandKey);
   const from = band ? `${band[1]} in ${bandYear}${storySales ? ` · the owner's story: ${storySales}` : ""}` : null;
   if (!band) {
     return { key: "revenue", label: "Revenue", from, found: "Check by hand", source: null, result: "not_given", resultLabel: "Not given", link: null, checked };
@@ -186,14 +217,14 @@ function revenueRow(bandKey: string | null, bandYear: string, storySales: string
   };
 }
 
-function websiteRow(url: string | null, status: "works" | "dead" | "none"): ReviewRow {
+export function websiteRow(url: string | null, status: "works" | "dead" | "none"): ReviewRow {
   return {
     key: "website", label: "Website", from: url,
-    found: status === "none" ? "Nothing to open" : "The link opens",
+    found: status === "none" ? "Nothing to open" : status === "works" ? "The link opens" : "The link doesn't open",
     source: status === "none" ? null : "Link check",
     result: status === "none" ? "not_given" : status === "works" ? "match" : "differs",
     resultLabel: status === "none" ? "Not given" : status === "works" ? "Works" : "Doesn't open",
-    link: status === "none" ? null : url, checked: false,
+    link: url ? publicWebsite(url)?.href ?? null : null, checked: false,
   };
 }
 
@@ -211,8 +242,8 @@ export async function sellerReview(sb: any, hp: any, st: any, founder: any, chec
   const web = await checkWebsite(st?.website_url);
   const has = (k: string) => checked.includes(k);
   const year = String(new Date().getFullYear() - 1);
-  const storyYear = founder?.bio_story?.year ?? null;
-  const storySales = founder?.bio_story?.sales ?? null;
+  const storyYear = founder?.bio_story?.parts?.year ?? null;
+  const storySales = founder?.bio_story?.parts?.sales ?? null;
   return {
     registrationNo: st?.registered_number ?? null,
     dbd: dbdState,
@@ -243,15 +274,16 @@ export async function sellerReview(sb: any, hp: any, st: any, founder: any, chec
       { label: "Contact number", value: st?.contact_number ?? "", note: "Your email and phone number are kept private and are never shared with other users." },
     ],
     verification: [
-      nameRow("Company name", st?.registered_name ?? st?.startup_name ?? null, dbd, has("name")),
+      nameRow("Company name", st?.startup_name ?? null, dbd, has("name")),
       addressRow(st?.business_address ?? null, dbd, has("address")),
       yearRow(st?.year_founded ? String(st.year_founded) : null, storyYear, dbd, has("year")),
       directorRow("Owner vs directors", founder?.full_name ?? null, "the owner in About Owner", dbd, has("director")),
-      revenueRow(null, year, storySales, dbd, has("revenue")),
+      revenueRow(st?.last_year_revenue ?? null, year, storySales, dbd, has("revenue")),
       websiteRow(st?.website_url ?? null, web),
     ],
     email: st?.email ?? null,
     phone: st?.contact_number ?? null,
+    personName: hp.__personName ?? null, personTitle: hp.__personTitle ?? null,
     directory: "Startups Directory",
     directoryId: hp.startup_id ?? null,
     card: {
@@ -289,7 +321,7 @@ export async function buyerReview(sb: any, p: any, inv: any, user: any, checked:
         byHandId("name", "Name", person, "No company record. Check it against their ID.", has("name")),
         byHandId("address", "Address", address, "Check it against their ID.", has("address")),
         notNeeded("year", "Year founded"), notNeeded("director", "Director vs user"), notNeeded("revenue", "Revenue"),
-        websiteRow(inv?.website_url ?? null, web),
+        { ...websiteRow(inv?.website_url ?? null, web), ...(web === "none" ? { result: "not_needed" as const, resultLabel: "Not needed" } : {}) },
       ]
     : [
         nameRow("Company name", inv?.investor_name ?? null, dbd, has("name")),
@@ -319,7 +351,7 @@ export async function buyerReview(sb: any, p: any, inv: any, user: any, checked:
       ? [
           { label: "Your name", value: person ?? "", note: "PitchSnack checks your name and address against your ID." },
           { label: "Address", value: address ?? "", note: null },
-          { label: "Website", value: inv?.website_url ?? "", note: "PitchSnack checks that the link opens." },
+          ...(inv?.website_url ? [{ label: "Website", value: inv.website_url, note: "PitchSnack checks that the link opens." }] : []),
           { label: "Email address", value: inv?.email ?? user?.email ?? "", note: "PitchSnack checks for corporate email." },
           { label: "Contact number", value: p.contact_number ?? "", note: "Your email and phone number are kept private and are never shared with other users." },
         ]
@@ -329,14 +361,15 @@ export async function buyerReview(sb: any, p: any, inv: any, user: any, checked:
           { label: "Address", value: address ?? "", note: "PitchSnack checks your registered address." },
           { label: "Year founded", value: inv?.year_founded ? String(inv.year_founded) : "", note: null },
           { label: `Revenue in ${year}`, value: revenueBandLabel(p.revenue_band) ?? "", note: "Checked against the accounts your company filed." },
-          { label: "Your name", value: [person, (Array.isArray(p.people) && p.people[0]?.role) || null].filter(Boolean).join(" · "), note: "Checked against your company's list of directors." },
+          { label: "Your name", value: [person, user?.title ?? null].filter(Boolean).join(" · "), note: "Checked against your company's list of directors." },
           { label: "Website", value: inv?.website_url ?? "", note: "PitchSnack checks that the link opens." },
           { label: "Email address", value: inv?.email ?? user?.email ?? "", note: "PitchSnack checks for corporate email." },
           { label: "Contact number", value: p.contact_number ?? "", note: "Your email and phone number are kept private and are never shared with other users." },
         ],
     verification,
     email: inv?.email ?? user?.email ?? null,
-    phone: p.contact_number ?? null,
+    phone: user?.phone ?? p.contact_number ?? null,
+    personName: person, personTitle: user?.title ?? null,
     directory: "Investors Directory",
     directoryId: p.investor_id ?? null,
     card: {
@@ -350,7 +383,7 @@ export async function buyerReview(sb: any, p: any, inv: any, user: any, checked:
       ],
       realName: inv?.investor_name ?? null, website: inv?.website_url ?? null, address,
       founded: inv?.year_founded ? String(inv.year_founded) : null,
-      contact: person, sector: null, city: p.city ?? null,
+      contact: [person, user?.title].filter(Boolean).join(" · ") || null, sector: null, city: p.city ?? null,
     },
   };
 }
@@ -380,7 +413,7 @@ export async function advisorReview(sb: any, f: any, owner: any, checked: string
     identityWords: [],
     identityApplies: false,
     exclusiveRows: [
-      { label: "Firm name", value: f.legal_name ?? f.name ?? "", note: "PitchSnack checks your registration." },
+      { label: "Firm name", value: f.name ?? "", note: "PitchSnack checks your registration." },
       { label: "Registration no.", value: f.registration_no ?? "", note: null },
       { label: "Address", value: address ?? "", note: "PitchSnack checks your registered address." },
       { label: "Year founded", value: f.year_founded ? String(f.year_founded) : "", note: null },
@@ -390,14 +423,15 @@ export async function advisorReview(sb: any, f: any, owner: any, checked: string
       { label: "Phone", value: f.phone ?? "", note: "Sellers and buyers see your website, email and phone on your profile." },
     ],
     verification: [
-      nameRow("Company name", f.legal_name ?? f.name ?? null, dbd, has("name")),
+      nameRow("Company name", f.name ?? null, dbd, has("name")),
       addressRow(address, dbd, has("address")),
       yearRow(f.year_founded ? String(f.year_founded) : null, null, dbd, has("year")),
       directorRow("Director vs user", person, "who submitted the profile", dbd, has("director")),
       websiteRow(f.website ?? null, web),
     ],
     email: f.email ?? null,
-    phone: f.phone ?? null,
+    phone: owner?.phone ?? f.phone ?? null,
+    personName: person, personTitle: owner?.title ?? null,
     directory: "Advisors Directory",
     directoryId: f.id,
     card: {
@@ -411,7 +445,7 @@ export async function advisorReview(sb: any, f: any, owner: any, checked: string
       ],
       realName: f.name ?? null, website: f.website ?? null, address,
       founded: f.year_founded ? String(f.year_founded) : null,
-      contact: person, sector: null, city: f.city ?? null,
+      contact: [person, owner?.title].filter(Boolean).join(" · ") || null, sector: null, city: f.city ?? null,
     },
   };
 }
