@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+import { Building, Share2 } from "lucide-react";
 import { useEffect } from "react";
 import { Calendar, Check, Lock, Plus, X, EyeOff } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -55,6 +57,16 @@ export function BuyOrderDetails({ card, persona, applyCtx, onClose, onApply, onS
           <DialogDescription className="bw-ddesc">{card.description}</DialogDescription>
           <div className="mt-2.5 flex flex-wrap items-center gap-2"><BuyerChip card={card} solid /><KindPill kind={card.kind} bordered /></div>
           <div className="bw-dline"><Calendar className="h-[13px] w-[13px]" />{date}</div>
+          {card.sharedBy && (
+            <div className="bw-sharedbox"><Share2 className="h-4 w-4 shrink-0" /><div>
+              <b>{c(`${card.sharedBy} shared this buy order with you.`, `${card.sharedBy} แชร์ประกาศซื้อนี้ให้คุณ`)}</b>{" "}
+              {persona !== "seller" ? c("Only sellers apply to buy orders. You can share it with someone whose business may fit.", "เฉพาะผู้ขายที่สมัครประกาศซื้อได้ คุณสามารถแชร์ให้คนที่มีธุรกิจที่อาจเหมาะได้")
+                : applyCtx?.state === "approved" ? c("Your company is approved: you can apply.", "บริษัทของคุณได้รับการอนุมัติแล้ว: คุณสมัครได้")
+                : applyCtx?.state === "pending" ? c("PitchSnack is checking your company, usually within 1 business day. You can apply once it’s approved.", "PitchSnack กำลังตรวจสอบบริษัทของคุณ โดยปกติภายใน 1 วันทำการ คุณสมัครได้เมื่อได้รับอนุมัติ")
+                : <>{c("To apply, set up your company on My Company and click Register your company. PitchSnack checks it, usually within 1 business day.", "หากต้องการสมัคร ให้ตั้งค่าบริษัทในบริษัทของฉัน แล้วกดลงทะเบียนบริษัท PitchSnack จะตรวจสอบ โดยปกติภายใน 1 วันทำการ")}
+                  <div className="mt-2"><Link to="/my-startups" className="bw-sharedgo"><Building className="h-3.5 w-3.5" />{c("Go to My Company", "ไปที่บริษัทของฉัน")}</Link></div></>}
+            </div></div>
+          )}
 
           {card.client && (
             <div className="bw-violet"><Lock className="h-4 w-4 shrink-0" /><span><b>{c(`For ${card.client.name ?? "—"} · ${card.client.ref ?? "—"}.`, `สำหรับ ${card.client.name ?? "—"} · ${card.client.ref ?? "—"}`)}</b> {c(`Only PitchSnack sees the client. Sellers and buyers see “${card.buyerType} · ${card.country ?? ""}”. Written by ${card.client.writer ?? "—"}.`, `เฉพาะ PitchSnack ที่เห็นลูกค้า ผู้ขายและผู้ซื้อเห็น “${card.buyerType} · ${card.country ?? ""}” เขียนโดย ${card.client.writer ?? "—"}`)}</span></div>
