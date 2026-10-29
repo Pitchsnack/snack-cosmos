@@ -17,7 +17,7 @@ import { listPaidReports, linkStoredDbd, viewStoredDbd } from "@/lib/paid-report
 import { extractDbd, deleteDbd } from "@/lib/dbd-store.functions";
 import { authoriseSeller, finaliseAuthorise } from "@/lib/report-orders.functions";
 import {
-  ORDERABLE, PAID_NAMES, PAID_ORDER, PAID_SHORT, nextStep, readyOrders, waitingChip, hasData,
+  ORDERABLE, PAID_NAMES, PAID_ORDER, PAID_SHORT, nextStep, readyOrders, waitingChip, hasData, noOrders,
   type PaidCompany, type PaidOrder, type PaidSort, type PaidTile,
 } from "@/lib/paid-reports";
 import type { HubKey } from "@/lib/reports-hub";
@@ -35,7 +35,7 @@ type Confirm =
   | { kind: "refresh"; companies: PaidCompany[]; link?: boolean }
   | { kind: "delete"; company: PaidCompany };
 
-const TILES: [PaidTile, string][] = [["needs", "Needs DBD data"], ["ready", "Ready to authorise"], ["overdue", "Overdue"], ["authorised", "Authorised"], ["all", "All companies"]];
+const TILES: [PaidTile, string][] = [["needs", "Needs DBD data"], ["ready", "Ready to authorise"], ["overdue", "Overdue"], ["authorised", "Authorised"], ["no_orders", "Data ready · no orders"], ["all", "All companies"]];
 
 export function PaidReportsPage() {
   const qc = useQueryClient();
@@ -150,7 +150,8 @@ export function PaidReportsPage() {
     if (n) toast.success(n === 1 ? "Seller authorised. They can now see the report." : `${n} reports authorised.`);
   }
   async function doDelete(c: PaidCompany) {
-    try { await deleteFn({ data: { reg: c.reg! } }); toast.success("DBD data deleted."); } catch (e) { toast.error((e as Error).message); }
+    if (!c.reg) return;
+    try { await deleteFn({ data: { reg: c.reg } }); toast.success("DBD data deleted."); } catch (e) { toast.error((e as Error).message); }
     refreshAll();
   }
 
@@ -169,16 +170,16 @@ export function PaidReportsPage() {
         <div>
           <div className="text-xs text-muted-foreground">Admin › Paid reports</div>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Paid reports</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Reports clients have paid for. Get the company's DBD data, then authorise the seller.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Reports clients have paid for, and companies whose reports are ready before anyone orders. Get the company's DBD data, then authorise the seller.</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {TILES.map(([k, label]) => (
-            <button key={k} type="button" aria-pressed={tile === k} onClick={() => { setTile(k); setPage(1); setSel(new Set()); }}
-              className={cn("rounded-xl border bg-card px-4 py-3 text-left transition-colors", tile === k ? "border-foreground ring-1 ring-foreground" : "border-border hover:border-muted-foreground/40")}>
+            <Button key={k} type="button" variant="outline" aria-pressed={tile === k} onClick={() => { setTile(k); setPage(1); setSel(new Set()); }}
+              className={cn("h-auto min-w-0 flex-col items-start whitespace-normal rounded-lg border bg-card px-4 py-3 text-left transition-colors", tile === k ? "border-foreground ring-1 ring-foreground" : "border-border hover:border-muted-foreground/40")}>
               <div className="text-xs text-muted-foreground">{label}</div>
               <div className={cn("text-2xl font-bold", k === "overdue" && (d?.counts.overdue ?? 0) > 0 && "text-destructive")}>{d?.counts[k] ?? "–"}</div>
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -291,8 +292,8 @@ function NextButton({ c, busy, failed, onUse, onAuthorise, onView }: { c: PaidCo
   if (busy) return <Button size="sm" disabled className="h-8"><Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />Working…</Button>;
   if (s.kind === "use") return <Button size="sm" variant="outline" className="h-8" onClick={stop(onUse)}>Use stored data</Button>;
   if (s.kind === "extract") return <Button size="sm" className="h-8 bg-foreground text-background hover:bg-foreground/90" disabled={!c.reg} onClick={stop(onUse)}>{failed ? "Try again" : "Extract data"}</Button>;
-  if (s.kind === "authorise") return <Button size="sm" className="h-8 bg-accent text-accent-foreground hover:bg-accent/90" onClick={stop(onAuthorise)}>{s.n! > 1 ? `Authorise ${s.n}` : "Authorise"}</Button>;
-  return <button type="button" className="text-[13px] font-semibold text-primary hover:underline" onClick={stop(onView)}>{s.kind === "view" ? "View reports" : "Open reports"}</button>;
+  if (s.kind === "authorise") return <Button size="sm" className="h-8 bg-accent text-accent-foreground hover:bg-accent/90" onClick={stop(onAuthorise)}>{(s.n ?? 0) > 1 ? `Authorise ${s.n}` : "Authorise"}</Button>;
+  return <Button variant="link" className="h-auto p-0 text-[13px] font-semibold" onClick={stop(onView)}>{s.kind === "view" ? "View reports" : "Open reports"}</Button>;
 }
 
 function CompanyRow({ c, checked, busy, failed, onCheck, onOpen, onUse, onAuthorise, onView, onRefresh }: {
@@ -300,7 +301,7 @@ function CompanyRow({ c, checked, busy, failed, onCheck, onOpen, onUse, onAuthor
 }) {
   const w = waitingChip(c);
   const data = hasData(c);
-  const tags = <div className="flex flex-wrap gap-1">{c.orders.map((o) => (
+  const tags = noOrders(c) ? <span className="text-muted-foreground">None ordered · 7 reports ready</span> : <div className="flex flex-wrap gap-1">{c.orders.map((o) => (
     <Tooltip key={o.id + o.key}><TooltipTrigger asChild><span className={cn("rounded-md px-1.5 py-0.5 text-[11.5px] font-semibold", tagTone(o, data))}>{PAID_SHORT[o.key]}</span></TooltipTrigger><TooltipContent>{o.ref} · {PAID_NAMES[o.key]}</TooltipContent></Tooltip>
   ))}</div>;
   const chip = <span className={cn("whitespace-nowrap rounded-full px-2 py-0.5 text-[11.5px] font-semibold", chipTone[w.tone])}>{w.text}</span>;
@@ -311,7 +312,7 @@ function CompanyRow({ c, checked, busy, failed, onCheck, onOpen, onUse, onAuthor
       <td className="px-3 py-3 max-md:block max-md:p-0">
         <div className="flex items-center gap-2">
           <span className="md:hidden" onClick={(e) => e.stopPropagation()}><Checkbox aria-label={`Select ${c.name}`} checked={checked} onCheckedChange={(v) => onCheck(!!v)} /></span>
-          <div className="min-w-0 flex-1"><div className="font-semibold">{c.name}</div><div className="text-xs text-muted-foreground">{c.ref ?? "—"} · {plural(c.orders.length, "order")}</div></div>
+          <div className="min-w-0 flex-1"><div className="font-semibold">{c.name}</div><div className="text-xs text-muted-foreground">{c.ref ?? "—"} · {noOrders(c) ? "No orders yet" : plural(c.orders.length, "order")}</div></div>
           <span className="md:hidden">{chip}</span>
         </div>
       </td>
@@ -345,7 +346,7 @@ function SidePanel({ c, prices, busy, failed, onUse, onViewData, onRefresh, onDe
 }) {
   const w = waitingChip(c);
   const data = hasData(c);
-  const notOrdered = PAID_ORDER.filter((k) => !c.orders.some((o) => o.key === k) && data && (k === "credit" || c.produced.includes(k)));
+  const notOrdered = PAID_ORDER.filter((k) => !c.orders.some((o) => o.key === k) && data && (noOrders(c) || k === "credit" || c.produced.includes(k)));
   const link = "inline-flex items-center gap-1 text-[13px] font-semibold text-primary hover:underline";
   return (
     <div>
@@ -385,6 +386,12 @@ function SidePanel({ c, prices, busy, failed, onUse, onViewData, onRefresh, onDe
             )}
         </div>
 
+        {noOrders(c) && <section className="space-y-2 py-2">
+          <h3 className="font-semibold">No reports ordered yet</h3>
+          <p className="text-sm text-muted-foreground">All 7 reports are ready from the stored DBD data. Open them to check them now. When the company orders one, it shows here with <strong>Authorise seller</strong>.</p>
+          {c.awaitingUserApproval && <p className="text-sm text-muted-foreground">Waiting in User approval › Sellers.</p>}
+        </section>}
+
         {c.orders.map((o) => (
           <div key={o.id + o.key} className="rounded-xl border border-border p-3.5">
             <div className="flex items-start gap-3">
@@ -408,8 +415,8 @@ function SidePanel({ c, prices, busy, failed, onUse, onViewData, onRefresh, onDe
 
         {notOrdered.length > 0 && (
           <div>
-            <p className="mb-1.5 text-xs text-muted-foreground">Also ready from this data, not ordered:</p>
-            <div className="flex flex-wrap gap-1.5">{notOrdered.map((k) => <button key={k} type="button" onClick={() => onView(k)} className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground">{PAID_NAMES[k]}</button>)}</div>
+            <p className="mb-1.5 text-xs text-muted-foreground">{noOrders(c) ? "Ready from this data:" : "Also ready from this data, not ordered:"}</p>
+            <div className="flex flex-wrap gap-1.5">{notOrdered.map((k) => <Button key={k} variant="secondary" type="button" onClick={() => onView(k)} className="h-auto rounded-full px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground">{PAID_NAMES[k]}</Button>)}</div>
           </div>
         )}
       </div>
