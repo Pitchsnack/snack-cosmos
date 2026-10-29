@@ -120,10 +120,10 @@ function ApprovalsPage() {
       ) : (tab === "invitations" || tab === "contacts") ? (
         <InvitationsTab />
       ) : error ? <p className="text-sm text-destructive">{(error as Error).message}</p> : isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : (
-        <div className="overflow-x-auto border border-border bg-card rounded-lg"><table className="os-history"><thead><tr>{["When", "Decision", "Listing / Buyer / Advisor", "By"].map(label => <th key={label}>{t(label)}</th>)}</tr></thead><tbody>{(data?.history ?? []).filter((e: any) => ["approve", "reject", "decline", "request_changes"].includes(e.action)).map((e: any) => {
+        <div className="overflow-x-auto border border-border bg-card rounded-lg"><table className="os-history"><thead><tr>{["When", "Decision", "Listing / Buyer / Advisor", "By"].map(label => <th key={label}>{t(label)}</th>)}</tr></thead><tbody>{(oneStep.data?.history ?? []).filter((e: any) => ["approve", "reject", "decline", "request_changes"].includes(e.action)).map((e: any) => {
           const kind = e.item_type === "listing" ? "seller" : e.item_type === "advisor" ? "advisor" : "buyer";
           const info = kind === "seller" ? (data as any)?.startupInfo?.[e.startup_id] : kind === "buyer" ? (data as any)?.buyerInfo?.[e.item_id] : null;
-          return <tr key={e.id}><td>{approvalDate(e.created_at, language)}</td><td>{t(e.action === "approve" ? "Verified and published" : e.action === "request_changes" ? "Changes requested" : "Declined")}</td><td>{info?.name ?? info?.startup_name ?? info?.company_name ?? e.subject_name ?? e.item_id}{info?.ref_no ? ` (${info.ref_no})` : ""}</td><td>{names[e.actor_id] ?? e.actor_name ?? "—"}</td></tr>;
+          return <tr key={e.id}><td>{approvalDate(e.created_at, language)}</td><td>{t(e.action === "approve" ? "Verified and published" : e.action === "request_changes" ? "Changes requested" : "Declined")}</td><td>{e.subject_name ?? e.item_id}</td><td>{names[e.actor_id] ?? e.actor_name ?? "—"}</td></tr>;
         })}</tbody></table></div>
       )}
     </div>
