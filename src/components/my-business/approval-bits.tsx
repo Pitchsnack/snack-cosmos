@@ -1,6 +1,7 @@
 import { useTranslation } from "@/i18n/language";
 import { approvalDate } from "@/lib/approval-date";
 import { useOpenSellerEdit } from "@/components/my-business/seller-edit-popup";
+import { composeFounderBio } from "@/lib/founder-story";
 import { handoverLine } from "@/lib/hidden-profile";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -39,12 +40,12 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
   });
   const doUnpublish = useMutation({
     mutationFn: () => unpublish({ data: { startupId: profile.startup_id } }),
-    onSuccess: () => { toast.success("Removed. Your listing is hidden from buyers."); done(); },
+    onSuccess: () => { toast.success(t("Removed. Your listing is hidden from buyers.")); done(); },
     onError: (e: Error) => toast.error(e.message),
   });
   const doResume = useMutation({
     mutationFn: () => resume({ data: { listingId: profile.id } }),
-    onSuccess: () => { toast.success("Live again in Browse listings."); done(); },
+    onSuccess: () => { toast.success(t("Live again in Browse listings.")); done(); },
     onError: (e: Error) => toast.error(e.message),
   });
   const st = useQuery({
@@ -90,7 +91,7 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
       { label: "Year founded", value: s?.year_founded ? String(s.year_founded) : "", note: null },
       { label: `Revenue in ${new Date().getFullYear()-1}`, value: s?.last_year_revenue ?? "", note: "Checked against the accounts your company filed." },
       { label: "Owner", value: [s?.founders?.[0]?.full_name, s?.founders?.[0]?.position].filter(Boolean).join(" · "), note: "Checked against your company's list of directors." },
-      { label: "About the owner", value: s?.founders?.[0]?.bio ?? "", note: "PitchSnack checks the year founded and the sales against your company's records." },
+      { label: "About the owner", value: s?.founders?.[0]?.bio_story?.mode === "lines" ? composeFounderBio(s.founders[0].bio_story, language) : s?.founders?.[0]?.bio ?? "", note: "PitchSnack checks the year founded and the sales against your company's records." },
       { label: "Website", value: s?.website_url ?? "", note: "PitchSnack checks that the link opens." },
       { label: "Email address", value: s?.email ?? "", note: "PitchSnack checks for corporate email." },
       { label: "Contact number", value: s?.contact_number ?? "", note: "Your email and phone number are kept private and are never shared with other users." },
@@ -108,7 +109,7 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
           : state === "changes" || state === "declined"
             ? <span>{t("Fix what PitchSnack asked with Edit information, then register again.")}</span>
             : state === "paused"
-              ? <span>Hidden from Browse listings since {fmt((profile as any).unpublished_at ?? profile.updated_at)}.</span>
+              ? <span>{t("Hidden from Browse listings since {date}.").replace("{date}", approvalDate((profile as any).unpublished_at ?? profile.updated_at, language))}</span>
               : <span><b className="font-semibold text-foreground">Draft</b> · not live yet. Register once: PitchSnack checks your company and publishes your listing together.</span>}
       <span className="flex flex-col items-end gap-1">
         {state === "live"
@@ -152,5 +153,5 @@ export const APPROVAL_TONE: Record<string, string> = {
 
 export function ApprovedChip({ row }: { row: HiddenProfileRow | null | undefined }) {
   const ap = approvalOf(row);
-  return <span className={cn("text-[11px] font-semibold", APPROVAL_TONE[ap])}>{APPROVAL_LABEL[ap]}</span>;
+  return <span className={cn("text-[11px] font-semibold", APPROVAL_TONE[ap])}>{useTranslation().t(APPROVAL_LABEL[ap])}</span>;
 }

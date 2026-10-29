@@ -363,7 +363,7 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
       { label: "Registration no.", value: f.registrationNo ?? "", note: null },
       { label: "Address", value: fullAddress(f), note: "PitchSnack checks your registered address." },
       { label: "Year founded", value: f.yearFounded ? String(f.yearFounded) : "", note: null },
-      { label: "Your name", value: f.team?.[0]?.name ?? "", note: "Checked against your firm's list of directors." },
+      { label: "Your name", value: f.ownerReviewName ?? "", note: "Checked against your firm's list of directors." },
       { label: "Website", value: f.website ?? "", note: "PitchSnack checks that the link opens." },
       { label: "Email", value: f.email ?? "", note: "PitchSnack checks for corporate email." },
       { label: "Phone", value: f.phone ?? "", note: "Sellers and buyers see your website, email and phone on your profile." },

@@ -154,7 +154,16 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
     const actorIds = [...new Set((history ?? []).map((h: any) => h.actor_id).filter(Boolean))];
     const { data: actors } = actorIds.length ? await sb.from("users").select("id, first_name, last_name, email").in("id", actorIds) : { data: [] };
     const actorNames = Object.fromEntries((actors ?? []).map((u: any) => [u.id, fullName(u)]));
-    return { sellers, buyers, advisors, history: (history ?? []).map((h: any) => ({ ...h, actor_name: actorNames[h.actor_id], subject_name: [...sellers, ...buyers, ...advisors].find(i => i.id === h.item_id)?.name ?? h.item_id })), me: context.userId };
+    const [allListings, allBuyers, allAdvisors] = await Promise.all([
+      sb.from("hidden_profiles").select("id,ref_no,startups(startup_name)"),
+      sb.from("buyer_profiles").select("user_id,ref_no,investors(investor_name)"),
+      sb.from("advisor_firms").select("id,ref_no,name"),
+    ]);
+    const subject = new Map<string, string>();
+    for (const x of allListings.data ?? []) { const st = Array.isArray(x.startups) ? x.startups[0] : x.startups; subject.set(`listing:${x.id}`, `${st?.startup_name ?? x.ref_no} (${x.ref_no})`); }
+    for (const x of allBuyers.data ?? []) { const inv = Array.isArray(x.investors) ? x.investors[0] : x.investors; subject.set(`buyer_profile:${x.user_id}`, `${inv?.investor_name ?? x.ref_no} (${x.ref_no})`); }
+    for (const x of allAdvisors.data ?? []) subject.set(`advisor:${x.id}`, `${x.name} (${x.ref_no})`);
+    return { sellers, buyers, advisors, history: (history ?? []).map((h: any) => ({ ...h, actor_name: actorNames[h.actor_id], subject_name: subject.get(`${h.item_type}:${h.item_id}`) ?? h.item_id })), me: context.userId };
   });
 
 /* ================================================================ decide */
@@ -163,10 +172,10 @@ const Decide = z.object({
   kind: z.enum(["seller", "buyer", "advisor"]),
   id: z.string().uuid(),
   action: z.enum(["approve", "request_changes", "decline"]),
-  publishedName: z.string().trim().max(200).optional(),
-  publishedHeadline: z.string().trim().max(300).optional(),
+  publishedName: z.string().trim().max(120).optional(),
+  publishedHeadline: z.string().trim().max(120).optional(),
   note: z.string().max(2000).optional(),
-  reasons: z.array(z.string().max(120)).max(10).optional(),
+  reasons: z.array(z.enum(DECISION_REASONS)).max(5).optional(),
 });
 
 export const decideOneStep = createServerFn({ method: "POST" })
@@ -367,7 +376,7 @@ export const decideOneStep = createServerFn({ method: "POST" })
 
 export const markReviewCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ kind: z.enum(["seller", "buyer", "advisor"]), id: z.string().uuid(), row: z.enum(["name", "address", "year", "director", "revenue"]) }).parse(d))
+  .inputValidator((d) => z.object({ kind: z.enum(["seller", "buyer", "advisor"]), id: z.string().uuid(), row: z.enum(["name", "address", "year", "director", "revenue", "website"]) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as Ctx);
     const sb = await admin();

@@ -32,7 +32,12 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
   onSubmit: () => void;
   onClose: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const label = (value: string) => {
+    const revenue = value.match(/^Revenue in (\d{4})$/);
+    if (revenue) return t("Revenue in {year}").replace("{year}", String(Number(revenue[1]) + (language === "th" ? 543 : 0)));
+    return t(value);
+  };
   const [tick, setTick] = useState(false);
   useEffect(() => { if (open) setTick(false); }, [open]);
 
@@ -78,7 +83,7 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
             </div>
             <div className="ap-rows">
               {(data?.listingRows ?? []).map(([l, v]) => (
-                <div className="ap-rw" key={l}><span>{t(l)}</span><span>{v || t("Not added")}</span></div>
+                <div className="ap-rw" key={l}><span>{t(l)}</span><span>{v ? t(v) : t("Not added")}</span></div>
               ))}
               {data?.identityApplies && (
                 <div className="ap-rw">
@@ -108,9 +113,9 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
             <div className="ap-rows">
               {(data?.exclusiveRows ?? []).map((r) => (
                 <div className="ap-rw" key={r.label}>
-                  <span>{t(r.label)}</span>
+                  <span>{label(r.label)}</span>
                   <span>
-                    {r.value?.trim() || t("Not added")}
+                    {r.label === "Year founded" && language === "th" && /^\d{4}$/.test(r.value) ? String(Number(r.value)+543) : r.value?.trim() ? t(r.value) : t("Not added")}
                     {r.note && <span className="ap-sm">{t(r.note)}</span>}
                   </span>
                 </div>

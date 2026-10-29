@@ -1,1 +1,2 @@
 - Soft launch: access_codes/soft_launch_settings are admin-only (is_control); code status is derived in access-codes.ts, never stored; users.access_code_id is server-set only (trigger).
+- One-step reviews compare user-entered identities and bands against the shared DBD store; website reachability fails closed to a saved manual check until destination-pinned public egress is available, preventing DNS-rebinding SSRF.
