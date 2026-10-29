@@ -17,7 +17,6 @@ import logoWhite from "@/assets/pitchsnack-white.png";
 import streetSvg from "@/components/login/street.svg?raw";
 import { L } from "@/components/login/login-copy";
 import { ADVISOR_OPTS, BUYER_OPTS, BUYER_REL_OPTS, S, SELLER_OPTS, type Role } from "@/components/login/signup-copy";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import "@/styles/login-page.css";
 import "@/styles/signup-page.css";
 import { AccessGate, useClaimSeat, useGate } from "@/components/access-gate/access-gate";
