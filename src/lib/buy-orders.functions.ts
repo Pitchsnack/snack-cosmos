@@ -114,7 +114,7 @@ async function cardsFor(sb: any, rows: any[], userId: string, isAdmin: boolean, 
     ids.length ? sb.from("buy_order_views").select("buy_order_id").in("buy_order_id", ids) : { data: [] },
     ids.length ? sb.from("buy_order_applications").select("buy_order_id, business_id, status, applied_at").in("buy_order_id", ids) : { data: [] },
     myInvestorIds(sb, userId),
-    isAdmin && writerIds.length ? sb.from("users").select("id, full_name, email").in("id", writerIds) : { data: [] },
+    isAdmin && writerIds.length ? sb.from("users").select("id, first_name, last_name, email").in("id", writerIds) : { data: [] },
   ]);
   const count = (list: any[]) => { const m = new Map<string, number>(); for (const x of list) m.set(x.buy_order_id, (m.get(x.buy_order_id) ?? 0) + 1); return m; };
   const myApps = new Map<string, any>();
@@ -122,7 +122,7 @@ async function cardsFor(sb: any, rows: any[], userId: string, isAdmin: boolean, 
   return rows.map((r) => toCard(r, {
     inv: new Map((invs ?? []).map((x: any) => [x.id, x])), bp: new Map((bps ?? []).map((x: any) => [x.investor_id, x])),
     views: count(vs ?? []), apps: count(aps ?? []), appsNew: count((aps ?? []).filter((x: any) => x.status === "new")), mine: new Set(mine), myApps, isAdmin,
-    writers: new Map((ws ?? []).map((w: any) => [w.id, w.full_name || w.email])),
+    writers: new Map((ws ?? []).map((w: any) => [w.id, [w.first_name, w.last_name].filter(Boolean).join(" ") || w.email])),
   }, bands));
 }
 
