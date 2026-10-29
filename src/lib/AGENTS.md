@@ -1,2 +1,4 @@
 - Soft launch: access_codes/soft_launch_settings are admin-only (is_control); code status is derived in access-codes.ts, never stored; users.access_code_id is server-set only (trigger).
 - One-step reviews compare user-entered identities and bands against the shared DBD store; website reachability fails closed to a saved manual check until destination-pinned public egress is available, preventing DNS-rebinding SSRF.
+- Admin Paid reports uses paid-reports.functions.ts and paid-reports.ts for ordered and linked zero-order companies; no-orders presentation never stores readiness or unlocks seller access; linking uses dbd_link_startup only.
+- Startups Directory list reads rows with deferMedia and fills card images via signStartupListMedia (RLS re-read) + useListMedia's browser cache; other listStartups callers still get signed URLs inline.

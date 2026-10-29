@@ -81,6 +81,51 @@ async function signMany(
 }
 
 
+/** Logo + slot-1 tile paths for list rows, signed in one batched call. */
+async function signListMedia(
+  supabase: import("@supabase/supabase-js").SupabaseClient,
+  list: Array<{ id: string; logo_url: string | null }>,
+): Promise<{ tileBySid: Record<string, string>; signed: Record<string, string> }> {
+  const logoPaths = list.map((r) => r.logo_url).filter((p): p is string => !!p);
+  const ids = list.map((r) => r.id);
+  const tileBySid: Record<string, string> = {};
+  if (ids.length > 0) {
+    const { data: mediaRows } = await supabase
+      .from("startup_media")
+      .select("startup_id, image_url")
+      .in("startup_id", ids)
+      .eq("slot", 1);
+    for (const m of (mediaRows ?? []) as Array<{ startup_id: string; image_url: string }>) {
+      if (m.image_url && !tileBySid[m.startup_id]) tileBySid[m.startup_id] = m.image_url;
+    }
+  }
+  const signed = await signMany(supabase, [...logoPaths, ...Object.values(tileBySid)]);
+  return { tileBySid, signed };
+}
+
+/**
+ * Signs list-card media for the given startups. Rows are re-read with the
+ * caller's own client, so RLS decides which startups (and paths) are signable.
+ */
+export const signStartupListMedia = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ ids: z.array(z.string().uuid()).min(1).max(100) }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const { data: rows, error } = await supabase.from("startups").select("id, logo_url").in("id", data.ids);
+    if (error) throw new Error(error.message);
+    const list = (rows ?? []) as Array<{ id: string; logo_url: string | null }>;
+    const { tileBySid, signed } = await signListMedia(supabase, list);
+    return {
+      ttlSeconds: SIGN_TTL,
+      items: list.map((r) => ({
+        id: r.id,
+        logo: r.logo_url ? (signed[r.logo_url] ?? null) : null,
+        tile: tileBySid[r.id] ? (signed[tileBySid[r.id]] ?? null) : null,
+      })),
+    };
+  });
+
 export interface StartupRow {
   id: string;
   tenant_id: string;
@@ -233,6 +278,8 @@ const ListInput = z.object({
   allowPrivateRefs: z.array(z.string().uuid()).max(200).default([]),
   /** Restrict to specific startup ids (Admin listing review). */
   ids: z.array(z.string().uuid()).max(50).optional(),
+  /** Return rows without signed media URLs; the caller signs them later via signStartupListMedia. */
+  deferMedia: z.boolean().default(false),
 });
 
 export const listStartups = createServerFn({ method: "GET" })
@@ -308,23 +355,9 @@ export const listStartups = createServerFn({ method: "GET" })
     >;
 
 
-    const logoPaths = list.map((r) => r.logo_url).filter((p): p is string => !!p);
-
-    // Fetch slot 1 media for tile hero image (additive; UI consumes only signed URL).
-    const ids = list.map((r) => r.id);
-    const tileBySid: Record<string, string> = {};
-    if (ids.length > 0) {
-      const { data: mediaRows } = await supabase
-        .from("startup_media")
-        .select("startup_id, image_url")
-        .in("startup_id", ids)
-        .eq("slot", 1);
-      for (const m of (mediaRows ?? []) as Array<{ startup_id: string; image_url: string }>) {
-        if (m.image_url && !tileBySid[m.startup_id]) tileBySid[m.startup_id] = m.image_url;
-      }
-    }
-    const tilePaths = Object.values(tileBySid);
-    const signed = await signMany(supabase, [...logoPaths, ...tilePaths]);
+    const { tileBySid, signed } = data.deferMedia
+      ? { tileBySid: {} as Record<string, string>, signed: {} as Record<string, string> }
+      : await signListMedia(supabase, list);
 
     const items: StartupListItem[] = list.map((r) => {
       const own = firstEmbed(r.startup_ownership)?.users ?? null;

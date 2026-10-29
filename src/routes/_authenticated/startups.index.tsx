@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
 import { StartupEditPopup } from "@/components/startups/startup-edit-popup";
@@ -31,6 +30,7 @@ import { ViewToggle } from "@/components/shared/view-toggle";
 import { SectorImagesMenu } from "@/components/startups/sector-images-menu";
 import { usePersistentView } from "@/hooks/use-persistent-view";
 import { useStartups } from "@/hooks/use-startups";
+import { useListMedia } from "@/hooks/use-list-media";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { usePermissions } from "@/hooks/use-session-context";
 import { OwnershipProvider, RunBySelect, HeaderCounts, useOwnershipMap, runByMatches, type RunByFilter } from "@/components/handover/ownership";
@@ -168,7 +168,7 @@ function StartupsPageInner() {
     return isPublicationPreview ? listPreviewPublishedRefs() : [];
   }, [previewVersion]);
 
-  const { data, isLoading, isFetching, refetch } = useStartups({
+  const { data, isFetching, refetch } = useStartups({
     search: s.q, stage: s.stage, industry: s.industry, headquarters: s.hq,
     sector: s.sector, businessModel: s.bmodel,
     companyType: s.ct, productTag: s.ptag, marketTag: s.mtag,
@@ -177,9 +177,10 @@ function StartupsPageInner() {
     // not hidden after rendering.
     scope: "directory",
     allowPrivateRefs,
+    deferMedia: true,
   });
 
-  const rawItems = data && "items" in data ? data.items : [];
+  const rawItems = useListMedia(useMemo(() => (data && "items" in data ? data.items : []), [data]));
   const statusOf = (it: (typeof rawItems)[number]): HiddenStatus => hiddenStatusOf(byStartup.get(it.id), it.company_type);
   const hpCounts = useMemo(() => {
     const c = { all: rawItems.length, live: 0, draft: 0, none: 0 };
@@ -364,21 +365,9 @@ function StartupsPageInner() {
 
 
 
-      {isLoading && items.length === 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="rounded-lg border border-border bg-card p-4 shadow-card space-y-3">
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-5/6" />
-              <div className="flex gap-2">
-                <Skeleton className="h-5 w-12" />
-                <Skeleton className="h-5 w-16" />
-              </div>
-            </div>
-          ))}
-        </div>
+      {!data ? (
+        // Not loaded yet: the page hat overlay shows; no empty state or error.
+        <div className="min-h-[40vh]" aria-hidden="true" />
       ) : items.length === 0 ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">
           <Rocket className="mx-auto mb-2 h-8 w-8 opacity-50" />
