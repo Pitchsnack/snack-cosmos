@@ -28,7 +28,6 @@ export function useListMedia<T extends { id: string; logo_signed_url: string | n
   const key = rows.map((r) => r.id).join(",");
 
   useEffect(() => {
-    let cancelled = false;
     const need = rows.map((r) => r.id).filter((id) => !fresh(id) && !inflight.has(id));
     if (need.length === 0) return;
     const run = async (ids: string[]) => {
@@ -38,7 +37,7 @@ export function useListMedia<T extends { id: string; logo_signed_url: string | n
         const res = await sign({ data: { ids } });
         const expiresAt = Date.now() + res.ttlSeconds * 1000;
         for (const it of res.items) cache.set(it.id, { logo: it.logo, tile: it.tile, expiresAt });
-        if (!cancelled) setVersion((v) => v + 1);
+        setVersion((v) => v + 1);
       } catch {
         /* cards keep their placeholder */
       } finally {
@@ -49,9 +48,6 @@ export function useListMedia<T extends { id: string; logo_signed_url: string | n
       await run(need.slice(0, FIRST_BATCH));
       await run(need.slice(FIRST_BATCH));
     })();
-    return () => {
-      cancelled = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
