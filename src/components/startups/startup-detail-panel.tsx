@@ -79,7 +79,6 @@ import { cn } from "@/lib/utils";
 import { CompanyEntityPill } from "@/components/relationships/company-entity-pill";
 import { StartupInfoBody } from "@/components/startups/startup-info-body";
 import { useHasFinancials } from "@/hooks/use-has-financials";
-import { HatSkeleton } from "@/components/ui/PitchSnackLoader";
 import { useDeleteControlRecords } from "@/hooks/use-entity-control";
 
 
@@ -413,7 +412,7 @@ export function StartupDetailPanel({
   const isMyWorkspace = workspace === "my-startups";
   const directoryReturnSearch = returnSearch;
 
-  const { data, isLoading, error } = useStartup(id);
+  const { data, error } = useStartup(id);
   const connectionState = useConnectionState(id);
   const { has, isControl } = usePermissions();
   const canManage = isControl || has("startups.write");
@@ -461,10 +460,11 @@ export function StartupDetailPanel({
 
   return (
     <div className="space-y-[14px] text-foreground">
-      {/* Header */}
-      <header className={cn("flex items-start justify-between gap-4", compact && "pt-1")}>
+      {/* Header — follows the panel width (container query): under 600px the actions take their own row. */}
+      <div className="@container">
+      <header className={cn("flex flex-col gap-3 @[600px]:flex-row @[600px]:items-start @[600px]:justify-between @[600px]:gap-4", compact && "pt-1")}>
 
-        <div className="flex items-start gap-4">
+        <div className="flex min-w-0 items-start gap-4">
           <div className={cn("flex h-12 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg", !(ownerMedia && !s.logo_signed_url) && "border border-border/60 bg-muted/30")}>
             {s.logo_signed_url ? (
               <img src={s.logo_signed_url} alt="" className="h-full w-full object-contain" />
@@ -478,7 +478,7 @@ export function StartupDetailPanel({
           </div>
           <div className="min-w-0 flex-1">
             <OwnershipPanelSlot id={s.id} />
-            <h2 className="text-2xl font-semibold tracking-tight leading-tight">
+            <h2 className="line-clamp-2 text-2xl font-semibold tracking-tight leading-tight" title={bizName(s.startup_name)}>
               {bizName(s.startup_name)}
               {connectionState === "connected" && (
                 <span
@@ -511,8 +511,9 @@ export function StartupDetailPanel({
           </div>
         </div>
 
-        <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-[2px]">
+        <div className="flex w-full min-w-0 flex-col gap-2 @[600px]:w-auto @[600px]:shrink-0 @[600px]:items-end">
+          <div className="flex w-full flex-wrap items-center gap-x-[2px] gap-y-2 @[600px]:w-auto @[600px]:flex-nowrap">
+            <div className="flex flex-wrap items-center gap-x-[2px] gap-y-2">
 
 
               {isMyWorkspace ? (
@@ -536,6 +537,8 @@ export function StartupDetailPanel({
                   (s as unknown as { registered_number?: string | null }).registered_number
                 }
                />}
+            </div>
+            <div className="ml-auto flex shrink-0 items-center">
               <FavoriteToggle id={id} size="md" className="ml-2 h-8 w-8" />
 
 
@@ -629,10 +632,12 @@ export function StartupDetailPanel({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+            </div>
           </div>
 
         </div>
       </header>
+      </div>
 
       {ownerMedia && <LogoPhotoAlert className="mt-[18px]" hasLogo={!!s.logo_signed_url} hasPhoto={mediaSlots.length > 0} onAdd={ownerMedia} />}
       {belowHeader}
