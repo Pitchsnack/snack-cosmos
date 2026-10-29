@@ -2,3 +2,5 @@
 - One-step reviews compare user-entered identities and bands against the shared DBD store; website reachability fails closed to a saved manual check until destination-pinned public egress is available, preventing DNS-rebinding SSRF.
 - Admin Paid reports uses paid-reports.functions.ts and paid-reports.ts for ordered and linked zero-order companies; no-orders presentation never stores readiness or unlocks seller access; linking uses dbd_link_startup only.
 - Startups Directory list reads rows with deferMedia and fills card images via signStartupListMedia (RLS re-read) + useListMedia's browser cache; other listStartups callers still get signed URLs inline.
+
+- Businesses Wanted: buy_orders/_applications/_views have RLS on with no client policies; every read/write goes through buy-orders.functions.ts (role-checked, whitelisted BoCard DTO); browser-safe ranges/match/dates live in buy-orders.ts. Buyer identity and {client} never leave the server except {client} to admins.

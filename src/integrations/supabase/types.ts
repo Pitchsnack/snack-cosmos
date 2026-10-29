@@ -1152,6 +1152,184 @@ export type Database = {
           },
         ]
       }
+      buy_order_applications: {
+        Row: {
+          applied_at: string
+          business_id: string
+          buy_order_id: string
+          decided_at: string | null
+          decided_by_user_id: string | null
+          id: string
+          nda_request_id: string | null
+          note: string | null
+          seller_user_id: string
+          status: string
+        }
+        Insert: {
+          applied_at?: string
+          business_id: string
+          buy_order_id: string
+          decided_at?: string | null
+          decided_by_user_id?: string | null
+          id?: string
+          nda_request_id?: string | null
+          note?: string | null
+          seller_user_id: string
+          status?: string
+        }
+        Update: {
+          applied_at?: string
+          business_id?: string
+          buy_order_id?: string
+          decided_at?: string | null
+          decided_by_user_id?: string | null
+          id?: string
+          nda_request_id?: string | null
+          note?: string | null
+          seller_user_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buy_order_applications_buy_order_id_fkey"
+            columns: ["buy_order_id"]
+            isOneToOne: false
+            referencedRelation: "buy_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buy_order_views: {
+        Row: {
+          buy_order_id: string
+          first_viewed_at: string
+          user_id: string
+        }
+        Insert: {
+          buy_order_id: string
+          first_viewed_at?: string
+          user_id: string
+        }
+        Update: {
+          buy_order_id?: string
+          first_viewed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buy_order_views_buy_order_id_fkey"
+            columns: ["buy_order_id"]
+            isOneToOne: false
+            referencedRelation: "buy_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buy_orders: {
+        Row: {
+          admin_note: string | null
+          cities: string
+          closed_at: string | null
+          closes_on: string | null
+          created_at: string
+          deal_types: string[]
+          description: string
+          extended_count: number
+          factory_size: string
+          id: string
+          investor_profile_id: string
+          kind: string
+          location: string
+          must_have: string[]
+          name_on_card: string
+          nice_to_have: string[]
+          period_months: number
+          posted_at: string | null
+          posted_by_user_id: string | null
+          price_range: string
+          products: string | null
+          profit: string | null
+          property_size: string
+          ref: string
+          sector: string
+          sent_back_at: string | null
+          sent_to_admin_at: string | null
+          status: string
+          target_revenue: string
+          timing: string | null
+          updated_at: string
+          written_by_user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          cities?: string
+          closed_at?: string | null
+          closes_on?: string | null
+          created_at?: string
+          deal_types?: string[]
+          description: string
+          extended_count?: number
+          factory_size?: string
+          id?: string
+          investor_profile_id: string
+          kind: string
+          location: string
+          must_have?: string[]
+          name_on_card: string
+          nice_to_have?: string[]
+          period_months?: number
+          posted_at?: string | null
+          posted_by_user_id?: string | null
+          price_range: string
+          products?: string | null
+          profit?: string | null
+          property_size?: string
+          ref?: string
+          sector: string
+          sent_back_at?: string | null
+          sent_to_admin_at?: string | null
+          status?: string
+          target_revenue: string
+          timing?: string | null
+          updated_at?: string
+          written_by_user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          cities?: string
+          closed_at?: string | null
+          closes_on?: string | null
+          created_at?: string
+          deal_types?: string[]
+          description?: string
+          extended_count?: number
+          factory_size?: string
+          id?: string
+          investor_profile_id?: string
+          kind?: string
+          location?: string
+          must_have?: string[]
+          name_on_card?: string
+          nice_to_have?: string[]
+          period_months?: number
+          posted_at?: string | null
+          posted_by_user_id?: string | null
+          price_range?: string
+          products?: string | null
+          profit?: string | null
+          property_size?: string
+          ref?: string
+          sector?: string
+          sent_back_at?: string | null
+          sent_to_admin_at?: string | null
+          status?: string
+          target_revenue?: string
+          timing?: string | null
+          updated_at?: string
+          written_by_user_id?: string
+        }
+        Relationships: []
+      }
       buyer_profiles: {
         Row: {
           address: string | null

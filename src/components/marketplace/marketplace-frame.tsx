@@ -6,6 +6,7 @@ import {hubIsNew} from '@/lib/reports-hub';
 import { VerificationSidebarChip, VerificationMenuStatus, useVerificationSidebar } from '@/components/company-verification/sidebar';
 import { useVerificationCopy } from '@/components/company-verification/copy';
 import { useEffect, useState } from "react";
+import { BusinessesWantedRow } from "@/components/businesses-wanted/bw-menu";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Building2, LayoutGrid, Shield, Menu, Sun, Moon, UserCircle, Check, MapPin, Briefcase, Crown, FileBarChart, Calculator, Lock, GitBranch, Contact, MessageSquare, Star, ShieldAlert, Handshake, Send } from "lucide-react";
 import { isReportOrdered, PadlockTile, PitchsnackTag } from "@/components/my-business/locked-report-page";
@@ -495,6 +496,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
     };
     return (
       <div>
+        <BusinessesWantedRow collapsed />
         <div className="space-y-1">{discover.map(railItem)}</div>
         {workspace.length > 0 && (
           <>
@@ -539,6 +541,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
   );
   return (
     <div className="space-y-4">
+      <BusinessesWantedRow />
       <div data-tour-sec="discover" className="space-y-1">{title("Discover")}{discover.map(fullItem)}</div>
       {workspace.length > 0 && <div data-tour-sec="workspace" className="space-y-1">{title("My Workspace")}{workspace.map(fullItem)}</div>}
       {tools.length > 0 && <div data-tour-sec="tools" className="space-y-1">{title("Tools")}{tools.map(fullItem)}</div>}

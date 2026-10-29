@@ -1,0 +1,235 @@
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { Calendar, ChevronDown, Eye, EyeOff, Lock, Megaphone, Send, Share2, User, Users, Check, Clock, CircleCheck, Info } from "lucide-react";
+import { useTranslation } from "@/i18n/language";
+import { boSector, closesInDays, coverOf, fmtDay, isNew } from "@/lib/buy-orders";
+import type { ApplyContext, BoCard } from "@/lib/buy-orders.functions";
+import { sectorIcon } from "./bw-icons";
+import { cn } from "@/lib/utils";
+
+export function useBw() {
+  const { language } = useTranslation();
+  const th = language === "th";
+  return { th, c: (en: string, t: string) => (th ? t : en) };
+}
+
+export const SEALED_TIP_EN = "Professionally managed by PitchSnack. Buyers are certified by PitchSnack and have a proven track record of acquiring businesses. Their identity remains confidential and is revealed only if your business is shortlisted.";
+export const SEALED_TIP_TH = "ดูแลโดยทีมงานมืออาชีพของ PitchSnack ผู้ซื้อผ่านการรับรองจาก PitchSnack และมีประวัติการซื้อกิจการที่พิสูจน์ได้ ชื่อของผู้ซื้อจะถูกเก็บเป็นความลับ และจะเปิดเผยเมื่อธุรกิจของคุณผ่านการคัดเลือกเท่านั้น";
+
+/** Sector name in the viewer's language. */
+export function useSectorName() {
+  const { th } = useBw();
+  return (s: string | null | undefined) => (s ? (th ? boSector(s)?.th ?? s : s) : "");
+}
+
+/** The status pill: NEW, Closes in, Closed, or the writer's states. */
+export function StatusPill({ card, preview }: { card: BoCard; preview?: boolean }) {
+  const { c, th } = useBw();
+  const fresh = preview || (card.status === "posted" && isNew(card.postedAt));
+  const n = card.status === "posted" ? closesInDays(card.closesOn) : null;
+  let dot: string | null = null, text = "";
+  if (card.status === "closed") { dot = "#9CA3AF"; text = c(`Closed ${fmtDay(card.closesOn ?? card.closedAt, false, false)}`, `ปิดแล้ว ${fmtDay(card.closesOn ?? card.closedAt, true, false)}`); }
+  else if (n) { dot = "#F59E0B"; text = n === 1 ? c("Closes in 1 day", "ปิดในอีก 1 วัน") : c(`Closes in ${n} days`, `ปิดในอีก ${n} วัน`); }
+  else if (card.status === "waiting") { dot = "#7C3AED"; text = c("Waiting for Admin", "รอแอดมินตรวจ"); }
+  else if (card.status === "sent_back") { dot = "#DC2626"; text = c("Sent back by Admin", "แอดมินส่งกลับ"); }
+  else if (card.status === "draft") { dot = "#9CA3AF"; text = c("Draft", "ฉบับร่าง"); }
+  const newTag = <span className="bw-new" title={c("Posted in the last 7 days", "ลงประกาศใน 7 วันที่ผ่านมา")}>{th ? "ใหม่" : "NEW"}</span>;
+  if (!dot) return fresh ? newTag : null;
+  return (
+    <span className={cn("bw-pill bw-status", fresh && card.status === "posted" && "bw-status-new")}>
+      <i style={{ background: dot }} />{text}
+      {fresh && card.status === "posted" && <b className="bw-new-end">{th ? "ใหม่" : "NEW"}</b>}
+    </span>
+  );
+}
+
+/** Sealed pill with its hover box (kept inside the window, closed on Esc, click and scroll). */
+export function KindPill({ kind, bordered }: { kind: BoCard["kind"]; bordered?: boolean }) {
+  const { c, th } = useBw();
+  const ref = useRef<HTMLSpanElement>(null);
+  const [pos, setPos] = useState<{ x: number; y: number; up: boolean } | null>(null);
+  const id = useId();
+  useEffect(() => {
+    if (!pos) return;
+    const close = () => setPos(null);
+    const key = (e: KeyboardEvent) => e.key === "Escape" && close();
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("keydown", key);
+    window.addEventListener("pointerdown", close);
+    return () => { window.removeEventListener("scroll", close, true); window.removeEventListener("keydown", key); window.removeEventListener("pointerdown", close); };
+  }, [pos]);
+  if (kind === "advertisement")
+    return <span className={cn("bw-pill", bordered && "bw-bordered")} title={c("Posted by the buyer", "ผู้ซื้อลงประกาศเอง")}><Megaphone className="h-3 w-3 text-[#6B7280]" />{c("Advertisement", "ประกาศ")}</span>;
+  const open = () => {
+    const r = ref.current?.getBoundingClientRect();
+    if (!r) return;
+    const w = Math.min(416, window.innerWidth - 16);
+    const up = r.bottom + 8 + 120 > window.innerHeight;
+    setPos({ x: Math.max(8, Math.min(r.left, window.innerWidth - w - 8)), y: up ? r.top - 8 : r.bottom + 8, up });
+  };
+  const text = th ? SEALED_TIP_TH : SEALED_TIP_EN;
+  return (
+    <>
+      <span ref={ref} tabIndex={0} aria-describedby={id} className="bw-pill bw-sealed" onMouseEnter={open} onMouseLeave={() => setPos(null)} onFocus={open} onBlur={() => setPos(null)}>
+        <Lock className="h-3 w-3 text-[#F6A823]" />{c("Sealed", "ปิดผนึก")}
+      </span>
+      <span id={id} hidden>{text}</span>
+      {pos && typeof document !== "undefined" && createPortal(
+        <div role="tooltip" className="bw-sealed-box" style={{ left: pos.x, top: pos.y, transform: pos.up ? "translateY(-100%)" : undefined }}>{text}</div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
+export function BuyerChip({ card, solid }: { card: BoCard; solid?: boolean }) {
+  const { c } = useBw();
+  const label = `${card.buyerType}${card.country ? ` · ${card.country}` : ""}`;
+  return (
+    <span className={cn("bw-pill bw-chip", solid && "bw-chip-solid")} title={c("The buyer’s name stays private", "ชื่อผู้ซื้อถูกเก็บเป็นความลับ")}>
+      <EyeOff className="h-3 w-3 shrink-0" />
+      <span>{card.yours ? c(`Sellers see: ${label}`, `ผู้ขายเห็น: ${label}`) : label}</span>
+    </span>
+  );
+}
+
+export function Cover({ card, height, top, bottom }: { card: BoCard; height: number; top?: ReactNode; bottom?: ReactNode }) {
+  const Icon = sectorIcon(card.sector);
+  return (
+    <div className="bw-cover" style={{ height, background: coverOf(card.sector).gradient }}>
+      <Icon aria-hidden className="bw-cover-icon" strokeWidth={1.3} />
+      {top && <div className="bw-cover-top">{top}</div>}
+      {bottom && <div className="bw-cover-bottom">{bottom}</div>}
+    </div>
+  );
+}
+
+/** The seller's application state box (section 6.4). */
+export function AppState({ card }: { card: BoCard }) {
+  const { c, th } = useBw();
+  const a = card.myApp;
+  if (!a) return null;
+  const sealed = card.kind === "sealed";
+  const d = fmtDay(a.appliedAt, th, false);
+  const m = a.status === "new"
+    ? { cls: "bw-st-amber", Icon: Clock, b: c(`Applied ${d}.`, `สมัครแล้ว ${d}`), t: sealed ? c("PitchSnack is checking the fit, usually within 5 business days.", "PitchSnack กำลังตรวจความเหมาะสม โดยปกติภายใน 5 วันทำการ") : c("The buyer reviews it.", "ผู้ซื้อกำลังพิจารณา") }
+    : a.status === "nda_requested"
+    ? { cls: "bw-st-green", Icon: CircleCheck, b: sealed ? c("PitchSnack requested an NDA for its client.", "PitchSnack ขอ NDA ให้ลูกค้า") : c("The buyer requested an NDA.", "ผู้ซื้อขอ NDA แล้ว"),
+        t: sealed ? c("Approve it in Pipeline › NDA Invitations: the buyer then sees your company’s name, and you see theirs when you accept their LOI.", "อนุมัติได้ที่ ดีล › คำเชิญ NDA: จากนั้นผู้ซื้อจะเห็นชื่อบริษัทของคุณ และคุณจะเห็นชื่อผู้ซื้อเมื่อยอมรับ LOI")
+          : c("Approve it in Pipeline › NDA Invitations to see each other’s names.", "อนุมัติได้ที่ ดีล › คำเชิญ NDA เพื่อเห็นชื่อของกันและกัน") }
+    : { cls: "bw-st-grey", Icon: Info, b: c("Not a fit this time.", "ครั้งนี้ยังไม่เหมาะ"), t: sealed ? c("PitchSnack won’t take it further for this buyer.", "PitchSnack จะไม่ดำเนินการต่อสำหรับผู้ซื้อรายนี้") : c("The buyer didn’t take it further.", "ผู้ซื้อไม่ได้ดำเนินการต่อ") };
+  return <div className={cn("bw-state", m.cls)}><m.Icon className="h-4 w-4 shrink-0" /><span><b>{m.b}</b> {m.t}</span></div>;
+}
+
+export function ApplyButton({ ctx, onApply, size }: { ctx: ApplyContext | undefined; onApply: () => void; size?: "lg" }) {
+  const { c } = useBw();
+  const [tip, setTip] = useState(false);
+  if (ctx?.state === "approved")
+    return <button type="button" className={cn("bw-btn bw-amber", size)} onClick={onApply}><Send className="h-4 w-4" />{c("Apply", "สมัคร")}</button>;
+  const why = ctx?.state === "pending"
+    ? c("Your account is pending approval. You can apply once PitchSnack approves it.", "บัญชีของคุณกำลังรอการอนุมัติ คุณจะสมัครได้เมื่อ PitchSnack อนุมัติแล้ว")
+    : c("Register your company first. You can apply once PitchSnack approves it.", "ลงทะเบียนบริษัทของคุณก่อน คุณจะสมัครได้เมื่อ PitchSnack อนุมัติแล้ว");
+  return (
+    <span className="relative flex flex-1">
+      <button type="button" aria-disabled="true" className={cn("bw-btn bw-locked", size)} onMouseEnter={() => setTip(true)} onMouseLeave={() => setTip(false)} onFocus={() => setTip(true)} onBlur={() => setTip(false)} onClick={() => setTip((v) => !v)}>
+        <Lock className="h-3.5 w-3.5" />{c("Apply", "สมัคร")}
+      </button>
+      {tip && <span role="tooltip" className="bw-tip">{why}</span>}
+    </span>
+  );
+}
+
+export function ShareButton({ narrow, onShare }: { narrow?: boolean; onShare: () => void }) {
+  const { c } = useBw();
+  return (
+    <button type="button" className={cn("bw-btn bw-outline", narrow && "bw-icon-only")} title={c("Share", "แชร์")} aria-label={c("Share", "แชร์")} onClick={onShare}>
+      <Share2 className="h-4 w-4" />{!narrow && <span>{c("Share", "แชร์")}</span>}
+    </button>
+  );
+}
+
+export type CardMode = "browse" | "applications" | "preview";
+
+export function BuyOrderCard({ card, persona, applyCtx, mode = "browse", sharedWithYou, onDetails, onApply, onShare }: {
+  card: BoCard; persona: "seller" | "buyer" | "advisor"; applyCtx?: ApplyContext; mode?: CardMode; sharedWithYou?: boolean;
+  onDetails: () => void; onApply: () => void; onShare: () => void;
+}) {
+  const { c, th } = useBw();
+  const sectorName = useSectorName();
+  const [more, setMore] = useState(false);
+  const boxId = useId();
+  const closed = card.status === "closed";
+  const posted = card.status === "posted";
+  const applied = mode === "browse" && persona === "seller" && !!card.myApp;
+  const grey = closed || applied;
+  const rootRef = useRef<HTMLElement>(null);
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => setNarrow(el.clientWidth - 32 < 320));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const canShare = posted && !card.yours && mode !== "preview";
+  const buttons: ReactNode[] = [];
+  if (persona === "seller") {
+    if (mode === "applications" && card.myApp) buttons.push(<div key="st" className="flex-[2] min-w-0"><AppState card={card} /></div>);
+    else if (card.myApp) buttons.push(<span key="ap" className="bw-btn bw-applied"><Check className="h-4 w-4" />{c("Applied", "สมัครแล้ว")}</span>);
+    else if (posted) buttons.push(<ApplyButton key="ap" ctx={applyCtx} onApply={onApply} />);
+  }
+  buttons.push(<button key="vd" type="button" className="bw-btn bw-outline" onClick={onDetails}>{c("View details", "ดูรายละเอียด")}</button>);
+  const three = canShare && buttons.length >= 2;
+  if (canShare) buttons.push(<ShareButton key="sh" narrow={three && narrow} onShare={onShare} />);
+
+  const date = closed ? c(`Closed ${fmtDay(card.closesOn ?? card.closedAt)}`, `ปิดแล้ว ${fmtDay(card.closesOn ?? card.closedAt, true)}`) : card.closesOn ? c(`Closes ${fmtDay(card.closesOn)}`, `ปิดรับ ${fmtDay(card.closesOn, true)}`) : "";
+  const any = (v: string) => (v === "Any" ? c("Any", "ไม่จำกัด") : v);
+
+  return (
+    <article ref={rootRef} className={cn("bw-card", grey && "bw-grey", more && "bw-open")} aria-label={`${card.name} · ${card.ref}`}>
+      <div className="bw-card-cover">
+        <Cover card={card} height={112}
+          top={<><div className="bw-row-l"><StatusPill card={card} preview={mode === "preview"} />{card.yours && <span className="bw-pill bw-yours"><User className="h-3 w-3" />{c("Yours", "ของคุณ")}</span>}{sharedWithYou && <span className="bw-pill bw-shared"><Share2 className="h-3 w-3" />{c("Shared with you", "แชร์ให้คุณ")}</span>}</div><BuyerChip card={card} /></>}
+          bottom={<><KindPill kind={card.kind} />{card.client == null && (posted || closed || mode === "preview") && (
+            <span className="bw-pill">
+              <span title={c("People who opened this buy order", "คนที่เปิดดูประกาศนี้")} className="inline-flex items-center gap-1"><Eye className="h-[13px] w-[13px]" />{card.views === 1 ? c("1 view", "เข้าชม 1 ครั้ง") : c(`${card.views} views`, `เข้าชม ${card.views} ครั้ง`)}</span>
+              <i className="bw-dot" />
+              <span title={c("Sellers who applied", "ผู้ขายที่สมัคร")} className="inline-flex items-center gap-1"><Users className="h-[13px] w-[13px]" />{c(`${card.applied} applied`, `สมัคร ${card.applied}`)}</span>
+            </span>
+          )}</>} />
+      </div>
+      <div className="bw-card-head">
+        {card.kind === "sealed" && <span aria-hidden className="bw-watermark">{th ? "ปิดผนึก" : "SEALED"}</span>}
+        <div className="bw-title-row"><h3>{card.name}</h3><span>{card.ref}</span></div>
+        <p className="bw-desc">{card.description}</p>
+        {card.client && <p className="bw-client"><Lock className="h-[13px] w-[13px]" />{c(`For ${card.client.name ?? "—"} · ${card.client.ref ?? "—"} · only PitchSnack sees this`, `สำหรับ ${card.client.name ?? "—"} · ${card.client.ref ?? "—"} · เห็นเฉพาะ PitchSnack`)}</p>}
+        <div className="bw-req">{c("Buying requirement", "ความต้องการซื้อ")}</div>
+      </div>
+      <div className="bw-card-box">
+        <div className="bw-box" id={boxId}>
+          <div className="bw-cell bw-span bw-loc">
+            <div><small>{c("Location", "ที่ตั้ง")}</small><b className="bw-one">{card.location}</b></div>
+            <div className="min-w-0"><small>{c("City", "เมือง")}</small><b className="bw-one" title={card.cities}>{any(card.cities || "Any")}</b></div>
+          </div>
+          <div className="bw-cell"><small>{c("Property size", "ขนาดที่ดิน")}</small><b className="bw-one bw-sm">{any(card.propertySize)}</b></div>
+          <div className="bw-cell"><small>{c("Factory size", "ขนาดโรงงาน")}</small><b className="bw-one bw-sm">{any(card.factorySize)}</b></div>
+          <div className="bw-cell"><small>{c("Target revenue", "รายได้เป้าหมาย")}</small><b>{card.targetRevenue}</b></div>
+          <div className="bw-cell"><small>{c("Price range", "ช่วงราคา")}</small><b>{card.priceRange}</b></div>
+          {more && <>
+            <div className="bw-cell bw-span bw-deal"><small>{c("Deal type", "รูปแบบดีล")}</small><b className="bw-sm">{card.dealTypes.join(" · ") || "—"}</b></div>
+            <div className="bw-cell bw-span"><small>{c("Must have", "ต้องมี")}</small><b className="bw-sm">{card.mustHave.join(" · ") || "—"}</b></div>
+          </>}
+        </div>
+        <div className="bw-foot">
+          <span><Calendar className="h-[13px] w-[13px]" />{date}</span>
+          <button type="button" className="bw-more" aria-expanded={more} aria-controls={boxId} onClick={() => setMore((v) => !v)}>
+            {more ? c("Show less", "แสดงน้อยลง") : c("Show more", "แสดงเพิ่ม")}<ChevronDown className={cn("h-3.5 w-3.5 transition-transform", more && "rotate-180")} />
+          </button>
+        </div>
+      </div>
+      <div className="bw-buttons">{buttons}</div>
+      <span className="sr-only">{sectorName(card.sector)}</span>
+    </article>
+  );
+}
