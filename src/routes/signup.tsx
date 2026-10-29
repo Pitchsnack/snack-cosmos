@@ -662,14 +662,12 @@ function SignupInner() {
                                   onChange={(e) => { setSize(e.target.value.replace(/\D/g, "").replace(/^0+/, "").slice(0, 5)); setErr5((x) => ({ ...x, size: false })); }} />
                                 <span className="su-unit">{t(S.people)}</span></div>
                             ) : (
-                              <Select value={size || undefined} onValueChange={(v) => { setSize(v); setErr5((x) => ({ ...x, size: false })); }}>
-                                <SelectTrigger id="su-size" className={`lg-field su-f su-sel ${err5.size ? "bad" : ""} ${size ? "" : "su-ph"}`}>
-                                  <Users size={18} /><span className="su-sel-v"><SelectValue placeholder={t(S.sizePick)} /></span>
-                                </SelectTrigger>
-                                <SelectContent position="popper" sideOffset={4} className="su-sel-list">
-                                  {SIZES.map((s) => <SelectItem key={s} value={s}>{s === "500+" ? t(S.sizeMore) : s.replace("-", "–")}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
+                              <div className={`lg-field su-f ${err5.size ? "bad" : ""}`}><Users size={18} />
+                                <select id="su-size" value={size} onChange={(e) => { setSize(e.target.value); setErr5((x) => ({ ...x, size: false })); }}
+                                  className={`w-full bg-transparent outline-none ${size ? "" : "text-muted-foreground"}`}>
+                                  <option value="" disabled>{t(S.sizePick)}</option>
+                                  {SIZES.map((s) => <option key={s} value={s}>{s === "500+" ? t(S.sizeMore) : s.replace("-", "–")}</option>)}
+                                </select></div>
                             )}
                           </div>
                         </div>
