@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { Link } from "@tanstack/react-router";
 import { Calendar, ChevronDown, Eye, EyeOff, Lock, Megaphone, Send, Share2, User, Users, Check, Clock, CircleCheck, Info } from "lucide-react";
 import { useTranslation } from "@/i18n/language";
 import { boSector, closesInDays, coverOf, fmtDay, isNew } from "@/lib/buy-orders";
@@ -172,9 +173,15 @@ export function BuyOrderCard({ card, persona, applyCtx, mode = "browse", sharedW
     return () => ro.disconnect();
   }, []);
 
-  const canShare = posted && !card.yours && mode !== "preview";
+  const canShare = posted && !card.yours && !card.client && mode !== "preview";
   const buttons: ReactNode[] = [];
-  if (persona === "seller") {
+  if (card.appsTotal != null) {
+    const n = card.appsNew ?? 0;
+    const label = card.client
+      ? (n ? c(`Applications · ${n} to check`, `ใบสมัคร · รอตรวจ ${n}`) : c(`Applications · ${card.appsTotal}`, `ใบสมัคร · ${card.appsTotal}`))
+      : (n ? c(`Applications · ${n} new`, `ใบสมัคร · ใหม่ ${n}`) : c(`Applications · ${card.appsTotal}`, `ใบสมัคร · ${card.appsTotal}`));
+    buttons.push(<Link key="apps" to="/marketplace/pipeline/invitations" search={{ view: "applications" }} className="bw-btn bw-navy"><Users className="h-4 w-4" />{label}</Link>);
+  } else if (persona === "seller") {
     if (mode === "applications" && card.myApp) buttons.push(<div key="st" className="flex-[2] min-w-0"><AppState card={card} /></div>);
     else if (card.myApp) buttons.push(<span key="ap" className="bw-btn bw-applied"><Check className="h-4 w-4" />{c("Applied", "สมัครแล้ว")}</span>);
     else if (posted) buttons.push(<ApplyButton key="ap" ctx={applyCtx} onApply={onApply} />);
