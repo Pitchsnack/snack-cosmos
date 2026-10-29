@@ -502,7 +502,7 @@ export const adminBuyOrders = createServerFn({ method: "GET" })
     const { data: aps } = (rows ?? []).length ? await sb.from("buy_order_applications").select("buy_order_id, status").in("buy_order_id", (rows ?? []).map((r: any) => r.id)) : { data: [] };
     const invIds = [...new Set((rows ?? []).map((r: any) => r.investor_profile_id))];
     const { data: invs } = invIds.length ? await sb.from("investors").select("id, investor_name, legal_name, firm_name").in("id", invIds) : { data: [] };
-    const company = new Map((invs ?? []).map((i: any) => [i.id, i.legal_name ?? i.firm_name ?? i.investor_name ?? null]));
+    const company = new Map<string, string | null>((invs ?? []).map((i: any) => [i.id, i.legal_name ?? i.firm_name ?? i.investor_name ?? null]));
     const rowBy = new Map((rows ?? []).map((r: any) => [r.id, r]));
     const today = bkkToday();
     const in30 = new Date(Date.parse(today) + 30 * 86400_000).toISOString().slice(0, 10);
