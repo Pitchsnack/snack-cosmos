@@ -118,6 +118,7 @@ function SignupInner() {
   const boInviteFn = useServerFn(buyOrderInvite);
   const [boInv, setBoInv] = useState<{ email: string; sender: string; name: string; ref: string } | null>(null);
   useEffect(() => { if (search.join) boInviteFn({ data: { token: search.join } }).then(setBoInv, () => {}); }, [search.join]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (boInv) setEmail(boInv.email); }, [boInv]);
   const boPath = boInv ? `/marketplace/businesses-wanted?bo=${encodeURIComponent(boInv.ref)}` : null;
   const goHome = (r: Role) => { if (boPath) navigate({ to: "/marketplace/businesses-wanted", search: { bo: boInv!.ref } as never }); else navigate({ to: myCompanyPath(r) }); };
   // step 4
@@ -585,10 +586,10 @@ function SignupInner() {
                         <label className="lg-label" htmlFor="su-email">{t(S.email)}</label>
                         <div className={`lg-field su-f ${err3.email || taken ? "bad" : ""}`}><Mail size={18} />
                           <input ref={emailRef} id="su-email" type="email" autoComplete="email" placeholder={t(S.emailPh)} value={email}
-                            readOnly={gate.gateOn && !!gate.invitationEmail}
+                            readOnly={(gate.gateOn && !!gate.invitationEmail) || !!boInv}
                             onChange={(e) => { setEmail(e.target.value); setTaken(false); if (EMAIL_RE.test(e.target.value.trim())) setErr3((x) => ({ ...x, email: false })); }} /></div>
                         {err3.email && <Err text={S.eEmail} />}
-                        {gate.gateOn && gate.invitationEmail && <p className="su-hint">{sc('invitation', lang)}</p>}
+                        {((gate.gateOn && gate.invitationEmail) || boInv) && <p className="su-hint">{sc('invitation', lang)}</p>}
                         {taken && <div className="lg-err"><CircleAlert size={15} />{t(S.taken)} <Link to="/login" search={{ email: email.trim() } as never} className="lg-link">{t(S.signIn)}</Link></div>}
                       </div>
                       <div className="lg-fg">
