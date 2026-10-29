@@ -27,3 +27,8 @@ Brief: /mnt/user-uploads/lovable-one-step-approval_2.md. No tests, no test accou
 - [ ] DBD CSV export/import (section 2.3) — later step, per Dan
 
 - [x] Admin › Paid reports menu page (one row per company, store-first, bulk, side panel, Admin view)
+
+## Admin Approvals queue fix — 29 October 2026
+
+- [x] listOneStepApprovals no longer selects `sector` from `hidden_profiles` (that column lives on `startups`); PS-1030 now appears in the seller queue.
+- [x] Seller review rows read the stored vocabulary: `owner_stays` yes/no through `handoverLine()`, asking price through the price-band label (test/approvals/one-step-review.test.ts, 6 tests).
