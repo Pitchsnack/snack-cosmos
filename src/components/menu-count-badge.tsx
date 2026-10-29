@@ -1,3 +1,4 @@
+import { adminWaitingCount } from "@/lib/buy-orders.functions";
 import { useApplicationsToCheck } from "@/components/businesses-wanted/bw-applications";
 import { adminHelpCount } from "@/lib/admin-help.functions";
 import { useQuery } from "@tanstack/react-query";
@@ -64,7 +65,10 @@ export function useAdminApprovalCounts(enabled = true) {
   const reportsFn = useServerFn(paidReportsCount);
   const { data: user = 0 } = useQuery({ queryKey: ["approvals", "count"], queryFn: () => userFn(), staleTime: 60_000, enabled });
   const { data: reports = 0 } = useQuery({ queryKey: ["paid-reports-count"], queryFn: () => reportsFn(), staleTime: 60_000, enabled });
-  return { user, reports, total: user + reports };
+  const adsFn = useServerFn(adminWaitingCount);
+  const { data: adsData } = useQuery({ queryKey: ["buy-orders", "admin-waiting"], queryFn: () => adsFn(), staleTime: 60_000, enabled });
+  const ads = adsData?.n ?? 0;
+  return { user, reports, ads, total: user + reports + ads };
 }
 
 /** Count pill for the Admin sub-menu rows: amber, white on the open page, "9+" above 9, hidden at 0. */

@@ -1,4 +1,3 @@
-import { adminWaitingCount } from "@/lib/buy-orders.functions";
 import { useState, useEffect, useRef } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { KeyRound,
@@ -300,7 +299,7 @@ function SidebarBody({
   // Coming soon folds again whenever another Admin page opens.
   const [soonOpen, setSoonOpen] = useState(false);
   useEffect(() => { setSoonOpen(false); }, [pathname]);
-  const { user: approvalUserCount, reports: approvalReportCount, total: approvalTotal } =
+  const { user: approvalUserCount, reports: approvalReportCount, ads: approvalAdsCount, total: approvalTotal } =
     useAdminApprovalCounts(useControlGroups);
 
 
@@ -475,7 +474,7 @@ function SidebarBody({
                           ) : it.label === "User approval" ? (
                             <AdminSubCount count={approvalUserCount} />
                           ) : it.label === "Advertisement" ? (
-                            <AdvertisementSubCount />
+                            <span className="ml-auto inline-flex items-center gap-1"><span className="hub-new">NEW</span><AdminSubCount count={approvalAdsCount} /></span>
                           ) : undefined,
                       }))}
                     />
@@ -738,8 +737,3 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
 }
 
 
-function AdvertisementSubCount() {
-  const fn = useServerFn(adminWaitingCount);
-  const { data } = useQuery({ queryKey: ["buy-orders", "admin-waiting"], queryFn: () => fn(), staleTime: 60_000 });
-  return <span className="ml-auto inline-flex items-center gap-1"><span className="hub-new">NEW</span><AdminSubCount count={data?.n ?? 0} /></span>;
-}
