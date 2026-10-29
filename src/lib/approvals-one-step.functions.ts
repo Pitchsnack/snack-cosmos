@@ -367,7 +367,7 @@ export const decideOneStep = createServerFn({ method: "POST" })
 
 export const markReviewCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ kind: z.enum(["seller", "buyer", "advisor"]), id: z.string().uuid(), row: z.enum(["name", "address", "year", "director", "revenue"]) }).parse(d))
+  .inputValidator((d) => z.object({ kind: z.enum(["seller", "buyer", "advisor"]), id: z.string().uuid(), row: z.enum(["name", "address", "year", "director", "revenue", "website"]) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as Ctx);
     const sb = await admin();

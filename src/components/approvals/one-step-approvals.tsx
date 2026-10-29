@@ -87,7 +87,7 @@ function ReviewPanel({ item, onDone }: { item: OneStepItem; onDone: () => void }
     if (dialog !== "approve" && reasons.includes("Another reason") && !note.trim()) { setReasonError(fill("Say what the other reason is, so {first name} knows what to fix.")); return; }
     act.mutate(dialog);
   };
-  const dirPath = item.kind === "seller" ? `/startups/${r.directoryId}` : item.kind === "buyer" ? `/investors/${r.directoryId}` : `/advisors/${r.directoryId}`;
+  const dirPath = item.kind === "seller" ? `/startups/${r.directoryId}` : item.kind === "buyer" ? `/investors/${r.directoryId}` : `/advisors/?view=split&selected=${encodeURIComponent(r.directoryId ?? "")}`;
   const description = item.kind === "seller" ? "The seller suggests them. You write the version buyers see in Browse listings." : item.kind === "buyer" ? "The buyer suggests them. You write the version sellers see in Browse investors." : "The advisor suggests them. You write the version sellers and buyers see in Browse advisors.";
   const footer = item.kind === "seller" ? 'Verify and publish verifies {name}, puts {ref} in Browse listings with the Certified badge, and lets {first name} connect with buyers. {first name} gets one email: "Your listing is approved".' : item.kind === "buyer" ? 'Verify and publish verifies {name}, puts {ref} in Browse investors with the Verified investor badge, and opens NDAs for {first name}. {first name} gets one email: "Your profile is approved".' : 'Verify and publish verifies {name} and puts {ref} in Browse advisors with the Verified advisor badge. {first name} gets one email: "Your profile is approved".';
   return <article className="os-panel">
@@ -97,8 +97,8 @@ function ReviewPanel({ item, onDone }: { item: OneStepItem; onDone: () => void }
       {item.chip === "sent_back" && <div className="os-note"><b>{fill("You asked for changes on {date}.", { date: approvalDate(item.sentBackAt, language) })}</b> {fill("It comes back as waiting when {first name} submits again.")} {item.decisionNote && <blockquote>{item.decisionNote}</blockquote>}</div>}
       <section><div className="os-section-head"><div><h3>{t("Listing name and headline")}</h3><p className="os-muted">{t(description)}</p></div><span className={`os-chip ${rewritten ? "os-blue" : "os-grey"}`}>{t(rewritten ? "Rewritten" : `Same as the ${item.kind}'s`)}</span></div>
         <table className="os-table os-name-table"><thead><tr><th>{t("Detail")}</th><th>{t(`The ${item.kind} suggested`)}</th><th>{t("Published as")}</th></tr></thead><tbody>
-          <tr><td>{t("Listing name")}</td><td data-label={t(`The ${item.kind} suggested`)}>{item.suggestedName || t("Not given")}</td><td data-label={t("Published as")}><Input aria-label={t("Published listing name")} maxLength={200} value={name} onChange={e => setName(e.target.value)} aria-invalid={invalid && !name.trim()} />{invalid && !name.trim() && <p className="text-destructive">{t("Write a listing name.")}</p>}</td></tr>
-          <tr><td>{t("Headline")}</td><td data-label={t(`The ${item.kind} suggested`)}>{item.suggestedHeadline || t("Not given")}</td><td data-label={t("Published as")}><Textarea aria-label={t("Published headline")} rows={2} maxLength={300} value={headline} onChange={e => setHeadline(e.target.value)} aria-invalid={invalid && !headline.trim()} />{invalid && !headline.trim() && <p className="text-destructive">{t("Write a headline.")}</p>}</td></tr>
+          <tr><td>{t("Listing name")}</td><td data-label={t(`The ${item.kind} suggested`)}>{item.suggestedName || t("Not given")}</td><td data-label={t("Published as")}><Input aria-label={t("Published listing name")} maxLength={120} value={name} onChange={e => setName(e.target.value)} aria-invalid={invalid && !name.trim()} />{invalid && !name.trim() && <p className="text-destructive">{t("Write a listing name.")}</p>}</td></tr>
+          <tr><td>{t("Headline")}</td><td data-label={t(`The ${item.kind} suggested`)}>{item.suggestedHeadline || t("Not given")}</td><td data-label={t("Published as")}><Textarea aria-label={t("Published headline")} rows={2} maxLength={120} value={headline} onChange={e => setHeadline(e.target.value)} aria-invalid={invalid && !headline.trim()} />{invalid && !headline.trim() && <p className="text-destructive">{t("Write a headline.")}</p>}</td></tr>
         </tbody></table>
       </section>
       <section>{!r.individual && <DbdStorePanel reg={r.dbd.registrationNo} initial={r.dbd} onChanged={() => void qc.invalidateQueries({ queryKey: KEY })} />}
@@ -136,5 +136,6 @@ function reviewText(value: string | null, t: (s: string) => string, language: "e
   if (revenue) result = t("{band} in {year}").replace("{band}", t(revenue[1])).replace("{year}", String(Number(revenue[2]) + (language === "th" ? 543 : 0))) + revenue[3].replace(" · the owner's story: ", language === "th" ? " · เรื่องราวของเจ้าของ: " : " · the owner's story: ");
   const filed = value.match(/^(.*?) in the (\d{4}) accounts filed with DBD$/);
   if (filed) result = t("{amount} in the {year} accounts filed with DBD").replace("{amount}", filed[1]).replace("{year}", String(Number(filed[2]) + (language === "th" ? 543 : 0)));
+  if (language === "th" && !revenue && !filed) result = result.replace(/\b(19\d{2}|20\d{2})\b/g, y => String(Number(y) + 543)).replace(" · the owner's story: ", " · เรื่องราวของเจ้าของ: ");
   return result;
 }

@@ -96,31 +96,12 @@ export function publicWebsite(value: string): URL | null {
     return u;
   } catch { return null; }
 }
-export async function checkWebsite(url: string | null | undefined): Promise<"works" | "dead" | "none"> {
+export async function checkWebsite(url: string | null | undefined): Promise<"works" | "dead" | "none" | "unchecked"> {
   if (!url?.trim()) return "none";
-  let target = publicWebsite(url.trim());
-  if (!target) return "dead";
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 8_000);
-  try {
-    for (let hop = 0; hop < 6; hop++) {
-      // Resolve through public DNS before fetching, rejecting private/rebinding targets.
-      const dns = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(target.hostname)}&type=A`, { headers: { accept: "application/dns-json" }, signal: ctrl.signal });
-      const answer = await dns.json() as { Answer?: { type: number; data: string }[] };
-      const addresses = (answer.Answer ?? []).filter(a => a.type === 1).map(a => a.data);
-      if (!addresses.length || addresses.some(ip => /^(0\.|10\.|127\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|192\.0\.|198\.(1[89])\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|2[2-5]\d\.)/.test(ip))) return "dead";
-      const res = await fetch(target.href, { method: "GET", redirect: "manual", signal: ctrl.signal });
-      const location = res.headers.get("location");
-      void res.body?.cancel();
-      if (res.status >= 300 && res.status < 400 && location) {
-        target = publicWebsite(new URL(location, target).href);
-        if (!target) return "dead";
-        continue;
-      }
-      return res.status < 400 || res.status === 401 || res.status === 403 ? "works" : "dead";
-    }
-    return "dead";
-  } catch { return "dead"; } finally { clearTimeout(timer); }
+  if (!publicWebsite(url.trim())) return "dead";
+  // DNS preflight followed by fetch cannot pin the destination in this runtime:
+  // fail closed rather than permit DNS rebinding into internal services.
+  return "unchecked";
 }
 
 type DbdFacts = import("./dbd-store.server").DbdFacts & { manual?: boolean };
@@ -152,7 +133,7 @@ export function nameRow(label: string, from: string | null, dbd: DbdFacts | null
   return {
     key: "name", label, from, found: found ?? "Check by hand", source: dbd ? (dbd.manual ? "Entered by hand" : "DBD register") : null,
     result: !from ? "not_given" : !hasName ? "by_hand" : match ? "match" : "differs",
-    resultLabel: !from ? "Not given" : !hasName ? "By hand" : match ? "Matches" : "Differs",
+    resultLabel: !from ? "Differs" : !hasName ? "By hand" : match ? "Matches" : "Differs",
     link: null, checked,
   };
 }
@@ -161,7 +142,7 @@ function addressRow(from: string | null, dbd: DbdFacts | null, checked: boolean)
   return {
     key: "address", label: "Address", from, found: dbd?.address ?? "Check by hand", source: dbd?.address ? (dbd.manual ? "Entered by hand" : "DBD register") : null,
     result: !from ? "not_given" : !dbd?.address ? "by_hand" : sameText(from, dbd.address) ? "match" : "differs",
-    resultLabel: !from ? "Not given" : !dbd?.address ? "By hand" : sameText(from, dbd.address) ? "Matches" : "Differs",
+    resultLabel: !from ? "Differs" : !dbd?.address ? "By hand" : sameText(from, dbd.address) ? "Matches" : "Differs",
     link: null, checked,
   };
 }
@@ -176,7 +157,7 @@ function yearRow(from: string | null, storyYear: string | null, dbd: DbdFacts | 
     key: "year", label: "Year founded", from: both, found: dbd?.registeredOn ? `Registered on ${dbd.registeredOn}` : "Check by hand",
     source: dbd?.registeredOn ? (dbd.manual ? "Entered by hand" : "DBD register") : null,
     result: !from ? "not_given" : regYear == null ? "by_hand" : match ? "match" : "differs",
-    resultLabel: !from ? "Not given" : regYear == null ? "By hand" : match ? "Matches" : "Differs",
+    resultLabel: !from ? "Differs" : regYear == null ? "By hand" : match ? "Matches" : "Differs",
     link: null, checked,
   };
 }
@@ -188,7 +169,7 @@ function directorRow(label: string, person: string | null, who: string, dbd: Dbd
     found: dbd?.directors.length ? `Directors: ${dbd.directors.join(", ")}` : "Check by hand",
     source: dbd?.directors.length ? (dbd.manual ? "Entered by hand" : "DBD register") : null,
     result: !person ? "not_given" : !dbd?.directors.length ? "by_hand" : isDir ? "match" : "differs",
-    resultLabel: !person ? "Not given" : !dbd?.directors.length ? "By hand" : isDir ? "Is a director" : "Not a director",
+    resultLabel: !person ? "Differs" : !dbd?.directors.length ? "By hand" : isDir ? "Is a director" : "Not a director",
     link: null, checked,
   };
 }
@@ -217,13 +198,13 @@ export function revenueRow(bandKey: string | null, bandYear: string, storySales:
   };
 }
 
-export function websiteRow(url: string | null, status: "works" | "dead" | "none"): ReviewRow {
+export function websiteRow(url: string | null, status: "works" | "dead" | "none" | "unchecked"): ReviewRow {
   return {
     key: "website", label: "Website", from: url,
-    found: status === "none" ? "Nothing to open" : status === "works" ? "The link opens" : "The link doesn't open",
-    source: status === "none" ? null : "Link check",
-    result: status === "none" ? "not_given" : status === "works" ? "match" : "differs",
-    resultLabel: status === "none" ? "Not given" : status === "works" ? "Works" : "Doesn't open",
+    found: status === "unchecked" ? "Check by hand" : status === "none" ? "Nothing to open" : status === "works" ? "The link opens" : "The link doesn't open",
+    source: status === "none" || status === "unchecked" ? null : "Link check",
+    result: status === "unchecked" ? "by_hand" : status === "none" ? "not_given" : status === "works" ? "match" : "differs",
+    resultLabel: status === "unchecked" ? "By hand" : status === "none" ? "Not given" : status === "works" ? "Works" : "Doesn't open",
     link: url ? publicWebsite(url)?.href ?? null : null, checked: false,
   };
 }
@@ -279,7 +260,7 @@ export async function sellerReview(sb: any, hp: any, st: any, founder: any, chec
       yearRow(st?.year_founded ? String(st.year_founded) : null, storyYear, dbd, has("year")),
       directorRow("Owner vs directors", founder?.full_name ?? null, "the owner in About Owner", dbd, has("director")),
       revenueRow(st?.last_year_revenue ?? null, year, storySales, dbd, has("revenue")),
-      websiteRow(st?.website_url ?? null, web),
+      { ...websiteRow(st?.website_url ?? null, web), checked: has("website") },
     ],
     email: st?.email ?? null,
     phone: st?.contact_number ?? null,
@@ -321,7 +302,7 @@ export async function buyerReview(sb: any, p: any, inv: any, user: any, checked:
         byHandId("name", "Name", person, "No company record. Check it against their ID.", has("name")),
         byHandId("address", "Address", address, "Check it against their ID.", has("address")),
         notNeeded("year", "Year founded"), notNeeded("director", "Director vs user"), notNeeded("revenue", "Revenue"),
-        { ...websiteRow(inv?.website_url ?? null, web), ...(web === "none" ? { result: "not_needed" as const, resultLabel: "Not needed" } : {}) },
+        { ...{ ...websiteRow(inv?.website_url ?? null, web), checked: has("website") }, ...(web === "none" ? { result: "not_needed" as const, resultLabel: "Not needed" } : {}) },
       ]
     : [
         nameRow("Company name", inv?.investor_name ?? null, dbd, has("name")),
@@ -329,7 +310,7 @@ export async function buyerReview(sb: any, p: any, inv: any, user: any, checked:
         yearRow(inv?.year_founded ? String(inv.year_founded) : null, null, dbd, has("year")),
         directorRow("Director vs user", person, "who submitted the profile", dbd, has("director")),
         revenueRow(p.revenue_band ?? null, year, null, dbd, has("revenue")),
-        websiteRow(inv?.website_url ?? null, web),
+        { ...websiteRow(inv?.website_url ?? null, web), checked: has("website") },
       ];
   return {
     registrationNo: individual ? null : inv?.registration_no ?? null,
@@ -427,7 +408,7 @@ export async function advisorReview(sb: any, f: any, owner: any, checked: string
       addressRow(address, dbd, has("address")),
       yearRow(f.year_founded ? String(f.year_founded) : null, null, dbd, has("year")),
       directorRow("Director vs user", person, "who submitted the profile", dbd, has("director")),
-      websiteRow(f.website ?? null, web),
+      { ...websiteRow(f.website ?? null, web), checked: has("website") },
     ],
     email: f.email ?? null,
     phone: owner?.phone ?? f.phone ?? null,
