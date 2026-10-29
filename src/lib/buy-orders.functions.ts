@@ -188,3 +188,158 @@ export const applyToBuyOrder = createServerFn({ method: "POST" })
     if (error) throw new Error(error.code === "23505" ? BO_CHANGED : error.message);
     return { ok: true };
   });
+
+// ---------- Applications (stage 2) ----------
+
+export type AppRow = {
+  id: string; status: BoAppStatus; appliedAt: string; decidedAt: string | null; note: string | null;
+  bo: { id: string; ref: string; name: string; kind: BoKind };
+  listing: { id: string; codeName: string | null; ref: string | null; sector: string | null; province: string | null; revenue: string | null; dealType: string | null; headline: string | null; description: string | null; highlights: string[] };
+  match: { key: "industry" | "location" | "revenue" | "deal"; ok: boolean }[];
+  client: { name: string | null; ref: string | null } | null;
+};
+
+/** The buy order's own side: the Advertisement's buyer, or an admin for a Sealed one. */
+async function isOwnSide(sb: any, userId: string, role: string | null, bo: any) {
+  if (bo.kind === "sealed") return role === "admin";
+  return (await myInvestorIds(sb, userId)).includes(bo.investor_profile_id);
+}
+
+async function reviewRows(sb: any, userId: string, role: string | null): Promise<AppRow[]> {
+  let q = sb.from("buy_orders").select("id, ref, name_on_card, kind, investor_profile_id, sector, location, target_revenue, deal_types").in("status", ["posted", "closed"]);
+  if (role === "admin") q = q.eq("kind", "sealed");
+  else {
+    const mine = await myInvestorIds(sb, userId);
+    if (!mine.length) return [];
+    q = q.eq("kind", "advertisement").in("investor_profile_id", mine);
+  }
+  const { data: bos } = await q;
+  if (!bos?.length) return [];
+  const boBy = new Map<string, any>(bos.map((b: any) => [b.id, b]));
+  const { data: apps } = await sb.from("buy_order_applications").select("*").in("buy_order_id", [...boBy.keys()]).order("applied_at", { ascending: false });
+  if (!apps?.length) return [];
+  const hpIds = [...new Set(apps.map((a: any) => a.business_id))];
+  const { data: hps } = await sb.from("hidden_profiles").select("id, startup_id, ref_no, code_name, live, deal_type").in("id", hpIds);
+  const sIds = [...new Set((hps ?? []).map((h: any) => h.startup_id))];
+  const { data: sts } = sIds.length ? await sb.from("startups").select("id, sector, city, address_province_state, headquarters, last_year_revenue").in("id", sIds) : { data: [] };
+  const hpBy = new Map<string, any>((hps ?? []).map((h: any) => [h.id, h]));
+  const stBy = new Map<string, any>((sts ?? []).map((s: any) => [s.id, s]));
+  let clients = new Map<string, any>();
+  if (role === "admin") {
+    const invIds = [...new Set(bos.map((b: any) => b.investor_profile_id))];
+    const [{ data: invs }, { data: bps }] = await Promise.all([
+      sb.from("investors").select("id, investor_name, firm_name").in("id", invIds),
+      sb.from("buyer_profiles").select("investor_id, ref_no").in("investor_id", invIds),
+    ]);
+    const refBy = new Map((bps ?? []).map((b: any) => [b.investor_id, b.ref_no]));
+    clients = new Map((invs ?? []).map((i: any) => [i.id, { name: i.investor_name ?? i.firm_name ?? null, ref: refBy.get(i.id) ?? null }]));
+  }
+  const { matchOf } = await import("@/lib/buy-orders");
+  return apps.map((a: any) => {
+    const bo = boBy.get(a.buy_order_id);
+    const hp = hpBy.get(a.business_id) ?? {};
+    const st = stBy.get(hp.startup_id) ?? {};
+    const live = (hp.live ?? {}) as any;
+    const hq = (st.headquarters ?? "").toLowerCase();
+    const country = ["Vietnam", "Malaysia", "Indonesia"].find((c) => hq.includes(c.toLowerCase())) ?? "Thailand";
+    const listing = {
+      id: a.business_id, codeName: live.code_name ?? hp.code_name ?? null, ref: hp.ref_no ?? null, sector: st.sector ?? null,
+      province: (st.address_province_state || (st.city ?? "").split(",")[0] || "").trim() || null,
+      revenue: st.last_year_revenue ?? null, dealType: live.deal_type ?? hp.deal_type ?? null,
+      headline: live.headline ?? null, description: live.description ?? null, highlights: (live.highlights ?? []) as string[],
+    };
+    return {
+      id: a.id, status: a.status, appliedAt: a.applied_at, decidedAt: a.decided_at, note: a.note,
+      bo: { id: bo.id, ref: bo.ref, name: bo.name_on_card, kind: bo.kind },
+      listing, match: matchOf({ ...listing, country }, bo).rows,
+      client: role === "admin" ? clients.get(bo.investor_profile_id) ?? null : null,
+    };
+  });
+}
+
+/** Pipeline › NDA Invitations › Applications. Sellers get their own; buyers and Control get the ones to decide. */
+export const listApplications = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { as: "seller" | "buyer" }) => z.object({ as: z.enum(["seller", "buyer"]) }).parse(d))
+  .handler(async ({ context, data }): Promise<{ mode: "seller"; cards: BoCard[] } | { mode: "review"; rows: AppRow[] }> => {
+    const role = await viewerRole(context.userId);
+    const sb = await admin();
+    if (data.as === "seller") {
+      if (role !== "seller" && role !== "admin") return { mode: "seller", cards: [] };
+      const s = await mySellerListing(context.userId);
+      if (!s) return { mode: "seller", cards: [] };
+      const { data: apps } = await sb.from("buy_order_applications").select("buy_order_id, applied_at").eq("business_id", s.facts.id).order("applied_at", { ascending: false });
+      const ids = (apps ?? []).map((a: any) => a.buy_order_id);
+      if (!ids.length) return { mode: "seller", cards: [] };
+      const { data: rows } = await sb.from("buy_orders").select("*").in("id", ids);
+      const order = new Map(ids.map((id: string, i: number) => [id, i]));
+      const sorted = (rows ?? []).sort((a: any, b: any) => (order.get(a.id) as number) - (order.get(b.id) as number));
+      return { mode: "seller", cards: await cardsFor(sb, sorted, context.userId, false, s.facts.id) };
+    }
+    if (role !== "buyer" && role !== "admin") return { mode: "review", rows: [] };
+    return { mode: "review", rows: await reviewRows(sb, context.userId, role) };
+  });
+
+/** Applications waiting for a decision (the tab and menu counts). */
+export const applicationsToCheck = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const role = await viewerRole(context.userId);
+    if (role !== "buyer" && role !== "admin") return { n: 0 };
+    const rows = await reviewRows(await admin(), context.userId, role);
+    return { n: rows.filter((r) => r.status === "new").length };
+  });
+
+/** Request NDA (signed by the caller; for a Sealed one, for the client) or Not a fit. */
+export const decideApplication = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; action: "nda" | "not_a_fit"; consent?: string }) =>
+    z.object({ id: z.string().uuid(), action: z.enum(["nda", "not_a_fit"]), consent: z.string().max(500).optional() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const role = await viewerRole(context.userId);
+    const sb = await admin();
+    const { data: app } = await sb.from("buy_order_applications").select("*").eq("id", data.id).maybeSingle();
+    if (!app) throw new Error(BO_CHANGED);
+    const { data: bo } = await sb.from("buy_orders").select("id, kind, status, investor_profile_id").eq("id", app.buy_order_id).maybeSingle();
+    if (!bo || !(await isOwnSide(sb, context.userId, role, bo))) throw new Error("Not allowed");
+    if (app.status !== "new") throw new Error(BO_CHANGED);
+    const now = new Date().toISOString();
+    if (data.action === "not_a_fit") {
+      const { data: done } = await sb.from("buy_order_applications").update({ status: "not_a_fit", decided_at: now, decided_by_user_id: context.userId }).eq("id", app.id).eq("status", "new").select("id");
+      if (!done?.length) throw new Error(BO_CHANGED);
+      return { ok: true };
+    }
+    // NDA request from the buy order's investor profile to the applicant's listing.
+    const { isBuyerVisible } = await import("@/lib/hidden-profile");
+    const { data: hp } = await sb.from("hidden_profiles").select("id, startup_id, approval_status, live").eq("id", app.business_id).maybeSingle();
+    if (!isBuyerVisible(hp)) throw new Error("This listing isn't available");
+    let buyerUserId = context.userId;
+    if (bo.kind === "sealed") {
+      const { data: bp } = await sb.from("buyer_profiles").select("user_id").eq("investor_id", bo.investor_profile_id).limit(1).maybeSingle();
+      if (!bp?.user_id) throw new Error("This client has no buyer account");
+      buyerUserId = bp.user_id;
+    } else {
+      const { verificationByUser } = await import("./profile-verification.server");
+      const bv = await verificationByUser(sb, context.userId, "status");
+      const { data: uv } = await sb.from("user_verifications").select("user_id").eq("user_id", context.userId).maybeSingle();
+      if (!uv && (bv as any)?.status !== "verified") throw new Error("Verify your buyer profile first");
+    }
+    const { data: prev } = await sb.from("deal_pipelines").select("id, status").eq("hidden_profile_id", hp.id).eq("buyer_user_id", buyerUserId).maybeSingle();
+    if (prev && !["withdrawn", "declined"].includes(prev.status)) throw new Error("This buyer already has an NDA request or invitation with this listing.");
+    if (role !== "admin") await (await import("./plan-access.server")).spendRequest(context.userId, "nda", hp.id);
+    let pipelineId: string;
+    if (prev) {
+      const { error } = await sb.from("deal_pipelines").update({ status: "active", nda_requested_at: now, nda_approved_at: null }).eq("id", prev.id);
+      if (error) throw new Error(error.message);
+      pipelineId = prev.id;
+    } else {
+      const { data: row, error } = await sb.from("deal_pipelines").insert({ hidden_profile_id: hp.id, startup_id: hp.startup_id, buyer_user_id: buyerUserId, status: "active" }).select("id").single();
+      if (error) throw new Error(error.message);
+      pipelineId = row.id;
+    }
+    await sb.from("deal_pipeline_events").insert({ pipeline_id: pipelineId, event: "nda_requested", actor_id: context.userId, note: data.consent ?? null });
+    await (await import("./email-alerts.server")).pipelineAlert(pipelineId, "nda_requested").catch(() => {});
+    await (await import("./invitations.server")).notifySellers(hp.startup_id, "New NDA request", "Open Pipeline › NDA Invitations to review and approve the NDA.", "/marketplace/pipeline/invitations").catch(() => {});
+    await sb.from("buy_order_applications").update({ status: "nda_requested", decided_at: now, decided_by_user_id: context.userId, nda_request_id: pipelineId }).eq("id", app.id);
+    return { ok: true };
+  });
