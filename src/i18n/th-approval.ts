@@ -679,6 +679,6 @@ export const TH_APPROVAL: Record<string, string> = {
   "Below ฿50M": "ต่ำกว่า ฿50 ล้าน",
   "Below ฿100M": "ต่ำกว่า ฿100 ล้าน",
   "Under ฿50M": "ต่ำกว่า ฿50 ล้าน",
-  "Revenue FY{year}": "รายได้ปี {year}"
+  "Revenue FY{year}": "รายได้ปี {year}",
   " that your account is approved.": " เมื่อบัญชีของท่านได้รับอนุมัติแล้ว",
 };
