@@ -49,5 +49,7 @@ Brief: /mnt/user-uploads/lovable-one-step-approval_2.md. No tests, no test accou
 ## Businesses Wanted (brief: lovable-businesses-wanted.md), in stages
 - [x] Stage 1: tables, menu row, page, filters, industry tiles, cards, View details, seller Apply
 - [ ] Stage 2: Pipeline › NDA Invitations › Applications (seller + buyer/Control), Request NDA / Not a fit, Sealed NDA naming (sections 6.5, 7, 8)
-- [ ] Stage 3: Advertisement menu + My advertisements + buy order form; Admin › Approvals › Advertisement; daily 00:05 close job (sections 9–11)
-- [ ] Stage 4: Share by email, sign-up from a shared buy order, first look (section 12); full Thai pass (section 14)
+- [x] Stage 3: Advertisement menu + My advertisements + buy order form; Admin › Approvals › Advertisement; daily 00:05 close job (sections 9–11)
+- [x] Stage 4: Share by email, sign-up from a shared buy order, first look (section 12); nightly close at 00:05 Bangkok
+- [ ] Sealed NDA "PitchSnack Private Client" name rule until LOI (section 8.5)
+- [ ] Full Thai pass against section 14 table

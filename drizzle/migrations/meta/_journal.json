@@ -820,6 +820,13 @@
       "when": 1793309036346,
       "tag": "0116_buy_orders",
       "breakpoints": true
+    },
+    {
+      "idx": 117,
+      "version": "7",
+      "when": 1793312615337,
+      "tag": "0117_buy_order_share_and_close",
+      "breakpoints": true
     }
   ]
 }

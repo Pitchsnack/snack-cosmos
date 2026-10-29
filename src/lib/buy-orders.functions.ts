@@ -31,6 +31,8 @@ export type BoCard = {
   sentToAdminAt: string | null; adminNote: string | null; extendedCount: number;
   /** Admins only. */
   client: { id: string; name: string | null; ref: string | null; writer: string | null } | null;
+  /** The sender's name, when this buy order was shared with the viewer by email (newest share). */
+  sharedBy?: string | null; sharedAt?: string | null;
 };
 
 export type ApplyContext = {
@@ -139,7 +141,20 @@ export const listBuyOrders = createServerFn({ method: "GET" })
     const { data, error } = await q;
     if (error) throw new Error(error.message);
     const seller = role === "seller" || role === "admin" ? await mySellerListing(context.userId) : null;
-    return { cards: await cardsFor(sb, data ?? [], context.userId, role === "admin", seller?.facts.id ?? null), isAdmin: role === "admin" };
+    const cards = await cardsFor(sb, data ?? [], context.userId, role === "admin", seller?.facts.id ?? null);
+    if (role !== "admin") {
+      const { data: sh } = await sb.from("share_invitations").select("buy_order_id, sender_user_id, sent_at").eq("joined_user_id", context.userId).not("buy_order_id", "is", null).order("sent_at", { ascending: false });
+      const rows = (sh ?? []) as any[];
+      if (rows.length) {
+        const sids = [...new Set(rows.map((r) => r.sender_user_id))];
+        const { data: us } = await sb.from("users").select("id, first_name, last_name").in("id", sids);
+        const nm = new Map((us ?? []).map((u: any) => [u.id, [u.first_name, u.last_name].filter(Boolean).join(" ") || "PitchSnack member"]));
+        const first = new Map<string, any>();
+        for (const r of rows) if (!first.has(r.buy_order_id)) first.set(r.buy_order_id, r);
+        for (const c of cards) { const r = first.get(c.id); if (r && !c.yours) { c.sharedBy = String(nm.get(r.sender_user_id) ?? "PitchSnack member"); c.sharedAt = r.sent_at; } }
+      }
+    }
+    return { cards, isAdmin: role === "admin" };
   });
 
 /** How many buy orders were posted in the last 7 days (the menu pill). */
@@ -613,4 +628,77 @@ export const adminBuyOrderApplicants = createServerFn({ method: "GET" })
     const sb = await admin();
     const rows = await reviewRows(sb, context.userId, "admin", data.id);
     return { rows };
+  });
+
+
+const senderName = (u: any) => [u?.first_name, u?.last_name].filter(Boolean).join(" ") || "PitchSnack member";
+
+/** Share a posted buy order by email (section 12.2). Answers OK either way so it never tells who is on PitchSnack. */
+export const sendBuyOrderShare = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), email: z.string().trim().email().max(254).transform((v) => v.toLowerCase()), lang: z.enum(["en", "th"]) }).parse(d))
+  .handler(async ({ context, data }) => {
+    const role = await viewerRole(context.userId);
+    if (!role || role === "admin") throw new Error("Not available");
+    const sb = await admin();
+    const { data: r } = await sb.from("buy_orders").select("*").eq("id", data.id).maybeSingle();
+    if (!r || effectiveStatus(r.status, r.closes_on) !== "posted") throw new Error(BO_CHANGED);
+    const mine = await myInvestorIds(sb, context.userId);
+    if (mine.includes(r.investor_profile_id)) throw new Error("Not available");
+    const { count } = await sb.from("share_invitations").select("id", { count: "exact", head: true }).eq("sender_user_id", context.userId).not("buy_order_id", "is", null).gte("sent_at", new Date(Date.now() - 60000).toISOString());
+    if ((count ?? 0) >= 10) throw new Error("Please wait before sending again");
+    const [card] = await cardsFor(sb, [r], context.userId, false, null);
+    const { data: me } = await sb.from("users").select("first_name, last_name").eq("id", context.userId).maybeSingle();
+    const name = senderName(me);
+    const { data: ex } = await sb.from("users").select("id").ilike("email", data.email.replace(/[\\%_]/g, "\\$&")).limit(1);
+    let existing = !!ex?.length;
+    if (!existing) { const { data: f } = await sb.rpc("share_email_has_account", { _email: data.email }); existing = !!f; }
+    let url = `https://pitchsnack.com/marketplace/businesses-wanted?bo=${encodeURIComponent(r.ref)}`;
+    let refKey = `buy-order-share:${r.id}:${data.email}:${Date.now()}`;
+    if (!existing) {
+      const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, "0")).join("");
+      const { data: inv, error } = await sb.from("share_invitations").insert({ sender_user_id: context.userId, email: data.email, token, buy_order_id: r.id }).select("id").single();
+      if (error) throw new Error("Invitation unavailable");
+      url = `https://pitchsnack.com/signup?join=${token}`; refKey = `buy-order-share:${inv.id}`;
+    }
+    const th = data.lang === "th";
+    const { coverOf, placeOf, fmtDay } = await import("@/lib/buy-orders");
+    const { BO_SHARE_COPY: C } = await import("@/lib/email-templates/buy-order-share");
+    const k = (x: keyof typeof C) => C[x][th ? 1 : 0];
+    const payload = {
+      name, email: data.email, lang: data.lang, url, existing,
+      card: {
+        title: card.name, ref: card.ref, description: card.description, tile: coverOf(card.sector).mid,
+        buyer: [card.buyerType, card.country].filter(Boolean).join(" · "), sealed: card.kind === "sealed",
+        rows: [
+          { l: k("location"), v: placeOf(card.cities, card.location) }, { l: k("rev"), v: card.targetRevenue }, { l: k("price"), v: card.priceRange },
+          { l: k("deal"), v: card.dealTypes.join(", ") }, { l: k("close"), v: fmtDay(card.closesOn, th) },
+        ],
+      },
+    };
+    const base = { alert_key: "Buy order share", role, user_id: context.userId, email: data.email, subject: k("subject").replace("{name}", name), ref_key: refKey };
+    try {
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      const res = await sendTemplateEmail("buy-order-share", data.email, { templateData: payload, idempotencyKey: refKey });
+      await sb.from("email_alert_log").insert({ ...base, status: res.sent ? "sent" : "suppressed" });
+    } catch (e) {
+      await sb.from("email_alert_log").insert({ ...base, status: "failed", reason: (e instanceof Error ? e.message : "Send failed").slice(0, 300) });
+      throw new Error("Invitation unavailable");
+    }
+    return { ok: true };
+  });
+
+/** Sign-up from a buy order email: only the token holder learns the sender and the card's public name/ref. */
+export const buyOrderInvite = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ token: z.string().min(16).max(128) }).parse(d))
+  .handler(async ({ data }) => {
+    const sb = await admin();
+    const { data: inv } = await sb.from("share_invitations").select("email, sender_user_id, buy_order_id").eq("token", data.token).maybeSingle();
+    if (!inv?.buy_order_id) return null;
+    const [{ data: bo }, { data: u }] = await Promise.all([
+      sb.from("buy_orders").select("ref, name_on_card").eq("id", inv.buy_order_id).maybeSingle(),
+      sb.from("users").select("first_name, last_name").eq("id", inv.sender_user_id).maybeSingle(),
+    ]);
+    if (!bo) return null;
+    return { email: inv.email as string, sender: senderName(u), name: bo.name_on_card as string, ref: bo.ref as string };
   });

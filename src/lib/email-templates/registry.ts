@@ -3,6 +3,7 @@ import { confirmTemplate as contactConfirm, teamTemplate as contactTeam } from '
 import { softLaunchTemplate } from './soft-launch'
 import { template as shareInvitation } from './share-invitation'
 import { template as profileInvitation } from './profile-invitation'
+import { template as buyOrderShare } from './buy-order-share'
 import type { ComponentType } from 'react'
 
 export interface TemplateEntry {
@@ -29,4 +30,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'soft-launch': softLaunchTemplate,
   'share-invitation': shareInvitation,
   'profile-invitation': profileInvitation,
+  'buy-order-share': buyOrderShare,
 }

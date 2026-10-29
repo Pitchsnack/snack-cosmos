@@ -3,13 +3,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronDown, Search, Target } from "lucide-react";
-import { toast } from "sonner";
 import { usePersona } from "@/hooks/use-marketplace";
 import { BO_SECTORS, SELLER_BANDS, boSector, citiesOf, overlaps, rangeOf, sectorOrder } from "@/lib/buy-orders";
 import { listBuyOrders, myApplyContext, type BoCard } from "@/lib/buy-orders.functions";
 import { BuyOrderCard, useBw, useSectorName } from "./bw-card";
 import { BuyOrderDetails } from "./bw-details";
 import { ApplyDialog } from "./bw-apply";
+import { ShareDialog } from "./bw-share";
 import { ChooseIndustry, IndustryRow } from "./bw-industries";
 
 export const BO_QUERY = ["buy-orders"] as const;
@@ -33,6 +33,7 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
   const [choose, setChoose] = useState(false);
   const [details, setDetails] = useState<string | null>(null);
   const [applyId, setApplyId] = useState<string | null>(null);
+  const [shareId, setShareId] = useState<string | null>(null);
 
   const cards = q.data?.cards ?? [];
   useEffect(() => {
@@ -67,6 +68,8 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
   const shown = base.filter((x) => !sector || x.sector === sector).sort((a, b) => {
     const ca = a.status === "closed" ? 1 : 0, cb = b.status === "closed" ? 1 : 0;
     if (ca !== cb) return ca - cb;
+    const sa = a.sharedAt ?? "", sb2 = b.sharedAt ?? "";
+    if (!ca && (sa || sb2) && sa !== sb2) return sb2.localeCompare(sa);
     return ca ? (b.closesOn ?? "").localeCompare(a.closesOn ?? "") : (b.postedAt ?? "").localeCompare(a.postedAt ?? "");
   });
 
@@ -76,11 +79,9 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
     : p === "buyer" ? c("What buyers on PitchSnack are looking for. Buyers’ names stay private. Share a buy order with someone who may have a business that fits.", "สิ่งที่ผู้ซื้อบน PitchSnack กำลังมองหา ชื่อผู้ซื้อถูกเก็บเป็นความลับ แชร์ประกาศให้คนที่อาจมีธุรกิจที่เหมาะ")
     : c("What buyers on PitchSnack are looking for. Buyers’ names stay private.", "สิ่งที่ผู้ซื้อบน PitchSnack กำลังมองหา ชื่อผู้ซื้อถูกเก็บเป็นความลับ");
 
-  const share = (x: BoCard) => {
-    const url = `${window.location.origin}/marketplace/businesses-wanted?bo=${encodeURIComponent(x.ref)}`;
-    navigator.clipboard?.writeText(url).then(() => toast.success(c("Link copied. Sharing by email comes in the next step.", "คัดลอกลิงก์แล้ว การแชร์ทางอีเมลจะมาในขั้นถัดไป")), () => toast.error(url));
-  };
+  const share = (x: BoCard) => setShareId(x.id);
   const detailCard = cards.find((x) => x.id === details) ?? null;
+  const shareCard = cards.find((x) => x.id === shareId) ?? null;
   const applyCard = cards.find((x) => x.id === applyId) ?? null;
   const refresh = () => { qc.invalidateQueries({ queryKey: BO_QUERY }); qc.invalidateQueries({ queryKey: ["buy-orders-new"] }); };
 
@@ -125,7 +126,7 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
           <div className="bw-grid">
             {shown.map((x) => (
               <BuyOrderCard key={x.id} card={x} persona={p} applyCtx={ctxQ.data}
-                onDetails={() => setDetails(x.id)} onApply={() => setApplyId(x.id)} onShare={() => share(x)} />
+                onDetails={() => setDetails(x.id)} onApply={() => setApplyId(x.id)} onShare={() => share(x)} sharedWithYou={!!x.sharedBy} />
             ))}
           </div>
         )}
@@ -133,6 +134,7 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
       <ChooseIndustry open={choose} counts={counts} total={base.length} picked={sector} onClose={() => setChoose(false)} onPick={(s) => { setSector(s); setChoose(false); }} />
       {detailCard && !applyCard && <BuyOrderDetails card={detailCard} persona={p} applyCtx={ctxQ.data} onClose={() => setDetails(null)} onApply={(x) => setApplyId(x.id)} onShare={share} />}
       {applyCard && ctxQ.data?.listing && <ApplyDialog card={applyCard} ctx={ctxQ.data} onClose={() => setApplyId(null)} onDone={() => { setApplyId(null); refresh(); }} />}
+      {shareCard && <ShareDialog card={shareCard} onClose={() => setShareId(null)} />}
       <span hidden>{BO_SECTORS.length}</span>
     </div>
   );

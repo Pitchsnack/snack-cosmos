@@ -9,6 +9,7 @@ import {
   Info, Lock, LogIn, LogOut, Mail, MailCheck, Rocket, Ticket, Scale, Search, ShieldCheck, Sprout, Store, Tag, User, Users, type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { buyOrderInvite } from "@/lib/buy-orders.functions";
 import { finishSignup, getSignupState, saveSignupAnswers, saveSignupSector } from "@/lib/signup.functions";
 import { SellerTypeQuestion, ManyTypeQuestion, buyerWords, advisorWords, manyError } from "@/components/common/business-type-question";
 import { EMPTY_PICKS, type SectorPick, type SectorPicks } from "@/lib/business-types";
@@ -113,6 +114,13 @@ function SignupInner() {
   const [showPw, setShowPw] = useState(false); const [terms, setTerms] = useState(false); const [news, setNews] = useState(false);
   const [err3, setErr3] = useState<Record<string, boolean>>({}); const [taken, setTaken] = useState(false); const [fail, setFail] = useState(false);
   const [busy, setBusy] = useState(false);
+  // A buy order shared by email (section 12.4): the box on step 1, and where sign-up lands.
+  const boInviteFn = useServerFn(buyOrderInvite);
+  const [boInv, setBoInv] = useState<{ email: string; sender: string; name: string; ref: string } | null>(null);
+  useEffect(() => { if (search.join) boInviteFn({ data: { token: search.join } }).then(setBoInv, () => {}); }, [search.join]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (boInv) setEmail(boInv.email); }, [boInv]);
+  const boPath = boInv ? `/marketplace/businesses-wanted?bo=${encodeURIComponent(boInv.ref)}` : null;
+  const goHome = (r: Role) => { if (boPath) navigate({ to: "/marketplace/businesses-wanted", search: { bo: boInv!.ref } as never }); else navigate({ to: myCompanyPath(r) }); };
   // step 4
   const [code, setCode] = useState(["", "", "", "", "", ""]); const [codeErr, setCodeErr] = useState<null | "short" | "bad">(null);
   const [wait, setWait] = useState(30); const [sentNote, setSentNote] = useState(false);
@@ -161,7 +169,7 @@ function SignupInner() {
         writePending(null);
         if (!s.answers?.done_at && !(await claimOk())) return;
         if (!s.answers) { navigate({ to: "/tenants" }); return; }
-        if (s.answers.done_at && s.signupDone) { setPersona(uid, s.answers.role); navigate({ to: myCompanyPath(s.answers.role) }); return; }
+        if (s.answers.done_at && s.signupDone) { setPersona(uid, s.answers.role); goHome(s.answers.role); return; }
         if (s.answers.done_at) {
           // Draft made, sector question not answered yet: open the last step.
           const co = s.answers.company;
@@ -374,7 +382,7 @@ function SignupInner() {
       const { data } = await supabase.auth.getSession();
       if (data.session) setPersona(data.session.user.id, res.role);
       await qc.invalidateQueries();
-      navigate({ to: myCompanyPath(res.role) });
+      goHome(res.role);
     } catch { setBusy(false); setFail(true); }
   }
 
@@ -444,6 +452,16 @@ function SignupInner() {
         <div className="lg-mid">
           <div className={`lg-col su-col${step === 7 ? " su-wide" : ""}`}>
             <div className="lg-card su-card">
+              {boInv && step === 1 && (
+                <div className="su-boinv">
+                  <Mail size={18} />
+                  <div>
+                    <div className="su-boinv-1">{lang === "th" ? `${boInv.sender} แชร์โอกาสซื้อกิจการให้ท่าน` : `${boInv.sender} shared an acquisition opportunity with you`}</div>
+                    <div><b>{boInv.name} · {boInv.ref}</b> {lang === "th" ? "จะเปิดขึ้นทันทีเมื่อบัญชีของท่านพร้อม หากต้องการสมัคร โปรดสมัครเป็นผู้ขาย" : "opens as soon as your account is ready. To apply to it, sign up as a seller."}</div>
+                    <div className="su-boinv-3">{lang === "th" ? `คำเชิญสำหรับ ${boInv.email} · ไม่ต้องใช้รหัสเข้าใช้งานในช่วงเปิดตัว` : `Invitation for ${boInv.email} · no access code needed during the soft launch`}</div>
+                  </div>
+                </div>
+              )}
               {inv && (step <= 3 || step === 6) && (() => {
                 const plan = role ? inv.plans?.[role] : null;
                 const freeLine = noneLeft || !inv.plans ? null
@@ -568,10 +586,10 @@ function SignupInner() {
                         <label className="lg-label" htmlFor="su-email">{t(S.email)}</label>
                         <div className={`lg-field su-f ${err3.email || taken ? "bad" : ""}`}><Mail size={18} />
                           <input ref={emailRef} id="su-email" type="email" autoComplete="email" placeholder={t(S.emailPh)} value={email}
-                            readOnly={gate.gateOn && !!gate.invitationEmail}
+                            readOnly={(gate.gateOn && !!gate.invitationEmail) || !!boInv}
                             onChange={(e) => { setEmail(e.target.value); setTaken(false); if (EMAIL_RE.test(e.target.value.trim())) setErr3((x) => ({ ...x, email: false })); }} /></div>
                         {err3.email && <Err text={S.eEmail} />}
-                        {gate.gateOn && gate.invitationEmail && <p className="su-hint">{sc('invitation', lang)}</p>}
+                        {((gate.gateOn && gate.invitationEmail) || boInv) && <p className="su-hint">{sc('invitation', lang)}</p>}
                         {taken && <div className="lg-err"><CircleAlert size={15} />{t(S.taken)} <Link to="/login" search={{ email: email.trim() } as never} className="lg-link">{t(S.signIn)}</Link></div>}
                       </div>
                       <div className="lg-fg">
@@ -706,7 +724,7 @@ function SignupInner() {
               )}
               </>}
             </div>
-            {(step <= 3 || step === 6) && !(noneLeft && step === 1) && <p className="lg-noacc">{t(S.haveAcc)} <Link to="/login">{t(S.signIn)}</Link></p>}
+            {(step <= 3 || step === 6) && !(noneLeft && step === 1) && <p className="lg-noacc">{t(S.haveAcc)} <Link to="/login" search={(boPath ? { redirect: boPath } : {}) as never}>{t(S.signIn)}</Link></p>}
             <p className="lg-pw2">Powered by SnackPortal2</p>
           </div>
         </div>
