@@ -60,6 +60,7 @@ import { Route as AuthenticatedVerificationRouteImport } from './routes/_authent
 import { Route as HandoverTokenRouteImport } from './routes/handover.$token'
 import { Route as Sp2GatewayIndexRouteImport } from './routes/sp2-gateway/index'
 import { Route as AuthenticatedAdminAccessCodesRouteImport } from './routes/_authenticated/admin/access-codes'
+import { Route as AuthenticatedAdminAdvertisementRouteImport } from './routes/_authenticated/admin/advertisement'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
 import { Route as AuthenticatedAdminMessagesRouteImport } from './routes/_authenticated/admin.messages'
 import { Route as AuthenticatedAdminPaidReportsRouteImport } from './routes/_authenticated/admin.paid-reports'
@@ -407,6 +408,12 @@ const AuthenticatedAdminAccessCodesRoute =
   AuthenticatedAdminAccessCodesRouteImport.update({
     id: '/admin/access-codes',
     path: '/admin/access-codes',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminAdvertisementRoute =
+  AuthenticatedAdminAdvertisementRouteImport.update({
+    id: '/admin/advertisement',
+    path: '/admin/advertisement',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAdminAnalyticsRoute =
@@ -901,6 +908,7 @@ export interface FileRoutesByFullPath {
   '/handover/$token': typeof HandoverTokenRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
+  '/admin/advertisement': typeof AuthenticatedAdminAdvertisementRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/admin/paid-reports': typeof AuthenticatedAdminPaidReportsRoute
@@ -1022,6 +1030,7 @@ export interface FileRoutesByTo {
   '/handover/$token': typeof HandoverTokenRoute
   '/sp2-gateway': typeof Sp2GatewayIndexRoute
   '/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
+  '/admin/advertisement': typeof AuthenticatedAdminAdvertisementRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/admin/paid-reports': typeof AuthenticatedAdminPaidReportsRoute
@@ -1145,6 +1154,7 @@ export interface FileRoutesById {
   '/handover/$token': typeof HandoverTokenRoute
   '/sp2-gateway/': typeof Sp2GatewayIndexRoute
   '/_authenticated/admin/access-codes': typeof AuthenticatedAdminAccessCodesRoute
+  '/_authenticated/admin/advertisement': typeof AuthenticatedAdminAdvertisementRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/_authenticated/admin/paid-reports': typeof AuthenticatedAdminPaidReportsRoute
@@ -1274,6 +1284,7 @@ export interface FileRouteTypes {
     | '/handover/$token'
     | '/sp2-gateway/'
     | '/admin/access-codes'
+    | '/admin/advertisement'
     | '/admin/analytics'
     | '/admin/messages'
     | '/admin/paid-reports'
@@ -1395,6 +1406,7 @@ export interface FileRouteTypes {
     | '/handover/$token'
     | '/sp2-gateway'
     | '/admin/access-codes'
+    | '/admin/advertisement'
     | '/admin/analytics'
     | '/admin/messages'
     | '/admin/paid-reports'
@@ -1517,6 +1529,7 @@ export interface FileRouteTypes {
     | '/handover/$token'
     | '/sp2-gateway/'
     | '/_authenticated/admin/access-codes'
+    | '/_authenticated/admin/advertisement'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/messages'
     | '/_authenticated/admin/paid-reports'
@@ -1978,6 +1991,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/access-codes'
       fullPath: '/admin/access-codes'
       preLoaderRoute: typeof AuthenticatedAdminAccessCodesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/advertisement': {
+      id: '/_authenticated/admin/advertisement'
+      path: '/admin/advertisement'
+      fullPath: '/admin/advertisement'
+      preLoaderRoute: typeof AuthenticatedAdminAdvertisementRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/admin/analytics': {
@@ -2816,6 +2836,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedVerificationRoute: typeof AuthenticatedVerificationRoute
   AuthenticatedAdminAccessCodesRoute: typeof AuthenticatedAdminAccessCodesRoute
+  AuthenticatedAdminAdvertisementRoute: typeof AuthenticatedAdminAdvertisementRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminMessagesRoute: typeof AuthenticatedAdminMessagesRoute
   AuthenticatedAdminPaidReportsRoute: typeof AuthenticatedAdminPaidReportsRoute
@@ -2871,6 +2892,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedVerificationRoute: AuthenticatedVerificationRoute,
   AuthenticatedAdminAccessCodesRoute: AuthenticatedAdminAccessCodesRoute,
+  AuthenticatedAdminAdvertisementRoute: AuthenticatedAdminAdvertisementRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminMessagesRoute: AuthenticatedAdminMessagesRoute,
   AuthenticatedAdminPaidReportsRoute: AuthenticatedAdminPaidReportsRoute,
