@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { BuyOrderCover } from "./buy-order-cover";
 import { addMonths, bkkToday, canShareOrder, checkDraft, draftRow, effectiveStatus, isOpen, sealedOnly, PERIODS, type BoAppStatus, type BoDraft, type BoKind, type BoStatus } from "@/lib/buy-orders";
 
 /**
@@ -35,6 +36,7 @@ export type BoCard = {
   sharedBy?: string | null; sharedAt?: string | null;
   managedApps?: { id: string; businessId: string; company: string; ref: string | null; status: BoAppStatus; appliedAt: string }[];
   applicationId?: string; forCompany?: { name: string; ref: string | null };
+  cover?: BuyOrderCover;
 };
 
 export type ApplyContext = {
@@ -144,6 +146,8 @@ function toCard(r: any, ctx: { inv: Map<string, any>; bp: Map<string, any>; view
 }
 
 async function cardsFor(sb: any, rows: any[], userId: string, isAdmin: boolean, sellerListingId: string | null): Promise<BoCard[]> {
+  if (!rows.length) return [];
+  const resolveCover = await (await import("./buy-order-cover.server")).buyOrderCoverResolver(sb);
   const bands = await import("@/lib/investor-bands");
   const ids = rows.map((r) => r.id);
   const invIds = [...new Set(rows.map((r) => r.investor_profile_id))];
@@ -159,11 +163,11 @@ async function cardsFor(sb: any, rows: any[], userId: string, isAdmin: boolean, 
   const count = (list: any[]) => { const m = new Map<string, number>(); for (const x of list) m.set(x.buy_order_id, (m.get(x.buy_order_id) ?? 0) + 1); return m; };
   const myApps = new Map<string, any>();
   if (sellerListingId) for (const a of (aps ?? []) as any[]) if (a.business_id === sellerListingId) myApps.set(a.buy_order_id, a);
-  return rows.map((r) => toCard(r, {
+  return Promise.all(rows.map(async (r) => ({ ...toCard(r, {
     inv: new Map((invs ?? []).map((x: any) => [x.id, x])), bp: new Map((bps ?? []).map((x: any) => [x.investor_id, x])),
     views: count(vs ?? []), apps: count(aps ?? []), appsNew: count((aps ?? []).filter((x: any) => x.status === "new")), mine: new Set(mine), myApps, isAdmin,
     writers: new Map((ws ?? []).map((w: any) => [w.id, [w.first_name, w.last_name].filter(Boolean).join(" ") || w.email])),
-  }, bands));
+  }, bands), cover: await resolveCover(r) })));
 }
 
 /** Businesses Wanted: posted and closed buy orders of both kinds, as the cards show them. */
