@@ -95,7 +95,7 @@ export function BuyerChip({ card, solid }: { card: BoCard; solid?: boolean }) {
   return (
     <span className={cn("bw-pill bw-chip", solid && "bw-chip-solid")} title={c("The buyer’s name stays private", "ชื่อผู้ซื้อถูกเก็บเป็นความลับ")}>
       <EyeOff className="h-3 w-3 shrink-0" />
-      <span>{card.yours ? c(`Sellers see: ${label}`, `ผู้ขายเห็น: ${label}`) : label}</span>
+      <span>{card.yours ? label : label}</span>
     </span>
   );
 }
