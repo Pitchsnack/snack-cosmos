@@ -129,24 +129,26 @@ export function AdminAdvertisementPage() {
         ))}
       </div>
 
-      <div className="bw-filters mt-4">
+      <div className="bw-filters bw-filters-admin">
         <label className="bw-search"><Search className="h-4 w-4" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={c("Search name, ref, client or buyer", "ค้นหาชื่อ รหัส ลูกค้า หรือผู้ซื้อ")} aria-label={c("Search", "ค้นหา")} /></label>
-        <select className="bw-in max-w-[180px]" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)} aria-label={c("Kind", "ประเภท")}>
+        <div className="bw-filter-lists">
+        <select className="bw-in" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)} aria-label={c("Kind", "ประเภท")}>
           <option value="">{c("All kinds", "ทุกประเภท")}</option><option value="sealed">{c("Sealed", "ปิดผนึก")}</option><option value="advertisement">{c("Advertisement", "ประกาศ")}</option>
         </select>
-        <select className="bw-in max-w-[240px]" value={sector} onChange={(e) => setSector(e.target.value)} aria-label={c("Industry", "อุตสาหกรรม")}>
+        <select className="bw-in" value={sector} onChange={(e) => setSector(e.target.value)} aria-label={c("Industry", "อุตสาหกรรม")}>
           <option value="">{c("All industries", "ทุกอุตสาหกรรม")}</option>
           {BO_GROUPS.map((g) => <optgroup key={g.group} label={th ? g.th : g.group}>{g.sectors.map((x) => <option key={x.name} value={x.name}>{th ? x.th : x.name}</option>)}</optgroup>)}
         </select>
-        <select className="bw-in max-w-[220px]" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} aria-label={c("Sort", "เรียง")}>
+        <select className="bw-in" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} aria-label={c("Sort", "เรียง")}>
           <option value="closes">{c("Closes soonest", "ใกล้ปิดก่อน")}</option><option value="newest">{c("Newest posted", "ลงล่าสุด")}</option>
           <option value="most">{c("Most applicants", "ผู้สมัครมากที่สุด")}</option><option value="mostNew">{c("Most new applicants", "ผู้สมัครใหม่มากที่สุด")}</option>
         </select>
+        </div>
       </div>
 
       {!d ? <p className="mt-6 text-sm text-[#6B7280]">{res.error ? (res.error as Error).message : c("Loading…", "กำลังโหลด…")}</p>
         : view === "list" ? (
-          <div className="mt-4 overflow-hidden rounded-xl border bg-card">
+          <div className="bw-filter-results overflow-hidden rounded-xl border bg-card">
             <div className="bw-arow bw-ahead"><span>{c("Buy order", "ประกาศซื้อ")}</span><span>{c("Status", "สถานะ")}</span><span>{c("Posted", "ลงประกาศ")}</span><span>{c("Closes", "ปิด")}</span><span>{c("Applicants", "ผู้สมัคร")}</span><span /></div>
             {d.rows.length === 0 && <p className="px-4 py-8 text-center text-sm text-[#6B7280]">{c("No buy orders match. Try another word or filter.", "ไม่พบประกาศซื้อ ลองคำหรือตัวกรองอื่น")}</p>}
             {d.rows.map((r) => (
@@ -162,7 +164,7 @@ export function AdminAdvertisementPage() {
             <Pager page={d.page} total={d.total} size={d.size} onPage={setPage} />
           </div>
         ) : (
-          <div className="mt-4 grid gap-4 min-[1100px]:grid-cols-[300px_minmax(0,1fr)]">
+          <div className="bw-filter-results grid gap-4 min-[1100px]:grid-cols-[300px_minmax(0,1fr)]">
             <div>
               <div className="grid gap-2">
                 {d.rows.length === 0 && <p className="py-8 text-center text-sm text-[#6B7280]">{c("No buy orders match. Try another word or filter.", "ไม่พบประกาศซื้อ ลองคำหรือตัวกรองอื่น")}</p>}
