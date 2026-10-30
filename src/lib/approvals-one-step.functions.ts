@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resetApprovalNotice } from "@/lib/approval-notices.functions";
+import { TR_KEYS, TR_MAX, setupLanguageOf, type TrKey, type TrRow } from "@/lib/review-translation";
 import { advisorReview, buyerReview, sellerReview, waitingDays, type OneStepItem, type OneStepKind } from "@/lib/one-step.server";
 
 /**
@@ -51,6 +52,33 @@ export const DECISION_REASONS = [
   "Another reason",
 ] as const;
 
+/* ================================================================ translation */
+
+function tr(key: TrKey, group: TrRow["group"], label: string, en: string | null | undefined, th: string | null | undefined, extra: Partial<TrRow> = {}): TrRow {
+  return { key, group, label, en: en ?? "", th: th ?? "", max: TR_MAX[key], ...extra };
+}
+function personRows(u: any): TrRow[] {
+  return [
+    tr("person_name", "company", "Name", fullName(u) && u?.first_name ? fullName(u) : (u?.first_name ?? ""), u?.full_name_th, { enLocked: true }),
+    tr("person_title", "company", "Position", u?.title, u?.title_th),
+  ];
+}
+function headlineRows(draft: any, suggested: string | null, published: string | null, publishedTh: string | null, suggestedTh: string | null): TrRow[] {
+  return [
+    tr("published_headline", "texts", "Headline (published)", draft?.headline ?? published ?? suggested, draft?.headlineTh ?? publishedTh ?? suggestedTh),
+    tr("suggested_headline", "texts", "Headline (suggested)", suggested, suggestedTh),
+  ];
+}
+function extras(x: { person: any; draft: any; savedAt: string | null; suggestedTh: string | null; publishedTh: string | null; descriptionTh: string | null; rows: TrRow[] }) {
+  return {
+    translation: x.rows,
+    setupLanguage: setupLanguageOf(x.person?.setup_language, x.rows),
+    savedAt: x.savedAt ?? null,
+    draft: x.draft && typeof x.draft === "object" ? { name: String(x.draft.name ?? ""), headline: String(x.draft.headline ?? ""), headlineTh: String(x.draft.headlineTh ?? "") } : null,
+    suggestedHeadlineTh: x.suggestedTh ?? null, publishedHeadlineTh: x.publishedTh ?? null, descriptionTh: x.descriptionTh ?? null,
+  };
+}
+
 /* ================================================================ queue */
 
 export const listOneStepApprovals = createServerFn({ method: "GET" })
@@ -61,28 +89,28 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
 
     // ---- sellers: hidden_profiles waiting or sent back
     const { data: hps, error: hpError } = await sb.from("hidden_profiles")
-      .select("id, startup_id, ref_no, code_name, description, highlights, customers_summary, deal_type, owner_stays, handover_months, asking_price_thb, asking_price_band, approval_status, submitted_at, submitted_by, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, review_checks")
+      .select("id, startup_id, ref_no, code_name, description, highlights, customers_summary, deal_type, owner_stays, handover_months, asking_price_thb, asking_price_band, approval_status, submitted_at, submitted_by, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, review_checks, headline_th, description_th, highlights_th, customers_summary_th, published_headline_th, review_draft, review_saved_at")
       .in("approval_status", ["in_review", "changes_requested"]).order("submitted_at", { ascending: true });
     if (hpError) throw new Error(hpError.message);
     const stIds = [...new Set((hps ?? []).map((h: any) => h.startup_id).filter(Boolean))];
     const { data: sts } = stIds.length
-      ? await sb.from("startups").select("id, startup_name, registered_name, registered_number, website_url, email, city, sector, year_founded, last_year_revenue, business_address, contact_number").in("id", stIds)
+      ? await sb.from("startups").select("id, startup_name, registered_name, registered_number, website_url, email, city, sector, year_founded, last_year_revenue, business_address, contact_number, startup_name_th, business_address_th").in("id", stIds)
       : { data: [] };
     const stBy = new Map<string, any>((sts ?? []).map((s: any) => [s.id, s]));
     const { data: founders } = stIds.length
-      ? await sb.from("startup_founders").select("startup_id, full_name, position, bio, bio_story").in("startup_id", stIds).order("created_at", { ascending: true })
+      ? await sb.from("startup_founders").select("id, startup_id, full_name, position, bio, bio_th, bio_story").in("startup_id", stIds).order("created_at", { ascending: true })
       : { data: [] };
     const founderBy = new Map<string, any>();
     for (const f of founders ?? []) if (!founderBy.has(f.startup_id)) founderBy.set(f.startup_id, f);
 
     // ---- buyers: buyer_profiles waiting or sent back
     const { data: bps, error: bpError } = await sb.from("buyer_profiles")
-      .select("user_id, ref_no, investor_id, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline, description, geography, sectors, city, country, people, buyer_relation, revenue_band, contact_number, address")
+      .select("user_id, ref_no, investor_id, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline, description, geography, suggested_headline_th, published_headline_th, description_th, review_draft, review_saved_at, sectors, city, country, people, buyer_relation, revenue_band, contact_number, address")
       .in("approval_status", ["in_review", "changes_requested"]).order("submitted_at", { ascending: true });
     if (bpError) throw new Error(bpError.message);
     const invIds = [...new Set((bps ?? []).map((b: any) => b.investor_id).filter(Boolean))];
     const { data: invs } = invIds.length
-      ? await sb.from("investors").select("id, investor_name, investor_type, country, website_url, registration_no, year_founded, email, aum_band, ticket_band, revenue_min_band, investment_focus, preferred_industries, preferred_stages, address_line1, address_line2, address_city_district, address_province_state, postal_code").in("id", invIds)
+      ? await sb.from("investors").select("id, investor_name, investor_type, country, website_url, registration_no, year_founded, email, aum_band, ticket_band, revenue_min_band, investment_focus, preferred_industries, preferred_stages, address_line1, address_line2, address_city_district, address_province_state, postal_code, investor_name_th, address_th").in("id", invIds)
       : { data: [] };
     const invBy = new Map<string, any>((invs ?? []).map((i: any) => [i.id, i]));
     const verByUser = await (await import("./profile-verification.server")).verificationsByUsers(sb, (bps ?? []).map((b: any) => b.user_id), "id, status, review_checks");
@@ -96,8 +124,8 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
     for (const h of hps ?? []) if (h.submitted_by) uids.add(h.submitted_by);
     for (const b of bps ?? []) uids.add(b.user_id);
     for (const f of firms ?? []) if (f.owner_user_id) uids.add(f.owner_user_id);
-    const { data: us } = uids.size ? await sb.from("users").select("id, first_name, last_name, email").in("id", [...uids]) : { data: [] };
-    const { data: profiles } = uids.size ? await sb.from("user_profiles").select("user_id, title, phone").in("user_id", [...uids]) : { data: [] };
+    const { data: us } = uids.size ? await sb.from("users").select("id, first_name, last_name, email, setup_language").in("id", [...uids]) : { data: [] };
+    const { data: profiles } = uids.size ? await sb.from("user_profiles").select("user_id, title, phone, full_name_th, title_th").in("user_id", [...uids]) : { data: [] };
     const pBy = new Map<string, any>((profiles ?? []).map((p: any) => [p.user_id, p]));
     const uBy = new Map<string, any>((us ?? []).map((u: any) => [u.id, { ...u, ...pBy.get(u.id) }]));
 
@@ -114,6 +142,17 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
         chip: hp.approval_status === "changes_requested" ? "sent_back" : "waiting",
         suggestedName: hp.suggested_listing_name, suggestedHeadline: hp.suggested_headline,
         publishedName: hp.code_name, publishedHeadline: hp.published_headline, review,
+        ...extras({ person: uBy.get(hp.submitted_by), draft: hp.review_draft, savedAt: hp.review_saved_at, suggestedTh: hp.headline_th, publishedTh: hp.published_headline_th, descriptionTh: hp.description_th,
+          rows: [
+            tr("company_name", "company", "Company name", st?.startup_name, st?.startup_name_th),
+            tr("address", "company", "Address", st?.business_address, st?.business_address_th, { multiline: true }),
+            ...personRows(uBy.get(hp.submitted_by)),
+            ...headlineRows(hp.review_draft, hp.suggested_headline, hp.published_headline, hp.published_headline_th, hp.headline_th),
+            tr("description", "texts", "Description", hp.description, hp.description_th, { multiline: true }),
+            tr("highlights", "texts", "Highlights", (hp.highlights ?? []).filter(Boolean).join("\n"), (hp.highlights_th ?? []).filter(Boolean).join("\n"), { list: true, multiline: true }),
+            tr("customers", "texts", "Customer profile", hp.customers_summary, hp.customers_summary_th, { multiline: true }),
+            ...(founderBy.get(hp.startup_id) ? [tr("owner_bio", "texts", "About the owner", founderBy.get(hp.startup_id).bio, founderBy.get(hp.startup_id).bio_th, { multiline: true })] : []),
+          ] }),
       });
     }
 
@@ -131,6 +170,14 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
         chip: p.approval_status === "changes_requested" ? "sent_back" : "waiting",
         suggestedName: p.suggested_listing_name, suggestedHeadline: p.suggested_headline,
         publishedName: p.published_listing_name, publishedHeadline: p.published_headline, review,
+        ...extras({ person: uBy.get(p.user_id), draft: p.review_draft, savedAt: p.review_saved_at, suggestedTh: p.suggested_headline_th, publishedTh: p.published_headline_th, descriptionTh: p.description_th,
+          rows: [
+            tr("company_name", "company", p.buyer_relation === "individual" ? "Name" : "Company Name", inv?.investor_name, inv?.investor_name_th),
+            tr("address", "company", "Address", review.card.address, inv?.address_th, { multiline: true, enLocked: !!review.card.address }),
+            ...personRows(uBy.get(p.user_id)),
+            ...headlineRows(p.review_draft, p.suggested_headline, p.published_headline, p.published_headline_th, p.suggested_headline_th),
+            tr("description", "texts", "Description", p.description, p.description_th, { multiline: true }),
+          ] }),
       });
     }
 
@@ -146,6 +193,14 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
         chip: f.advisor_verification === "more_info" ? "sent_back" : "waiting",
         suggestedName: f.suggested_listing_name, suggestedHeadline: f.suggested_headline,
         publishedName: f.published_listing_name, publishedHeadline: f.published_headline, review,
+        ...extras({ person: f.owner_user_id ? uBy.get(f.owner_user_id) : null, draft: f.review_draft, savedAt: f.review_saved_at, suggestedTh: f.suggested_headline_th, publishedTh: f.published_headline_th, descriptionTh: f.description_th,
+          rows: [
+            tr("company_name", "company", "Firm name", f.name, f.name_th),
+            tr("address", "company", "Address", review.card.address, f.address_th, { multiline: true, enLocked: !!review.card.address }),
+            ...(f.owner_user_id ? personRows(uBy.get(f.owner_user_id)) : []),
+            ...headlineRows(f.review_draft, f.suggested_headline, f.published_headline, f.published_headline_th, f.suggested_headline_th),
+            tr("description", "texts", "Description", f.description, f.description_th, { multiline: true }),
+          ] }),
       });
     }
 
