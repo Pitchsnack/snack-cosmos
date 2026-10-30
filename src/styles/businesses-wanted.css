@@ -329,3 +329,24 @@ select.bw-in { height: 42px; padding-top: 0; padding-bottom: 0; line-height: 1.2
 .bw-sharedbox { display: flex; gap: 10px; margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: #EEF2FF; border: 1px solid #C7D2FE; color: #312E81; font-size: 13.5px; line-height: 1.5; }
 .bw-sharedbox > svg { color: #4F46E5; margin-top: 2px; }
 .bw-sharedgo { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid #C7D2FE; background: #fff; color: #312E81; font-weight: 600; font-size: 13px; }
+
+/* City picker (buy order form, Location Thailand) */
+.bw-city { position: relative; }
+.bw-city-field { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 42px; padding: 0 12px; text-align: left; cursor: pointer; }
+.bw-city-pop { position: absolute; z-index: 60; top: calc(100% + 4px); left: 0; min-width: 240px; width: 100%; background: hsl(var(--background)); border: 1px solid #DCDFE5; border-radius: 12px; box-shadow: 0 12px 32px rgba(16, 24, 40, .14); padding: 8px; }
+.dark .bw-city-pop { border-color: hsl(var(--border)); }
+.bw-city-search { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 10px; border: 1px solid #DCDFE5; border-radius: 9px; color: var(--bw-mute); }
+.dark .bw-city-search { border-color: hsl(var(--border)); }
+.bw-city-search input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; font-size: 14px; color: var(--bw-text); }
+.bw-city-list { max-height: 300px; overflow-y: auto; margin-top: 6px; }
+.bw-city-row { display: flex; align-items: center; gap: 10px; width: 100%; height: 36px; padding: 0 8px; border-radius: 8px; font-size: 14px; color: var(--bw-text); text-align: left; }
+.bw-city-row:hover { background: var(--bw-soft); }
+.bw-city-box { display: grid; place-items: center; width: 18px; height: 18px; flex: none; border: 1.5px solid #C3C9D4; border-radius: 5px; color: #fff; }
+.bw-city-row[aria-checked="true"] .bw-city-box { background: #1E2A4A; border-color: #1E2A4A; }
+.dark .bw-city-row[aria-checked="true"] .bw-city-box { background: #A5B4FC; border-color: #A5B4FC; color: #151A28; }
+.bw-city-other { margin: 6px 8px 2px; padding-top: 8px; border-top: 1px solid var(--bw-soft); font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #6B7280; }
+.bw-city-none { padding: 10px 8px; font-size: 13px; color: var(--bw-mute); }
+
+/* The wider Target company price range list, and two-line card labels that still line up */
+.bw-select-wide select { min-width: 220px; }
+.bw-cell small { min-height: 2.3em; display: flex; align-items: flex-end; }

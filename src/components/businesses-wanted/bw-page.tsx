@@ -88,8 +88,8 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
   const applyCard = cards.find((x) => x.id === applyId) ?? null;
   const refresh = () => { qc.invalidateQueries({ queryKey: BO_QUERY }); qc.invalidateQueries({ queryKey: ["buy-orders-new"] }); qc.invalidateQueries({ queryKey: ["buy-order-apps"] }); qc.invalidateQueries({ queryKey: ["buy-orders-apply-ctx"] }); };
 
-  const sel = (value: string, set: (v: string) => void, first: string, opts: string[], aria: string, label?: (o: string) => string) => (
-    <label className="bw-select">
+  const sel = (value: string, set: (v: string) => void, first: string, opts: string[], aria: string, label?: (o: string) => string, wide = false) => (
+    <label className={wide ? "bw-select bw-select-wide" : "bw-select"}>
       <span className="sr-only">{aria}</span>
       <select value={value} onChange={(e) => set(e.target.value)}>
         <option value="">{first}</option>
