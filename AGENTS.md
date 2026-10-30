@@ -19,7 +19,7 @@
 - Messages share messages-page.tsx; check membership each call. admin-help.server.ts requires Control+Admin; latest receipt clears team unread; user DTOs hide admin identity. Users ?edit= opens editor; chat profiles read-only.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts); sellers get toPublic() only until NDA.
 - Loading: meta.pageLoading; LOI: config/loi-request.json; tour: marketplaceMenu/data-tour + mark_welcome_tour_seen().
-- Listing covers: one rule in resolveCover (use-sector-images.ts), drawn by SectorArt — picked → oldest → drawn; private public-images bucket via server fns.
+- Covers: listing resolveCover/SectorArt (pick → oldest → drawn); buy-order resolveBuyOrderCover (upload first) via signed DTOs and Control Admin review. Shared Sector images processing keeps listing behavior unchanged; private public-images.
 - Seller Browse uses listBrowseInvestors: code names, ranges, revenue minimum; investor-browse.ts filters public ranges, never exact figures.
 - Buyer investor profiles go live only by Admin approval (buyer_profiles.approval_status, decideBuyerProfile); setBuyerListing sends unapproved profiles to review.
 - Email alerts: wording defaults in src/config/email-alerts.ts, Admin overrides/switches in email_alert_settings; every send goes through sendAlert (email-alerts.server.ts), which checks the user switch and logs to email_alert_log; pipeline emails fire from pipeline log() so steps and emails never drift.

@@ -9,6 +9,8 @@ import { Building } from "lucide-react";
 import type { ApplyContext, BoCard } from "@/lib/buy-orders.functions";
 import { sectorIcon } from "./bw-icons";
 import { cn } from "@/lib/utils";
+import { resolveBuyOrderCover } from "@/lib/buy-order-cover";
+import { useSectorImages } from "@/hooks/use-sector-images";
 
 export function useBw() {
   const { language } = useTranslation();
@@ -98,9 +100,13 @@ export function BuyerChip({ card, solid }: { card: BoCard; solid?: boolean }) {
 
 export function Cover({ card, height, top, bottom }: { card: BoCard; height: number; top?: ReactNode; bottom?: ReactNode }) {
   const Icon = sectorIcon(card.sector);
+  const { data: images } = useSectorImages(!card.cover);
+  const cover = card.cover ?? resolveBuyOrderCover(images, card.sector);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const picture = cover.url && failedUrl !== cover.url;
   return (
-    <div className="bw-cover" style={{ height, background: coverOf(card.sector).gradient }}>
-      <Icon aria-hidden className="bw-cover-icon" strokeWidth={1.3} />
+    <div className={cn("bw-cover", card.status === "closed" && "bw-cover-closed")} style={{ height, background: coverOf(card.sector).gradient }}>
+      {picture ? <img src={cover.url ?? undefined} alt="" className="bw-cover-photo" onError={() => setFailedUrl(cover.url)} /> : <Icon aria-hidden className="bw-cover-icon" strokeWidth={1.3} />}
       {top && <div className="bw-cover-top">{top}</div>}
       {bottom && <div className="bw-cover-bottom">{bottom}</div>}
     </div>

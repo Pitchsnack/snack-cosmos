@@ -13,6 +13,7 @@ import { useCanManageSectorImages, DIRECTORY_SEARCH_KEY } from "@/components/sta
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { DeleteEntityDialog } from "@/components/entity-control/delete-entity-dialog";
 import { cn } from "@/lib/utils";
+import { prepareSectorPicture } from "@/lib/media/prepare-sector-picture";
 
 export const Route = createFileRoute("/_authenticated/startups/sector-images")({
   validateSearch: z.object({ sector: z.string().optional() }),
@@ -33,25 +34,6 @@ const RULE = "Use a JPG, PNG or WebP, landscape, at least 1200 × 675 px, up to 
 const plural = (n: number) => (n === 1 ? "1 image" : `${n} images`);
 const mb = (b: number) => Math.max(0.1, b / (1024 * 1024)).toFixed(1);
 const fmtDate = (s: string) => new Date(s).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-
-/** Checks the file, redraws it (drops EXIF/GPS) and scales it to fit 1920 × 1080. */
-async function prepare(file: File) {
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) return null;
-  const bmp = await createImageBitmap(file).catch(() => null);
-  if (!bmp || bmp.width < 1200 || bmp.height < 675 || bmp.width <= bmp.height) return null;
-  const k = Math.min(1, 1920 / bmp.width, 1080 / bmp.height);
-  const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
-  const c = document.createElement("canvas");
-  c.width = w; c.height = h;
-  c.getContext("2d")!.drawImage(bmp, 0, 0, w, h);
-  const mime: "image/jpeg" | "image/png" = file.type === "image/png" ? "image/png" : "image/jpeg";
-  const blob: Blob | null = await new Promise((r) => c.toBlob(r, mime, mime === "image/jpeg" ? 0.85 : undefined));
-  if (!blob || blob.size > 5 * 1024 * 1024) return null;
-  const buf = new Uint8Array(await blob.arrayBuffer());
-  let bin = "";
-  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
-  return { width: w, height: h, mime, base64: btoa(bin) };
-}
 
 function SectorImagesPage() {
   const navigate = useNavigate();
@@ -87,8 +69,9 @@ function SectorImagesPage() {
   const onFiles = async (sector: string, files: FileList) => {
     let added = 0, last = "";
     for (const f of Array.from(files)) {
-      const p = await prepare(f);
+      const p = await prepareSectorPicture(f);
       if (!p) { toast.error(`${f.name} wasn't added. ${RULE}`); continue; }
+      URL.revokeObjectURL(p.previewUrl);
       try { await addFn({ data: { sector, fileName: f.name, ...p } }); added++; last = f.name; }
       catch (e) { toast.error(`${f.name} wasn't added. ${(e as Error).message}`); }
     }

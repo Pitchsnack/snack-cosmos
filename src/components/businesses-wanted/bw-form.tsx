@@ -23,6 +23,7 @@ export function draftCard(d: BoDraft, who: { buyerType: string; country: string 
     postedAt: new Date().toISOString(), closesOn: addMonths(today, d.periodMonths), closedAt: null,
     buyerType: who.buyerType, country: who.country, aboutBuyer: null, views: 0, applied: 0, yours: false, myApp: null,
     appsTotal: null, appsNew: null, sentToAdminAt: null, adminNote: null, extendedCount: 0, client: null,
+    cover: base?.sector === d.sector ? base.cover : undefined,
   };
 }
 
@@ -189,7 +190,7 @@ export function BuyOrderForm({ control, clients, me, editing, onClose, onSaved }
         {preview ? (
           <div>
             <p className="mb-3 flex items-start gap-2 text-[13.5px]"><Eye className="mt-0.5 h-4 w-4 shrink-0" /><span><b>{c("Preview.", "ตัวอย่าง")}</b> {c("This is how sellers will see your advertisement in Businesses Wanted, once Admin posts it.", "นี่คือสิ่งที่ผู้ขายจะเห็นประกาศของคุณในธุรกิจที่ผู้ซื้อต้องการ เมื่อแอดมินลงประกาศแล้ว")}</span></p>
-            <div className="bw-preview-panel"><div className="mx-auto max-w-[380px]"><BuyOrderCard card={draftCard(d, who)} persona="buyer" mode="preview" onDetails={() => {}} onApply={() => {}} onShare={() => {}} /></div></div>
+            <div className="bw-preview-panel"><div className="mx-auto max-w-[380px]"><BuyOrderCard card={draftCard(d, who, editing ?? undefined)} persona="buyer" mode="preview" onDetails={() => {}} onApply={() => {}} onShare={() => {}} /></div></div>
           </div>
         ) : <BoFields d={d} set={set} errs={errs} clients={control ? clients : null} />}
         <DialogFooter className="gap-2 sm:justify-end">
