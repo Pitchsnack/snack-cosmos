@@ -232,10 +232,6 @@
 .bw-gtiles .bw-tile { width: 100%; }
 @media (max-width: 600px) { .bw-choose-grid { grid-template-columns: 1fr; } .bw-choose-all { width: 50%; } .bw-gtiles { grid-template-columns: repeat(2, 1fr); } }
 
-/* Menu pill */
-.bw-menu-new { margin-left: auto; height: 19px; padding: 0 7px; border-radius: 999px; background: #F6A823; color: #0E162F; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; }
-[aria-current="page"] .bw-menu-new, .active .bw-menu-new { background: #fff; }
-
 /* Applications (Pipeline › NDA Invitations) */
 .bw-apps { display: grid; gap: 10px; margin-top: 16px; max-width: 980px; }
 .bw-app { display: flex; gap: 12px; background: var(--card, #fff); border: 1px solid #EEF0F3; border-radius: 14px; padding: 12px 14px; }
