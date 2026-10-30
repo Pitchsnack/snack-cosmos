@@ -33,16 +33,16 @@ export function StatusPill({ card, preview }: { card: BoCard; preview?: boolean 
   const fresh = preview || (card.status === "posted" && isNew(card.postedAt));
   const n = card.status === "posted" ? closesInDays(card.closesOn) : null;
   let dot: string | null = null, text = "";
-  if (card.status === "closed") { dot = "#9CA3AF"; text = c(`Closed ${fmtDay(card.closesOn ?? card.closedAt, false, false)}`, `ปิดแล้ว ${fmtDay(card.closesOn ?? card.closedAt, true, false)}`); }
-  else if (n) { dot = "#F59E0B"; text = n === 1 ? c("Closes in 1 day", "ปิดในอีก 1 วัน") : c(`Closes in ${n} days`, `ปิดในอีก ${n} วัน`); }
-  else if (card.status === "waiting") { dot = "#7C3AED"; text = c("Waiting for Admin", "รอแอดมินตรวจ"); }
-  else if (card.status === "sent_back") { dot = "#DC2626"; text = c("Sent back by Admin", "แอดมินส่งกลับ"); }
-  else if (card.status === "draft") { dot = "#9CA3AF"; text = c("Draft", "ฉบับร่าง"); }
+  if (card.status === "closed") { dot = "muted"; text = c(`Closed ${fmtDay(card.closesOn ?? card.closedAt, false, false)}`, `ปิดแล้ว ${fmtDay(card.closesOn ?? card.closedAt, true, false)}`); }
+  else if (n) { dot = "soon"; text = n === 1 ? c("Closes in 1 day", "ปิดในอีก 1 วัน") : c(`Closes in ${n} days`, `ปิดในอีก ${n} วัน`); }
+  else if (card.status === "waiting") { dot = "waiting"; text = c("Waiting for Admin", "รอแอดมินตรวจ"); }
+  else if (card.status === "sent_back") { dot = "back"; text = c("Sent back by Admin", "แอดมินส่งกลับ"); }
+  else if (card.status === "draft") { dot = "muted"; text = c("Draft", "ฉบับร่าง"); }
   const newTag = <span className="bw-new" title={c("Posted in the last 7 days", "ลงประกาศใน 7 วันที่ผ่านมา")}>{th ? "ใหม่" : "NEW"}</span>;
   if (!dot) return fresh ? newTag : null;
   return (
-    <span className={cn("bw-pill bw-status", fresh && card.status === "posted" && "bw-status-new")}>
-      <i style={{ background: dot }} />{text}
+    <span className={cn("bw-pill bw-status", `bw-status-${dot}`, fresh && card.status === "posted" && "bw-status-new")}>
+      <i />{text}
       {fresh && card.status === "posted" && <b className="bw-new-end">{th ? "ใหม่" : "NEW"}</b>}
     </span>
   );
@@ -64,7 +64,7 @@ export function KindPill({ kind, bordered }: { kind: BoCard["kind"]; bordered?: 
     return () => { window.removeEventListener("scroll", close, true); window.removeEventListener("keydown", key); window.removeEventListener("pointerdown", close); };
   }, [pos]);
   if (kind === "advertisement")
-    return <span className={cn("bw-pill", bordered && "bw-bordered")} title={c("Posted by the buyer", "ผู้ซื้อลงประกาศเอง")}><Megaphone className="h-3 w-3 text-[#6B7280]" />{c("Advertisement", "ประกาศ")}</span>;
+    return <span className={cn("bw-pill bw-advertisement", bordered && "bw-bordered")} title={c("Posted by the buyer", "ผู้ซื้อลงประกาศเอง")}><Megaphone className="h-3 w-3" />{c("Advertisement", "ประกาศ")}</span>;
   const open = () => {
     const r = ref.current?.getBoundingClientRect();
     if (!r) return;
@@ -76,7 +76,7 @@ export function KindPill({ kind, bordered }: { kind: BoCard["kind"]; bordered?: 
   return (
     <>
       <span ref={ref} tabIndex={0} aria-describedby={id} className="bw-pill bw-sealed" onMouseEnter={open} onMouseLeave={() => setPos(null)} onFocus={open} onBlur={() => setPos(null)}>
-        <Lock className="h-3 w-3 text-[#F6A823]" />{c("Sealed", "ปิดผนึก")}
+        <Lock className="h-3 w-3" />{c("Sealed", "ปิดผนึก")}
       </span>
       <span id={id} hidden>{text}</span>
       {pos && typeof document !== "undefined" && createPortal(
@@ -227,10 +227,10 @@ export function BuyOrderCard({ card, persona, applyCtx, mode = "browse", sharedW
         <Cover card={card} height={112}
           top={<><div className="bw-row-l"><StatusPill card={card} preview={mode === "preview"} />{card.yours && <span className="bw-pill bw-yours"><User className="h-3 w-3" />{c("Yours", "ของคุณ")}</span>}{sharedWithYou && <span className="bw-pill bw-shared"><Share2 className="h-3 w-3" />{c("Shared with you", "แชร์ให้คุณ")}</span>}</div><BuyerChip card={card} /></>}
           bottom={<><KindPill kind={card.kind} />{card.client == null && (posted || closed || mode === "preview") && (
-            <span className="bw-pill">
-              <span title={c("People who opened this buy order", "คนที่เปิดดูประกาศนี้")} className="inline-flex items-center gap-1"><Eye className="h-[13px] w-[13px]" />{card.views === 1 ? c("1 view", "เข้าชม 1 ครั้ง") : c(`${card.views} views`, `เข้าชม ${card.views} ครั้ง`)}</span>
+            <span className="bw-pill bw-stats">
+              <span title={c("People who opened this buy order", "คนที่เปิดดูประกาศนี้")} className="inline-flex items-center gap-1"><Eye className="h-[13px] w-[13px]" />{mode !== "preview" && card.views === 1 ? c("1 view", "เข้าชม 1 ครั้ง") : c(`${mode === "preview" ? 0 : card.views} views`, `เข้าชม ${mode === "preview" ? 0 : card.views} ครั้ง`)}</span>
               <i className="bw-dot" />
-              <span title={c("Sellers who applied", "ผู้ขายที่สมัคร")} className="inline-flex items-center gap-1"><Users className="h-[13px] w-[13px]" />{c(`${card.applied} applied`, `สมัคร ${card.applied}`)}</span>
+              <span title={c("Sellers who applied", "ผู้ขายที่สมัคร")} className="inline-flex items-center gap-1"><Users className="h-[13px] w-[13px]" />{c(`${mode === "preview" ? 0 : card.applied} applied`, `สมัคร ${mode === "preview" ? 0 : card.applied}`)}</span>
             </span>
           )}</>} />
       </div>
