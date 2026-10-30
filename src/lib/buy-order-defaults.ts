@@ -308,3 +308,21 @@ export function translatedDefaults(d: BoDraft, country: string | null, from: "en
   fill("timing", [DEFAULT_TIMING[a]], DEFAULT_TIMING[b]);
   return out;
 }
+
+// ---------- the form's choices in Thai (what is saved stays the same) ----------
+const DEAL_TH: Record<string, string> = {
+  "Full acquisition": "ซื้อกิจการทั้งหมด", "Majority stake (above 51%)": "ถือหุ้นข้างมาก (มากกว่า 51%)",
+  "Minority stake (below 49%)": "ถือหุ้นข้างน้อย (น้อยกว่า 49%)", "Growth capital": "เงินทุนเพื่อการเติบโต", "Management buy-in": "ผู้บริหารภายนอกเข้าซื้อกิจการ",
+};
+/** A choice's label: sizes, ranges, locations, deal types and "Any". */
+export function choiceLabel(v: string, th: boolean): string {
+  if (!th) return v;
+  if (v === "Any") return "ไม่จำกัด";
+  if (DEAL_TH[v]) return DEAL_TH[v];
+  if (LOCATION_TH[v]) return LOCATION_TH[v];
+  let m = /^(\d+) rai or more$/.exec(v); if (m) return `${m[1]} ไร่ขึ้นไป`;
+  m = /^([\d,]+) sqm or more$/.exec(v); if (m) return `${m[1]} ตร.ม. ขึ้นไป`;
+  if (v.startsWith("Under ")) return `ต่ำกว่า ${v.slice(6)}`;
+  if (v.startsWith("Over ")) return `มากกว่า ${v.slice(5)}`;
+  return v;
+}
