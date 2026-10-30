@@ -69,7 +69,7 @@
 .bw-grey .bw-card-cover { filter: grayscale(1); opacity: .6; }
 .bw-grey .bw-card-head, .bw-grey .bw-card-box { opacity: .55; }
 
-.bw-cover { position: relative; overflow: hidden; color: #fff; }
+.bw-cover { position: relative; flex-shrink: 0; overflow: hidden; color: var(--bw-cover-light); }
 .bw-cover-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .bw-cover-closed { filter: grayscale(1); opacity: .6; }
 .bw-grey .bw-card-cover:has(.bw-cover-closed) { filter: none; opacity: 1; }

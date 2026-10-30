@@ -89,7 +89,8 @@ export function KindPill({ kind, bordered }: { kind: BoCard["kind"]; bordered?: 
 
 export function BuyerChip({ card, solid }: { card: BoCard; solid?: boolean }) {
   const { c } = useBw();
-  const label = `${card.buyerType}${card.country ? ` · ${card.country}` : ""}`;
+  const { t } = useTranslation();
+  const label = `${card.buyerType.split(" · ").map((part) => t(part)).join(" · ")}${card.country ? ` · ${t(card.country)}` : ""}`;
   return (
     <span className={cn("bw-pill bw-chip", solid && "bw-chip-solid")} title={c("The buyer’s name stays private", "ชื่อผู้ซื้อถูกเก็บเป็นความลับ")}>
       <EyeOff className="h-3 w-3 shrink-0" />
