@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { listingText } from "@/lib/public-listing";
-import { feeError, feeWords, newFee } from "@/lib/advisor-firm";
+import { describe, expect, it } from "bun:test";
+import { listingText } from "../../src/lib/public-listing";
+import { feeError, feeWords, newFee } from "../../src/lib/advisor-firm";
 
 describe("bilingual profile texts", () => {
   const l = { headline: "Snack maker", description: "Makes snacks", th: { headline: "ผู้ผลิตขนม", description: "", highlights: [], customerProfile: "" } };
