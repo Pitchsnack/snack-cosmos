@@ -255,12 +255,19 @@
 .bw-st-red { background: #FEF2F2; color: #991B1B; }
 .dark .bw-st-violet { background: rgba(124,58,237,.16); color: #C4B5FD; }
 .dark .bw-st-red { background: rgba(220,38,38,.16); color: #FCA5A5; }
-.bw-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.bw-form { --bw-form-surface: var(--bw-share-surface); --bw-form-ink: var(--bw-share-input-ink); --bw-form-label: var(--bw-share-text); --bw-form-border: var(--bw-share-input-border); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px 16px; }
+.dark .bw-form { --bw-form-surface: var(--background); --bw-form-ink: var(--foreground); --bw-form-label: var(--foreground); --bw-form-border: var(--border); }
+.bw-form > div { min-width: 0; }
 .bw-form .bw-span2 { grid-column: 1 / -1; }
 @media (max-width: 640px) { .bw-form { grid-template-columns: 1fr; } }
-.bw-form label.bw-lab { font-size: 13.5px; font-weight: 600; display: block; margin-bottom: 5px; }
+.bw-form .bw-lab { font-size: 13.5px; font-weight: 600; display: block; margin-bottom: 6px; color: var(--bw-form-label); }
 .bw-form label.bw-lab em { font-style: normal; font-weight: 400; color: #6B7280; }
 .bw-in { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #DCDFE5; background: hsl(var(--background)); font-size: 14px; }
+.bw-form textarea.bw-in { display: block; box-sizing: border-box; width: 100%; min-width: 0; height: 84px; min-height: 84px; max-height: none; padding: 10px 12px; border: 1px solid var(--bw-form-border); border-radius: 10px; background: var(--bw-form-surface); color: var(--bw-form-ink); font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: hidden; overflow-y: auto; resize: vertical; }
+.bw-form textarea.bw-in[rows="4"] { height: 106px; }
+.bw-form textarea.bw-bullet-area { line-height: 1.6; }
+.bw-form textarea.bw-bullet-area[rows="4"] { height: 112px; }
+.bw-form textarea.bw-in[aria-invalid="true"] { border-color: var(--bw-share-error); }
 .bw-in[aria-invalid="true"] { border-color: #B42318; }
 .dark .bw-in { border-color: hsl(var(--border)); }
 .bw-hint { font-size: 12px; color: #6B7280; margin-top: 4px; }

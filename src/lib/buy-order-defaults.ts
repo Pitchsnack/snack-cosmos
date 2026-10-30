@@ -3,6 +3,7 @@
  * the products/must-have lines per SET sector, the Thai city list, profit choices and
  * the bullet-point boxes. Saved text stays as written; only choices are stored as codes.
  */
+import { boSector } from "./buy-orders";
 
 // ---------- the buyer's country → nationality ----------
 const NATIONALITIES: Record<string, string> = {
@@ -37,11 +38,13 @@ export function defaultDescription(opts: { country: string | null; sector: strin
   const { country, sector, location } = opts;
   if (th) {
     const from = country ? `จาก${COUNTRY_TH[country] ? `ประเทศ${COUNTRY_TH[country]}` : country}` : "";
-    const what = sector ? `ธุรกิจ${sector}` : "ธุรกิจ";
+    const sectorTh = boSector(sector)?.th ?? sector;
+    const what = sectorTh.startsWith("ธุรกิจ") ? sectorTh : `ธุรกิจ${sectorTh}`;
     const where = location === "Southeast Asia" ? LOCATION_TH[location] : `ประเทศ${LOCATION_TH[location] ?? location}`;
     return `ผู้ซื้อเป็นบริษัท${from}ที่กำลังมองหา${what}ที่มั่นคงใน${where} โดยต้องการบริษัทที่มีทีมผู้บริหารที่มีความสามารถ มีลูกค้าประจำ และมีศักยภาพในการเติบโต ผู้ซื้อวางแผนจะรักษาทีมงานเดิมไว้และลงทุนเพื่อขยายธุรกิจในอนาคต`;
   }
-  const what = sector ? `an established ${lowerSector(sector)} business` : "an established business";
+  const industry = lowerSector(sector);
+  const what = sector ? `an established ${industry}${industry.endsWith("business") ? "" : " business"}` : "an established business";
   return `The buyer is ${buyerPhrase(country)} looking for ${what} in ${location}. Preference is for a company with a capable management team, recurring customers, and growth potential. The buyer plans to retain the team and invest in future expansion.`;
 }
 
