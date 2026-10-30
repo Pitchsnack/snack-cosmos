@@ -79,3 +79,10 @@ Brief: /mnt/user-uploads/lovable-one-step-approval_2.md. No tests, no test accou
 - [x] Stage 4: Share by email, sign-up from a shared buy order, first look (section 12); nightly close at 00:05 Bangkok
 - [ ] Sealed NDA "PitchSnack Private Client" name rule until LOI (section 8.5)
 - [ ] Full Thai pass against section 14 table
+
+## Buy order form defaults (brief: lovable-businesses-wanted-form-defaults.md) — 30 October 2026
+- [x] description 10–400 (DB + server + form); profit yes/no/not_stated with default not_stated; BO-1003's free-text profit converted to yes
+- [x] Default text follows buyer/industry/location until typed; 28-industry products + must-have lines EN/TH; City list (79 cities, search, Any) for Thailand; bullet boxes; Profit radio; Timing default
+- [x] Labels renamed everywhere: Target company price range, Products and services (forms, card, View details, filter, Share pop-up, share email); Thai city names on card/details/filter
+- [x] 44 buy-order tests pass; verified on screen EN/TH, phone 390px, dark
+- [ ] Admin's check dialog on screen — blocked: no buy order waiting for Admin right now (shares the same form fields, verified there)
