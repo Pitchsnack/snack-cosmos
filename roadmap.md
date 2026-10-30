@@ -1,5 +1,9 @@
 # One-step approval — roadmap
 
+## Buy-order Share pop-up — 30 October 2026
+- [x] Restore shared dialog padding, grey text, industry icon and bordered/focused email input; preserve text, validation and sending.
+- [ ] Verify card/details entry points and EN/TH desktop/390px layouts.
+
 ## Businesses Wanted menu NEW tag — 30 October 2026
 - [x] Replace the "{n} new" amber/white pill (count, tooltip, fill) on the Businesses Wanted menu row with the app's own NEW tag, always shown; keep icon, name, place, link and the cards' NEW pill.
 - [x] Verify Seller/Buyer/Advisor personas and Control admin: tag matches Advertisement's dashed style, no fill on the selected row (row text colour), folded menu hides it, Thai shows ใหม่, cards keep their NEW pill; 30 buy-order tests pass, build OK, no runtime errors.
