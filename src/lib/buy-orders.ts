@@ -186,9 +186,10 @@ export type BoField = keyof BoDraft;
 export const emptyDraft = (): BoDraft => ({
   clientId: null, sector: "", name: "", description: "", location: "Thailand", cities: "", propertySize: "Any", factorySize: "Any",
   products: "", targetRevenue: "", priceRange: "", dealTypes: BO_DEAL_TYPES.slice(0, 2) as unknown as string[], mustHave: "", niceToHave: "",
-  profit: "", timing: "", periodMonths: 3,
+  profit: "not_stated", timing: "", periodMonths: 3,
 });
-export const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 20);
+/** One point per line; a leading "• " from the bullet boxes is dropped. */
+export const lines = (s: string) => s.split("\n").map((x) => x.replace(/^•\s*/, "").trim()).filter(Boolean).slice(0, 20);
 /** The form's checks (section 10.1). Returns the fields in error, in form order. */
 export function checkDraft(d: BoDraft, needClient: boolean): Partial<Record<BoField, "pick" | "description" | "deal" | "long">> {
   const e: Partial<Record<BoField, "pick" | "description" | "deal" | "long">> = {};
@@ -196,7 +197,7 @@ export function checkDraft(d: BoDraft, needClient: boolean): Partial<Record<BoFi
   if (!boSector(d.sector)) e.sector = "pick";
   if (d.name.trim().length > 40) e.name = "long";
   const n = d.description.trim().length;
-  if (n < 10 || n > 280) e.description = "description";
+  if (n < 10 || n > 400) e.description = "description";
   if (!(BO_LOCATIONS as readonly string[]).includes(d.location)) e.location = "pick";
   if (!(PROPERTY_SIZES as readonly string[]).includes(d.propertySize)) e.propertySize = "pick";
   if (!(FACTORY_SIZES as readonly string[]).includes(d.factorySize)) e.factorySize = "pick";
@@ -209,8 +210,8 @@ export function checkDraft(d: BoDraft, needClient: boolean): Partial<Record<BoFi
 /** The row's columns from a checked draft. */
 export const draftRow = (d: BoDraft) => ({
   sector: d.sector, name_on_card: d.name.trim() || d.sector, description: d.description.trim(), location: d.location,
-  cities: d.cities.trim() || "Any", property_size: d.propertySize, factory_size: d.factorySize, products: d.products.trim() || null,
+  cities: d.cities.trim() || "Any", property_size: d.propertySize, factory_size: d.factorySize, products: d.products.replace(/\s*\n\s*/g, " ").trim() || null,
   target_revenue: d.targetRevenue, price_range: d.priceRange, deal_types: d.dealTypes, must_have: lines(d.mustHave), nice_to_have: lines(d.niceToHave),
-  profit: d.profit.trim() || null, timing: d.timing.trim() || null, period_months: d.periodMonths,
+  profit: ["yes", "no", "not_stated"].includes(d.profit) ? d.profit : "not_stated", timing: d.timing.trim() || null, period_months: d.periodMonths,
 });
 export const periodLabel = (m: number, th = false) => (m === 12 ? (th ? "รายปี" : "Annual") : th ? `${m} เดือน` : `${m} months`);
