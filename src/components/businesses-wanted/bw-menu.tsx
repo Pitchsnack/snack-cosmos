@@ -1,25 +1,14 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Target } from "lucide-react";
-import { usePersona } from "@/hooks/use-marketplace";
-import { useSessionContext } from "@/hooks/use-session-context";
-import { newBuyOrderCount } from "@/lib/buy-orders.functions";
 import { RailTip } from "@/components/marketplace/rail-tip";
 import { useBw } from "./bw-card";
 
 /** First Marketplace menu row, above DISCOVER, in every persona. */
 export function BusinessesWantedRow({ collapsed }: { collapsed?: boolean }) {
   const { c } = useBw();
-  const { persona } = usePersona();
-  const { data } = useSessionContext();
-  const role = data?.user?.accountRole ?? null;
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const fn = useServerFn(newBuyOrderCount);
-  const q = useQuery({ queryKey: ["buy-orders-new", persona, data?.user?.id], queryFn: () => fn({ data: { persona } }), enabled: !!role, staleTime: 60_000 });
   const label = c("Businesses Wanted", "ธุรกิจที่ผู้ซื้อต้องการ");
   const active = path.startsWith("/marketplace/businesses-wanted");
-  const n = q.data?.n ?? 0;
   if (collapsed)
     return (
       <div className="mb-1">
