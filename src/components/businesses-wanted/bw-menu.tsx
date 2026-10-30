@@ -34,9 +34,7 @@ export function BusinessesWantedRow({ collapsed }: { collapsed?: boolean }) {
     <Link to="/marketplace/businesses-wanted" className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${active ? "bg-[var(--role-accent)] text-[var(--role-on)] font-medium" : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"}`}>
       <Target className="h-[18px] w-[18px] shrink-0" />
       <span className="min-w-0">{label}</span>
-      {n > 0
-        ? <span className="bw-menu-new" style={active ? { background: "#fff" } : undefined} title={c("Buy orders posted in the last 7 days", "ประกาศซื้อที่ลงใน 7 วันที่ผ่านมา")}>{c(`${n} new`, `ใหม่ ${n}`)}</span>
-        : <span className="hub-new ml-auto" style={active ? { color: "currentColor", borderColor: "currentColor" } : undefined}>{c("NEW", "ใหม่")}</span>}
+      <span className="hub-new ml-auto" style={active ? { color: "currentColor", borderColor: "currentColor" } : undefined}>{c("NEW", "ใหม่")}</span>
     </Link>
   );
 }
