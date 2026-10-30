@@ -6,6 +6,12 @@
 export type BoKind = "sealed" | "advertisement";
 export type BoStatus = "draft" | "waiting" | "sent_back" | "posted" | "closed";
 export type BoAppStatus = "new" | "nda_requested" | "not_a_fit";
+export type BoPersona = "seller" | "buyer" | "advisor";
+/** Control's Buyer view stays sealed-only; other personas use the standard view. */
+export const sealedOnly = (role: string | null, persona: BoPersona) => role === "admin" && persona === "buyer";
+export const managedApplyState = (eligibleIds: string[], appliedIds: string[]) =>
+  !eligibleIds.length ? "none" : eligibleIds.every((id) => appliedIds.includes(id)) ? "applied" : "available";
+export const canShareOrder = (role: string | null, ownAdvertisement: boolean) => !!role && (role === "admin" || !ownAdvertisement);
 
 export type BoGroup = { group: string; th: string; icon: string; sectors: { name: string; th: string; icon: string }[] };
 
