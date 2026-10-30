@@ -3,7 +3,7 @@
  * the products/must-have lines per SET sector, the Thai city list, profit choices and
  * the bullet-point boxes. Saved text stays as written; only choices are stored as codes.
  */
-import { boSector } from "./buy-orders";
+import { boSector, type BoDraft } from "./buy-orders";
 
 // ---------- the buyer's country → nationality ----------
 const NATIONALITIES: Record<string, string> = {
@@ -281,3 +281,30 @@ export const ensureBullets = (text: string) =>
 /** For saving: bullets and empty lines dropped, one point per line. */
 export const stripBullets = (text: string) =>
   text.split("\n").map((l) => l.replace(/^•\s*/, "").trim()).filter(Boolean).join("\n");
+
+// ---------- the other language of a buy order's default texts ----------
+/** For each text still empty in `to`, the default's other language when the `from` text is still the form's default. */
+export function translatedDefaults(d: BoDraft, country: string | null, from: "en" | "th"): Partial<BoDraft> {
+  const a = from === "th" ? 1 : 0, b = 1 - a;
+  const k = (f: string, l: number) => (l ? `${f}Th` : f) as keyof BoDraft;
+  const get = (f: string, l: number) => String(d[k(f, l)] ?? "").trim();
+  const norm = (s: string) => stripBullets(s);
+  const out: Partial<BoDraft> = {};
+  const fill = (f: string, src: string[], dst: string) => {
+    if (get(f, b)) return;
+    const v = norm(get(f, a));
+    if (v && src.some((x) => norm(x) === v)) (out as Record<string, string>)[k(f, b)] = dst;
+  };
+  const sec = boSector(d.sector);
+  if (sec && !get("name", b) && [sec.name, sec.th].includes(get("name", a) || sec.name)) (out as Record<string, string>)[k("name", b)] = b ? sec.th : sec.name;
+  const desc = (l: number) => defaultDescription({ country, sector: d.sector, location: d.location }, !!l);
+  if (!get("description", b) && get("description", a) === desc(a)) (out as Record<string, string>)[k("description", b)] = desc(b);
+  const it = industryText(d.sector);
+  if (it) fill("products", [it.products[a]], it.products[b]);
+  const must = it ? it.mustHave : GENERAL_MUST_HAVE;
+  if (!get("mustHave", b) && norm(get("mustHave", a)) === must[a].join("\n")) (out as Record<string, string>)[k("mustHave", b)] = must[b].join("\n");
+  if (!get("mustHave", b) && it && norm(get("mustHave", a)) === GENERAL_MUST_HAVE[a].join("\n")) (out as Record<string, string>)[k("mustHave", b)] = GENERAL_MUST_HAVE[b].join("\n");
+  if (!get("niceToHave", b) && norm(get("niceToHave", a)) === DEFAULT_NICE_TO_HAVE[a].join("\n")) (out as Record<string, string>)[k("niceToHave", b)] = DEFAULT_NICE_TO_HAVE[b].join("\n");
+  fill("timing", [DEFAULT_TIMING[a]], DEFAULT_TIMING[b]);
+  return out;
+}
