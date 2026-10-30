@@ -398,3 +398,5 @@ select.bw-in { height: 42px; padding-top: 0; padding-bottom: 0; line-height: 1.2
 @media (min-width: 701px) { @container bw-page (max-width: 999px) { .bw-page .bw-filter-lists:not(.bw-filters-admin *) { grid-template-columns: minmax(140px, 1fr) repeat(3, minmax(170px, max-content)); } } }
 .bw-page .bw-filter-lists .bw-select { min-width: 0; }
 .bw-page .bw-filter-lists .bw-select select { text-overflow: clip; }
+/* Phones: Target company price can't fit half a row, so it takes the whole row to show in full */
+@media (max-width: 700px) { .bw-page .bw-filter-lists .bw-select-wide { grid-column: 1 / -1; } }
