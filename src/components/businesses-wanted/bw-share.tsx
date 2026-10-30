@@ -4,6 +4,7 @@ import { CircleCheck, EyeOff, Lock, Send, Share2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { placeOf, coverOf } from "@/lib/buy-orders";
+import { citiesDisplay } from "@/lib/buy-order-defaults";
 import { sendBuyOrderShare, type BoCard } from "@/lib/buy-orders.functions";
 import { useBw } from "./bw-card";
 import { sectorIcon } from "./bw-icons";
@@ -51,7 +52,7 @@ export function ShareDialog({ card, onClose }: { card: BoCard; onClose: () => vo
           <span className="bw-share-sec" style={{ background: coverOf(card.sector).gradient }}><Icon size={24} strokeWidth={1.8} aria-hidden="true" /></span>
           <div className="min-w-0">
             <div className="bw-share-name"><b>{card.name}</b> <span>· {card.ref}</span></div>
-            <div className="bw-share-meta">{placeOf(card.cities, card.location)} · {c("Target revenue", "รายได้เป้าหมาย")} {card.targetRevenue} · {c("Price range", "ช่วงราคา")} {card.priceRange}</div>
+            <div className="bw-share-meta">{placeOf(citiesDisplay(card.cities, th), card.location)} · {c("Target revenue", "รายได้เป้าหมาย")} {card.targetRevenue} · {c("Target company price range", "ช่วงราคาบริษัทเป้าหมาย")} {card.priceRange}</div>
             <span className="bw-pill bw-share-hidden"><EyeOff className="h-3 w-3" />{c("Buyer’s name hidden", "ไม่แสดงชื่อผู้ซื้อ")}</span>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Undo2, Calendar, ChevronDown, Eye, EyeOff, Lock, Megaphone, Send, Share2, User, Users, Check, Clock, CircleCheck, Info } from "lucide-react";
 import { useTranslation } from "@/i18n/language";
 import { boSector, closesInDays, coverOf, fmtDay, isNew, managedApplyState } from "@/lib/buy-orders";
+import { citiesDisplay } from "@/lib/buy-order-defaults";
 import { Button } from "@/components/ui/button";
 import { Building } from "lucide-react";
 import type { ApplyContext, BoCard } from "@/lib/buy-orders.functions";
@@ -247,12 +248,12 @@ export function BuyOrderCard({ card, persona, applyCtx, mode = "browse", sharedW
         <div className="bw-box" id={boxId}>
           <div className="bw-cell bw-span bw-loc">
             <div><small>{c("Location", "ที่ตั้ง")}</small><b className="bw-one">{card.location}</b></div>
-            <div className="min-w-0"><small>{c("City", "เมือง")}</small><b className="bw-one" title={card.cities}>{any(card.cities || "Any")}</b></div>
+            <div className="min-w-0"><small>{c("City", "เมือง")}</small><b className="bw-one" title={card.cities}>{citiesDisplay(card.cities || "Any", th)}</b></div>
           </div>
           <div className="bw-cell"><small>{c("Property size", "ขนาดที่ดิน")}</small><b className="bw-one bw-sm">{any(card.propertySize)}</b></div>
           <div className="bw-cell"><small>{c("Factory size", "ขนาดโรงงาน")}</small><b className="bw-one bw-sm">{any(card.factorySize)}</b></div>
           <div className="bw-cell"><small>{c("Target revenue", "รายได้เป้าหมาย")}</small><b>{card.targetRevenue}</b></div>
-          <div className="bw-cell"><small>{c("Price range", "ช่วงราคา")}</small><b>{card.priceRange}</b></div>
+          <div className="bw-cell"><small>{c("Target company price range", "ช่วงราคาบริษัทเป้าหมาย")}</small><b>{card.priceRange}</b></div>
           {more && <>
             <div className="bw-cell bw-span bw-deal"><small>{c("Deal type", "รูปแบบดีล")}</small><b className="bw-sm">{card.dealTypes.join(" · ") || "—"}</b></div>
             <div className="bw-cell bw-span"><small>{c("Must have", "ต้องมี")}</small><b className="bw-sm">{card.mustHave.join(" · ") || "—"}</b></div>

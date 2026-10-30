@@ -87,12 +87,12 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
   const applyCard = cards.find((x) => x.id === applyId) ?? null;
   const refresh = () => { qc.invalidateQueries({ queryKey: BO_QUERY }); qc.invalidateQueries({ queryKey: ["buy-orders-new"] }); qc.invalidateQueries({ queryKey: ["buy-order-apps"] }); qc.invalidateQueries({ queryKey: ["buy-orders-apply-ctx"] }); };
 
-  const sel = (value: string, set: (v: string) => void, first: string, opts: string[], aria: string) => (
+  const sel = (value: string, set: (v: string) => void, first: string, opts: string[], aria: string, label?: (o: string) => string) => (
     <label className="bw-select">
       <span className="sr-only">{aria}</span>
       <select value={value} onChange={(e) => set(e.target.value)}>
         <option value="">{first}</option>
-        {opts.map((o) => <option key={o} value={o}>{o}</option>)}
+        {opts.map((o) => <option key={o} value={o}>{label ? label(o) : o}</option>)}
       </select>
       <ChevronDown className="h-4 w-4" aria-hidden />
     </label>
@@ -114,8 +114,8 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
           <span className="truncate">{sector ? sectorName(sector) : c("All industries", "ทุกอุตสาหกรรม")}</span><ChevronDown className="h-4 w-4 shrink-0" />
         </Button>
         {sel(rev, setRev, c("Target revenue", "รายได้เป้าหมาย"), SELLER_BANDS.map((b) => b.label), c("Target revenue", "รายได้เป้าหมาย"))}
-        {sel(price, setPrice, c("Price range", "ช่วงราคา"), SELLER_BANDS.map((b) => b.label), c("Price range", "ช่วงราคา"))}
-        {sel(city, setCity, c("All cities", "ทุกเมือง"), allCities, c("City", "เมือง"))}
+        {sel(price, setPrice, c("Target company price range", "ช่วงราคาบริษัทเป้าหมาย"), SELLER_BANDS.map((b) => b.label), c("Target company price range", "ช่วงราคาบริษัทเป้าหมาย"))}
+        {sel(city, setCity, c("All cities", "ทุกเมือง"), allCities, c("City", "เมือง"), (o) => citiesDisplay(o, th))}
         </div>
       </div>
 
