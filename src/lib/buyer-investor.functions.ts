@@ -150,6 +150,8 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
         revenue_max_m: inv.revenue_max_m == null ? null : Number(inv.revenue_max_m),
         short_description: inv.short_description as string | null,
         keywords: (inv.keywords ?? []) as string[],
+        short_description_th: (inv.short_description_th ?? null) as string | null,
+        keywords_th: (inv.keywords_th ?? []) as string[],
         investment_focus: (inv.investment_focus ?? []) as string[],
         preferred_stages: (inv.preferred_stages ?? []) as string[],
         preferred_industries: (inv.preferred_industries ?? []) as string[],
@@ -179,11 +181,12 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
         relation: (p.buyer_relation ?? null) as "individual" | "corporate" | "agent" | null,
         status: p.status as string,
         description: (p.description ?? "") as string,
+        description_th: (p.description_th ?? "") as string,
         deal_types: (p.deal_types ?? []) as string[],
         ref_no: p.ref_no as string,
       },
       account: { name: (meta.full_name || meta.name || "") as string, title: (up?.title ?? "") as string },
-      people: (p.people ?? []) as { name: string; role: string; email: string; phone: string }[],
+      people: (p.people ?? []) as { name: string; role: string; role_th?: string; email: string; phone: string }[],
       verification: {
         status: (bv?.status === "unverified" || !bv?.status ? "none" : bv.status) as "none" | "pending" | "verified" | "more_info" | "declined",
         note: bv?.decision_note as string | null,
@@ -267,7 +270,7 @@ const Patch = z.object({
   revenue_min_m: z.number().min(0).max(100000).nullable().optional(),
   revenue_max_m: z.number().min(0).max(100000).nullable().optional(),
   media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(1000) })).max(3).optional(),
-  people: z.array(z.object({ name: z.string().max(120), role: z.string().max(120).default(""), email: z.string().max(200).default(""), phone: z.string().max(60).default("") })).max(20).optional(),
+  people: z.array(z.object({ name: z.string().max(120), role: z.string().max(120).default(""), role_th: z.string().max(120).optional(), email: z.string().max(200).default(""), phone: z.string().max(60).default("") })).max(20).optional(),
   aum_band: z.enum(AUM_KEYS).nullable().optional(),
   ticket_band: z.enum(TICKET_KEYS).nullable().optional(),
   revenue_min_band: z.enum(REV_KEYS).nullable().optional(),
@@ -275,6 +278,9 @@ const Patch = z.object({
   registration_no: txt(50),
   address_line1: txt(120), address_line2: txt(120), address_city_district: txt(80), address_province_state: txt(80), postal_code: txt(12),
   description: z.string().trim().optional(),
+  // Thai twins (English stays in the fields above).
+  description_th: z.string().trim().max(2000).optional(),
+  short_description_th: txt(4000), keywords_th: arr(5),
   deal_types: arr(12),
   acts_for_types: arr(7),
   // One-step approval: the buyer's suggested listing name/headline and the new About Company fields.
@@ -302,6 +308,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       (!/^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(data.website_url ?? "") && "Enter a valid website address, e.g. www.yourfirm.com") ||
       (descriptionChanged(data.description, r.p.description) && data.description && (descriptionError(data.description) ||
         (descriptionLeaks(data.description, data.investor_name, data.website_url ?? "").length ? "Your description mentions names, websites or contact details." : null))) ||
+      (data.description_th && descriptionLeaks(data.description_th, data.investor_name, data.website_url ?? "").length ? "Your Thai description mentions names, websites or contact details." : null) ||
       (relation !== "individual" && regError(data.registration_no ?? "", data.country ?? ""));
     if (!r.directory && problem) throw new Error(problem);
     const own = (x?: string | null) => !x || /^https?:/.test(x) || x.includes(`/${investorId}/`);
@@ -319,6 +326,8 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     if (data.revenue_min_m !== undefined) inv.revenue_min_m = data.revenue_min_m;
     if (data.revenue_max_m !== undefined) inv.revenue_max_m = data.revenue_max_m;
     if (data.keywords) inv.keywords = data.keywords;
+    if (data.keywords_th) inv.keywords_th = data.keywords_th;
+    if (data.short_description_th !== undefined) inv.short_description_th = data.short_description_th || null;
     if (data.investment_focus) inv.investment_focus = data.investment_focus;
     if (data.preferred_stages) inv.preferred_stages = data.preferred_stages;
     if (data.preferred_industries) inv.preferred_industries = data.preferred_industries;
@@ -357,6 +366,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     if (data.portfolio_extra) { const {preservePortfolioEntries} = await import("./profile-edit-rules"); bp.portfolio = preservePortfolioEntries(data.portfolio_extra, r.p.portfolio); }
     if (data.people) bp.people = data.people.filter((m) => m.name.trim());
     if (data.description !== undefined) { bp.description = data.description || null; bp.headline = data.description || null; }
+    if (data.description_th !== undefined) bp.description_th = data.description_th || null;
     if (data.deal_types) bp.deal_types = data.deal_types;
     if (data.investment_focus) bp.geography = data.investment_focus.join(", ") || null;
     if (data.ticket_band !== undefined) { const b = bandOf(data.ticket_band); bp.ticket_min = b ? b.lo * 1e6 : null; bp.ticket_max = b?.hi != null ? b.hi * 1e6 : null; }
