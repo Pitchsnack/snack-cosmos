@@ -18,6 +18,7 @@ export function BuyOrderPicture({ card, onSaved }: { card: BoCard; onSaved: (cov
   const sectorName = useSectorName();
   const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
+  const close = () => { setOpen(false); setTimeout(() => trigger.current?.focus(), 100); };
   const cover = card.cover;
   const line = cover?.source === "upload" ? c(`Uploaded for this buy order: ${cover.name}`, `อัปโหลดสำหรับประกาศรับซื้อนี้: ${cover.name}`)
     : cover?.source === "sector" ? c(`Sector picture: ${cover.name}`, `รูปภาพกลุ่มอุตสาหกรรม: ${cover.name}`)
@@ -25,7 +26,7 @@ export function BuyOrderPicture({ card, onSaved }: { card: BoCard; onSaved: (cov
   return <>
     <Button ref={trigger} variant="outline" className="mt-3 h-9 w-full" onClick={() => setOpen(true)}><Image />{c("Change picture", "เปลี่ยนรูปภาพ")}</Button>
     <p title={line} className="mt-1.5 truncate text-xs text-muted-foreground">{line}</p>
-    {open && <PictureDialog card={card} onSaved={onSaved} onClose={() => setOpen(false)} returnFocus={() => requestAnimationFrame(() => trigger.current?.focus())} />}
+    {open && <PictureDialog card={card} onSaved={onSaved} onClose={close} returnFocus={() => requestAnimationFrame(() => trigger.current?.focus())} />}
   </>;
 }
 
