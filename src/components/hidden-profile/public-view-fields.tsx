@@ -512,14 +512,18 @@ function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string 
 }
 
 function BuyerPreview({ d, sector, pickedImage, source, refNo }: { d: HiddenDraft; sector: string | null; pickedImage: string | null | undefined; source?: ListingSource; refNo?: string }) {
-  const tr = useTr();
+  const appTr = useTr();
+  // The preview reads as a buyer with the app in the switch's language does.
+  const { lang } = useTextLang();
+  const appLang = appTr("en", "th");
+  const tr = (en: string, th: string) => (lang === "th" ? th : en);
   const name = d.code_name.trim();
-  const head = d.headline.trim();
+  const head = (lang === "th" ? d.headline_th?.trim() || d.headline.trim() : d.headline.trim() || d.headline_th?.trim() || "");
   const city = source?.city || source?.headquarters || "";
   const products = (d.product_tags ?? source?.product_tags ?? []).slice(0, 3).join(", ");
   const markets = (d.market_tags ?? source?.market_tags ?? []).slice(0, 3).join(", ");
   const rev = revenueBand(source?.last_year_revenue) ?? "—";
-  const caption = <div className="mb-2 flex items-center gap-[6px] text-[12.5px] font-semibold text-[#4338CA]"><Eye className="h-[14px] w-[14px]" strokeWidth={2} />{tr("Buyer preview", "ตัวอย่างที่ผู้ซื้อเห็น")}</div>;
+  const caption = <div className="mb-2 flex items-center gap-[6px] text-[12.5px] font-semibold text-[#4338CA]"><Eye className="h-[14px] w-[14px]" strokeWidth={2} />{appTr("Buyer preview", "ตัวอย่างที่ผู้ซื้อเห็น")}{lang !== appLang && <span className={cn("lang-tag", lang === "th" ? "lang-tag-th" : "lang-tag-en")}>{lang === "th" ? "ไทย" : "English"}</span>}</div>;
   const nameEl = <div className={cn("text-[14px] font-bold text-[#151A28] dark:text-foreground", !name && "font-semibold text-[#8A90A0]")}>{name || refNo || tr("Your listing name", "ชื่อประกาศของท่าน")}</div>;
   const headEl = (cls: string) => <div className={cn("text-[12px] text-[#4B5563] dark:text-muted-foreground", cls, !head && "font-semibold text-[#8A90A0]")}>{head || tr("Your headline", "หัวข้อประกาศของท่าน")}</div>;
   return (
