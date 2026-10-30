@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resetApprovalNotice } from "@/lib/approval-notices.functions";
-import { TR_KEYS, TR_MAX, setupLanguageOf, type TrKey, type TrRow } from "@/lib/review-translation";
+import { TR_LIST, TR_MAX, setupLanguageOf, trBase, type TrKey, type TrRow } from "@/lib/review-translation";
 import { advisorReview, buyerReview, sellerReview, waitingDays, type OneStepItem, type OneStepKind } from "@/lib/one-step.server";
 
 /**
@@ -55,7 +55,7 @@ export const DECISION_REASONS = [
 /* ================================================================ translation */
 
 function tr(key: TrKey, group: TrRow["group"], label: string, en: string | null | undefined, th: string | null | undefined, extra: Partial<TrRow> = {}): TrRow {
-  return { key, group, label, en: en ?? "", th: th ?? "", max: TR_MAX[key], ...extra };
+  return { key, group, label, en: en ?? "", th: th ?? "", max: TR_MAX[trBase(key)], ...extra };
 }
 function personRows(u: any): TrRow[] {
   return [
@@ -89,19 +89,20 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
 
     // ---- sellers: hidden_profiles waiting or sent back
     const { data: hps, error: hpError } = await sb.from("hidden_profiles")
-      .select("id, startup_id, ref_no, code_name, description, highlights, customers_summary, deal_type, owner_stays, handover_months, asking_price_thb, asking_price_band, approval_status, submitted_at, submitted_by, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, review_checks, headline_th, description_th, highlights_th, customers_summary_th, published_headline_th, review_draft, review_saved_at")
+      .select("id, startup_id, ref_no, code_name, description, highlights, customers_summary, deal_type, owner_stays, handover_months, asking_price_thb, asking_price_band, approval_status, submitted_at, submitted_by, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, review_checks, headline_th, description_th, highlights_th, customers_summary_th, published_headline_th, review_draft, review_saved_at, reason, reason_th")
       .in("approval_status", ["in_review", "changes_requested"]).order("submitted_at", { ascending: true });
     if (hpError) throw new Error(hpError.message);
     const stIds = [...new Set((hps ?? []).map((h: any) => h.startup_id).filter(Boolean))];
     const { data: sts } = stIds.length
-      ? await sb.from("startups").select("id, startup_name, registered_name, registered_number, website_url, email, city, sector, year_founded, last_year_revenue, business_address, contact_number, startup_name_th, business_address_th").in("id", stIds)
+      ? await sb.from("startups").select("id, startup_name, registered_name, registered_number, website_url, email, city, sector, year_founded, last_year_revenue, business_address, contact_number, startup_name_th, business_address_th, short_description, short_description_th, long_description, long_description_th, product_tags, product_tags_th, market_tags, market_tags_th").in("id", stIds)
       : { data: [] };
     const stBy = new Map<string, any>((sts ?? []).map((s: any) => [s.id, s]));
     const { data: founders } = stIds.length
       ? await sb.from("startup_founders").select("id, startup_id, full_name, position, bio, bio_th, bio_story").in("startup_id", stIds).order("created_at", { ascending: true })
       : { data: [] };
     const founderBy = new Map<string, any>();
-    for (const f of founders ?? []) if (!founderBy.has(f.startup_id)) founderBy.set(f.startup_id, f);
+    const foundersBy = new Map<string, any[]>();
+    for (const f of founders ?? []) { if (!founderBy.has(f.startup_id)) founderBy.set(f.startup_id, f); foundersBy.set(f.startup_id, [...(foundersBy.get(f.startup_id) ?? []), f]); }
 
     // ---- buyers: buyer_profiles waiting or sent back
     const { data: bps, error: bpError } = await sb.from("buyer_profiles")
@@ -110,7 +111,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
     if (bpError) throw new Error(bpError.message);
     const invIds = [...new Set((bps ?? []).map((b: any) => b.investor_id).filter(Boolean))];
     const { data: invs } = invIds.length
-      ? await sb.from("investors").select("id, investor_name, investor_type, country, website_url, registration_no, year_founded, email, aum_band, ticket_band, revenue_min_band, investment_focus, preferred_industries, preferred_stages, address_line1, address_line2, address_city_district, address_province_state, postal_code, investor_name_th, address_th").in("id", invIds)
+      ? await sb.from("investors").select("id, investor_name, investor_type, country, website_url, registration_no, year_founded, email, aum_band, ticket_band, revenue_min_band, investment_focus, preferred_industries, preferred_stages, address_line1, address_line2, address_city_district, address_province_state, postal_code, investor_name_th, address_th, short_description, short_description_th, keywords, keywords_th").in("id", invIds)
       : { data: [] };
     const invBy = new Map<string, any>((invs ?? []).map((i: any) => [i.id, i]));
     const verByUser = await (await import("./profile-verification.server")).verificationsByUsers(sb, (bps ?? []).map((b: any) => b.user_id), "id, status, review_checks");
@@ -151,7 +152,12 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
             tr("description", "texts", "Description", hp.description, hp.description_th, { multiline: true }),
             tr("highlights", "texts", "Highlights", (hp.highlights ?? []).filter(Boolean).join("\n"), (hp.highlights_th ?? []).filter(Boolean).join("\n"), { list: true, multiline: true }),
             tr("customers", "texts", "Customer profile", hp.customers_summary, hp.customers_summary_th, { multiline: true }),
-            ...(founderBy.get(hp.startup_id) ? [tr("owner_bio", "texts", "About the owner", founderBy.get(hp.startup_id).bio, founderBy.get(hp.startup_id).bio_th, { multiline: true })] : []),
+            tr("reason", "texts", "Reason for sale", hp.reason, hp.reason_th, { multiline: true }),
+            tr("short_description", "texts", "Short Description", st?.short_description, st?.short_description_th, { multiline: true }),
+            tr("long_description", "texts", "Long Description", st?.long_description, st?.long_description_th, { multiline: true }),
+            tr("product_tags", "texts", "Product & Service Tags", (st?.product_tags ?? []).join("\n"), (st?.product_tags_th ?? []).join("\n"), { list: true, multiline: true }),
+            tr("market_tags", "texts", "Market Tags", (st?.market_tags ?? []).join("\n"), (st?.market_tags_th ?? []).join("\n"), { list: true, multiline: true }),
+            ...(foundersBy.get(hp.startup_id) ?? []).map((f: any, _i: number, all: any[]) => tr(`owner_bio:${f.id}`, "texts", all.length > 1 ? `About the owner · ${f.full_name ?? ""}` : "About the owner", f.bio, f.bio_th, { multiline: true })),
           ] }),
       });
     }
@@ -177,6 +183,8 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
             ...personRows(uBy.get(p.user_id)),
             ...headlineRows(p.review_draft, p.suggested_headline, p.published_headline, p.published_headline_th, p.suggested_headline_th),
             tr("description", "texts", "Description", p.description, p.description_th, { multiline: true }),
+            tr("short_description", "texts", "About Company", inv?.short_description, inv?.short_description_th, { multiline: true }),
+            tr("keywords", "texts", "Keywords", (inv?.keywords ?? []).join("\n"), (inv?.keywords_th ?? []).join("\n"), { list: true, multiline: true }),
           ] }),
       });
     }
@@ -439,7 +447,7 @@ const SaveReview = z.object({
   publishedName: z.string().max(120),
   publishedHeadline: z.string().max(120),
   publishedHeadlineTh: z.string().max(120),
-  texts: z.array(z.object({ key: z.enum(TR_KEYS), en: z.string().max(3000).optional(), th: z.string().max(3000) })).max(20),
+  texts: z.array(z.object({ key: z.string().regex(/^[a-z_]+(:[0-9a-f-]{36})?$/), en: z.string().max(6000).optional(), th: z.string().max(6000) })).max(40),
 });
 
 /** Admin › Approvals › Save: keeps the review's changes without verifying, publishing or emailing. */
@@ -451,8 +459,9 @@ export const saveOneStepReview = createServerFn({ method: "POST" })
     const sb = await admin();
     const now = new Date().toISOString();
     for (const t of data.texts) {
-      const max = TR_MAX[t.key];
-      const parts = t.key === "highlights" ? [...(t.en ?? "").split("\n"), ...t.th.split("\n")] : [t.en ?? "", t.th];
+      if (!(trBase(t.key) in TR_MAX)) throw new Error("Unknown text");
+      const max = TR_MAX[trBase(t.key)];
+      const parts = TR_LIST.includes(trBase(t.key)) ? [...(t.en ?? "").split("\n"), ...t.th.split("\n")] : [t.en ?? "", t.th];
       if (parts.some((x) => x.trim().length > max)) throw new Error(`Too long: ${t.key}`);
     }
     const clean = (v: string) => v.trim() || null;
@@ -475,7 +484,6 @@ export const saveOneStepReview = createServerFn({ method: "POST" })
       const { data: hp } = await sb.from("hidden_profiles").select("id, startup_id, submitted_by").eq("id", data.id).maybeSingle();
       if (!hp) throw new Error("Listing not found");
       userId = hp.submitted_by;
-      const { data: founder } = hp.startup_id ? await sb.from("startup_founders").select("id").eq("startup_id", hp.startup_id).order("created_at", { ascending: true }).limit(1).maybeSingle() : { data: null };
       for (const t of data.texts) {
         if (t.key === "company_name" && hp.startup_id) await put("startups", ["id", hp.startup_id], "startup_name", "startup_name_th", t);
         if (t.key === "address" && hp.startup_id) await put("startups", ["id", hp.startup_id], "business_address", "business_address_th", t);
@@ -483,7 +491,16 @@ export const saveOneStepReview = createServerFn({ method: "POST" })
         if (t.key === "description") await put("hidden_profiles", ["id", hp.id], "description", "description_th", t);
         if (t.key === "highlights") await put("hidden_profiles", ["id", hp.id], "highlights", "highlights_th", t, true);
         if (t.key === "customers") await put("hidden_profiles", ["id", hp.id], "customers_summary", "customers_summary_th", t);
-        if (t.key === "owner_bio" && founder) await put("startup_founders", ["id", founder.id], "bio", "bio_th", t);
+        if (t.key === "reason") await put("hidden_profiles", ["id", hp.id], "reason", "reason_th", t);
+        if (hp.startup_id && t.key === "short_description") await put("startups", ["id", hp.startup_id], "short_description", "short_description_th", t);
+        if (hp.startup_id && t.key === "long_description") await put("startups", ["id", hp.startup_id], "long_description", "long_description_th", t);
+        if (hp.startup_id && t.key === "product_tags") await put("startups", ["id", hp.startup_id], "product_tags", "product_tags_th", t, true);
+        if (hp.startup_id && t.key === "market_tags") await put("startups", ["id", hp.startup_id], "market_tags", "market_tags_th", t, true);
+        if (t.key.startsWith("owner_bio:")) {
+          const fid = t.key.slice(10);
+          const { data: own } = await sb.from("startup_founders").select("id").eq("id", fid).eq("startup_id", hp.startup_id).maybeSingle();
+          if (own) await put("startup_founders", ["id", fid], "bio", "bio_th", t);
+        }
       }
       const { error } = await sb.from("hidden_profiles").update({ review_draft: draft, review_saved_at: now }).eq("id", hp.id);
       if (error) throw new Error(error.message);
@@ -496,6 +513,8 @@ export const saveOneStepReview = createServerFn({ method: "POST" })
         if (t.key === "address" && p.investor_id) await put("investors", ["id", p.investor_id], "address_line1", "address_th", t);
         if (t.key === "suggested_headline") await put("buyer_profiles", ["user_id", p.user_id], "suggested_headline", "suggested_headline_th", t);
         if (t.key === "description") await put("buyer_profiles", ["user_id", p.user_id], "description", "description_th", t);
+        if (t.key === "short_description" && p.investor_id) await put("investors", ["id", p.investor_id], "short_description", "short_description_th", t);
+        if (t.key === "keywords" && p.investor_id) await put("investors", ["id", p.investor_id], "keywords", "keywords_th", t, true);
       }
       const { error } = await sb.from("buyer_profiles").update({ review_draft: draft, review_saved_at: now }).eq("user_id", p.user_id);
       if (error) throw new Error(error.message);

@@ -2,8 +2,11 @@
  * Admin › Approvals review › Translation: browser-safe row model and counting
  * rules, shared by the review UI, its server builder and tests.
  */
-export const TR_KEYS = ["company_name", "address", "person_name", "person_title", "published_headline", "suggested_headline", "description", "highlights", "customers", "owner_bio"] as const;
-export type TrKey = (typeof TR_KEYS)[number];
+export const TR_KEYS = ["company_name", "address", "person_name", "person_title", "published_headline", "suggested_headline", "description", "highlights", "customers", "reason", "short_description", "long_description", "product_tags", "market_tags", "keywords", "owner_bio"] as const;
+export type TrBase = (typeof TR_KEYS)[number];
+/** A row key: the base, plus ":{id}" for rows repeated per person (About the owner). */
+export type TrKey = TrBase | `${TrBase}:${string}`;
+export const trBase = (k: string) => k.split(":")[0] as TrBase;
 export type TrRow = {
   key: TrKey;
   group: "company" | "texts";
@@ -19,10 +22,12 @@ export type TrRow = {
 };
 export type TrState = "both" | "no_th" | "no_en" | "empty";
 
-export const TR_MAX: Record<TrKey, number> = {
+export const TR_MAX: Record<TrBase, number> = {
   company_name: 200, address: 500, person_name: 120, person_title: 120,
-  published_headline: 120, suggested_headline: 120, description: 3000, highlights: 200, customers: 3000, owner_bio: 3000,
+  published_headline: 120, suggested_headline: 120, description: 3000, highlights: 200, customers: 3000,
+  reason: 3000, short_description: 3000, long_description: 6000, product_tags: 80, market_tags: 80, keywords: 80, owner_bio: 3000,
 };
+export const TR_LIST: TrBase[] = ["highlights", "product_tags", "market_tags", "keywords"];
 
 export const hasThai = (s: string | null | undefined) => /[\u0E00-\u0E7F]/.test(s ?? "");
 const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
