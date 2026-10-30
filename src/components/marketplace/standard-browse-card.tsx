@@ -71,7 +71,7 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
   const StatusIcon = status === 'approved' ? LockOpen : status === 'requested' ? Clock : EyeOff;
   const statusTip = newDays != null ? `${t(statusLabel)} · ${t('New, listed')} ${newDays} ${t(newDays === 1 ? 'day ago' : 'days ago')}` : t(statusLabel);
   const figure = (f: StandardFigure, highlight = false) => <dl className={cn('standard-card-cell', highlight && !!f.value && 'standard-card-fit')}>
-    <dt title={t(f.label)}>{t(f.label)}</dt><dd><span className={cn('standard-card-value', !f.value && 'standard-card-empty')} title={f.value ?? undefined}>{f.value || t('Not stated')}</span><span className="standard-card-second" title={f.second ?? undefined}>{f.second || '\u00a0'}</span></dd>
+    <dt title={t(f.label)}>{t(f.label)}</dt><dd><span className={cn('standard-card-value', !f.value && 'standard-card-empty')} title={f.value ?? undefined}>{f.value || t('Not stated')}</span>{f.second && <span className="standard-card-second" title={f.second}>{f.second}</span>}</dd>
   </dl>;
   const openFromCard = (e: React.MouseEvent<HTMLElement>) => {
     if (!onOpen) return;
