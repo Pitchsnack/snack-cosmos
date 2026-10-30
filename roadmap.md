@@ -47,7 +47,8 @@ Brief: /mnt/user-uploads/lovable-one-step-approval_2.md. No tests, no test accou
 - [x] Seller review rows read the stored vocabulary: `owner_stays` yes/no through `handoverLine()`, asking price through the price-band label (test/approvals/one-step-review.test.ts, 6 tests).
 
 ## Businesses Wanted (brief: lovable-businesses-wanted.md), in stages
-- [ ] Admin all-tabs extension: persona-specific browsing/counts, managed Live seller picker and applications, full-name sharing; verify authorization and on-screen flow.
+- [x] Admin all-tabs extension: persona-specific browsing/counts, managed Live seller picker and applications, full-name sharing; 18 rule tests pass and all three signed-in Admin tabs render without errors.
+- [ ] Admin managed-company Apply/share end-to-end check — blocked: no buy orders exist and no Live managed companies are available in Control; no test business or buy order was invented.
 - [x] Stage 1: tables, menu row, page, filters, industry tiles, cards, View details, seller Apply
 - [ ] Stage 2: Pipeline › NDA Invitations › Applications (seller + buyer/Control), Request NDA / Not a fit, Sealed NDA naming (sections 6.5, 7, 8)
 - [x] Stage 3: Advertisement menu + My advertisements + buy order form; Admin › Approvals › Advertisement; daily 00:05 close job (sections 9–11)
