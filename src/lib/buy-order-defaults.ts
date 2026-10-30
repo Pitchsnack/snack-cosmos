@@ -29,7 +29,8 @@ export function buyerPhrase(country: string | null | undefined): string {
   return `a company from ${country}`;
 }
 
-const lowerSector = (sector: string) => sector.replace(/^./, (ch) => ch.toLowerCase());
+/** Lower case, keeping "REITs" as it is. */
+const lowerSector = (sector: string) => sector.toLowerCase().replace(/\breits\b/g, "REITs");
 
 /** The default Description, following the buyer, industry and location picked. */
 export function defaultDescription(opts: { country: string | null; sector: string; location: string }, th: boolean): string {

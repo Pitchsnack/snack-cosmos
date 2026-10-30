@@ -25,7 +25,7 @@ describe("defaultDescription", () => {
     expect(s.length).toBe(276);
   });
   it("keeps REITs capitalised and handles no picks", () => {
-    expect(defaultDescription({ country: null, sector: "Property Fund & REITs", location: "Thailand" }, false)).toContain("an established property fund & REITs business".replace("property fund & REITs", "property fund & REITs"));
+    expect(defaultDescription({ country: null, sector: "Property Fund & REITs", location: "Thailand" }, false)).toContain("an established property fund & REITs business");
     expect(defaultDescription({ country: null, sector: "", location: "Thailand" }, false)).toContain("The buyer is a company looking for an established business in Thailand.");
   });
   it("writes Thai without ประเทศ before Southeast Asia", () => {
