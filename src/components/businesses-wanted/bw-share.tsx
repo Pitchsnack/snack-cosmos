@@ -54,7 +54,7 @@ export function ShareDialog({ card: rawCard, onClose }: { card: BoCard; onClose:
           <span className="bw-share-sec" style={{ background: coverOf(card.sector).gradient }}><Icon size={24} strokeWidth={1.8} aria-hidden="true" /></span>
           <div className="min-w-0">
             <div className="bw-share-name"><b>{card.name}</b> <span>· {card.ref}</span></div>
-            <div className="bw-share-meta">{placeOf(citiesDisplay(card.cities, th), card.location)} · {c("Target revenue", "รายได้เป้าหมาย")} {card.targetRevenue} · {c("Target company price range", "ช่วงราคาบริษัทเป้าหมาย")} {card.priceRange}</div>
+            <div className="bw-share-meta">{placeOf(citiesDisplay(card.cities, th), card.location)} · {c("Target revenue", "รายได้เป้าหมาย")} {card.targetRevenue} · {c("Target company price", "ราคาบริษัทเป้าหมาย")} {card.priceRange}</div>
             <span className="bw-pill bw-share-hidden"><EyeOff className="h-3 w-3" />{c("Buyer’s name hidden", "ไม่แสดงชื่อผู้ซื้อ")}</span>
           </div>
         </div>

@@ -19,7 +19,7 @@
 .bw-page .bw-filters .bw-search input { width: 100%; height: 100%; padding: 0; border: 0; font-size: 14px; color: inherit; }
 .bw-page .bw-filters select { width: 100%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bw-page .bw-filters .bw-indbtn { width: 100%; }
-@container bw-page (max-width: 899px) {
+@container bw-page (max-width: 999px) {
   .bw-page .bw-filters { grid-template-columns: minmax(0, 1fr); }
   .bw-page .bw-filter-lists, .bw-page .bw-filters-admin .bw-filter-lists { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .bw-page .bw-filters-admin .bw-filter-lists { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -354,9 +354,7 @@ select.bw-in { height: 42px; padding-top: 0; padding-bottom: 0; line-height: 1.2
 .bw-city-other { margin: 6px 8px 2px; padding-top: 8px; border-top: 1px solid var(--bw-soft); font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #6B7280; }
 .bw-city-none { padding: 10px 8px; font-size: 13px; color: var(--bw-mute); }
 
-/* The wider Target company price range list, and two-line card labels that still line up */
-.bw-select-wide select { min-width: 220px; }
-.bw-cell small { min-height: 2.3em; display: flex; align-items: flex-end; }
+/* The wider Target company price list, and two-line card labels that still line up */
 
 /* Buy orders in English and Thai */
 .bw-seg { display: inline-flex; background: #EEF0F3; border-radius: 10px; padding: 3px; gap: 2px; }
@@ -382,3 +380,23 @@ select.bw-in { height: 42px; padding-top: 0; padding-bottom: 0; line-height: 1.2
 .dark .bw-src { background: rgba(255,255,255,.05); color: #E5E7EB; }
 .bw-lmissing { display: flex; gap: 8px; align-items: flex-start; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 10px; padding: 9px 12px; font-size: 13px; color: #92400E; margin-bottom: 10px; }
 .bw-ltabs + * .bw-in[aria-invalid="true"], .bw-in[aria-invalid="true"] { border-color: #D92D20; }
+
+/* Card sizes: tighter spacing, one-row buttons, top-aligned cells */
+.bw-card-box { padding-top: 6px; }
+.bw-cell { padding: 7px 12px; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-start; }
+.bw-loc { display: grid; }
+.bw-cell small { font-size: 12px; color: #6B7280; line-height: 1.35; }
+.bw-cell b { margin-top: 1px; line-height: 1.3; }
+.bw-foot { padding: 6px 0; }
+.bw-buttons { padding: 10px 16px 14px; flex-wrap: nowrap; }
+.bw-buttons > .bw-btn, .bw-buttons > span, .bw-buttons > a { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.bw-buttons > .bw-icon-only { flex: 0 0 40px; }
+.bw-btn-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bw-count-pill { display: inline-flex; align-items: center; justify-content: center; height: 18px; min-width: 18px; padding: 0 5px; margin-left: 0; border-radius: 999px; background: #F6A823; color: #0E162F; font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; flex: none; }
+/* Filter bar: the lists as wide as their longest choice, never cut */
+@container bw-page (min-width: 1000px) { .bw-page .bw-filter-lists:not(.bw-filters-admin *) { grid-template-columns: 200px repeat(3, minmax(170px, max-content)); } }
+@media (min-width: 701px) { @container bw-page (max-width: 999px) { .bw-page .bw-filter-lists:not(.bw-filters-admin *) { grid-template-columns: minmax(140px, 1fr) repeat(3, minmax(170px, max-content)); } } }
+.bw-page .bw-filter-lists .bw-select { min-width: 0; }
+.bw-page .bw-filter-lists .bw-select select { text-overflow: clip; }
+/* Phones: Target company price can't fit half a row, so it takes the whole row to show in full */
+@media (max-width: 700px) { .bw-page .bw-filter-lists .bw-select-wide { grid-column: 1 / -1; } }

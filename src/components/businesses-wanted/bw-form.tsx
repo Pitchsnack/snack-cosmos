@@ -137,7 +137,7 @@ export function BoFields({ d, set, errs, clients, only, tl: tlIn, choiceTh, tags
   const ranges = (first: BoField) => (
     <>
       <div><label className="bw-lab" htmlFor="bo-targetRevenue">{c("Target revenue", "รายได้เป้าหมาย")}</label>{sel("targetRevenue", BO_RANGES.map((r) => r.label), pick)}{errText("targetRevenue")}</div>
-      <div><label className="bw-lab" htmlFor="bo-priceRange">{c("Target company price range", "ช่วงราคาบริษัทเป้าหมาย")}</label>{sel("priceRange", BO_RANGES.map((r) => r.label), pick)}{errText("priceRange")}</div>
+      <div><label className="bw-lab" htmlFor="bo-priceRange">{c("Target company price", "ราคาบริษัทเป้าหมาย")}</label>{sel("priceRange", BO_RANGES.map((r) => r.label), pick)}{errText("priceRange")}</div>
     </>
   );
   return (
