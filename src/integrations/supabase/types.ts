@@ -1239,6 +1239,7 @@ export type Database = {
           created_at: string
           deal_types: string[]
           description: string
+          description_th: string | null
           extended_count: number
           factory_size: string
           id: string
@@ -1246,13 +1247,17 @@ export type Database = {
           kind: string
           location: string
           must_have: string[]
+          must_have_th: string[]
           name_on_card: string
+          name_on_card_th: string | null
           nice_to_have: string[]
+          nice_to_have_th: string[]
           period_months: number
           posted_at: string | null
           posted_by_user_id: string | null
           price_range: string
           products: string | null
+          products_th: string | null
           profit: string | null
           property_size: string
           ref: string
@@ -1261,7 +1266,9 @@ export type Database = {
           sent_to_admin_at: string | null
           status: string
           target_revenue: string
+          text_lang: string
           timing: string | null
+          timing_th: string | null
           updated_at: string
           written_by_user_id: string
         }
@@ -1278,6 +1285,7 @@ export type Database = {
           created_at?: string
           deal_types?: string[]
           description: string
+          description_th?: string | null
           extended_count?: number
           factory_size?: string
           id?: string
@@ -1285,13 +1293,17 @@ export type Database = {
           kind: string
           location: string
           must_have?: string[]
+          must_have_th?: string[]
           name_on_card: string
+          name_on_card_th?: string | null
           nice_to_have?: string[]
+          nice_to_have_th?: string[]
           period_months?: number
           posted_at?: string | null
           posted_by_user_id?: string | null
           price_range: string
           products?: string | null
+          products_th?: string | null
           profit?: string | null
           property_size?: string
           ref?: string
@@ -1300,7 +1312,9 @@ export type Database = {
           sent_to_admin_at?: string | null
           status?: string
           target_revenue: string
+          text_lang?: string
           timing?: string | null
+          timing_th?: string | null
           updated_at?: string
           written_by_user_id: string
         }
@@ -1317,6 +1331,7 @@ export type Database = {
           created_at?: string
           deal_types?: string[]
           description?: string
+          description_th?: string | null
           extended_count?: number
           factory_size?: string
           id?: string
@@ -1324,13 +1339,17 @@ export type Database = {
           kind?: string
           location?: string
           must_have?: string[]
+          must_have_th?: string[]
           name_on_card?: string
+          name_on_card_th?: string | null
           nice_to_have?: string[]
+          nice_to_have_th?: string[]
           period_months?: number
           posted_at?: string | null
           posted_by_user_id?: string | null
           price_range?: string
           products?: string | null
+          products_th?: string | null
           profit?: string | null
           property_size?: string
           ref?: string
@@ -1339,7 +1358,9 @@ export type Database = {
           sent_to_admin_at?: string | null
           status?: string
           target_revenue?: string
+          text_lang?: string
           timing?: string | null
+          timing_th?: string | null
           updated_at?: string
           written_by_user_id?: string
         }
