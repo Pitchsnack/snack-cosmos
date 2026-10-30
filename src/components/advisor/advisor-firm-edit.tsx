@@ -103,7 +103,7 @@ function Tag({ t }: { t?: SourceTag }) {
   );
 }
 function F({ label, req, opt, hint, err, tag, children, className, htmlFor }: {
-  label: string; req?: boolean; opt?: boolean; hint?: React.ReactNode; err?: string | null; tag?: SourceTag; children: React.ReactNode; className?: string; htmlFor?: string;
+  label: React.ReactNode; req?: boolean; opt?: boolean; hint?: React.ReactNode; err?: string | null; tag?: SourceTag; children: React.ReactNode; className?: string; htmlFor?: string;
 }) {
   return (
     <div className={cn("space-y-1.5", className)} data-edit-sec={htmlFor === "fe-teamSize" ? "team-size" : undefined}>
@@ -189,7 +189,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
     ["name", nameError(f.name)],
     ["city", cityError(thai ? f.addr.province : f.city, f.country)],
     ["year", yearError(f.yearFounded)],
-    ["desc", descError(f.description)],
+    ["desc", descError(f.description || f.descriptionTh)],
     ["teamSize", teamSizeError(f.teamSize)],
     ["legalName", f.legalName.trim() ? null : "Add your firm's legal name."],
     ["reg", thai && !/^\d{13}$/.test(f.registrationNo) ? "The registration number has 13 digits." : null],
@@ -225,7 +225,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       await save({
         data: {
           id: created?.id ?? firm?.id ?? null, name: f.name.trim(), firmType: f.firmType, logoPath: up.logoPath, logoSource: logoChanged ? "upload" : f.logo.source, media: up.media,
-          description: f.description.trim(), descriptionTh: f.descriptionTh.trim() || null, yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
+          description: f.description.trim() || f.descriptionTh.trim(), descriptionTh: f.descriptionTh.trim() || null, yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
           dealBand: f.dealBand || null, teamSize: f.teamSize ? Number(f.teamSize) : null, languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
           legalName: f.legalName.trim(), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
