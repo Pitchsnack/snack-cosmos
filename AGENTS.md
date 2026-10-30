@@ -1,5 +1,5 @@
 # Decisions
-- Businesses Wanted DTOs own persona privacy/access; scoped filter grids prevent collisions. Shared cover rows use pill tokens; public `.bw` pill/close styles stay scoped. Persona tokens theme pages.
+- Businesses Wanted DTOs own persona privacy/access; scoped filter grids avoid collisions. Cover rows use pill tokens; public `.bw` styles scoped. Persona tokens theme pages. Form defaults: browser-safe src/lib/buy-order-defaults.ts.
 - Marketplace Contacts shares role UI; list/card reads recheck active NDA and owner/view access before shared projection, keeping Admin access separate.
 - Admin contacts use a dedicated Control+Admin-authorized directory and separate admin_contact_notes, keyed by user ID; lazy company DTOs adapt shared cards without viewer controls, and profile/status/sign-in/NDA projections serve both Admin entry points without changing marketplace privacy.
 - Seller founders use a browser-safe structured story helper and the existing founder bio plus nullable bio_story; existing startup authorization/saving and bio display gates remain authoritative.
