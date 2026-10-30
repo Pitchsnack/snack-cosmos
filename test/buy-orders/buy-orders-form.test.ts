@@ -7,10 +7,10 @@ describe("buy order form", () => {
   it("needs industry, target revenue and price range", () => {
     expect(Object.keys(checkDraft(emptyDraft(), false))).toEqual(expect.arrayContaining(["sector", "targetRevenue", "priceRange", "description"]));
   });
-  it("description is 10 to 280 characters", () => {
+  it("description is 10 to 400 characters", () => {
     expect(checkDraft({ ...ok, description: "too short" }, false).description).toBe("description");
-    expect(checkDraft({ ...ok, description: "x".repeat(281) }, false).description).toBe("description");
-    expect(checkDraft({ ...ok, description: "x".repeat(280) }, false).description).toBeUndefined();
+    expect(checkDraft({ ...ok, description: "x".repeat(401) }, false).description).toBe("description");
+    expect(checkDraft({ ...ok, description: "x".repeat(400) }, false).description).toBeUndefined();
   });
   it("needs at least one deal type", () => {
     expect(checkDraft({ ...ok, dealTypes: [] }, false).dealTypes).toBe("deal");
