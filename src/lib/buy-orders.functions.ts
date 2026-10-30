@@ -22,6 +22,8 @@ export type BoCard = {
   propertySize: string; factorySize: string; products: string | null;
   targetRevenue: string; priceRange: string; dealTypes: string[]; mustHave: string[]; niceToHave: string[];
   profit: string | null; timing: string | null; periodMonths: number;
+  /** The Thai texts (null/empty when not written yet) and the writer's language. */
+  nameTh: string | null; descriptionTh: string | null; productsTh: string | null; mustHaveTh: string[]; niceToHaveTh: string[]; timingTh: string | null; textLang: "en" | "th";
   postedAt: string | null; closesOn: string | null; closedAt: string | null;
   buyerType: string; country: string | null; aboutBuyer: string | null;
   views: number; applied: number; yours: boolean;
@@ -134,6 +136,8 @@ function toCard(r: any, ctx: { inv: Map<string, any>; bp: Map<string, any>; view
     propertySize: r.property_size, factorySize: r.factory_size, products: r.products,
     targetRevenue: r.target_revenue, priceRange: r.price_range, dealTypes: r.deal_types ?? [], mustHave: r.must_have ?? [], niceToHave: r.nice_to_have ?? [],
     profit: r.profit, timing: r.timing, periodMonths: r.period_months,
+    nameTh: r.name_on_card_th ?? null, descriptionTh: r.description_th ?? null, productsTh: r.products_th ?? null,
+    mustHaveTh: r.must_have_th ?? [], niceToHaveTh: r.nice_to_have_th ?? [], timingTh: r.timing_th ?? null, textLang: r.text_lang === "th" ? "th" : "en",
     postedAt: r.posted_at, closesOn: r.closes_on, closedAt: r.closed_at ?? (effectiveStatus(r.status, r.closes_on) === "closed" && r.closes_on ? `${r.closes_on}T00:00:00+07:00` : null),
     buyerType, country: i.country ?? null, aboutBuyer: about,
     views: ctx.views.get(r.id) ?? 0, applied: ctx.apps.get(r.id) ?? 0,
@@ -464,7 +468,9 @@ const draftSchema = z.object({
   location: z.string().max(40), cities: z.string().max(200), propertySize: z.string().max(40), factorySize: z.string().max(40),
   products: z.string().max(500), targetRevenue: z.string().max(40), priceRange: z.string().max(40), dealTypes: z.array(z.string().max(60)).max(5),
   mustHave: z.string().max(2000), niceToHave: z.string().max(2000), profit: z.string().max(200), timing: z.string().max(200),
-  periodMonths: z.number().int(),
+  periodMonths: z.number().int(), lang: z.enum(["en", "th"]).optional(),
+  nameTh: z.string().max(60).optional(), descriptionTh: z.string().max(400).optional(), productsTh: z.string().max(500).optional(),
+  mustHaveTh: z.string().max(2000).optional(), niceToHaveTh: z.string().max(2000).optional(), timingTh: z.string().max(200).optional(),
 });
 
 /** Live investor profiles PitchSnack manages: the clients a Sealed buy order can be for. Admins only. */
@@ -523,6 +529,8 @@ export const saveBuyOrder = createServerFn({ method: "POST" })
     if (role !== "buyer" && role !== "admin") throw new Error("Not allowed");
     const sb = await admin();
     const sealed = role === "admin";
+    // Control writes both languages with English first; a buyer writes in their app's language.
+    if (sealed) data.draft.lang = "en";
     const errs = checkDraft(data.draft as BoDraft, sealed);
     if (Object.keys(errs).length) throw new Error("Check the highlighted fields.");
     let investorId: string;
@@ -575,6 +583,8 @@ function rowToDraft(r: any): BoDraft {
     cities: r.cities === "Any" ? "" : r.cities ?? "", propertySize: r.property_size ?? "Any", factorySize: r.factory_size ?? "Any", products: r.products ?? "",
     targetRevenue: r.target_revenue ?? "", priceRange: r.price_range ?? "", dealTypes: r.deal_types ?? [], mustHave: (r.must_have ?? []).join("\n"),
     niceToHave: (r.nice_to_have ?? []).join("\n"), profit: r.profit ?? "", timing: r.timing ?? "", periodMonths: r.period_months ?? 3,
+    lang: r.text_lang === "th" ? "th" : "en", nameTh: r.name_on_card_th ?? "", descriptionTh: r.description_th ?? "", productsTh: r.products_th ?? "",
+    mustHaveTh: (r.must_have_th ?? []).join("\n"), niceToHaveTh: (r.nice_to_have_th ?? []).join("\n"), timingTh: r.timing_th ?? "",
   };
 }
 
@@ -584,7 +594,7 @@ async function requireControlAdmin(context: { supabase: any; userId: string }) {
   await (await import("@/lib/profile-handover.server")).requireControlAdmin(context);
 }
 
-export type AdminBoRow = BoCard & { writerKind: "control" | "buyer"; company: string | null; ndaRequested: number; notAFit: number };
+export type AdminBoRow = BoCard & { thaiMissing: boolean; writerKind: "control" | "buyer"; company: string | null; ndaRequested: number; notAFit: number };
 export type AdminBoFilter = { tile?: "all" | "waiting" | "open" | "closing" | "closed" | "applicants"; q?: string; kind?: "sealed" | "advertisement" | null; sector?: string | null; sort?: "closes" | "newest" | "most" | "mostNew"; page?: number; size?: number };
 
 export const adminBuyOrders = createServerFn({ method: "GET" })
@@ -607,7 +617,8 @@ export const adminBuyOrders = createServerFn({ method: "GET" })
     const today = bkkToday();
     const in30 = new Date(Date.parse(today) + 30 * 86400_000).toISOString().slice(0, 10);
     const all: AdminBoRow[] = cards.map((c) => ({
-      ...c, writerKind: c.kind === "sealed" ? "control" : "buyer", company: company.get((rowBy.get(c.id) as any).investor_profile_id) ?? null,
+      ...c, thaiMissing: c.status === "waiting" && missingLangs(rowToDraft(rowBy.get(c.id))).some((m) => m.side === "th"),
+      writerKind: c.kind === "sealed" ? "control" : "buyer", company: company.get((rowBy.get(c.id) as any).investor_profile_id) ?? null,
       appsTotal: c.applied, appsNew: (aps ?? []).filter((a: any) => a.buy_order_id === c.id && a.status === "new").length,
       ndaRequested: (aps ?? []).filter((a: any) => a.buy_order_id === c.id && a.status === "nda_requested").length,
       notAFit: (aps ?? []).filter((a: any) => a.buy_order_id === c.id && a.status === "not_a_fit").length,
@@ -665,8 +676,10 @@ export const adminDecideBuyOrder = createServerFn({ method: "POST" })
     const { data: bo } = await sb.from("buy_orders").select("*").eq("id", data.id).maybeSingle();
     if (!bo || bo.status !== "waiting") throw new Error(BO_CHANGED);
     // Admin edits only these; the rest stays as written.
-    const merged: BoDraft = { ...rowToDraft(bo), ...pick(data.draft as BoDraft, ["name", "description", "targetRevenue", "priceRange", "location", "cities", "propertySize", "factorySize", "mustHave", "periodMonths"]) };
+    const merged: BoDraft = { ...rowToDraft(bo), ...pick(data.draft as BoDraft, ["name", "description", "products", "mustHave", "niceToHave", "timing", "nameTh", "descriptionTh", "productsTh", "mustHaveTh", "niceToHaveTh", "timingTh", "targetRevenue", "priceRange", "location", "cities", "propertySize", "factorySize", "periodMonths"]) };
+    merged.lang = bo.text_lang === "th" ? "th" : "en";
     if (Object.keys(checkDraft(merged, false)).length) throw new Error("Check the highlighted fields.");
+    if (data.action === "post" && missingLangs(merged).length) throw new Error("Add the Thai first. It’s in the Thai tab.");
     const now = new Date();
     const { investor_profile_id: _i, ...cols } = { ...draftRow(merged), investor_profile_id: null };
     let upd: any = { ...cols, updated_at: now.toISOString() };
@@ -733,7 +746,8 @@ export const sendBuyOrderShare = createServerFn({ method: "POST" })
     if (!canShareOrder(role, r.kind === "advertisement" && mine.includes(r.investor_profile_id))) throw new Error("Not available");
     const { count } = await sb.from("share_invitations").select("id", { count: "exact", head: true }).eq("sender_user_id", context.userId).not("buy_order_id", "is", null).gte("sent_at", new Date(Date.now() - 60000).toISOString());
     if ((count ?? 0) >= 10) throw new Error("Please wait before sending again");
-    const [card] = await cardsFor(sb, [r], context.userId, false, null);
+    const th0 = data.lang === "th";
+    const card = (await import("@/lib/buy-orders")).localizeCard((await cardsFor(sb, [r], context.userId, false, null))[0], th0);
     const { data: me } = await sb.from("users").select("first_name, last_name").eq("id", context.userId).maybeSingle();
     const name = senderName(me);
     if (role === "admin" && ![me?.first_name, me?.last_name].filter(Boolean).join(" ").trim()) throw new Error("Add your full name before sharing");
