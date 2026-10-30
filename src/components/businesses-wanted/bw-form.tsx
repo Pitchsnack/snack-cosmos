@@ -253,19 +253,25 @@ export function BuyOrderForm({ control, clients, me, editing, onClose, onSaved }
 }) {
   const { c, th } = useBw();
   const save = useServerFn(saveBuyOrder);
-  // The fields that follow the buyer, industry and location until the writer types in them.
-  const touched = useRef<Set<string>>(new Set(editing ? ["description", "products", "mustHave"] : []));
+  const appLang: "en" | "th" = th ? "th" : "en";
+  // Control types both languages; a buyer writes in the app's language.
+  const langs: ("en" | "th")[] = control ? ["en", "th"] : [appLang];
+  // The text boxes that follow the buyer, industry and location until the writer types in them.
+  const touched = useRef<Set<string>>(new Set(editing ? ["description", "products", "mustHave", "descriptionTh", "productsTh", "mustHaveTh"] : []));
+  const [tl, setTl] = useState<"en" | "th">(appLang);
   const [d, setD] = useState<BoDraft>(() => {
-    if (editing) return cardToDraft(editing);
-    const lang = th ? 1 : 0;
-    return {
-      ...emptyDraft(),
-      description: defaultDescription({ country: null, sector: "", location: "Thailand" }, th),
-      mustHave: GENERAL_MUST_HAVE[lang].join("\n"),
-      niceToHave: DEFAULT_NICE_TO_HAVE[lang].join("\n"),
-      profit: "not_stated",
-      timing: DEFAULT_TIMING[lang],
-    };
+    if (editing) return { ...cardToDraft(editing), ...(control ? { lang: "en" as const } : {}) };
+    const n: BoDraft = { ...emptyDraft(), lang: control ? "en" : appLang, profit: "not_stated" };
+    for (const l of langs) {
+      const i = l === "th" ? 1 : 0;
+      Object.assign(n, {
+        [textKey("description", l)]: defaultDescription({ country: null, sector: "", location: "Thailand" }, l === "th"),
+        [textKey("mustHave", l)]: GENERAL_MUST_HAVE[i].join("\n"),
+        [textKey("niceToHave", l)]: DEFAULT_NICE_TO_HAVE[i].join("\n"),
+        [textKey("timing", l)]: DEFAULT_TIMING[i],
+      });
+    }
+    return n;
   });
   const [errs, setErrs] = useState<Partial<Record<BoField, string>>>({});
   const [preview, setPreview] = useState(false);
@@ -273,20 +279,36 @@ export function BuyOrderForm({ control, clients, me, editing, onClose, onSaved }
   const tried = useRef(false);
   const set = (p: Partial<BoDraft>) => setD((v) => {
     const n = { ...v, ...p };
-    for (const k of Object.keys(p)) if (k === "description" || k === "products" || k === "mustHave") touched.current.add(k);
+    for (const k of Object.keys(p)) if (/^(description|products|mustHave)(Th)?$/.test(k)) touched.current.add(k);
     if (!editing && ("clientId" in p || "sector" in p || "location" in p)) {
       const country = clients.find((x) => x.id === n.clientId)?.country ?? me?.country ?? null;
-      if (!touched.current.has("description")) n.description = defaultDescription({ country, sector: n.sector, location: n.location }, th);
       const it = industryText(n.sector);
-      const lang = th ? 1 : 0;
-      if (!touched.current.has("products")) n.products = it ? it.products[lang] : "";
-      if (!touched.current.has("mustHave")) n.mustHave = (it ? it.mustHave[lang] : GENERAL_MUST_HAVE[lang]).join("\n");
+      for (const l of langs) {
+        const i = l === "th" ? 1 : 0;
+        const k = (f: BoText) => textKey(f, l) as string;
+        const w = n as unknown as Record<string, string>;
+        if (!touched.current.has(k("description"))) w[k("description")] = defaultDescription({ country, sector: n.sector, location: n.location }, l === "th");
+        if (!touched.current.has(k("products"))) w[k("products")] = it ? it.products[i] : "";
+        if (!touched.current.has(k("mustHave"))) w[k("mustHave")] = (it ? it.mustHave[i] : GENERAL_MUST_HAVE[i]).join("\n");
+      }
       if ("location" in p && p.location !== v.location) n.cities = "";
     }
     if (tried.current) setErrs(checkDraft(n, control));
     return n;
   });
-  const check = () => { tried.current = true; const e = checkDraft(d, control); setErrs(e); if (Object.keys(e).length) { setPreview(false); focusFirst(e); return false; } return true; };
+  const check = () => {
+    tried.current = true;
+    const e = checkDraft(d, control);
+    setErrs(e);
+    if (!Object.keys(e).length) return true;
+    setPreview(false);
+    if (control) {
+      const first = Object.keys(e).find((k) => /^(name|description|products|mustHave|niceToHave|timing)(Th)?$/.test(k));
+      if (first) setTl(first.endsWith("Th") ? "th" : "en");
+    }
+    focusFirst(e);
+    return false;
+  };
   const who = useMemo(() => {
     const cl = clients.find((x) => x.id === d.clientId);
     return cl ? { buyerType: cl.buyerType, country: cl.country } : me ?? { buyerType: "Buyer", country: null };
@@ -308,6 +330,8 @@ export function BuyOrderForm({ control, clients, me, editing, onClose, onSaved }
     ? c("For a buyer PitchSnack looks after. Sellers see the buyer’s name only when they accept the buyer’s LOI. Admin checks it, edits it and posts it.", "สำหรับผู้ซื้อที่ PitchSnack ดูแล ผู้ขายจะเห็นชื่อผู้ซื้อเมื่อยอมรับ LOI ของผู้ซื้อเท่านั้น แอดมินจะตรวจ แก้ไข และลงประกาศ")
     : c(`Your own buy order. Sellers apply to you directly, and Admin checks it before it goes live. Sellers see “${who.buyerType}${who.country ? ` · ${who.country}` : ""}”, not your name, until they approve your NDA.`, `ประกาศซื้อของคุณเอง ผู้ขายสมัครกับคุณโดยตรง และแอดมินจะตรวจก่อนเผยแพร่ ผู้ขายจะเห็น “${who.buyerType}${who.country ? ` · ${who.country}` : ""}” ไม่ใช่ชื่อของคุณ จนกว่าจะอนุมัติ NDA ของคุณ`);
   const sendLabel = control ? c("Send to Admin", "ส่งให้แอดมิน") : c("Submit", "ส่ง");
+  const switchLabel = c("Texts in", "ภาษาของข้อความ");
+  const card = <BuyOrderCard card={draftCard(d, who, editing ?? undefined)} persona="buyer" mode="preview" onDetails={() => {}} onApply={() => {}} onShare={() => {}} />;
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[calc(100dvh-32px)] max-w-[780px] overflow-y-auto">
@@ -315,16 +339,32 @@ export function BuyOrderForm({ control, clients, me, editing, onClose, onSaved }
         <DialogDescription>{line}</DialogDescription>
         {preview ? (
           <div>
-            <p className="mb-3 flex items-start gap-2 text-[13.5px]"><Eye className="mt-0.5 h-4 w-4 shrink-0" /><span><b>{c("Preview.", "ตัวอย่าง")}</b> {c("This is how sellers will see your advertisement in Businesses Wanted, once Admin posts it.", "นี่คือสิ่งที่ผู้ขายจะเห็นประกาศของคุณในธุรกิจที่ผู้ซื้อต้องการ เมื่อแอดมินลงประกาศแล้ว")}</span></p>
-            <div className="bw-preview-panel"><div className="mx-auto max-w-[380px]"><BuyOrderCard card={draftCard(d, who, editing ?? undefined)} persona="buyer" mode="preview" onDetails={() => {}} onApply={() => {}} onShare={() => {}} /></div></div>
+            <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+              <p className="flex min-w-0 flex-1 items-start gap-2 text-[13.5px]"><Eye className="mt-0.5 h-4 w-4 shrink-0" /><span><b>{c("Preview.", "ดูตัวอย่าง")}</b> {control
+                ? c("This is how sellers will see this buy order in Businesses Wanted, once Admin posts it.", "ผู้ขายจะเห็นประกาศรับซื้อนี้แบบนี้ในหน้า ธุรกิจที่ผู้ซื้อต้องการ เมื่อแอดมินเผยแพร่แล้ว")
+                : c("This is how sellers will see your advertisement in Businesses Wanted, once Admin posts it.", "นี่คือสิ่งที่ผู้ขายจะเห็นประกาศของคุณในธุรกิจที่ผู้ซื้อต้องการ เมื่อแอดมินลงประกาศแล้ว")}</span></p>
+              {control && <LangSwitch value={tl} onChange={setTl} label={switchLabel} />}
+            </div>
+            <div className="bw-preview-panel"><div className="mx-auto max-w-[380px]">{control ? <BwLang value={tl}>{card}</BwLang> : card}</div></div>
           </div>
-        ) : <BoFields d={d} set={set} errs={errs} clients={control ? clients : null} />}
+        ) : (
+          <>
+            {control && (
+              <div className="bw-langrow">
+                <span className="bw-lab mb-0">{switchLabel}</span>
+                <LangSwitch value={tl} onChange={setTl} label={switchLabel} />
+                <span className="bw-langrow-hint">{c("Type each text in English and Thai. Sellers and buyers read it in their app’s language.", "พิมพ์ข้อความแต่ละช่องทั้งภาษาอังกฤษและภาษาไทย ผู้ขายและผู้ซื้อจะอ่านตามภาษาที่ตั้งไว้ในแอป")}</span>
+              </div>
+            )}
+            <BoFields d={d} set={set} errs={errs} clients={control ? clients : null} tl={control ? tl : d.lang} choiceTh={control ? tl === "th" : undefined} tags={control} />
+          </>
+        )}
         <DialogFooter className="gap-2 sm:justify-end">
           {preview
             ? <Button variant="outline" className="sm:mr-auto" onClick={() => setPreview(false)}><ChevronLeft className="h-4 w-4" />{c("Back to edit", "กลับไปแก้ไข")}</Button>
             : <Button variant="outline" onClick={onClose}>{c("Cancel", "ยกเลิก")}</Button>}
           <Button variant="outline" disabled={busy} onClick={() => run(false)}>{c("Save draft", "บันทึกฉบับร่าง")}</Button>
-          {!control && !preview && <Button variant="outline" onClick={() => check() && setPreview(true)}><Eye className="h-4 w-4" />{c("Preview", "ดูตัวอย่าง")}</Button>}
+          {!preview && <Button variant="outline" onClick={() => check() && setPreview(true)}><Eye className="h-4 w-4" />{c("Preview", "ดูตัวอย่าง")}</Button>}
           <Button disabled={busy} onClick={() => run(true)}><Send className="h-4 w-4" />{sendLabel}</Button>
         </DialogFooter>
       </DialogContent>
