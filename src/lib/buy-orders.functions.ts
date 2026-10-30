@@ -289,7 +289,7 @@ export const applyToBuyOrder = createServerFn({ method: "POST" })
 
 export type AppRow = {
   id: string; status: BoAppStatus; appliedAt: string; decidedAt: string | null; note: string | null;
-  bo: { id: string; ref: string; name: string; kind: BoKind };
+  bo: { id: string; ref: string; name: string; nameTh?: string | null; kind: BoKind };
   listing: { id: string; codeName: string | null; ref: string | null; sector: string | null; province: string | null; revenue: string | null; dealType: string | null; headline: string | null; description: string | null; highlights: string[] };
   match: { key: "industry" | "location" | "revenue" | "deal"; ok: boolean }[];
   client: { name: string | null; ref: string | null } | null;

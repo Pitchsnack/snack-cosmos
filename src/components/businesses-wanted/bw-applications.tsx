@@ -92,7 +92,7 @@ function ReviewList({ rows, control: isControl }: { rows: AppRow[]; control: boo
             <div className="min-w-0 flex-1">
               <div className="text-[14px]"><b>{r.listing.codeName ?? "—"}</b> · {r.listing.ref}</div>
               <div className="text-[12.5px] text-[#6B7280]">{[sectorName(r.listing.sector), r.listing.province, r.listing.revenue && c(`Revenue FY25 ${r.listing.revenue}`, `รายได้ปี 2568 ${r.listing.revenue}`)].filter(Boolean).join(" · ")}</div>
-              <div className="mt-1 flex items-center gap-1 text-[12.5px]"><Megaphone className="h-3 w-3" />{c("Applied to", "สมัคร")} <b>{r.bo.name}</b> · {r.bo.ref} · {fmtDay(r.appliedAt, th, false)}</div>
+              <div className="mt-1 flex items-center gap-1 text-[12.5px]"><Megaphone className="h-3 w-3" />{c("Applied to", "สมัคร")} <b>{(th && r.bo.nameTh) || r.bo.name}</b> · {r.bo.ref} · {fmtDay(r.appliedAt, th, false)}</div>
               {r.client && <div className="mt-0.5 flex items-center gap-1 text-[11.5px] text-[#6B7280]"><Lock className="h-3 w-3" />{c(`For ${r.client.name ?? "—"} · ${r.client.ref ?? "—"} · only PitchSnack sees this`, `สำหรับ ${r.client.name ?? "—"} · ${r.client.ref ?? "—"} · เห็นเฉพาะ PitchSnack`)}</div>}
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <span className="bw-mpill">{c(`${n} of 4 match`, `ตรง ${n} จาก 4`)}</span>
