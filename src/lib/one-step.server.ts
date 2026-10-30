@@ -37,6 +37,7 @@ export type OneStepReview = {
   card: {
     ref: string; type: string | null; place: string | null; description: string | null;
     figs: [string, string][]; realName: string | null; website: string | null; address: string | null;
+    realNameTh?: string | null; addressTh?: string | null;
     founded: string | null; contact: string | null; sector: string | null; city: string | null;
   };
 };
@@ -58,6 +59,16 @@ export type OneStepItem = {
   publishedName: string | null;
   publishedHeadline: string | null;
   review: OneStepReview;
+  /** Translation tab rows (company + contact, then texts). */
+  translation: import("./review-translation").TrRow[];
+  setupLanguage: "en" | "th";
+  /** Last Save without verifying (cleared on verify). */
+  savedAt: string | null;
+  /** Saved-but-unverified published values; null = nothing saved yet. */
+  draft: { name: string; headline: string; headlineTh: string } | null;
+  suggestedHeadlineTh: string | null;
+  publishedHeadlineTh: string | null;
+  descriptionTh: string | null;
 };
 
 /* ------------------------------------------------------------- helpers */

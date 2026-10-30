@@ -2,10 +2,10 @@ import { EditInfoPopup } from "@/components/common/edit-info-popup";
 import { BuyerInvestorEdit, BuyerInvestorForm, type Data } from "@/components/my-business/buyer-investor-edit";
 import { useInvestor } from "@/hooks/use-investor";
 
-export function InvestorEditPopup({ id, onClose }: { id: string; onClose: () => void }) {
+export function InvestorEditPopup({ id, onClose, initialView }: { id: string; onClose: () => void; initialView?: "public" | "private" }) {
   const { data } = useInvestor(id);
-  return <EditInfoPopup open subtitle={`${data?.investor_name ?? ""} · Exclusive view`} companyName={data?.investor_name ?? ""} onClosed={onClose} phoneTabs>
-    <BuyerInvestorEdit id={id} directory />
+  return <EditInfoPopup open subtitle={`${data?.investor_name ?? ""} · ${initialView === "public" ? "Listing view" : "Exclusive view"}`} companyName={data?.investor_name ?? ""} onClosed={onClose} phoneTabs>
+    <BuyerInvestorEdit id={id} directory initialView={initialView} />
   </EditInfoPopup>;
 }
 export function InvestorAddPopup({onClose,onCreated}:{onClose:()=>void;onCreated:(id:string)=>void}) {

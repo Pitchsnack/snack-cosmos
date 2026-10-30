@@ -14,6 +14,12 @@ type Ctx = { lang: TextLang; setLang: (l: TextLang) => void; switchable: boolean
 const TextLangCtx = createContext<Ctx | null>(null);
 
 export function TextLangProvider({ children }: { children: ReactNode }) {
+  const parent = useContext(TextLangCtx);
+  // Nested inside another switch (e.g. Edit information over an Approvals review): share it, so changing one changes the other.
+  if (parent) return <>{children}</>;
+  return <OwnTextLang>{children}</OwnTextLang>;
+}
+function OwnTextLang({ children }: { children: ReactNode }) {
   const { language } = useTranslation();
   const { data: session } = useSessionContext();
   const switchable = session?.user?.accountRole === "admin";

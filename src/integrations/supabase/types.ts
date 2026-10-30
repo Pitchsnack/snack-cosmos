@@ -583,6 +583,7 @@ export type Database = {
           addr_street: string | null
           addr_subdistrict: string | null
           addr_unit: string | null
+          address_th: string | null
           advisor_verification: string
           assigned_admin_id: string | null
           city: string | null
@@ -616,16 +617,20 @@ export type Database = {
           more_info_fields: string[]
           more_info_note: string | null
           name: string
+          name_th: string | null
           owner_relation: string | null
           owner_user_id: string | null
           phone: string | null
           prepared_at: string | null
           prepared_by: string | null
           published_headline: string | null
+          published_headline_th: string | null
           published_listing_name: string | null
           ref_no: string
           registration_no: string | null
           review_checklist: string[]
+          review_draft: Json | null
+          review_saved_at: string | null
           run_by: Database["public"]["Enums"]["profile_run_by"]
           sector_agnostic: boolean
           sector_picks: Json | null
@@ -636,6 +641,7 @@ export type Database = {
           setup_reached: string | null
           status: string
           suggested_headline: string | null
+          suggested_headline_th: string | null
           suggested_listing_name: string | null
           team_size: number | null
           thai_name: string | null
@@ -656,6 +662,7 @@ export type Database = {
           addr_street?: string | null
           addr_subdistrict?: string | null
           addr_unit?: string | null
+          address_th?: string | null
           advisor_verification?: string
           assigned_admin_id?: string | null
           city?: string | null
@@ -689,16 +696,20 @@ export type Database = {
           more_info_fields?: string[]
           more_info_note?: string | null
           name?: string
+          name_th?: string | null
           owner_relation?: string | null
           owner_user_id?: string | null
           phone?: string | null
           prepared_at?: string | null
           prepared_by?: string | null
           published_headline?: string | null
+          published_headline_th?: string | null
           published_listing_name?: string | null
           ref_no?: string
           registration_no?: string | null
           review_checklist?: string[]
+          review_draft?: Json | null
+          review_saved_at?: string | null
           run_by?: Database["public"]["Enums"]["profile_run_by"]
           sector_agnostic?: boolean
           sector_picks?: Json | null
@@ -709,6 +720,7 @@ export type Database = {
           setup_reached?: string | null
           status?: string
           suggested_headline?: string | null
+          suggested_headline_th?: string | null
           suggested_listing_name?: string | null
           team_size?: number | null
           thai_name?: string | null
@@ -729,6 +741,7 @@ export type Database = {
           addr_street?: string | null
           addr_subdistrict?: string | null
           addr_unit?: string | null
+          address_th?: string | null
           advisor_verification?: string
           assigned_admin_id?: string | null
           city?: string | null
@@ -762,16 +775,20 @@ export type Database = {
           more_info_fields?: string[]
           more_info_note?: string | null
           name?: string
+          name_th?: string | null
           owner_relation?: string | null
           owner_user_id?: string | null
           phone?: string | null
           prepared_at?: string | null
           prepared_by?: string | null
           published_headline?: string | null
+          published_headline_th?: string | null
           published_listing_name?: string | null
           ref_no?: string
           registration_no?: string | null
           review_checklist?: string[]
+          review_draft?: Json | null
+          review_saved_at?: string | null
           run_by?: Database["public"]["Enums"]["profile_run_by"]
           sector_agnostic?: boolean
           sector_picks?: Json | null
@@ -782,6 +799,7 @@ export type Database = {
           setup_reached?: string | null
           status?: string
           suggested_headline?: string | null
+          suggested_headline_th?: string | null
           suggested_listing_name?: string | null
           team_size?: number | null
           thai_name?: string | null
@@ -1422,15 +1440,19 @@ export type Database = {
           private_description: string | null
           profile_views_month: number
           published_headline: string | null
+          published_headline_th: string | null
           published_listing_name: string | null
           ref_no: string
           revenue_band: string | null
+          review_draft: Json | null
+          review_saved_at: string | null
           sectors: string[]
           show_name: boolean
           stages: string[]
           status: string
           submitted_at: string | null
           suggested_headline: string | null
+          suggested_headline_th: string | null
           suggested_listing_name: string | null
           target_size: string | null
           ticket_exact: string | null
@@ -1472,15 +1494,19 @@ export type Database = {
           private_description?: string | null
           profile_views_month?: number
           published_headline?: string | null
+          published_headline_th?: string | null
           published_listing_name?: string | null
           ref_no?: string
           revenue_band?: string | null
+          review_draft?: Json | null
+          review_saved_at?: string | null
           sectors?: string[]
           show_name?: boolean
           stages?: string[]
           status?: string
           submitted_at?: string | null
           suggested_headline?: string | null
+          suggested_headline_th?: string | null
           suggested_listing_name?: string | null
           target_size?: string | null
           ticket_exact?: string | null
@@ -1522,15 +1548,19 @@ export type Database = {
           private_description?: string | null
           profile_views_month?: number
           published_headline?: string | null
+          published_headline_th?: string | null
           published_listing_name?: string | null
           ref_no?: string
           revenue_band?: string | null
+          review_draft?: Json | null
+          review_saved_at?: string | null
           sectors?: string[]
           show_name?: boolean
           stages?: string[]
           status?: string
           submitted_at?: string | null
           suggested_headline?: string | null
+          suggested_headline_th?: string | null
           suggested_listing_name?: string | null
           target_size?: string | null
           ticket_exact?: string | null
@@ -3711,11 +3741,14 @@ export type Database = {
           published_at: string | null
           published_by: string | null
           published_headline: string | null
+          published_headline_th: string | null
           reason: string | null
           reason_th: string | null
           ref_no: string
           region: string | null
           review_checks: string[]
+          review_draft: Json | null
+          review_saved_at: string | null
           stake_pct: number | null
           startup_id: string
           status: string
@@ -3777,11 +3810,14 @@ export type Database = {
           published_at?: string | null
           published_by?: string | null
           published_headline?: string | null
+          published_headline_th?: string | null
           reason?: string | null
           reason_th?: string | null
           ref_no?: string
           region?: string | null
           review_checks?: string[]
+          review_draft?: Json | null
+          review_saved_at?: string | null
           stake_pct?: number | null
           startup_id: string
           status?: string
@@ -3843,11 +3879,14 @@ export type Database = {
           published_at?: string | null
           published_by?: string | null
           published_headline?: string | null
+          published_headline_th?: string | null
           reason?: string | null
           reason_th?: string | null
           ref_no?: string
           region?: string | null
           review_checks?: string[]
+          review_draft?: Json | null
+          review_saved_at?: string | null
           stake_pct?: number | null
           startup_id?: string
           status?: string
@@ -4382,6 +4421,7 @@ export type Database = {
           address_line1: string | null
           address_line2: string | null
           address_province_state: string | null
+          address_th: string | null
           aum: string | null
           aum_band: string | null
           aum_exact_usd: number | null
@@ -4400,6 +4440,7 @@ export type Database = {
           imported_at: string | null
           investment_focus: string[] | null
           investor_name: string
+          investor_name_th: string | null
           investor_type: string | null
           keywords: string[] | null
           keywords_th: string[] | null
@@ -4445,6 +4486,7 @@ export type Database = {
           address_line1?: string | null
           address_line2?: string | null
           address_province_state?: string | null
+          address_th?: string | null
           aum?: string | null
           aum_band?: string | null
           aum_exact_usd?: number | null
@@ -4463,6 +4505,7 @@ export type Database = {
           imported_at?: string | null
           investment_focus?: string[] | null
           investor_name: string
+          investor_name_th?: string | null
           investor_type?: string | null
           keywords?: string[] | null
           keywords_th?: string[] | null
@@ -4508,6 +4551,7 @@ export type Database = {
           address_line1?: string | null
           address_line2?: string | null
           address_province_state?: string | null
+          address_th?: string | null
           aum?: string | null
           aum_band?: string | null
           aum_exact_usd?: number | null
@@ -4526,6 +4570,7 @@ export type Database = {
           imported_at?: string | null
           investment_focus?: string[] | null
           investor_name?: string
+          investor_name_th?: string | null
           investor_type?: string | null
           keywords?: string[] | null
           keywords_th?: string[] | null
@@ -6711,6 +6756,7 @@ export type Database = {
           address_line2: string | null
           address_province_state: string | null
           business_address: string | null
+          business_address_th: string | null
           business_model: string | null
           business_size: string | null
           city: string | null
@@ -6761,6 +6807,7 @@ export type Database = {
           short_description_th: string | null
           source_global_id: string | null
           startup_name: string | null
+          startup_name_th: string | null
           status: string
           tenant_id: string
           updated_at: string
@@ -6776,6 +6823,7 @@ export type Database = {
           address_line2?: string | null
           address_province_state?: string | null
           business_address?: string | null
+          business_address_th?: string | null
           business_model?: string | null
           business_size?: string | null
           city?: string | null
@@ -6826,6 +6874,7 @@ export type Database = {
           short_description_th?: string | null
           source_global_id?: string | null
           startup_name?: string | null
+          startup_name_th?: string | null
           status?: string
           tenant_id: string
           updated_at?: string
@@ -6841,6 +6890,7 @@ export type Database = {
           address_line2?: string | null
           address_province_state?: string | null
           business_address?: string | null
+          business_address_th?: string | null
           business_model?: string | null
           business_size?: string | null
           city?: string | null
@@ -6891,6 +6941,7 @@ export type Database = {
           short_description_th?: string | null
           source_global_id?: string | null
           startup_name?: string | null
+          startup_name_th?: string | null
           status?: string
           tenant_id?: string
           updated_at?: string
@@ -7239,12 +7290,14 @@ export type Database = {
           country: string | null
           created_at: string
           experience: string | null
+          full_name_th: string | null
           functional_expertise: string | null
           industry_focus: string | null
           linkedin: string | null
           organisation: string | null
           phone: string | null
           title: string | null
+          title_th: string | null
           updated_at: string
           user_id: string
           website: string | null
@@ -7257,12 +7310,14 @@ export type Database = {
           country?: string | null
           created_at?: string
           experience?: string | null
+          full_name_th?: string | null
           functional_expertise?: string | null
           industry_focus?: string | null
           linkedin?: string | null
           organisation?: string | null
           phone?: string | null
           title?: string | null
+          title_th?: string | null
           updated_at?: string
           user_id: string
           website?: string | null
@@ -7275,12 +7330,14 @@ export type Database = {
           country?: string | null
           created_at?: string
           experience?: string | null
+          full_name_th?: string | null
           functional_expertise?: string | null
           industry_focus?: string | null
           linkedin?: string | null
           organisation?: string | null
           phone?: string | null
           title?: string | null
+          title_th?: string | null
           updated_at?: string
           user_id?: string
           website?: string | null
@@ -7457,6 +7514,7 @@ export type Database = {
           last_name: string | null
           primary_role_id: string | null
           primary_tenant_id: string | null
+          setup_language: string | null
           signup_done_at: string | null
           status: Database["public"]["Enums"]["user_status"]
           updated_at: string
@@ -7479,6 +7537,7 @@ export type Database = {
           last_name?: string | null
           primary_role_id?: string | null
           primary_tenant_id?: string | null
+          setup_language?: string | null
           signup_done_at?: string | null
           status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string
@@ -7501,6 +7560,7 @@ export type Database = {
           last_name?: string | null
           primary_role_id?: string | null
           primary_tenant_id?: string | null
+          setup_language?: string | null
           signup_done_at?: string | null
           status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resetApprovalNotice } from "@/lib/approval-notices.functions";
+import { TR_LIST, TR_MAX, setupLanguageOf, trBase, type TrKey, type TrRow } from "@/lib/review-translation";
 import { advisorReview, buyerReview, sellerReview, waitingDays, type OneStepItem, type OneStepKind } from "@/lib/one-step.server";
 
 /**
@@ -51,6 +52,33 @@ export const DECISION_REASONS = [
   "Another reason",
 ] as const;
 
+/* ================================================================ translation */
+
+function tr(key: TrKey, group: TrRow["group"], label: string, en: string | null | undefined, th: string | null | undefined, extra: Partial<TrRow> = {}): TrRow {
+  return { key, group, label, en: en ?? "", th: th ?? "", max: TR_MAX[trBase(key)], ...extra };
+}
+function personRows(u: any): TrRow[] {
+  return [
+    tr("person_name", "company", "Name", [u?.first_name, u?.last_name].filter(Boolean).join(" "), u?.full_name_th, { enLocked: true }),
+    tr("person_title", "company", "Position", u?.title, u?.title_th),
+  ];
+}
+function headlineRows(draft: any, suggested: string | null, published: string | null, publishedTh: string | null, suggestedTh: string | null): TrRow[] {
+  return [
+    tr("published_headline", "texts", "Headline (published)", draft?.headline ?? published ?? suggested, draft?.headlineTh ?? publishedTh ?? suggestedTh),
+    tr("suggested_headline", "texts", "Headline (suggested)", suggested, suggestedTh),
+  ];
+}
+function extras(x: { person: any; draft: any; savedAt: string | null; suggestedTh: string | null; publishedTh: string | null; descriptionTh: string | null; rows: TrRow[] }) {
+  return {
+    translation: x.rows,
+    setupLanguage: setupLanguageOf(x.person?.setup_language, x.rows),
+    savedAt: x.savedAt ?? null,
+    draft: x.draft && typeof x.draft === "object" ? { name: String(x.draft.name ?? ""), headline: String(x.draft.headline ?? ""), headlineTh: String(x.draft.headlineTh ?? "") } : null,
+    suggestedHeadlineTh: x.suggestedTh ?? null, publishedHeadlineTh: x.publishedTh ?? null, descriptionTh: x.descriptionTh ?? null,
+  };
+}
+
 /* ================================================================ queue */
 
 export const listOneStepApprovals = createServerFn({ method: "GET" })
@@ -61,28 +89,29 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
 
     // ---- sellers: hidden_profiles waiting or sent back
     const { data: hps, error: hpError } = await sb.from("hidden_profiles")
-      .select("id, startup_id, ref_no, code_name, description, highlights, customers_summary, deal_type, owner_stays, handover_months, asking_price_thb, asking_price_band, approval_status, submitted_at, submitted_by, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, review_checks")
+      .select("id, startup_id, ref_no, code_name, description, highlights, customers_summary, deal_type, owner_stays, handover_months, asking_price_thb, asking_price_band, approval_status, submitted_at, submitted_by, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, review_checks, headline_th, description_th, highlights_th, customers_summary_th, published_headline_th, review_draft, review_saved_at, reason, reason_th")
       .in("approval_status", ["in_review", "changes_requested"]).order("submitted_at", { ascending: true });
     if (hpError) throw new Error(hpError.message);
     const stIds = [...new Set((hps ?? []).map((h: any) => h.startup_id).filter(Boolean))];
     const { data: sts } = stIds.length
-      ? await sb.from("startups").select("id, startup_name, registered_name, registered_number, website_url, email, city, sector, year_founded, last_year_revenue, business_address, contact_number").in("id", stIds)
+      ? await sb.from("startups").select("id, startup_name, registered_name, registered_number, website_url, email, city, sector, year_founded, last_year_revenue, business_address, contact_number, startup_name_th, business_address_th, short_description, short_description_th, long_description, long_description_th, product_tags, product_tags_th, market_tags, market_tags_th").in("id", stIds)
       : { data: [] };
     const stBy = new Map<string, any>((sts ?? []).map((s: any) => [s.id, s]));
     const { data: founders } = stIds.length
-      ? await sb.from("startup_founders").select("startup_id, full_name, position, bio, bio_story").in("startup_id", stIds).order("created_at", { ascending: true })
+      ? await sb.from("startup_founders").select("id, startup_id, full_name, position, bio, bio_th, bio_story").in("startup_id", stIds).order("created_at", { ascending: true })
       : { data: [] };
     const founderBy = new Map<string, any>();
-    for (const f of founders ?? []) if (!founderBy.has(f.startup_id)) founderBy.set(f.startup_id, f);
+    const foundersBy = new Map<string, any[]>();
+    for (const f of founders ?? []) { if (!founderBy.has(f.startup_id)) founderBy.set(f.startup_id, f); foundersBy.set(f.startup_id, [...(foundersBy.get(f.startup_id) ?? []), f]); }
 
     // ---- buyers: buyer_profiles waiting or sent back
     const { data: bps, error: bpError } = await sb.from("buyer_profiles")
-      .select("user_id, ref_no, investor_id, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline, description, geography, sectors, city, country, people, buyer_relation, revenue_band, contact_number, address")
+      .select("user_id, ref_no, investor_id, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline, description, geography, suggested_headline_th, published_headline_th, description_th, review_draft, review_saved_at, sectors, city, country, people, buyer_relation, revenue_band, contact_number, address")
       .in("approval_status", ["in_review", "changes_requested"]).order("submitted_at", { ascending: true });
     if (bpError) throw new Error(bpError.message);
     const invIds = [...new Set((bps ?? []).map((b: any) => b.investor_id).filter(Boolean))];
     const { data: invs } = invIds.length
-      ? await sb.from("investors").select("id, investor_name, investor_type, country, website_url, registration_no, year_founded, email, aum_band, ticket_band, revenue_min_band, investment_focus, preferred_industries, preferred_stages, address_line1, address_line2, address_city_district, address_province_state, postal_code").in("id", invIds)
+      ? await sb.from("investors").select("id, investor_name, investor_type, country, website_url, registration_no, year_founded, email, aum_band, ticket_band, revenue_min_band, investment_focus, preferred_industries, preferred_stages, address_line1, address_line2, address_city_district, address_province_state, postal_code, investor_name_th, address_th, short_description, short_description_th, keywords, keywords_th").in("id", invIds)
       : { data: [] };
     const invBy = new Map<string, any>((invs ?? []).map((i: any) => [i.id, i]));
     const verByUser = await (await import("./profile-verification.server")).verificationsByUsers(sb, (bps ?? []).map((b: any) => b.user_id), "id, status, review_checks");
@@ -96,8 +125,8 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
     for (const h of hps ?? []) if (h.submitted_by) uids.add(h.submitted_by);
     for (const b of bps ?? []) uids.add(b.user_id);
     for (const f of firms ?? []) if (f.owner_user_id) uids.add(f.owner_user_id);
-    const { data: us } = uids.size ? await sb.from("users").select("id, first_name, last_name, email").in("id", [...uids]) : { data: [] };
-    const { data: profiles } = uids.size ? await sb.from("user_profiles").select("user_id, title, phone").in("user_id", [...uids]) : { data: [] };
+    const { data: us } = uids.size ? await sb.from("users").select("id, first_name, last_name, email, setup_language").in("id", [...uids]) : { data: [] };
+    const { data: profiles } = uids.size ? await sb.from("user_profiles").select("user_id, title, phone, full_name_th, title_th").in("user_id", [...uids]) : { data: [] };
     const pBy = new Map<string, any>((profiles ?? []).map((p: any) => [p.user_id, p]));
     const uBy = new Map<string, any>((us ?? []).map((u: any) => [u.id, { ...u, ...pBy.get(u.id) }]));
 
@@ -114,6 +143,22 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
         chip: hp.approval_status === "changes_requested" ? "sent_back" : "waiting",
         suggestedName: hp.suggested_listing_name, suggestedHeadline: hp.suggested_headline,
         publishedName: hp.code_name, publishedHeadline: hp.published_headline, review,
+        ...extras({ person: uBy.get(hp.submitted_by), draft: hp.review_draft, savedAt: hp.review_saved_at, suggestedTh: hp.headline_th, publishedTh: hp.published_headline_th, descriptionTh: hp.description_th,
+          rows: [
+            tr("company_name", "company", "Company name", st?.startup_name, st?.startup_name_th),
+            tr("address", "company", "Address", st?.business_address, st?.business_address_th, { multiline: true }),
+            ...personRows(uBy.get(hp.submitted_by)),
+            ...headlineRows(hp.review_draft, hp.suggested_headline, hp.published_headline, hp.published_headline_th, hp.headline_th),
+            tr("description", "texts", "Description", hp.description, hp.description_th, { multiline: true }),
+            tr("highlights", "texts", "Highlights", (hp.highlights ?? []).filter(Boolean).join("\n"), (hp.highlights_th ?? []).filter(Boolean).join("\n"), { list: true, multiline: true }),
+            tr("customers", "texts", "Customer profile", hp.customers_summary, hp.customers_summary_th, { multiline: true }),
+            tr("reason", "texts", "Reason for sale", hp.reason, hp.reason_th, { multiline: true }),
+            tr("short_description", "texts", "Short Description", st?.short_description, st?.short_description_th, { multiline: true }),
+            tr("long_description", "texts", "Long Description", st?.long_description, st?.long_description_th, { multiline: true }),
+            tr("product_tags", "texts", "Product & Service Tags", (st?.product_tags ?? []).join("\n"), (st?.product_tags_th ?? []).join("\n"), { list: true, multiline: true }),
+            tr("market_tags", "texts", "Market Tags", (st?.market_tags ?? []).join("\n"), (st?.market_tags_th ?? []).join("\n"), { list: true, multiline: true }),
+            ...(foundersBy.get(hp.startup_id) ?? []).map((f: any, _i: number, all: any[]) => tr(`owner_bio:${f.id}`, "texts", all.length > 1 ? `About the owner · ${f.full_name ?? ""}` : "About the owner", f.bio, f.bio_th, { multiline: true })),
+          ] }),
       });
     }
 
@@ -131,6 +176,16 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
         chip: p.approval_status === "changes_requested" ? "sent_back" : "waiting",
         suggestedName: p.suggested_listing_name, suggestedHeadline: p.suggested_headline,
         publishedName: p.published_listing_name, publishedHeadline: p.published_headline, review,
+        ...extras({ person: uBy.get(p.user_id), draft: p.review_draft, savedAt: p.review_saved_at, suggestedTh: p.suggested_headline_th, publishedTh: p.published_headline_th, descriptionTh: p.description_th,
+          rows: [
+            tr("company_name", "company", p.buyer_relation === "individual" ? "Name" : "Company Name", inv?.investor_name, inv?.investor_name_th),
+            tr("address", "company", "Address", review.card.address, inv?.address_th, { multiline: true, enLocked: !!review.card.address }),
+            ...personRows(uBy.get(p.user_id)),
+            ...headlineRows(p.review_draft, p.suggested_headline, p.published_headline, p.published_headline_th, p.suggested_headline_th),
+            tr("description", "texts", "Description", p.description, p.description_th, { multiline: true }),
+            tr("short_description", "texts", "About Company", inv?.short_description, inv?.short_description_th, { multiline: true }),
+            tr("keywords", "texts", "Keywords", (inv?.keywords ?? []).join("\n"), (inv?.keywords_th ?? []).join("\n"), { list: true, multiline: true }),
+          ] }),
       });
     }
 
@@ -146,6 +201,14 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
         chip: f.advisor_verification === "more_info" ? "sent_back" : "waiting",
         suggestedName: f.suggested_listing_name, suggestedHeadline: f.suggested_headline,
         publishedName: f.published_listing_name, publishedHeadline: f.published_headline, review,
+        ...extras({ person: f.owner_user_id ? uBy.get(f.owner_user_id) : null, draft: f.review_draft, savedAt: f.review_saved_at, suggestedTh: f.suggested_headline_th, publishedTh: f.published_headline_th, descriptionTh: f.description_th,
+          rows: [
+            tr("company_name", "company", "Firm name", f.name, f.name_th),
+            tr("address", "company", "Address", review.card.address, f.address_th, { multiline: true, enLocked: !!review.card.address }),
+            ...(f.owner_user_id ? personRows(uBy.get(f.owner_user_id)) : []),
+            ...headlineRows(f.review_draft, f.suggested_headline, f.published_headline, f.published_headline_th, f.suggested_headline_th),
+            tr("description", "texts", "Description", f.description, f.description_th, { multiline: true }),
+          ] }),
       });
     }
 
@@ -174,6 +237,7 @@ const Decide = z.object({
   action: z.enum(["approve", "request_changes", "decline"]),
   publishedName: z.string().trim().max(120).optional(),
   publishedHeadline: z.string().trim().max(120).optional(),
+  publishedHeadlineTh: z.string().trim().max(120).optional(),
   note: z.string().max(2000).optional(),
   reasons: z.array(z.enum(DECISION_REASONS)).max(5).optional(),
 });
@@ -208,7 +272,8 @@ export const decideOneStep = createServerFn({ method: "POST" })
         const { error } = await sb.from("buyer_profiles").update({
           approval_status: "approved", status: "live", live_since: p.live_since ?? now,
           decided_at: now, decided_by: context.userId, decision_note: null, decision_reasons: [],
-          published_listing_name: (data.publishedName ?? "").trim(), published_headline: (data.publishedHeadline ?? "").trim(), updated_at: now,
+          published_listing_name: (data.publishedName ?? "").trim(), published_headline: (data.publishedHeadline ?? "").trim(),
+          published_headline_th: data.publishedHeadlineTh?.trim() || null, review_draft: null, review_saved_at: null, updated_at: now,
         }).eq("user_id", p.user_id);
         if (error) throw new Error(error.message);
         // The verification moves with the profile, in the same decision.
@@ -273,11 +338,12 @@ export const decideOneStep = createServerFn({ method: "POST" })
         const { data: sub } = await sb.from("listing_submissions").select("snapshot").eq("hidden_profile_id", hp.id).eq("version", hp.version).maybeSingle();
         const cover = hp.pending_cover ?? hp.cover_image_url ?? null;
         const { pickDraft } = await import("@/lib/hidden-profile");
-        const pub = { ...pickDraft(hp), code_name: (data.publishedName ?? "").trim(), headline: (data.publishedHeadline ?? "").trim(), cover_image_url: cover };
+        const pub = { ...pickDraft(hp), code_name: (data.publishedName ?? "").trim(), headline: (data.publishedHeadline ?? "").trim(), headline_th: data.publishedHeadlineTh?.trim() || (pickDraft(hp) as any).headline_th || null, cover_image_url: cover };
         const { error } = await sb.from("hidden_profiles").update({
           approval_status: "live", status: "live", live: pub,
           live_snapshot: sub?.snapshot ? { ...sub.snapshot, public: pub } : null,
           code_name: (data.publishedName ?? "").trim(), published_headline: (data.publishedHeadline ?? "").trim(),
+          published_headline_th: data.publishedHeadlineTh?.trim() || null, review_draft: null, review_saved_at: null,
           cover_image_url: cover, decided_at: now, decision_note: null, decision_reasons: [], decision_fields: [],
           has_unpublished_changes: false, published_at: hp.live && hp.published_at ? hp.published_at : now, published_by: context.userId,
         }).eq("id", hp.id);
@@ -334,6 +400,7 @@ export const decideOneStep = createServerFn({ method: "POST" })
         assigned_admin_id: null, more_info_note: null, more_info_fields: [], review_checklist: [],
         status: "live", live_since: f.live_since ?? now,
         published_listing_name: (data.publishedName ?? "").trim(), published_headline: (data.publishedHeadline ?? "").trim(),
+        published_headline_th: data.publishedHeadlineTh?.trim() || null, review_draft: null, review_saved_at: null,
         updated_at: now,
       }).eq("id", f.id);
       if (error) throw new Error(error.message);
@@ -370,6 +437,107 @@ export const decideOneStep = createServerFn({ method: "POST" })
       });
     }
     return { ok: true };
+  });
+
+/* ================================================================ save without verifying */
+
+const SaveReview = z.object({
+  kind: z.enum(["seller", "buyer", "advisor"]),
+  id: z.string().uuid(),
+  publishedName: z.string().max(120),
+  publishedHeadline: z.string().max(120),
+  publishedHeadlineTh: z.string().max(120),
+  texts: z.array(z.object({ key: z.string().regex(/^[a-z_]+(:[0-9a-f-]{36})?$/), en: z.string().max(6000).optional(), th: z.string().max(6000) })).max(40),
+});
+
+/** Admin › Approvals › Save: keeps the review's changes without verifying, publishing or emailing. */
+export const saveOneStepReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => SaveReview.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    const sb = await admin();
+    const now = new Date().toISOString();
+    for (const t of data.texts) {
+      if (!(trBase(t.key) in TR_MAX)) throw new Error("Unknown text");
+      const max = TR_MAX[trBase(t.key)];
+      const parts = TR_LIST.includes(trBase(t.key)) ? [...(t.en ?? "").split("\n"), ...t.th.split("\n")] : [t.en ?? "", t.th];
+      if (parts.some((x) => x.trim().length > max)) throw new Error(`Too long: ${t.key}`);
+    }
+    const clean = (v: string) => v.trim() || null;
+    const list = (v: string) => v.split("\n").map((x) => x.trim()).filter(Boolean);
+    /** Writes the Thai twin always, and the English only where it was empty. */
+    async function put(table: string, match: [string, string], col: string | null, colTh: string, t: { en?: string; th: string }, asList = false) {
+      const patch: Record<string, unknown> = { [colTh]: asList ? list(t.th) : clean(t.th) };
+      if (col && t.en !== undefined && t.en.trim()) {
+        const { data: cur } = await sb.from(table).select(col).eq(match[0], match[1]).maybeSingle();
+        const v = cur?.[col];
+        if (asList ? !(v ?? []).filter(Boolean).length : !String(v ?? "").trim()) patch[col] = asList ? list(t.en) : t.en.trim();
+      }
+      const { error } = await sb.from(table).update(patch).eq(match[0], match[1]);
+      if (error) throw new Error(error.message);
+    }
+    const draft = { name: data.publishedName.trim(), headline: data.publishedHeadline.trim(), headlineTh: data.publishedHeadlineTh.trim() };
+    let userId: string | null = null;
+
+    if (data.kind === "seller") {
+      const { data: hp } = await sb.from("hidden_profiles").select("id, startup_id, submitted_by").eq("id", data.id).maybeSingle();
+      if (!hp) throw new Error("Listing not found");
+      userId = hp.submitted_by;
+      for (const t of data.texts) {
+        if (t.key === "company_name" && hp.startup_id) await put("startups", ["id", hp.startup_id], "startup_name", "startup_name_th", t);
+        if (t.key === "address" && hp.startup_id) await put("startups", ["id", hp.startup_id], "business_address", "business_address_th", t);
+        if (t.key === "suggested_headline") await put("hidden_profiles", ["id", hp.id], "suggested_headline", "headline_th", t);
+        if (t.key === "description") await put("hidden_profiles", ["id", hp.id], "description", "description_th", t);
+        if (t.key === "highlights") await put("hidden_profiles", ["id", hp.id], "highlights", "highlights_th", t, true);
+        if (t.key === "customers") await put("hidden_profiles", ["id", hp.id], "customers_summary", "customers_summary_th", t);
+        if (t.key === "reason") await put("hidden_profiles", ["id", hp.id], "reason", "reason_th", t);
+        if (hp.startup_id && t.key === "short_description") await put("startups", ["id", hp.startup_id], "short_description", "short_description_th", t);
+        if (hp.startup_id && t.key === "long_description") await put("startups", ["id", hp.startup_id], "long_description", "long_description_th", t);
+        if (hp.startup_id && t.key === "product_tags") await put("startups", ["id", hp.startup_id], "product_tags", "product_tags_th", t, true);
+        if (hp.startup_id && t.key === "market_tags") await put("startups", ["id", hp.startup_id], "market_tags", "market_tags_th", t, true);
+        if (t.key.startsWith("owner_bio:")) {
+          const fid = t.key.slice(10);
+          const { data: own } = await sb.from("startup_founders").select("id").eq("id", fid).eq("startup_id", hp.startup_id).maybeSingle();
+          if (own) await put("startup_founders", ["id", fid], "bio", "bio_th", t);
+        }
+      }
+      const { error } = await sb.from("hidden_profiles").update({ review_draft: draft, review_saved_at: now }).eq("id", hp.id);
+      if (error) throw new Error(error.message);
+    } else if (data.kind === "buyer") {
+      const { data: p } = await sb.from("buyer_profiles").select("user_id, investor_id").eq("user_id", data.id).maybeSingle();
+      if (!p) throw new Error("Profile not found");
+      userId = p.user_id;
+      for (const t of data.texts) {
+        if (t.key === "company_name" && p.investor_id) await put("investors", ["id", p.investor_id], "investor_name", "investor_name_th", t);
+        if (t.key === "address" && p.investor_id) await put("investors", ["id", p.investor_id], "address_line1", "address_th", t);
+        if (t.key === "suggested_headline") await put("buyer_profiles", ["user_id", p.user_id], "suggested_headline", "suggested_headline_th", t);
+        if (t.key === "description") await put("buyer_profiles", ["user_id", p.user_id], "description", "description_th", t);
+        if (t.key === "short_description" && p.investor_id) await put("investors", ["id", p.investor_id], "short_description", "short_description_th", t);
+        if (t.key === "keywords" && p.investor_id) await put("investors", ["id", p.investor_id], "keywords", "keywords_th", t, true);
+      }
+      const { error } = await sb.from("buyer_profiles").update({ review_draft: draft, review_saved_at: now }).eq("user_id", p.user_id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { data: f } = await sb.from("advisor_firms").select("id, owner_user_id").eq("id", data.id).maybeSingle();
+      if (!f) throw new Error("Firm not found");
+      userId = f.owner_user_id;
+      for (const t of data.texts) {
+        if (t.key === "company_name") await put("advisor_firms", ["id", f.id], "name", "name_th", t);
+        if (t.key === "address") await put("advisor_firms", ["id", f.id], "addr_street", "address_th", t);
+        if (t.key === "suggested_headline") await put("advisor_firms", ["id", f.id], "suggested_headline", "suggested_headline_th", t);
+        if (t.key === "description") await put("advisor_firms", ["id", f.id], "description", "description_th", t);
+      }
+      const { error } = await sb.from("advisor_firms").update({ review_draft: draft, review_saved_at: now }).eq("id", f.id);
+      if (error) throw new Error(error.message);
+    }
+    if (userId) {
+      for (const t of data.texts) {
+        if (t.key === "person_name") await put("user_profiles", ["user_id", userId], null, "full_name_th", t);
+        if (t.key === "person_title") await put("user_profiles", ["user_id", userId], "title", "title_th", t);
+      }
+    }
+    return { ok: true, savedAt: now };
   });
 
 /* ================================================================ review checks */

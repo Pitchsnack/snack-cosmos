@@ -267,7 +267,7 @@ export function MainTabs<T extends string>({ tabs, value, onChange, tone, idBase
 }
 
 export function TabRow<T extends string>({ tabs, value, onChange, label, idBase, extra }: {
-   tabs: { key: T; label: string; count?: number; icon?: ReactNode; error?: boolean }[];
+   tabs: { key: T; label: string; count?: number; icon?: ReactNode; error?: boolean; after?: ReactNode }[];
   value: T; onChange: (k: T) => void; label: string; idBase: string; extra?: ReactNode;
 }) {
   const edit = useEditInfo();
@@ -296,6 +296,7 @@ export function TabRow<T extends string>({ tabs, value, onChange, label, idBase,
                {t.icon}{t.label}
                {t.error && <span aria-label="Required field missing" className="h-[7px] w-[7px] rounded-full bg-destructive" />}
               {!!t.count && <MissingCount n={t.count} />}
+              {t.after}
             </button>
           );
         })}
