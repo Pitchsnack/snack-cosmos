@@ -827,6 +827,13 @@
       "when": 1793312615337,
       "tag": "0117_buy_order_share_and_close",
       "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1793332644616,
+      "tag": "0118_buy_order_photo_covers",
+      "breakpoints": true
     }
   ]
 }

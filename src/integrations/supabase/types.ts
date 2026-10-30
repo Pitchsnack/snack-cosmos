@@ -1231,6 +1231,11 @@ export type Database = {
           cities: string
           closed_at: string | null
           closes_on: string | null
+          cover_image_name: string | null
+          cover_image_path: string | null
+          cover_sector_image_id: string | null
+          cover_uploaded_at: string | null
+          cover_uploaded_by: string | null
           created_at: string
           deal_types: string[]
           description: string
@@ -1265,6 +1270,11 @@ export type Database = {
           cities?: string
           closed_at?: string | null
           closes_on?: string | null
+          cover_image_name?: string | null
+          cover_image_path?: string | null
+          cover_sector_image_id?: string | null
+          cover_uploaded_at?: string | null
+          cover_uploaded_by?: string | null
           created_at?: string
           deal_types?: string[]
           description: string
@@ -1299,6 +1309,11 @@ export type Database = {
           cities?: string
           closed_at?: string | null
           closes_on?: string | null
+          cover_image_name?: string | null
+          cover_image_path?: string | null
+          cover_sector_image_id?: string | null
+          cover_uploaded_at?: string | null
+          cover_uploaded_by?: string | null
           created_at?: string
           deal_types?: string[]
           description?: string
@@ -1328,7 +1343,15 @@ export type Database = {
           updated_at?: string
           written_by_user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "buy_orders_cover_sector_image_id_fkey"
+            columns: ["cover_sector_image_id"]
+            isOneToOne: false
+            referencedRelation: "sector_images"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       buyer_profiles: {
         Row: {
