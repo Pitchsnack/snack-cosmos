@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FounderStoryEditor } from "./founder-story-editor";
 import { LangTag, useTextLang } from "@/components/common/text-lang";
-import { initialFounderStory, type FounderStory } from "@/lib/founder-story";
+import { type FounderStory } from "@/lib/founder-story";
 import { useTranslation } from "@/i18n/language";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
