@@ -24,7 +24,7 @@ async function requireAdvisor(sb: any, userId: string) {
 
 export function rowToFee(f: any): FeeDetail {
   const pct = f.pct_min != null ? (f.pct_max != null ? `${Number(f.pct_min)}–${Number(f.pct_max)}` : `${Number(f.pct_min)}`) : "";
-  return { type: (f.fee_type ?? "other") as FeeType, amount: f.amount_thb != null ? String(f.amount_thb) : "", pct, words: f.own_words ?? "" };
+  return { type: (f.fee_type ?? "other") as FeeType, amount: f.amount_thb != null ? String(f.amount_thb) : "", pct, words: f.own_words ?? "", wordsTh: f.own_words_th ?? "" };
 }
 function feeToRow(firmId: string, service: string, d: FeeDetail) {
   const p = parsePct(d.pct);
@@ -35,6 +35,7 @@ function feeToRow(firmId: string, service: string, d: FeeDetail) {
     pct_min: ["success", "retainer_success"].includes(d.type) && p ? p.min : null,
     pct_max: ["success", "retainer_success"].includes(d.type) && p ? p.max : null,
     own_words: d.type === "other" ? d.words.trim().slice(0, 80) || null : null,
+    own_words_th: d.type === "other" ? (d.wordsTh ?? "").trim().slice(0, 80) || null : null,
   };
 }
 
@@ -58,7 +59,7 @@ function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: an
     id: r.id, refNo: r.ref_no, name: r.name ?? "", firmType: r.firm_type ?? "", logoPath: r.logo_path, logoUrl: r.logo_path ? urls.get(r.logo_path) ?? null : null,
     logoSource: r.logo_source ?? null,
     media: (Array.isArray(r.media) ? r.media : []).map((m: any) => ({ slot: m.slot, path: m.image_path, url: urls.get(m.image_path) ?? null })),
-    description: r.description, yearFounded: r.year_founded, city: r.city, country: r.country,
+    description: r.description, descriptionTh: r.description_th ?? null, yearFounded: r.year_founded, city: r.city, country: r.country,
     services: r.services ?? [], fees, feeDetails, dealBand: r.deal_size_band ?? null,
     teamSize: r.team_size, languages: r.languages ?? [], sectors: r.sectors ?? [], sectorAgnostic: !!r.sector_agnostic, sectorPicks: r.sector_picks ?? null,
     legalName: r.legal_name, thaiName: r.thai_name, registrationNo: r.registration_no,
@@ -70,8 +71,8 @@ function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: an
     publishedListingName: r.published_listing_name ?? null, publishedHeadline: r.published_headline ?? null,
     verification: { state: r.advisor_verification ?? "unverified", note: r.more_info_note ?? null, fields: r.more_info_fields ?? [], reason: r.decline_reason ?? null, declineNote: r.decline_note ?? null },
     setupAnswered: r.setup_answered ?? [], setupDoneAt: r.setup_done_at ?? null, wizard: r.wizard_state ?? {},
-    team: mine(kids.team).sort((a, b) => a.sort_order - b.sort_order).map((t) => ({ id: t.id, name: t.name, role: t.role, email: t.email })),
-    credentials: mine(kids.creds).sort((a, b) => a.sort_order - b.sort_order).map((c) => ({ id: c.id, name: c.name, note: c.note, status: c.status, checkedAt: c.checked_at })),
+    team: mine(kids.team).sort((a, b) => a.sort_order - b.sort_order).map((t) => ({ id: t.id, name: t.name, role: t.role, roleTh: t.role_th ?? null, email: t.email })),
+    credentials: mine(kids.creds).sort((a, b) => a.sort_order - b.sort_order).map((c) => ({ id: c.id, name: c.name, nameTh: c.name_th ?? null, note: c.note, noteTh: c.note_th ?? null, status: c.status, checkedAt: c.checked_at })),
     documents: mine(kids.docs).map((d) => ({ id: d.id, path: d.file_path, name: d.name, type: d.doc_type, checkedAt: d.checked_at, validUntil: d.valid_until, url: urls.get(d.file_path) ?? null })),
     reviews: mine(kids.reviews).sort((a, b) => b.created_at.localeCompare(a.created_at)).map((v) => ({ id: v.id, role: v.client_role, detail: v.client_detail, service: v.service, stars: v.stars, comment: v.comment, at: v.created_at })),
   };
@@ -250,7 +251,7 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
     const row = {
       ...(data.media ? { media: data.media } : {}),
       name: data.name, firm_type: data.firmType, logo_path: data.logoPath, logo_source: data.logoPath ? data.logoSource ?? "upload" : null,
-      description: data.description, year_founded: data.yearFounded, city: data.city, country: data.country, services: data.services,
+      description: data.description, ...(data.descriptionTh !== undefined ? { description_th: data.descriptionTh || null } : {}), year_founded: data.yearFounded, city: data.city, country: data.country, services: data.services,
       deal_size_band: data.dealBand, team_size: data.teamSize,
       languages: data.languages, sectors: data.sectors, ...(data.sectorAgnostic === undefined ? {} : { sector_agnostic: data.sectorAgnostic }), legal_name: data.legalName, thai_name: data.thaiName,
       registration_no: data.registrationNo ?? null, addr_street: data.addrStreet, addr_unit: data.addrUnit,
@@ -278,7 +279,7 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
     // team
     await sb.from("advisor_firm_team").delete().eq("firm_id", id);
     if (data.team.length) {
-      const { error } = await sb.from("advisor_firm_team").insert(data.team.map((t, i) => ({ firm_id: id, name: t.name, role: t.role, email: t.email, sort_order: i })));
+      const { error } = await sb.from("advisor_firm_team").insert(data.team.map((t, i) => ({ firm_id: id, name: t.name, role: t.role, role_th: t.roleTh || null, email: t.email, sort_order: i })));
       if (error) throw new Error(error.message);
     }
     // credentials: diff so unchanged items keep their check status
@@ -287,8 +288,8 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
     const dropC = (oldCreds ?? []).map((c: any) => c.id).filter((x: string) => !keepC.has(x));
     if (dropC.length) await sb.from("advisor_firm_credentials").delete().in("id", dropC);
     for (const [i, c] of data.credentials.entries()) {
-      if (c.id) await sb.from("advisor_firm_credentials").update({ name: c.name, note: c.note, sort_order: i }).eq("id", c.id).eq("firm_id", id);
-      else { const { error } = await sb.from("advisor_firm_credentials").insert({ firm_id: id, name: c.name, note: c.note, sort_order: i }); if (error) throw new Error(error.message); }
+      if (c.id) await sb.from("advisor_firm_credentials").update({ name: c.name, note: c.note, name_th: c.nameTh || null, note_th: c.noteTh || null, sort_order: i }).eq("id", c.id).eq("firm_id", id);
+      else { const { error } = await sb.from("advisor_firm_credentials").insert({ firm_id: id, name: c.name, note: c.note, name_th: c.nameTh || null, note_th: c.noteTh || null, sort_order: i }); if (error) throw new Error(error.message); }
     }
     // documents
     const { data: oldDocs } = await sb.from("advisor_firm_documents").select("id").eq("firm_id", id);

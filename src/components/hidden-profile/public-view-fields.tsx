@@ -18,6 +18,7 @@ import {
 } from "@/lib/public-listing";
 import { checkListingName } from "@/lib/hidden-profiles.functions";
 import { cn } from "@/lib/utils";
+import { LangTag, missingLangHint, useTextLang } from "@/components/common/text-lang";
 import { usePermissions } from "@/hooks/use-session-context";
 
 /**
@@ -106,7 +107,7 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
 
   const findings = useMemo(() => (facts ? runIdentityCheck(d, facts) : []), [d, facts]);
   const counts: Record<PublicTab, number> = {
-    identity: (d.headline.trim() ? 0 : 1) + (d.description.trim() ? 0 : 1) + (d.highlights.slice(0, 3).every((h) => h.trim()) ? 0 : 1),
+    identity: (d.headline.trim() || d.headline_th?.trim() ? 0 : 1) + (d.description.trim() || d.description_th?.trim() ? 0 : 1) + ([0, 1, 2].every((i) => d.highlights[i]?.trim() || d.highlights_th?.[i]?.trim()) ? 0 : 1),
     deal: ((DEAL_TYPES as readonly string[]).includes(d.deal_type ?? "") ? 0 : 1) + (d.owner_stays ? 0 : 1),
   };
   const dirty = !!row && JSON.stringify(d) !== baseline;
@@ -184,6 +185,20 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
   const { d, setD, ideas } = pd;
   const set = <K extends keyof HiddenDraft>(k: K, v: HiddenDraft[K]) => setD((p) => ({ ...p, [k]: v }));
   const flag = (k: HiddenTextField) => (pd.findings.some((f) => f.field === k) ? "border-destructive" : "");
+  // Bilingual texts: the picked text language edits `{field}` or `{field}_th`.
+  const { lang, switchable } = useTextLang();
+  const appTh = useTr()("en", "th") === "th";
+  type TF = "headline" | "description" | "customers_summary" | "reason";
+  const tk = (f: TF) => (lang === "th" ? `${f}_th` : f) as keyof HiddenDraft;
+  const otk = (f: TF) => (lang === "th" ? f : `${f}_th`) as keyof HiddenDraft;
+  const tv = (f: TF) => { const own = (d[tk(f)] as string | null | undefined) ?? ""; const oth = (d[otk(f)] as string | null | undefined) ?? ""; return switchable ? own : own || oth; };
+  const tset = (f: TF, v: string | null) => setD((p) => ({ ...p, [tk(f)]: v }));
+  const tph = (f: TF, fb?: string) => { const own = (d[tk(f)] as string | null | undefined) ?? ""; const oth = (d[otk(f)] as string | null | undefined) ?? ""; return switchable && !own && oth ? missingLangHint(lang, appTh) : fb; };
+  const both = (f: TF) => !!(((d[f] as string | null) ?? "").trim() || ((d[`${f}_th` as keyof HiddenDraft] as string | null | undefined) ?? "").trim());
+  const hlEn = d.highlights, hlTh = d.highlights_th ?? ["", "", "", ""];
+  const hlOwn = lang === "th" ? hlTh : hlEn, hlOth = lang === "th" ? hlEn : hlTh;
+  const hlView = switchable ? hlOwn : hlOwn.map((h, i) => h || hlOth[i] || "");
+  const hlSet = (next: string[]) => setD((p) => ({ ...p, [lang === "th" ? "highlights_th" : "highlights"]: next }));
 
   if (tab === "identity") {
     const fill = (
@@ -193,7 +208,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
         </button>
       </TooltipTrigger><TooltipContent>{tr("Fills in every field on this tab for you. You can change anything afterwards.", "กรอกทุกช่องในแท็บนี้ให้ท่าน ท่านแก้ไขได้ภายหลัง")}</TooltipContent></Tooltip></TooltipProvider>
     );
-    const hlMissing = !d.highlights.slice(0, 3).every((h) => h.trim());
+    const hlMissing = ![0, 1, 2].every((i) => hlEn[i]?.trim() || hlTh[i]?.trim());
     return (
       <div>
         <IdentityMsg pd={pd} />
@@ -205,23 +220,24 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
               {pd.canName ? <ListingNameField pd={pd} refNo={refNo} /> : <SuggestedNameField pd={pd} refNo={refNo} />}
             </EditSec>
             <EditSec id="headline" tone="seller" active={section === "headline"}>
-              <FieldRow label={tr("Headline", "พาดหัว")} htmlFor="hp-headline" missing={!d.headline.trim()} right={`${d.headline.length}/120`} suggest={ideas.headlineIdea ? () => set("headline", ideas.headlineIdea) : undefined}>
-                <Input id="hp-headline" maxLength={120} value={d.headline} placeholder={ideas.headlineIdea} onChange={(e) => set("headline", e.target.value)} className={cn(BOX, !d.headline.trim() && MISS_BOX, flag("headline"))} />
+              <FieldRow label={tr("Headline", "พาดหัว")} after={<LangTag />} htmlFor="hp-headline" missing={!both("headline")} right={`${tv("headline").length}/120`} suggest={ideas.headlineIdea ? () => tset("headline", ideas.headlineIdea) : undefined}>
+                <Input id="hp-headline" lang={lang} maxLength={120} value={tv("headline")} placeholder={tph("headline", ideas.headlineIdea)} onChange={(e) => tset("headline", e.target.value)} className={cn(BOX, !both("headline") && MISS_BOX, flag("headline"))} />
               </FieldRow>
               <FlagMsg pd={pd} k="headline" />
             </EditSec>
             <EditSec id="description" tone="seller" active={section === "description"}>
-              <FieldRow label={tr("Description", "คำอธิบาย")} htmlFor="hp-description" missing={!d.description.trim()} right={`${d.description.length}/420`} suggest={ideas.descIdea ? () => set("description", ideas.descIdea) : undefined}>
-                <Textarea id="hp-description" maxLength={420} value={d.description} placeholder={ideas.descIdea} onChange={(e) => set("description", e.target.value)} className={cn(AREA, "h-[112px] min-h-[112px] resize-y", !d.description.trim() && MISS_BOX, flag("description"))} />
+              <FieldRow label={tr("Description", "คำอธิบาย")} after={<LangTag />} htmlFor="hp-description" missing={!both("description")} right={`${tv("description").length}/420`} suggest={ideas.descIdea ? () => tset("description", ideas.descIdea) : undefined}>
+                <Textarea id="hp-description" lang={lang} maxLength={420} value={tv("description")} placeholder={tph("description", ideas.descIdea)} onChange={(e) => tset("description", e.target.value)} className={cn(AREA, "h-[112px] min-h-[112px] resize-y", !both("description") && MISS_BOX, flag("description"))} />
               </FieldRow>
               <FlagMsg pd={pd} k="description" />
             </EditSec>
             <EditSec id="highlights" tone="seller" active={section === "highlights"}>
-              <FieldRow label={tr("Highlights", "จุดเด่น")} missing={hlMissing} right={tr("3 required", "ต้องมี 3 ข้อ")}
-                suggest={ideas.highlightIdeas.length ? () => set("highlights", d.highlights.map((h, i) => ideas.highlightIdeas[i] ?? h)) : undefined}>
+              <FieldRow label={tr("Highlights", "จุดเด่น")} after={<LangTag />} missing={hlMissing} right={tr("3 required", "ต้องมี 3 ข้อ")}
+                suggest={ideas.highlightIdeas.length ? () => hlSet(hlOwn.map((h, i) => ideas.highlightIdeas[i] ?? h)) : undefined}>
                 <div role="group" aria-label="Highlights" className="overflow-hidden rounded-[10px] border border-[#D7DCE3] bg-background focus-within:border-[#2563EB] focus-within:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] dark:border-input">
-                  {d.highlights.map((h, i) => {
+                  {hlView.map((h, i) => {
                     const filled = !!h.trim();
+                    const ring = !hlEn[i]?.trim() && !hlTh[i]?.trim();
                     const req = i < 3;
                     const name = req ? tr(`Highlight ${i + 1}`, `จุดเด่นข้อที่ ${i + 1}`) : tr("Highlight 4 (optional)", "จุดเด่นข้อที่ 4 (ไม่บังคับ)");
                     return (
@@ -229,10 +245,10 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
                         {filled ? (
                           <span aria-hidden className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-[#E8F6EE]"><Check className="h-[13px] w-[13px] text-[#15803D]" strokeWidth={2.6} /></span>
                         ) : (
-                          <span aria-hidden className={cn("grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border text-[11px] font-semibold", req ? "border-[#F87171] text-[#DC2626]" : "border-[#DCDFE5] text-[#6A7181]")}>{i + 1}</span>
+                          <span aria-hidden className={cn("grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border text-[11px] font-semibold", req && ring ? "border-[#F87171] text-[#DC2626]" : "border-[#DCDFE5] text-[#6A7181]")}>{i + 1}</span>
                         )}
-                        <input aria-label={name} value={h} placeholder={name}
-                          onChange={(e) => set("highlights", d.highlights.map((x, j) => (j === i ? e.target.value : x)))}
+                        <input aria-label={name} value={h} lang={lang} placeholder={switchable && !hlOwn[i] && hlOth[i] ? missingLangHint(lang, appTh, true) : name}
+                          onChange={(e) => hlSet(hlOwn.map((x, j) => (j === i ? e.target.value : x)))}
                           className="h-11 min-w-0 flex-1 border-0 bg-transparent text-[15px] outline-none placeholder:text-[#9CA3AF]" />
                       </div>
                     );
@@ -242,8 +258,8 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
               <FlagMsg pd={pd} k="highlights" />
             </EditSec>
             <EditSec id="customers" tone="seller" active={section === "customers"}>
-              <FieldRow label={tr("Customer profile (do not mention names)", "ลักษณะลูกค้า (ห้ามระบุชื่อ)")} htmlFor="hp-customers_summary" right={tr("Optional", "ไม่บังคับ")} suggest={ideas.customersIdea ? () => set("customers_summary", ideas.customersIdea) : undefined}>
-                <Textarea id="hp-customers_summary" value={d.customers_summary} placeholder={ideas.customersIdea} onChange={(e) => set("customers_summary", e.target.value)} className={cn(AREA, "h-20 min-h-20 resize-y", flag("customers_summary"))} />
+              <FieldRow label={tr("Customer profile (do not mention names)", "ลักษณะลูกค้า (ห้ามระบุชื่อ)")} after={<LangTag />} htmlFor="hp-customers_summary" right={tr("Optional", "ไม่บังคับ")} suggest={ideas.customersIdea ? () => tset("customers_summary", ideas.customersIdea) : undefined}>
+                <Textarea id="hp-customers_summary" lang={lang} value={tv("customers_summary")} placeholder={tph("customers_summary", ideas.customersIdea)} onChange={(e) => tset("customers_summary", e.target.value)} className={cn(AREA, "h-20 min-h-20 resize-y", flag("customers_summary"))} />
               </FieldRow>
               <FlagMsg pd={pd} k="customers_summary" />
             </EditSec>
@@ -275,8 +291,8 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
           </FieldRow>
         </div>
         <OwnerHandover d={d} set={set} />
-        <FieldRow label={tr("Reason for sale", "เหตุผลที่ขาย")} htmlFor="hp-reason" right={tr("Optional", "ไม่บังคับ")}>
-          <Textarea id="hp-reason" value={d.reason ?? ""} onChange={(e) => set("reason", e.target.value || null)} className={cn(AREA, "h-24 min-h-24 resize-y", flag("reason"))} />
+        <FieldRow label={tr("Reason for sale", "เหตุผลที่ขาย")} after={<LangTag />} htmlFor="hp-reason" right={tr("Optional", "ไม่บังคับ")}>
+          <Textarea id="hp-reason" lang={lang} value={tv("reason")} placeholder={tph("reason")} onChange={(e) => tset("reason", e.target.value || null)} className={cn(AREA, "h-24 min-h-24 resize-y", flag("reason"))} />
         </FieldRow>
         <FlagMsg pd={pd} k="reason" />
         </div>
@@ -496,14 +512,18 @@ function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string 
 }
 
 function BuyerPreview({ d, sector, pickedImage, source, refNo }: { d: HiddenDraft; sector: string | null; pickedImage: string | null | undefined; source?: ListingSource; refNo?: string }) {
-  const tr = useTr();
+  const appTr = useTr();
+  // The preview reads as a buyer with the app in the switch's language does.
+  const { lang } = useTextLang();
+  const appLang = appTr("en", "th");
+  const tr = (en: string, th: string) => (lang === "th" ? th : en);
   const name = d.code_name.trim();
-  const head = d.headline.trim();
+  const head = (lang === "th" ? d.headline_th?.trim() || d.headline.trim() : d.headline.trim() || d.headline_th?.trim() || "");
   const city = source?.city || source?.headquarters || "";
   const products = (d.product_tags ?? source?.product_tags ?? []).slice(0, 3).join(", ");
   const markets = (d.market_tags ?? source?.market_tags ?? []).slice(0, 3).join(", ");
   const rev = revenueBand(source?.last_year_revenue) ?? "—";
-  const caption = <div className="mb-2 flex items-center gap-[6px] text-[12.5px] font-semibold text-[#4338CA]"><Eye className="h-[14px] w-[14px]" strokeWidth={2} />{tr("Buyer preview", "ตัวอย่างที่ผู้ซื้อเห็น")}</div>;
+  const caption = <div className="mb-2 flex items-center gap-[6px] text-[12.5px] font-semibold text-[#4338CA]"><Eye className="h-[14px] w-[14px]" strokeWidth={2} />{appTr("Buyer preview", "ตัวอย่างที่ผู้ซื้อเห็น")}{lang !== appLang && <span className={cn("lang-tag", lang === "th" ? "lang-tag-th" : "lang-tag-en")}>{lang === "th" ? "ไทย" : "English"}</span>}</div>;
   const nameEl = <div className={cn("text-[14px] font-bold text-[#151A28] dark:text-foreground", !name && "font-semibold text-[#8A90A0]")}>{name || refNo || tr("Your listing name", "ชื่อประกาศของท่าน")}</div>;
   const headEl = (cls: string) => <div className={cn("text-[12px] text-[#4B5563] dark:text-muted-foreground", cls, !head && "font-semibold text-[#8A90A0]")}>{head || tr("Your headline", "หัวข้อประกาศของท่าน")}</div>;
   return (

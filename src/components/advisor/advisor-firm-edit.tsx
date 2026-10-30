@@ -1,4 +1,5 @@
 import { tr } from "@/i18n/language";
+import { LangTag, useTextLang } from "@/components/common/text-lang";
 import { supabase } from "@/integrations/supabase/client";
 import { AttachmentCard } from "@/components/startups/attachment-card";
 import { EMPTY_SLOT, uploadPending, type EntityMediaState } from "@/components/media/entity-media-editor";
@@ -30,13 +31,13 @@ import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { cn } from "@/lib/utils";
 
 export type FirmForm = {
-  name: string; firmType: string; logo: LogoState; media: EntityMediaState; description: string; yearFounded: string;
+  name: string; firmType: string; logo: LogoState; media: EntityMediaState; description: string; descriptionTh: string; yearFounded: string;
   city: string; country: string; services: string[]; fees: Record<string, FeeDetail>;
   dealBand: string; teamSize: string; languages: string[]; sectors: string[]; sectorAgnostic: boolean;
   legalName: string; thaiName: string; registrationNo: string; addr: Addr;
   website: string; email: string; phone: string;
-  team: { id?: string; name: string; role: string; email: string }[];
-  credentials: { id?: string; name: string; note: string; status?: string }[];
+  team: { id?: string; name: string; role: string; roleTh?: string; email: string }[];
+  credentials: { id?: string; name: string; nameTh?: string; note: string; noteTh?: string; status?: string }[];
   documents: { id?: string; path: string; name: string; type: string; checked?: boolean }[];
   /** One-step approval: the advisor's suggested listing name and headline. */
   suggestedListingName: string; suggestedHeadline: string;
@@ -57,15 +58,15 @@ export const toFirmForm = (f: AdvisorFirm | null): FirmForm => ({
     logo: { ...EMPTY_SLOT, persistedPath: f?.logoPath ?? null, signedUrl: f?.logoUrl ?? null },
     slots: [1, 2, 3].map((n) => { const m = f?.media?.find((x) => x.slot === n); return { ...EMPTY_SLOT, persistedPath: m?.path ?? null, signedUrl: m?.url ?? null }; }) as EntityMediaState["slots"],
   },
-  description: f?.description ?? "", yearFounded: f?.yearFounded ? String(f.yearFounded) : "",
+  description: f?.description ?? "", descriptionTh: f?.descriptionTh ?? "", yearFounded: f?.yearFounded ? String(f.yearFounded) : "",
   city: f?.city ?? "", country: f?.country ?? "Thailand", services: f?.services ?? [],
   fees: Object.fromEntries((f?.services ?? []).map((s) => [s, f?.feeDetails[s] ?? newFee()])),
   dealBand: f?.dealBand ?? "", teamSize: f?.teamSize ? String(f.teamSize) : "", languages: f?.languages ?? [], sectors: f?.sectors ?? [], sectorAgnostic: !!f?.sectorAgnostic,
   legalName: f?.legalName ?? "", thaiName: f?.thaiName ?? "", registrationNo: f?.registrationNo ?? "",
   addr: { street: f?.addrStreet ?? "", unit: f?.addrUnit ?? "", district: f?.country === "Thailand" ? f?.addrDistrict ?? "" : "", province: f?.addrProvince ?? "", postal: f?.addrPostal ?? "" },
   website: f?.website ?? "", email: f?.email ?? "", phone: f?.phone ?? "",
-  team: (f?.team ?? []).map((t) => ({ id: t.id, name: t.name, role: t.role ?? "", email: t.email ?? "" })),
-  credentials: (f?.credentials ?? []).map((c) => ({ id: c.id, name: c.name, note: c.note ?? "", status: c.status })),
+  team: (f?.team ?? []).map((t) => ({ id: t.id, name: t.name, role: t.role ?? "", roleTh: t.roleTh ?? "", email: t.email ?? "" })),
+  credentials: (f?.credentials ?? []).map((c) => ({ id: c.id, name: c.name, nameTh: c.nameTh ?? "", note: c.note ?? "", noteTh: c.noteTh ?? "", status: c.status })),
   documents: (f?.documents ?? []).map((d) => ({ id: d.id, path: d.path, name: d.name, type: d.type ?? "", checked: !!d.checkedAt })),
   suggestedListingName: f?.suggestedListingName ?? "", suggestedHeadline: f?.suggestedHeadline ?? "",
 });
@@ -102,7 +103,7 @@ function Tag({ t }: { t?: SourceTag }) {
   );
 }
 function F({ label, req, opt, hint, err, tag, children, className, htmlFor }: {
-  label: string; req?: boolean; opt?: boolean; hint?: React.ReactNode; err?: string | null; tag?: SourceTag; children: React.ReactNode; className?: string; htmlFor?: string;
+  label: React.ReactNode; req?: boolean; opt?: boolean; hint?: React.ReactNode; err?: string | null; tag?: SourceTag; children: React.ReactNode; className?: string; htmlFor?: string;
 }) {
   return (
     <div className={cn("space-y-1.5", className)} data-edit-sec={htmlFor === "fe-teamSize" ? "team-size" : undefined}>
@@ -152,6 +153,11 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   useEffect(() => { pop?.setPresentation(f.name); }, [f.name]);
   const thai = f.country === "Thailand";
   const src = setup?.sources ?? {};
+  // Bilingual texts: Edit information's text switch picks which language's boxes are edited.
+  const { lang: tl, switchable: tlSw } = useTextLang();
+  const pick = (en: string | undefined, th: string | undefined) => tl === "th" ? (th || (tlSw ? "" : en || "")) : (en || (tlSw ? "" : th || ""));
+  const descV = pick(f.description, f.descriptionTh);
+  const setDesc = (v: string) => set(tl === "th" ? "descriptionTh" : "description", v);
 
   useEffect(() => { pop?.setDirty(JSON.stringify(f) !== JSON.stringify(base.current)); }, [f]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setup?.onDirty(JSON.stringify(f) === JSON.stringify(base.current) ? null : f); }, [f]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -183,7 +189,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
     ["name", nameError(f.name)],
     ["city", cityError(thai ? f.addr.province : f.city, f.country)],
     ["year", yearError(f.yearFounded)],
-    ["desc", descError(f.description)],
+    ["desc", descError(f.description || f.descriptionTh)],
     ["teamSize", teamSizeError(f.teamSize)],
     ["legalName", f.legalName.trim() ? null : "Add your firm's legal name."],
     ["reg", thai && !/^\d{13}$/.test(f.registrationNo) ? "The registration number has 13 digits." : null],
@@ -219,15 +225,15 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       await save({
         data: {
           id: created?.id ?? firm?.id ?? null, name: f.name.trim(), firmType: f.firmType, logoPath: up.logoPath, logoSource: logoChanged ? "upload" : f.logo.source, media: up.media,
-          description: f.description.trim(), yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
+          description: f.description.trim() || f.descriptionTh.trim(), descriptionTh: f.descriptionTh.trim() || null, yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
           dealBand: f.dealBand || null, teamSize: f.teamSize ? Number(f.teamSize) : null, languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
           legalName: f.legalName.trim(), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
           addrStreet: nul(f.addr.street), addrUnit: nul(f.addr.unit), addrDistrict: thai ? nul(f.addr.district) : nul(f.city),
           addrProvince: nul(f.addr.province), addrPostal: nul(f.addr.postal),
           website: f.website.trim() ? normalizeUrl(f.website) : "", email: f.email.trim(), phone: f.phone.trim(),
-          team: f.team.filter((t) => t.name.trim()).map((t) => ({ id: t.id, name: t.name, role: nul(t.role), email: nul(t.email) })),
-          credentials: f.credentials.filter((c) => c.name.trim()).map((c) => ({ id: c.id, name: c.name, note: nul(c.note) })),
+          team: f.team.filter((t) => t.name.trim()).map((t) => ({ id: t.id, name: t.name, role: nul(t.role), roleTh: nul(t.roleTh ?? ""), email: nul(t.email) })),
+          credentials: f.credentials.filter((c) => c.name.trim()).map((c) => ({ id: c.id, name: c.name, nameTh: nul(c.nameTh ?? ""), note: nul(c.note), noteTh: nul(c.noteTh ?? "") })),
           documents: f.documents.map((d) => ({ id: d.id, path: d.path, name: d.name || "Document", type: nul(d.type) })),
           suggested_listing_name: nul(f.suggestedListingName), suggested_headline: nul(f.suggestedHeadline),
         },
@@ -331,8 +337,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           </F>
         </div>
         <p className="-mt-2 flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.")}</p>
-        <F label="Description" req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={`${f.description.length} / 300 · your card shows 3 lines`} htmlFor="fe-desc">
-          <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} value={f.description} onBlur={blur("desc")} onChange={(e) => set("description", e.target.value)} />
+        <F label={<>Description<LangTag /></>} req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={`${descV.length} / 300 · your card shows 3 lines`} htmlFor="fe-desc">
+          <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} lang={tl} value={descV} onBlur={blur("desc")} onChange={(e) => setDesc(e.target.value)} />
         </F>
 </EditSec>}
         {visible("address") && <EditSec id="company" active={section === "company"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Address")} /><CompactFields two>          <F label="Legal name" req tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
@@ -370,7 +376,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {f.team.map((t, i) => (
           <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
             <F label="Name" req><Input className={inp} value={t.name} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></F>
-            <F label="Role"><Input className={inp} placeholder="Role, e.g. Partner · M&A" value={t.role} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))} /></F>
+            <F label="Role"><Input className={inp} placeholder="Role, e.g. Partner · M&A" lang={tl} value={pick(t.role, t.roleTh)} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, [tl === "th" ? "roleTh" : "role"]: e.target.value } : x)))} /></F>
             <F label="Work email"><Input className={inp} value={t.email} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, email: e.target.value } : x)))} /></F>
             <Button type="button" variant="ghost" size="icon" aria-label="Remove person" onClick={() => set("team", f.team.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
           </div>
@@ -384,8 +390,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {f.credentials.length === 0 && <p className="text-[13px] text-muted-foreground">No licences or credentials yet. Add the ones your firm holds; Admin checks each one before it shows as Verified.</p>}
         {f.credentials.map((c, i) => (
           <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1.4fr_auto_auto]">
-            <F label="Licence or credential" req><Input className={inp} placeholder="e.g. Financial advisor licence" value={c.name} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, name: e.target.value, status: "pending" } : x)))} /></F>
-            <F label="Note"><Input className={inp} placeholder="Note, e.g. 2 licensed advisers on the team" value={c.note} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, note: e.target.value, status: "pending" } : x)))} /></F>
+            <F label="Licence or credential" req><Input className={inp} placeholder="e.g. Financial advisor licence" lang={tl} value={tl === "th" ? pick(c.name, c.nameTh) : c.name} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "nameTh" : "name"]: e.target.value, ...(tl === "th" && !x.name ? { name: e.target.value } : {}), status: "pending" } : x)))} /></F>
+            <F label="Note"><Input className={inp} placeholder="Note, e.g. 2 licensed advisers on the team" lang={tl} value={pick(c.note, c.noteTh)} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "noteTh" : "note"]: e.target.value, status: "pending" } : x)))} /></F>
             <span className={cn("mb-2 rounded-full border px-2 py-0.5 text-[11.5px] font-semibold", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
               {c.status === "verified" ? "✓ Verified" : "Pending check"}
             </span>
@@ -427,8 +433,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
             <Input id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder="e.g. 2014" value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
           </F>
         </div>
-        <F label="Description" req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={`${f.description.length} / 300 · your card shows 3 lines`} htmlFor="fe-desc">
-          <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} value={f.description} onBlur={blur("desc")} onChange={(e) => set("description", e.target.value)} />
+        <F label={<>Description<LangTag /></>} req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={`${descV.length} / 300 · your card shows 3 lines`} htmlFor="fe-desc">
+          <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} lang={tl} value={descV} onBlur={blur("desc")} onChange={(e) => setDesc(e.target.value)} />
         </F>
       </Section>
 
@@ -508,7 +514,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {f.team.map((t, i) => (
           <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
             <F label="Name" req><Input className={inp} value={t.name} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></F>
-            <F label="Role"><Input className={inp} placeholder="Role, e.g. Partner · M&A" value={t.role} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))} /></F>
+            <F label="Role"><Input className={inp} placeholder="Role, e.g. Partner · M&A" lang={tl} value={pick(t.role, t.roleTh)} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, [tl === "th" ? "roleTh" : "role"]: e.target.value } : x)))} /></F>
             <F label="Work email"><Input className={inp} value={t.email} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, email: e.target.value } : x)))} /></F>
             <Button type="button" variant="ghost" size="icon" aria-label="Remove person" onClick={() => set("team", f.team.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
           </div>
@@ -521,8 +527,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {f.credentials.length === 0 && <p className="text-[13px] text-muted-foreground">No licences or credentials yet. Add the ones your firm holds; Admin checks each one before it shows as Verified.</p>}
         {f.credentials.map((c, i) => (
           <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1.4fr_auto_auto]">
-            <F label="Licence or credential" req><Input className={inp} placeholder="e.g. Financial advisor licence" value={c.name} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, name: e.target.value, status: "pending" } : x)))} /></F>
-            <F label="Note"><Input className={inp} placeholder="Note, e.g. 2 licensed advisers on the team" value={c.note} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, note: e.target.value, status: "pending" } : x)))} /></F>
+            <F label="Licence or credential" req><Input className={inp} placeholder="e.g. Financial advisor licence" lang={tl} value={tl === "th" ? pick(c.name, c.nameTh) : c.name} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "nameTh" : "name"]: e.target.value, ...(tl === "th" && !x.name ? { name: e.target.value } : {}), status: "pending" } : x)))} /></F>
+            <F label="Note"><Input className={inp} placeholder="Note, e.g. 2 licensed advisers on the team" lang={tl} value={pick(c.note, c.noteTh)} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "noteTh" : "note"]: e.target.value, status: "pending" } : x)))} /></F>
             <span className={cn("mb-2 rounded-full border px-2 py-0.5 text-[11.5px] font-semibold", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
               {c.status === "verified" ? "✓ Verified" : "Pending check"}
             </span>

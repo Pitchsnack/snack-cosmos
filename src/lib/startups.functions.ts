@@ -159,6 +159,8 @@ export interface StartupRow {
   investment_stage: InvestmentStage | null;
   product_tags: string[];
   market_tags: string[];
+  short_description_th?: string | null; long_description_th?: string | null;
+  product_tags_th?: string[] | null; market_tags_th?: string[] | null;
   regulatory_licenses?: RegulatoryLicence[];
   iso_standards?: string[];
   url_key: string | null;
@@ -182,6 +184,8 @@ export interface StartupFounder {
   linkedin_url: string | null;
   bio: string | null;
   bio_story?: FounderStory | null;
+  bio_th?: string | null;
+  bio_story_th?: FounderStory | null;
   photo_url: string | null;
   display_order: number;
 }
@@ -409,12 +413,13 @@ export const getStartup = createServerFn({ method: "GET" })
          logo_url, company_type, company_type_source, business_address, address_line1, address_line2, address_city_district, address_province_state, postal_code, registered_name, registered_number, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
         product_tags, market_tags, regulatory_licenses, iso_standards, url_key, source_global_id, imported_at,
+        short_description_th, long_description_th, product_tags_th, market_tags_th,
         tenants!inner(tenant_name),
         startup_ownership(owning_agent_user_id, assigned_at, users:owning_agent_user_id(id,email,first_name,last_name)),
         startup_ai_ownership(owning_ai_agent_id, assigned_at, users:owning_ai_agent_id(id,email,first_name,last_name)),
         startup_users(id, user_id, role, created_at, users:user_id(id,email,first_name,last_name)),
         startup_media(id, slot, image_url, caption),
-        startup_founders(id, full_name, position, linkedin_url, bio, bio_story, photo_url, display_order),
+        startup_founders(id, full_name, position, linkedin_url, bio, bio_story, bio_th, bio_story_th, photo_url, display_order),
         startup_investors(id, investor_id, investors:investor_id(id, investor_name, website_url, logo_url))
       `)
       .eq("id", data.id)
@@ -515,6 +520,8 @@ const FounderInput = z.object({
   linkedin_url: z.string().max(2048).nullable().optional(),
   bio: z.string().max(5000).nullable().optional(),
   bio_story: FounderStorySchema.nullable().optional(),
+  bio_th: z.string().max(5000).nullable().optional(),
+  bio_story_th: FounderStorySchema.nullable().optional(),
   photo_url: z.string().max(2048).nullable().optional(),
   display_order: z.number().int().default(0),
 });
@@ -562,6 +569,10 @@ const ProfileFields = {
   investmentStage: z.enum(STAGES).nullable().optional(),
   productTags: TagArray.optional(),
   marketTags: TagArray.optional(),
+  productTagsTh: TagArray.optional(),
+  marketTagsTh: TagArray.optional(),
+  shortDescriptionTh: z.string().max(500).nullable().optional(),
+  longDescriptionTh: z.string().max(5000).nullable().optional(),
   regulatoryLicenses: z
     .array(
       z.object({
@@ -617,6 +628,8 @@ async function syncFounders(
     linkedin_url: f.linkedin_url ?? null,
     bio: f.bio_story?.mode === "lines" ? composeFounderBio(f.bio_story) : f.bio ?? null,
     bio_story: f.bio_story ?? null,
+    bio_th: f.bio_story_th?.mode === "lines" ? composeFounderBio(f.bio_story_th) : f.bio_th ?? null,
+    bio_story_th: f.bio_story_th ?? null,
     photo_url: f.photo_url ?? null,
     display_order: f.display_order ?? i,
   }));
@@ -739,6 +752,10 @@ export const createStartup = createServerFn({ method: "POST" })
         investment_stage: data.investmentStage ?? null,
         product_tags: data.productTags ?? [],
         market_tags: data.marketTags ?? [],
+        product_tags_th: data.productTagsTh ?? null,
+        market_tags_th: data.marketTagsTh ?? null,
+        short_description_th: emptyToNull(data.shortDescriptionTh),
+        long_description_th: emptyToNull(data.longDescriptionTh),
         regulatory_licenses: data.regulatoryLicenses ?? [],
         iso_standards: data.isoStandards ?? [],
         created_by: userId,
@@ -862,6 +879,10 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.investmentStage !== undefined) patch.investment_stage = data.investmentStage;
     if (data.productTags !== undefined) patch.product_tags = data.productTags;
     if (data.marketTags !== undefined) patch.market_tags = data.marketTags;
+    if (data.productTagsTh !== undefined) patch.product_tags_th = data.productTagsTh;
+    if (data.marketTagsTh !== undefined) patch.market_tags_th = data.marketTagsTh;
+    if (data.shortDescriptionTh !== undefined) patch.short_description_th = data.shortDescriptionTh;
+    if (data.longDescriptionTh !== undefined) patch.long_description_th = data.longDescriptionTh;
     if (data.regulatoryLicenses !== undefined) patch.regulatory_licenses = data.regulatoryLicenses;
     if (data.isoStandards !== undefined) patch.iso_standards = data.isoStandards;
 

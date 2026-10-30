@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
+import { TextLangProvider, TextLangSwitch } from "./text-lang";
 
 /**
  * My Company › Edit information pop-up. One shell for the seller, buyer and
@@ -147,6 +148,7 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
   }, [open]);
 
   return (
+    <TextLangProvider>
     <EditInfoCtx.Provider value={ctx}>
       <DialogPrimitive.Root open={open} onOpenChange={(o) => { if (!o) requestClose(); }}>
         <DialogPrimitive.Portal>
@@ -170,12 +172,15 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
             )}
             style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
           >
-             <div className="flex shrink-0 flex-wrap items-center gap-4 border-b border-border px-6 py-[18px] sm:flex-nowrap">
+             <div className="flex shrink-0 flex-wrap items-center gap-4 border-b border-border px-6 py-[18px] edit-info-head">
               <div className="min-w-0 flex-1">
                 <DialogPrimitive.Title className="text-[18px] font-semibold leading-tight text-[#151A28] dark:text-foreground">{title ?? tr("Edit information", "แก้ไขข้อมูล")}</DialogPrimitive.Title>
                  <div className="mt-[3px] text-[13px] text-muted-foreground">{presentation ? [presentation.name || (creating ? tr("Not created yet", "ยังไม่ได้สร้าง") : companyName), presentation.view].filter(Boolean).join(" · ") : subtitle}</div>
               </div>
-               <div ref={setTabsSlot} className="shrink-0 empty:hidden max-sm:order-3 max-sm:w-full" />
+              <div className="edit-info-switches">
+                <TextLangSwitch />
+                <div ref={setTabsSlot} className="edit-info-tabs-slot shrink-0 empty:hidden" />
+              </div>
               <Button type="button" variant="ghost" size="icon" aria-label={tr("Close", "ปิด")} onClick={requestClose}
                 className="h-9 w-9 shrink-0 text-muted-foreground hover:bg-muted">
                 <X className="h-[18px] w-[18px]" />
@@ -205,6 +210,7 @@ export function EditInfoPopup({ open, subtitle, companyName, onClosed, children,
         </AlertDialogContent>
       </AlertDialog>
     </EditInfoCtx.Provider>
+    </TextLangProvider>
   );
 }
 

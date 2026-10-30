@@ -1,4 +1,5 @@
 import { tr } from "@/i18n/language";
+import { LangTag, useTextLang } from "@/components/common/text-lang";
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Image as ImageIcon, Plus, Upload } from "lucide-react";
@@ -30,6 +31,9 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
   const err = showErr ? feeError(service, value) : null;
   const words = proposal ? proposal.words(value) : feeWords(value);
   const set = (p: Partial<FeeDetail>) => onChange({ ...value, ...p });
+  // Own words follow Edit information's text language (English in words, Thai in wordsTh).
+  const { lang: tl, switchable: tlSw } = useTextLang();
+  const ownWords = tl === "th" ? (value.wordsTh ?? "") || (tlSw ? "" : value.words) : value.words || (tlSw ? "" : value.wordsTh ?? "");
   const amountField = (label: string, ph: string) => (
     <div className="min-w-0">
       <span className={sub}>{tr(label)}</span>
@@ -70,10 +74,10 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
       )}
       {value.type === "other" && (
         <div>
-          <span className={sub}>{tr("In your own words")}</span>
-          <textarea rows={2} maxLength={80} aria-required placeholder={ex.own} onBlur={onBlurAll}
-            className={cn(small, "h-auto py-2", err?.words && bad)} value={value.words}
-            onChange={(e) => set({ words: e.target.value })} />
+          <span className={sub}>{tr("In your own words")}<LangTag /></span>
+          <textarea rows={2} maxLength={80} aria-required lang={tl} placeholder={ex.own} onBlur={onBlurAll}
+            className={cn(small, "h-auto py-2", err?.words && bad)} value={ownWords}
+            onChange={(e) => set(tl === "th" ? { wordsTh: e.target.value } : { words: e.target.value })} />
         </div>
       )}
       {words && <p className="text-[12.5px] text-[#6B7280]">{tr(proposal ? "On the proposal" : "On your profile")}: <b className="font-semibold text-[#151A28] dark:text-foreground">{nowrapPct(words)}</b></p>}

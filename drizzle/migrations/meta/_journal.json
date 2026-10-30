@@ -848,6 +848,13 @@
       "when": 1793372062019,
       "tag": "0120_buy_order_thai_texts",
       "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1793377375942,
+      "tag": "0121_bilingual_profile_texts",
+      "breakpoints": true
     }
   ]
 }

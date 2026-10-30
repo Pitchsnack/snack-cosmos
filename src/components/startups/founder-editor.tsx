@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FounderStoryEditor } from "./founder-story-editor";
-import { initialFounderStory, type FounderStory } from "@/lib/founder-story";
+import { LangTag, useTextLang } from "@/components/common/text-lang";
+import { type FounderStory } from "@/lib/founder-story";
 import { useTranslation } from "@/i18n/language";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,6 +21,8 @@ export interface FounderDraft {
   linkedin_url?: string | null;
   bio?: string | null;
   bio_story?: FounderStory | null;
+  bio_th?: string | null;
+  bio_story_th?: FounderStory | null;
   photo_url?: string | null;
 }
 
@@ -30,6 +33,8 @@ interface Props {
   startupId?: string;
   year?: string;
   sales?: string;
+  /** Sales label in a given language (each story language starts with its own). */
+  salesFor?: (lang: "en" | "th") => string;
   addOnOpen?: boolean;
 }
 
@@ -235,14 +240,15 @@ function PositionMultiSelect({
   );
 }
 
-export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", addOnOpen }: Props) {
+export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", salesFor, addOnOpen }: Props) {
   const {language} = useTranslation();
+  const { lang: textLang, switchable } = useTextLang();
   const root = useRef<HTMLDivElement>(null);
   const added = useRef(false);
   const focusIndex = useRef<number | null>(null);
   const add = () => {
     focusIndex.current = value.length;
-    onChange([...value, {full_name:"", bio_story:initialFounderStory(null, null, language === "th" ? "th" : "en", year, sales)}]);
+    onChange([...value, {full_name:"", bio_story:null}]);
   };
   useEffect(() => {if (addOnOpen && !added.current) {added.current = true; add();}}, [addOnOpen]);
   useEffect(() => {
@@ -284,7 +290,10 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
                   onChange={(e) => update(i, { linkedin_url: e.target.value })}
                 />
               </div>
-              <FounderStoryEditor bio={f.bio} story={f.bio_story} year={year} sales={sales} onChange={patch => update(i, patch)} />
+              {textLang === "th"
+                ? <FounderStoryEditor lang="th" bio={f.bio_th} story={f.bio_story_th} year={year} sales={salesFor?.("th") ?? sales} onChange={patch => update(i, {bio_th: patch.bio, bio_story_th: patch.bio_story})} />
+                : <FounderStoryEditor lang="en" bio={f.bio} story={f.bio_story} year={year} sales={salesFor?.("en") ?? sales} onChange={patch => update(i, patch)} />}
+              {switchable && <div className="-mt-1"><LangTag className="!ml-0" /></div>}
               <div className="flex justify-end">
                 <Button
                   type="button"

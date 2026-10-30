@@ -355,7 +355,9 @@ export type Database = {
           firm_id: string
           id: string
           name: string
+          name_th: string | null
           note: string | null
+          note_th: string | null
           sort_order: number
           status: string
         }
@@ -365,7 +367,9 @@ export type Database = {
           firm_id: string
           id?: string
           name: string
+          name_th?: string | null
           note?: string | null
+          note_th?: string | null
           sort_order?: number
           status?: string
         }
@@ -375,7 +379,9 @@ export type Database = {
           firm_id?: string
           id?: string
           name?: string
+          name_th?: string | null
           note?: string | null
+          note_th?: string | null
           sort_order?: number
           status?: string
         }
@@ -440,6 +446,7 @@ export type Database = {
           fee_type: string
           firm_id: string
           own_words: string | null
+          own_words_th: string | null
           pct_max: number | null
           pct_min: number | null
           service: string
@@ -450,6 +457,7 @@ export type Database = {
           fee_type?: string
           firm_id: string
           own_words?: string | null
+          own_words_th?: string | null
           pct_max?: number | null
           pct_min?: number | null
           service: string
@@ -460,6 +468,7 @@ export type Database = {
           fee_type?: string
           firm_id?: string
           own_words?: string | null
+          own_words_th?: string | null
           pct_max?: number | null
           pct_min?: number | null
           service?: string
@@ -535,6 +544,7 @@ export type Database = {
           id: string
           name: string
           role: string | null
+          role_th: string | null
           sort_order: number
         }
         Insert: {
@@ -543,6 +553,7 @@ export type Database = {
           id?: string
           name: string
           role?: string | null
+          role_th?: string | null
           sort_order?: number
         }
         Update: {
@@ -551,6 +562,7 @@ export type Database = {
           id?: string
           name?: string
           role?: string | null
+          role_th?: string | null
           sort_order?: number
         }
         Relationships: [
@@ -589,6 +601,7 @@ export type Database = {
           declined_at: string | null
           declined_by: string | null
           description: string | null
+          description_th: string | null
           email: string | null
           firm_type: string
           id: string
@@ -661,6 +674,7 @@ export type Database = {
           declined_at?: string | null
           declined_by?: string | null
           description?: string | null
+          description_th?: string | null
           email?: string | null
           firm_type?: string
           id?: string
@@ -733,6 +747,7 @@ export type Database = {
           declined_at?: string | null
           declined_by?: string | null
           description?: string | null
+          description_th?: string | null
           email?: string | null
           firm_type?: string
           id?: string
@@ -1393,6 +1408,7 @@ export type Database = {
           decision_process: string | null
           decision_reasons: string[]
           description: string | null
+          description_th: string | null
           geography: string | null
           headline: string | null
           investor_id: string | null
@@ -1442,6 +1458,7 @@ export type Database = {
           decision_process?: string | null
           decision_reasons?: string[]
           description?: string | null
+          description_th?: string | null
           geography?: string | null
           headline?: string | null
           investor_id?: string | null
@@ -1491,6 +1508,7 @@ export type Database = {
           decision_process?: string | null
           decision_reasons?: string[]
           description?: string | null
+          description_th?: string | null
           geography?: string | null
           headline?: string | null
           investor_id?: string | null
@@ -3659,19 +3677,23 @@ export type Database = {
           created_at: string
           created_by: string | null
           customers_summary: string
+          customers_summary_th: string | null
           deal_type: string | null
           decided_at: string | null
           decision_fields: string[]
           decision_note: string | null
           decision_reasons: string[]
           description: string
+          description_th: string | null
           directory_category: string | null
           featured: boolean
           handover: string | null
           handover_months: number | null
           has_unpublished_changes: boolean
           headline: string
+          headline_th: string | null
           highlights: string[]
+          highlights_th: string[] | null
           id: string
           live: Json | null
           live_snapshot: Json | null
@@ -3690,6 +3712,7 @@ export type Database = {
           published_by: string | null
           published_headline: string | null
           reason: string | null
+          reason_th: string | null
           ref_no: string
           region: string | null
           review_checks: string[]
@@ -3720,19 +3743,23 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customers_summary?: string
+          customers_summary_th?: string | null
           deal_type?: string | null
           decided_at?: string | null
           decision_fields?: string[]
           decision_note?: string | null
           decision_reasons?: string[]
           description?: string
+          description_th?: string | null
           directory_category?: string | null
           featured?: boolean
           handover?: string | null
           handover_months?: number | null
           has_unpublished_changes?: boolean
           headline?: string
+          headline_th?: string | null
           highlights?: string[]
+          highlights_th?: string[] | null
           id?: string
           live?: Json | null
           live_snapshot?: Json | null
@@ -3751,6 +3778,7 @@ export type Database = {
           published_by?: string | null
           published_headline?: string | null
           reason?: string | null
+          reason_th?: string | null
           ref_no?: string
           region?: string | null
           review_checks?: string[]
@@ -3781,19 +3809,23 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customers_summary?: string
+          customers_summary_th?: string | null
           deal_type?: string | null
           decided_at?: string | null
           decision_fields?: string[]
           decision_note?: string | null
           decision_reasons?: string[]
           description?: string
+          description_th?: string | null
           directory_category?: string | null
           featured?: boolean
           handover?: string | null
           handover_months?: number | null
           has_unpublished_changes?: boolean
           headline?: string
+          headline_th?: string | null
           highlights?: string[]
+          highlights_th?: string[] | null
           id?: string
           live?: Json | null
           live_snapshot?: Json | null
@@ -3812,6 +3844,7 @@ export type Database = {
           published_by?: string | null
           published_headline?: string | null
           reason?: string | null
+          reason_th?: string | null
           ref_no?: string
           region?: string | null
           review_checks?: string[]
@@ -4369,10 +4402,12 @@ export type Database = {
           investor_name: string
           investor_type: string | null
           keywords: string[] | null
+          keywords_th: string[] | null
           legal_name: string | null
           linkedin_url: string | null
           logo_url: string | null
           long_description: string | null
+          long_description_th: string | null
           max_ticket_size: string | null
           media: Json
           min_ticket_size: string | null
@@ -4391,6 +4426,7 @@ export type Database = {
           setup_done_at: string | null
           setup_reached: string | null
           short_description: string | null
+          short_description_th: string | null
           source_global_id: string | null
           status: string
           tenant_id: string
@@ -4429,10 +4465,12 @@ export type Database = {
           investor_name: string
           investor_type?: string | null
           keywords?: string[] | null
+          keywords_th?: string[] | null
           legal_name?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
           long_description?: string | null
+          long_description_th?: string | null
           max_ticket_size?: string | null
           media?: Json
           min_ticket_size?: string | null
@@ -4451,6 +4489,7 @@ export type Database = {
           setup_done_at?: string | null
           setup_reached?: string | null
           short_description?: string | null
+          short_description_th?: string | null
           source_global_id?: string | null
           status?: string
           tenant_id: string
@@ -4489,10 +4528,12 @@ export type Database = {
           investor_name?: string
           investor_type?: string | null
           keywords?: string[] | null
+          keywords_th?: string[] | null
           legal_name?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
           long_description?: string | null
+          long_description_th?: string | null
           max_ticket_size?: string | null
           media?: Json
           min_ticket_size?: string | null
@@ -4511,6 +4552,7 @@ export type Database = {
           setup_done_at?: string | null
           setup_reached?: string | null
           short_description?: string | null
+          short_description_th?: string | null
           source_global_id?: string | null
           status?: string
           tenant_id?: string
@@ -6292,6 +6334,8 @@ export type Database = {
         Row: {
           bio: string | null
           bio_story: Json | null
+          bio_story_th: Json | null
+          bio_th: string | null
           created_at: string
           display_order: number
           full_name: string
@@ -6306,6 +6350,8 @@ export type Database = {
         Insert: {
           bio?: string | null
           bio_story?: Json | null
+          bio_story_th?: Json | null
+          bio_th?: string | null
           created_at?: string
           display_order?: number
           full_name: string
@@ -6320,6 +6366,8 @@ export type Database = {
         Update: {
           bio?: string | null
           bio_story?: Json | null
+          bio_story_th?: Json | null
+          bio_th?: string | null
           created_at?: string
           display_order?: number
           full_name?: string
@@ -6684,13 +6732,16 @@ export type Database = {
           listing_autofill_at: string | null
           logo_url: string | null
           long_description: string | null
+          long_description_th: string | null
           market_tags: string[]
+          market_tags_th: string[] | null
           owner_relation: string | null
           peer_basis: string
           postal_code: string | null
           prepared_at: string | null
           prepared_by: string | null
           product_tags: string[]
+          product_tags_th: string[] | null
           region: string | null
           registered_capital: string | null
           registered_date: string | null
@@ -6707,6 +6758,7 @@ export type Database = {
           setup_from_signup: string[]
           setup_reached: string | null
           short_description: string | null
+          short_description_th: string | null
           source_global_id: string | null
           startup_name: string | null
           status: string
@@ -6745,13 +6797,16 @@ export type Database = {
           listing_autofill_at?: string | null
           logo_url?: string | null
           long_description?: string | null
+          long_description_th?: string | null
           market_tags?: string[]
+          market_tags_th?: string[] | null
           owner_relation?: string | null
           peer_basis?: string
           postal_code?: string | null
           prepared_at?: string | null
           prepared_by?: string | null
           product_tags?: string[]
+          product_tags_th?: string[] | null
           region?: string | null
           registered_capital?: string | null
           registered_date?: string | null
@@ -6768,6 +6823,7 @@ export type Database = {
           setup_from_signup?: string[]
           setup_reached?: string | null
           short_description?: string | null
+          short_description_th?: string | null
           source_global_id?: string | null
           startup_name?: string | null
           status?: string
@@ -6806,13 +6862,16 @@ export type Database = {
           listing_autofill_at?: string | null
           logo_url?: string | null
           long_description?: string | null
+          long_description_th?: string | null
           market_tags?: string[]
+          market_tags_th?: string[] | null
           owner_relation?: string | null
           peer_basis?: string
           postal_code?: string | null
           prepared_at?: string | null
           prepared_by?: string | null
           product_tags?: string[]
+          product_tags_th?: string[] | null
           region?: string | null
           registered_capital?: string | null
           registered_date?: string | null
@@ -6829,6 +6888,7 @@ export type Database = {
           setup_from_signup?: string[]
           setup_reached?: string | null
           short_description?: string | null
+          short_description_th?: string | null
           source_global_id?: string | null
           startup_name?: string | null
           status?: string

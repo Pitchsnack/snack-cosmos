@@ -1,4 +1,5 @@
 import { BuyerDescriptionEditor } from "./buyer-description-editor";
+import { LangTag, missingLangHint, useTextLang } from "@/components/common/text-lang";
 import { descriptionChanged } from "@/lib/buyer-description";
 import { missingCreationFields } from "@/lib/profile-edit-rules";
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
@@ -235,6 +236,15 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const typeOf = agent ? actsFor[0] ?? "" : f.investor_type;
   const [deals, setDeals] = useState<string[]>(data.buyer.deal_types);
   const [keywords, setKeywords] = useState(inv.keywords ?? []);
+  // Bilingual texts: Edit information's text switch picks which language's boxes are edited.
+  const { lang: tl, switchable: tlSw } = useTextLang();
+  const [thx, setThx] = useState({ description: (data.buyer as any).description_th ?? "", short_description: (inv as any).short_description_th ?? "" });
+  const [keywordsTh, setKeywordsTh] = useState<string[]>((inv as any).keywords_th ?? []);
+  const bv = (k: "description" | "short_description") => tl === "th" ? (thx[k] || (!tlSw ? f[k] : "")) : (f[k] || (!tlSw ? thx[k] : ""));
+  const bset = (k: "description" | "short_description") => (v: string) => tl === "th" ? setThx((o) => ({ ...o, [k]: v })) : setF((o) => ({ ...o, [k]: v }));
+  const bph = (k: "description" | "short_description", fb?: string) => { const own = tl === "th" ? thx[k] : f[k]; const oth = tl === "th" ? f[k] : thx[k]; return tlSw && !own && oth ? missingLangHint(tl, language === "th") : fb; };
+  const kwView = tl === "th" ? (keywordsTh.length || tlSw ? keywordsTh : keywords) : (keywords.length || tlSw ? keywords : keywordsTh);
+  const setKw = (v: string[]) => (tl === "th" ? setKeywordsTh(v) : setKeywords(v));
   const [focus, setFocus] = useState(inv.investment_focus);
   const [stages, setStages] = useState(inv.preferred_stages);
   const showsFund = !individual && rel !== "agent";
@@ -266,7 +276,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((o) => ({ ...o, [k]: e.target.value }));
   const pop = useEditInfo();
-  const editSnapshot = JSON.stringify([f,addr,companyType,companyTypeDirty,companyTypeReset,tenant,directoryStatus,directoryVisibility,legalName,longDescription,human,ai,deals,keywords,focus,stages,actsFor,industries,portfolio,media,people,linkedPortfolio,portfolioInvestors,bio,revenueMin,revenueMax]);
+  const editSnapshot = JSON.stringify([thx,keywordsTh,f,addr,companyType,companyTypeDirty,companyTypeReset,tenant,directoryStatus,directoryVisibility,legalName,longDescription,human,ai,deals,keywords,focus,stages,actsFor,industries,portfolio,media,people,linkedPortfolio,portfolioInvestors,bio,revenueMin,revenueMax]);
   const originalSnapshot = useRef(editSnapshot);
   useEffect(()=>{pop?.setDirty(editSnapshot !== originalSnapshot.current);},[editSnapshot]);
 
@@ -376,6 +386,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         
         registration_no: individual ? null : t(f.registration_no),
         ...(descriptionChanged(f.description, data.buyer.description) ? {description: f.description.trim()} : {}), deal_types: deals,
+        description_th: thx.description.trim(), short_description_th: thx.short_description.trim() || null, keywords_th: keywordsTh,
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, ...(portfolioDirty ? {portfolio_extra: portfolio} : {}),
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
@@ -583,9 +594,9 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
         {/* About */}
         <div className="space-y-1.5">
-          <Label>About Company</Label>
-          <Textarea value={f.short_description} onChange={set("short_description")} rows={3} maxLength={2000} className="startup-long-description"
-            placeholder="Brief description of the company" />
+          <Label>About Company<LangTag /></Label>
+          <Textarea lang={tl} value={bv("short_description")} onChange={(e) => bset("short_description")(e.target.value)} rows={3} maxLength={2000} className="startup-long-description"
+            placeholder={bph("short_description", "Brief description of the company")} />
         </div>
 
 {directory && <div className="space-y-1.5"><Label>Bio</Label><Textarea value={bio} onChange={e=>setBio(e.target.value)} maxLength={2000} /></div>}{directory && <div className="space-y-1.5"><Label>Long Description</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</div>}
@@ -608,8 +619,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 </div>}
           {tab === "industries" && <div className="space-y-4"><TabHead title={tr("Industries & Portfolio")} />        {/* Tags */}
         <S cur={setup ? undefined : sec} id="keywords" className="space-y-1.5">
-          <Label>Product &amp; Service Tags (Up to 5)</Label>
-          <TagEditor values={keywords} onChange={setKeywords} max={5} maxLength={50}
+          <Label>Product &amp; Service Tags (Up to 5)<LangTag /></Label>
+          <TagEditor values={kwView} onChange={setKw} max={5} maxLength={50}
             placeholder="Example: Portfolio Management, Due Diligence" />
         </S>
 
@@ -662,7 +673,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             </div>
           </div>
           <p className="flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.")}</p>
-          <BuyerDescriptionEditor value={f.description} onChange={(description) => setF((o) => ({...o, description}))} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:f.description,sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
+          <BuyerDescriptionEditor value={bv("description")} onChange={bset("description")} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
         {directory && <CompactFields><div className="space-y-1.5"><Label>AUM</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>Min Ticket Size</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>Max Ticket Size</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
 <div className="buyer-mandate-money">        {showsFund && (
           <S cur={setup ? undefined : sec} id="fund">
@@ -732,8 +743,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               {people.map((p, i) => (
                 <div key={i} data-row className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
                   {(["name", "role", "email", "phone"] as const).map((k) => (
-                    <Input key={k} placeholder={k[0].toUpperCase() + k.slice(1)} value={p[k]}
-                      onChange={(e) => setPeople((o) => o.map((x, j) => (j === i ? { ...x, [k]: e.target.value } : x)))} />
+                    <Input key={k} lang={k === "role" ? tl : undefined} placeholder={k === "role" && tlSw ? `Role (${tl.toUpperCase()})` : k[0].toUpperCase() + k.slice(1)} value={k === "role" && tl === "th" ? ((p as any).role_th ?? (tlSw ? "" : p.role)) : p[k]}
+                      onChange={(e) => setPeople((o) => o.map((x, j) => (j === i ? { ...x, [k === "role" && tl === "th" ? "role_th" : k]: e.target.value } : x)))} />
                   ))}
                   <Button type="button" variant="ghost" size="icon" aria-label="Remove" onClick={() => setPeople((o) => o.filter((_, j) => j !== i))}>
                     <Trash2 className="h-4 w-4" />
@@ -956,15 +967,15 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
         {/* About */}
         <div className="space-y-1.5">
-          <Label>About Company</Label>
-          <Textarea value={f.short_description} onChange={set("short_description")} rows={3} maxLength={2000} className="startup-long-description"
-            placeholder="Brief description of the company" />
+          <Label>About Company<LangTag /></Label>
+          <Textarea lang={tl} value={bv("short_description")} onChange={(e) => bset("short_description")(e.target.value)} rows={3} maxLength={2000} className="startup-long-description"
+            placeholder={bph("short_description", "Brief description of the company")} />
         </div>
 
         {/* Tags */}
         <S cur={setup ? undefined : sec} id="keywords" className="space-y-1.5">
-          <Label>Product &amp; Service Tags (Up to 5)</Label>
-          <TagEditor values={keywords} onChange={setKeywords} max={5} maxLength={50}
+          <Label>Product &amp; Service Tags (Up to 5)<LangTag /></Label>
+          <TagEditor values={kwView} onChange={setKw} max={5} maxLength={50}
             placeholder="Example: Portfolio Management, Due Diligence" />
         </S>
 
@@ -998,7 +1009,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               summary: <>Sellers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} />
         </S>
 
-        <BuyerDescriptionEditor value={f.description} onChange={(description)=>setF((o)=>({...o,description}))} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:f.description,sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />
+        <BuyerDescriptionEditor value={bv("description")} onChange={bset("description")} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />
 
         {/* Portfolio Startups */}
         <S cur={setup ? undefined : sec} id="portfolio" className="space-y-1.5">
@@ -1032,8 +1043,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               {people.map((p, i) => (
                 <div key={i} data-row className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
                   {(["name", "role", "email", "phone"] as const).map((k) => (
-                    <Input key={k} placeholder={k[0].toUpperCase() + k.slice(1)} value={p[k]}
-                      onChange={(e) => setPeople((o) => o.map((x, j) => (j === i ? { ...x, [k]: e.target.value } : x)))} />
+                    <Input key={k} lang={k === "role" ? tl : undefined} placeholder={k === "role" && tlSw ? `Role (${tl.toUpperCase()})` : k[0].toUpperCase() + k.slice(1)} value={k === "role" && tl === "th" ? ((p as any).role_th ?? (tlSw ? "" : p.role)) : p[k]}
+                      onChange={(e) => setPeople((o) => o.map((x, j) => (j === i ? { ...x, [k === "role" && tl === "th" ? "role_th" : k]: e.target.value } : x)))} />
                   ))}
                   <Button type="button" variant="ghost" size="icon" aria-label="Remove" onClick={() => setPeople((o) => o.filter((_, j) => j !== i))}>
                     <Trash2 className="h-4 w-4" />
