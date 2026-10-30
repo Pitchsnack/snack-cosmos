@@ -46,6 +46,13 @@ function fromFirm(f: AdvisorFirm): A {
     logo: { path: f.logoPath, url: f.logoUrl, name: null, sizeKb: null, source: f.logoSource }, photos: f.media?.length ?? 0, desc: f.description ?? "",
   };
 }
+/** Auto Enrich ran on these details (website compared without http(s):// or www., which saving may add). */
+const webKey = (w: string) => w.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/+$/, "");
+const sameEnrichSig = (sig: string | undefined, x: { web: string; reg: string; name: string }) => {
+  if (!sig) return false;
+  const [w = "", r = "", ...n] = sig.split("|");
+  return webKey(w) === webKey(x.web) && r === x.reg && n.join("|") === x.name;
+};
 const article = (w: string) => (/^[aeiou]/i.test(w) ? "an" : "a");
 
 export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
@@ -134,8 +141,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     setCur((first ?? "review") as WizardQ);
     // Every answer still valid and Auto Enrich already ran on these details: reopen at Review & complete.
     const w = firm.wizard as { enrichSig?: string; enrich?: AdvisorEnrichResult } | null;
-    console.log("RESUME", JSON.stringify({ first, sig: w?.enrichSig, mine: `${a.web}|${a.reg}|${a.name}`, has: !!w?.enrich }));
-    if (!first && w?.enrich && w.enrichSig === `${a.web}|${a.reg}|${a.name}`) { setEnrich(w.enrich); setPhase("complete"); }
+    if (!first && w?.enrich && sameEnrichSig(w.enrichSig, a)) { setEnrich(w.enrich); setPhase("complete"); }
   }, [isAnswered]);
 
   // ---- autosave ----
@@ -726,7 +732,7 @@ function Enrich({ firm, a, header, card, btnO, btnP, onBack, onExit, onDone }: {
   const thaiReg = a.country === "Thailand" && /^\d{13}$/.test(a.reg);
   const sig = `${normalizeUrl(a.web)}|${a.reg}|${a.name}`;
   const cached = (firm.wizard as { enrichSig?: string; enrich?: AdvisorEnrichResult });
-  const reuse = cached.enrichSig && cached.enrich && cached.enrichSig === `${a.web}|${a.reg}|${a.name}` ? cached.enrich : null;
+  const reuse = cached.enrichSig && cached.enrich && sameEnrichSig(cached.enrichSig, a) ? cached.enrich : null;
   const [res, setRes] = useState<AdvisorEnrichResult | null>(reuse);
   const [step, setStep] = useState(reuse ? 9 : 0); // which source row is reading
   const done = step >= 9;
