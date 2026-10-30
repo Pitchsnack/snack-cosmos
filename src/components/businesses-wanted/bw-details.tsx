@@ -6,7 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { addMonths, bkkToday, fmtDay, placeOf, raiSqm } from "@/lib/buy-orders";
 import { recordBuyOrderView, type ApplyContext, type BoCard } from "@/lib/buy-orders.functions";
-import { AppState, ApplyButton, BuyerChip, Cover, KindPill, ShareButton, StatusPill, useBw, useSectorName } from "./bw-card";
+import { AppState, ApplyButton, BuyerChip, Cover, ForCompany, KindPill, managedCardState, ShareButton, StatusPill, useBw, useSectorName } from "./bw-card";
 import { cn } from "@/lib/utils";
 
 export function BuyOrderDetails({ card, persona, applyCtx, onClose, onApply, onShare }: {
@@ -23,6 +23,7 @@ export function BuyOrderDetails({ card, persona, applyCtx, onClose, onApply, onS
   const posted = card.status === "posted";
   const closed = card.status === "closed";
   const sealed = card.kind === "sealed";
+  const managedState = managedCardState(card, applyCtx);
   const date = closed
     ? c(`Closed ${fmtDay(card.closesOn ?? card.closedAt)}`, `ปิดแล้ว ${fmtDay(card.closesOn ?? card.closedAt, true)}`)
     : card.postedAt
@@ -71,7 +72,7 @@ export function BuyOrderDetails({ card, persona, applyCtx, onClose, onApply, onS
           {card.client && (
             <div className="bw-violet"><Lock className="h-4 w-4 shrink-0" /><span><b>{c(`For ${card.client.name ?? "—"} · ${card.client.ref ?? "—"}.`, `สำหรับ ${card.client.name ?? "—"} · ${card.client.ref ?? "—"}`)}</b> {c(`Only PitchSnack sees the client. Sellers and buyers see “${card.buyerType} · ${card.country ?? ""}”. Written by ${card.client.writer ?? "—"}.`, `เฉพาะ PitchSnack ที่เห็นลูกค้า ผู้ขายและผู้ซื้อเห็น “${card.buyerType} · ${card.country ?? ""}” เขียนโดย ${card.client.writer ?? "—"}`)}</span></div>
           )}
-          {persona === "seller" && card.myApp && <div className="mt-3"><AppState card={card} /></div>}
+          {persona === "seller" && (card.managedApps?.length ? card.managedApps.map((a) => <div className="mt-3" key={a.id}><AppState card={{ ...card, myApp: { status: a.status, appliedAt: a.appliedAt } }} /><ForCompany company={{ name: a.company, ref: a.ref }} /></div>) : card.myApp ? <div className="mt-3"><AppState card={card} /></div> : null)}
 
           <div className="bw-dgrid">
             <section className="bw-dsec">
@@ -117,8 +118,9 @@ export function BuyOrderDetails({ card, persona, applyCtx, onClose, onApply, onS
         </div>
         <div className="bw-dfoot">
           <button type="button" className="bw-btn bw-outline flex-none px-4" onClick={onClose}>{c("Close", "ปิด")}</button>
-          {persona === "seller" && posted && !card.myApp && <span className="flex-none"><ApplyButton ctx={applyCtx} onApply={() => onApply(card)} /></span>}
-          {posted && !card.yours && <span className="flex-none"><ShareButton onShare={() => onShare(card)} /></span>}
+          {persona === "seller" && posted && (managedState ? managedState === "available" : !card.myApp && !card.forCompany) && <span className="flex-none"><ApplyButton ctx={applyCtx} onApply={() => onApply(card)} /></span>}
+          {persona === "seller" && posted && managedState === "applied" && <span className="bw-btn bw-applied flex-none"><Check className="h-4 w-4" />{c("Applied", "สมัครแล้ว")}</span>}
+          {posted && !card.yours && !card.client && <span className="flex-none"><ShareButton onShare={() => onShare(card)} /></span>}
         </div>
         <span className="sr-only">{th ? "" : ""}</span>
       </DialogContent>
