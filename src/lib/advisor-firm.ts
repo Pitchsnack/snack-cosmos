@@ -100,7 +100,7 @@ export function feeWords(f: FeeDetail): string | null {
     case "retainer": return amountOk(f.amount) ? `Retainer ${amt} a month` : null;
     case "success": return p ? `${fmtPct(p)}% success fee` : null;
     case "retainer_success": return amountOk(f.amount) && p ? `Retainer ${amt} a month, then a ${fmtPct(p)}% success fee` : null;
-    case "other": return f.words.trim() ? f.words.trim().slice(0, 80) : null;
+    case "other": { const w = f.words.trim() || (f.wordsTh ?? "").trim(); return w ? w.slice(0, 80) : null; }
   }
 }
 /** Field errors for one fee (only once its fields are touched). */
@@ -112,7 +112,7 @@ export function feeError(service: string, f: FeeDetail): { msg: string; amount?:
     msg: `Add how you charge for ${service}.`,
     amount: feeNeedsAmount(f.type) && !amountOk(f.amount),
     pct: feeNeedsPct(f.type) && !parsePct(f.pct),
-    words: f.type === "other" && !f.words.trim(),
+    words: f.type === "other" && !f.words.trim() && !(f.wordsTh ?? "").trim(),
   };
 }
 
