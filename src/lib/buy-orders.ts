@@ -181,23 +181,38 @@ export type BoDraft = {
   clientId?: string | null; sector: string; name: string; description: string; location: string; cities: string;
   propertySize: string; factorySize: string; products: string; targetRevenue: string; priceRange: string;
   dealTypes: string[]; mustHave: string; niceToHave: string; profit: string; timing: string; periodMonths: number;
+  /** The writer's language: the texts that must be there first. The other language is added by Control or Admin. */
+  lang?: "en" | "th";
+  nameTh?: string; descriptionTh?: string; productsTh?: string; mustHaveTh?: string; niceToHaveTh?: string; timingTh?: string;
 };
+/** The six texts kept in English and Thai. */
+export const BO_TEXTS = ["name", "description", "products", "mustHave", "niceToHave", "timing"] as const;
+export type BoText = (typeof BO_TEXTS)[number];
+export const thKey = (f: BoText) => `${f}Th` as const;
+export const textKey = (f: BoText, lang: "en" | "th") => (lang === "th" ? thKey(f) : f) as BoField;
 export type BoField = keyof BoDraft;
 export const emptyDraft = (): BoDraft => ({
   clientId: null, sector: "", name: "", description: "", location: "Thailand", cities: "", propertySize: "Any", factorySize: "Any",
   products: "", targetRevenue: "", priceRange: "", dealTypes: BO_DEAL_TYPES.slice(0, 2) as unknown as string[], mustHave: "", niceToHave: "",
-  profit: "not_stated", timing: "", periodMonths: 3,
+  profit: "not_stated", timing: "", periodMonths: 3, lang: "en",
+  nameTh: "", descriptionTh: "", productsTh: "", mustHaveTh: "", niceToHaveTh: "", timingTh: "",
 });
 /** One point per line; a leading "• " from the bullet boxes is dropped. */
 export const lines = (s: string) => s.split("\n").map((x) => x.replace(/^•\s*/, "").trim()).filter(Boolean).slice(0, 20);
 /** The form's checks (section 10.1). Returns the fields in error, in form order. */
 export function checkDraft(d: BoDraft, needClient: boolean): Partial<Record<BoField, "pick" | "description" | "deal" | "long">> {
+  d = { ...emptyDraft(), ...d, lang: d.lang ?? "en" };
   const e: Partial<Record<BoField, "pick" | "description" | "deal" | "long">> = {};
   if (needClient && !d.clientId) e.clientId = "pick";
   if (!boSector(d.sector)) e.sector = "pick";
   if (d.name.trim().length > 40) e.name = "long";
-  const n = d.description.trim().length;
-  if (n < 10 || n > 400) e.description = "description";
+  if ((d.nameTh ?? "").trim().length > 40) e.nameTh = "long";
+  const main = d.lang === "th" ? "descriptionTh" : "description";
+  const other = d.lang === "th" ? "description" : "descriptionTh";
+  const n = String(d[main] ?? "").trim().length;
+  if (n < 10 || n > 400) e[main] = "description";
+  const o = String(d[other] ?? "").trim().length;
+  if (o && (o < 10 || o > 400)) e[other] = "description";
   if (!(BO_LOCATIONS as readonly string[]).includes(d.location)) e.location = "pick";
   if (!(PROPERTY_SIZES as readonly string[]).includes(d.propertySize)) e.propertySize = "pick";
   if (!(FACTORY_SIZES as readonly string[]).includes(d.factorySize)) e.factorySize = "pick";
@@ -210,8 +225,40 @@ export function checkDraft(d: BoDraft, needClient: boolean): Partial<Record<BoFi
 /** The row's columns from a checked draft. */
 export const draftRow = (d: BoDraft) => ({
   sector: d.sector, name_on_card: d.name.trim() || d.sector, description: d.description.trim(), location: d.location,
+  name_on_card_th: (d.nameTh ?? "").trim() || (d.lang === "th" ? boSector(d.sector)?.th ?? null : null),
+  description_th: (d.descriptionTh ?? "").trim() || null,
+  products_th: (d.productsTh ?? "").replace(/\s*\n\s*/g, " ").trim() || null,
+  must_have_th: lines(d.mustHaveTh ?? ""), nice_to_have_th: lines(d.niceToHaveTh ?? ""), timing_th: (d.timingTh ?? "").trim() || null,
+  text_lang: d.lang === "th" ? "th" : "en",
   cities: d.cities.trim() || "Any", property_size: d.propertySize, factory_size: d.factorySize, products: d.products.replace(/\s*\n\s*/g, " ").trim() || null,
   target_revenue: d.targetRevenue, price_range: d.priceRange, deal_types: d.dealTypes, must_have: lines(d.mustHave), nice_to_have: lines(d.niceToHave),
   profit: ["yes", "no", "not_stated"].includes(d.profit) ? d.profit : "not_stated", timing: d.timing.trim() || null, period_months: d.periodMonths,
 });
 export const periodLabel = (m: number, th = false) => (m === 12 ? (th ? "รายปี" : "Annual") : th ? `${m} เดือน` : `${m} months`);
+
+
+/** The texts that still need their other language: one entry per text, with the side that is missing.
+ * Must have and Nice to have need the same number of points in both. */
+export function missingLangs(d: BoDraft): { field: BoText; side: "en" | "th" }[] {
+  const r = draftRow({ ...emptyDraft(), ...d });
+  const pairs: [BoText, unknown, unknown][] = [
+    ["name", r.name_on_card, r.name_on_card_th], ["description", r.description, r.description_th], ["products", r.products, r.products_th],
+    ["mustHave", r.must_have, r.must_have_th], ["niceToHave", r.nice_to_have, r.nice_to_have_th], ["timing", r.timing, r.timing_th],
+  ];
+  const out: { field: BoText; side: "en" | "th" }[] = [];
+  for (const [field, en, th] of pairs) {
+    const a = Array.isArray(en) ? en.length : en ? 1 : 0;
+    const b = Array.isArray(th) ? th.length : th ? 1 : 0;
+    if (a !== b && (a || b)) out.push({ field, side: a > b ? "th" : "en" });
+  }
+  return out;
+}
+
+/** A buy order's texts in the reader's language; a text without that language shows the other one. */
+export function localizeCard<T extends { name: string; description: string; products: string | null; mustHave: string[]; niceToHave: string[]; timing: string | null;
+  nameTh?: string | null; descriptionTh?: string | null; productsTh?: string | null; mustHaveTh?: string[]; niceToHaveTh?: string[]; timingTh?: string | null }>(c: T, th: boolean): T {
+  const has = (v: unknown) => (Array.isArray(v) ? v.length > 0 : !!v);
+  const p = <V,>(en: V, t: V | null | undefined): V => (th ? (has(t) ? (t as V) : en) : has(en) ? en : ((t ?? en) as V));
+  return { ...c, name: p(c.name, c.nameTh), description: p(c.description, c.descriptionTh), products: p(c.products, c.productsTh),
+    mustHave: p(c.mustHave, c.mustHaveTh), niceToHave: p(c.niceToHave, c.niceToHaveTh), timing: p(c.timing, c.timingTh) };
+}

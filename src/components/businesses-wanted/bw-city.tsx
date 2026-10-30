@@ -8,10 +8,11 @@ import { useBw } from "./bw-card";
  * City, when Location is Thailand: a list of Thai cities to tick.
  * Value is the saved English text ("Bangkok, Pattaya or Chonburi"); "" means Any.
  */
-export function CityPicker({ value, onChange, id, invalid, describedBy }: {
-  value: string; onChange: (v: string) => void; id?: string; invalid?: boolean; describedBy?: string;
+export function CityPicker({ value, onChange, id, invalid, describedBy, namesTh }: {
+  value: string; onChange: (v: string) => void; id?: string; invalid?: boolean; describedBy?: string; namesTh?: boolean;
 }) {
-  const { c, th } = useBw();
+  const { c, th: appTh } = useBw();
+  const th = namesTh ?? appTh;
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const root = useRef<HTMLDivElement>(null);
@@ -42,7 +43,7 @@ export function CityPicker({ value, onChange, id, invalid, describedBy }: {
   const featured = FEATURED_CITIES.filter(match);
   const others = OTHER_PROVINCES.filter(match);
   const anyOn = ticked.length === 0;
-  const summary = anyOn ? c("Any", "ไม่จำกัด") : th
+  const summary = anyOn ? (th ? "ไม่จำกัด" : "Any") : th
     ? ticked.map((en) => FEATURED_CITIES.concat(OTHER_PROVINCES).find((x) => x.en === en)?.th ?? en).join(" ").replace(/ ([^ ]+)$/, " หรือ$1")
     : citiesText(ticked);
 
