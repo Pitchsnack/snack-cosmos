@@ -213,16 +213,18 @@ export function BuyOrderCard({ card: rawCard, persona, applyCtx, mode = "browse"
     }
   } else if (card.appsTotal != null) {
     const n = card.appsNew ?? 0;
-    const label = card.client
-      ? (n ? c(`Applications · ${n} to check`, `ใบสมัคร · รอตรวจ ${n}`) : c(`Applications · ${card.appsTotal}`, `ใบสมัคร · ${card.appsTotal}`))
-      : (n ? c(`Applications · ${n} new`, `ใบสมัคร · ใหม่ ${n}`) : c(`Applications · ${card.appsTotal}`, `ใบสมัคร · ${card.appsTotal}`));
-    buttons.push(<Link key="apps" to="/marketplace/pipeline/invitations" search={{ view: "applications" }} className="bw-btn bw-navy"><Users className="h-4 w-4" />{label}</Link>);
+    const tipText = n ? (card.client ? c(`Applications, ${n} to check`, `ใบสมัคร · รอตรวจ ${n}`) : c(`Applications, ${n} new`, `ใบสมัคร · ใหม่ ${n}`)) : undefined;
+    buttons.push(<Link key="apps" to="/marketplace/pipeline/invitations" search={{ view: "applications" }} className="bw-btn bw-navy" title={tipText} aria-label={tipText}>
+      <Users className="h-[15px] w-[15px] shrink-0" />
+      {n ? <><span className="bw-btn-text">{c("Applications", "ใบสมัคร")}</span><span aria-hidden className="bw-count-pill">{n}</span></>
+        : <span className="bw-btn-text">{c(`Applications · ${card.appsTotal}`, `ใบสมัคร · ${card.appsTotal}`)}</span>}
+    </Link>);
   } else if (persona === "seller") {
     if (mode === "applications" && card.myApp) buttons.push(<div key="st" className="flex-[2] min-w-0"><AppState card={card} /><ForCompany company={card.forCompany} /></div>);
     else if (applied || (!managedState && card.myApp)) buttons.push(<span key="ap" className="bw-btn bw-applied"><Check className="h-4 w-4" />{c("Applied", "สมัครแล้ว")}</span>);
     else if (posted) buttons.push(<ApplyButton key="ap" ctx={applyCtx} onApply={onApply} />);
   }
-  buttons.push(<Button variant="unstyled" key="vd" type="button" className="bw-btn bw-outline" onClick={onDetails}>{c("View details", "ดูรายละเอียด")}</Button>);
+  buttons.push(<Button variant="unstyled" key="vd" type="button" className="bw-btn bw-outline" onClick={onDetails}><span className="bw-btn-text">{c("View details", "ดูรายละเอียด")}</span></Button>);
   const three = canShare && buttons.length >= 2;
   if (canShare) buttons.push(<ShareButton key="sh" narrow={three && narrow} onShare={onShare} />);
 
