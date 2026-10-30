@@ -629,6 +629,8 @@ export type Database = {
           ref_no: string
           registration_no: string | null
           review_checklist: string[]
+          review_draft: Json | null
+          review_saved_at: string | null
           run_by: Database["public"]["Enums"]["profile_run_by"]
           sector_agnostic: boolean
           sector_picks: Json | null
@@ -706,6 +708,8 @@ export type Database = {
           ref_no?: string
           registration_no?: string | null
           review_checklist?: string[]
+          review_draft?: Json | null
+          review_saved_at?: string | null
           run_by?: Database["public"]["Enums"]["profile_run_by"]
           sector_agnostic?: boolean
           sector_picks?: Json | null
@@ -783,6 +787,8 @@ export type Database = {
           ref_no?: string
           registration_no?: string | null
           review_checklist?: string[]
+          review_draft?: Json | null
+          review_saved_at?: string | null
           run_by?: Database["public"]["Enums"]["profile_run_by"]
           sector_agnostic?: boolean
           sector_picks?: Json | null
@@ -1438,6 +1444,8 @@ export type Database = {
           published_listing_name: string | null
           ref_no: string
           revenue_band: string | null
+          review_draft: Json | null
+          review_saved_at: string | null
           sectors: string[]
           show_name: boolean
           stages: string[]
@@ -1490,6 +1498,8 @@ export type Database = {
           published_listing_name?: string | null
           ref_no?: string
           revenue_band?: string | null
+          review_draft?: Json | null
+          review_saved_at?: string | null
           sectors?: string[]
           show_name?: boolean
           stages?: string[]
@@ -1542,6 +1552,8 @@ export type Database = {
           published_listing_name?: string | null
           ref_no?: string
           revenue_band?: string | null
+          review_draft?: Json | null
+          review_saved_at?: string | null
           sectors?: string[]
           show_name?: boolean
           stages?: string[]
@@ -3735,6 +3747,8 @@ export type Database = {
           ref_no: string
           region: string | null
           review_checks: string[]
+          review_draft: Json | null
+          review_saved_at: string | null
           stake_pct: number | null
           startup_id: string
           status: string
@@ -3802,6 +3816,8 @@ export type Database = {
           ref_no?: string
           region?: string | null
           review_checks?: string[]
+          review_draft?: Json | null
+          review_saved_at?: string | null
           stake_pct?: number | null
           startup_id: string
           status?: string
@@ -3869,6 +3885,8 @@ export type Database = {
           ref_no?: string
           region?: string | null
           review_checks?: string[]
+          review_draft?: Json | null
+          review_saved_at?: string | null
           stake_pct?: number | null
           startup_id?: string
           status?: string
