@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { BuyOrderCover } from "./buy-order-cover";
-import { addMonths, bkkToday, canShareOrder, checkDraft, draftRow, effectiveStatus, isOpen, sealedOnly, PERIODS, type BoAppStatus, type BoDraft, type BoKind, type BoStatus } from "@/lib/buy-orders";
+import { addMonths, bkkToday, canShareOrder, checkDraft, draftRow, effectiveStatus, isOpen, missingLangs, sealedOnly, PERIODS, type BoAppStatus, type BoDraft, type BoKind, type BoStatus } from "@/lib/buy-orders";
 
 /**
  * Businesses Wanted. Every read and write goes through here with the service client,
@@ -302,7 +302,7 @@ async function isOwnSide(sb: any, userId: string, role: string | null, bo: any) 
 }
 
 async function reviewRows(sb: any, userId: string, role: string | null, onlyId?: string): Promise<AppRow[]> {
-  let q = sb.from("buy_orders").select("id, ref, name_on_card, kind, investor_profile_id, sector, location, target_revenue, deal_types").in("status", ["posted", "closed"]);
+  let q = sb.from("buy_orders").select("id, ref, name_on_card, name_on_card_th, kind, investor_profile_id, sector, location, target_revenue, deal_types").in("status", ["posted", "closed"]);
   if (onlyId) q = q.eq("id", onlyId);
   else if (role === "admin") q = q.eq("kind", "sealed");
   else {
@@ -347,7 +347,7 @@ async function reviewRows(sb: any, userId: string, role: string | null, onlyId?:
     };
     return {
       id: a.id, status: a.status, appliedAt: a.applied_at, decidedAt: a.decided_at, note: a.note,
-      bo: { id: bo.id, ref: bo.ref, name: bo.name_on_card, kind: bo.kind },
+      bo: { id: bo.id, ref: bo.ref, name: bo.name_on_card, nameTh: bo.name_on_card_th ?? null, kind: bo.kind },
       listing, match: matchOf({ ...listing, country }, bo).rows,
       client: role === "admin" ? clients.get(bo.investor_profile_id) ?? null : null,
     };
@@ -695,7 +695,7 @@ export const adminDecideBuyOrder = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-function pick<T extends object>(o: T, keys: (keyof T)[]): Partial<T> { const r: Partial<T> = {}; for (const k of keys) r[k] = o[k]; return r; }
+function pick<T extends object>(o: T, keys: (keyof T)[]): Partial<T> { const r: Partial<T> = {}; for (const k of keys) if (o[k] !== undefined) r[k] = o[k]; return r; }
 
 /** Extend (posted) or Reopen (closed), section 11.6. */
 export const adminExtendBuyOrder = createServerFn({ method: "POST" })
