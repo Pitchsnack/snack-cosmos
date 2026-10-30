@@ -2,7 +2,7 @@
 
 ## Buy order form text boxes — 30 October 2026
 - [x] Expand and wrap the four shared text boxes, align all labels and remove repeated business from EN/TH Agribusiness defaults; preserve saving, counts, hints and bullets.
-- [ ] Verify signed-in form at desktop and 390px, Thai defaults, overflow/resizing and existing tests.
+- [x] Verified signed-in sealed form EN desktop and TH 390px: correct dimensions, wrapped text/no sideways scroll, bold labels, vertical scrolling, drag-to-resize and bullet Enter; 44 existing tests pass and build OK. Advertisement/Admin check reuse these fields; their separate dialogs were not exercised, and no data was saved.
 
 ## Buy-order Share pop-up — 30 October 2026
 - [x] Restore shared dialog padding, grey text, industry icon and bordered/focused email input; preserve text, validation and sending.
