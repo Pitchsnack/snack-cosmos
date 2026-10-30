@@ -3,7 +3,9 @@ import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { Undo2, Calendar, ChevronDown, Eye, EyeOff, Lock, Megaphone, Send, Share2, User, Users, Check, Clock, CircleCheck, Info } from "lucide-react";
 import { useTranslation } from "@/i18n/language";
-import { boSector, closesInDays, coverOf, fmtDay, isNew } from "@/lib/buy-orders";
+import { boSector, closesInDays, coverOf, fmtDay, isNew, managedApplyState } from "@/lib/buy-orders";
+import { Button } from "@/components/ui/button";
+import { Building } from "lucide-react";
 import type { ApplyContext, BoCard } from "@/lib/buy-orders.functions";
 import { sectorIcon } from "./bw-icons";
 import { cn } from "@/lib/utils";
@@ -122,11 +124,21 @@ export function AppState({ card }: { card: BoCard }) {
   return <div className={cn("bw-state", m.cls)}><m.Icon className="h-4 w-4 shrink-0" /><span><b>{m.b}</b> {m.t}</span></div>;
 }
 
+export function ForCompany({ company }: { company?: BoCard["forCompany"] }) {
+  const { c } = useBw();
+  return company ? <div className="bw-for-company"><Building className="h-3 w-3 shrink-0" />{c(`For ${company.name} · ${company.ref ?? "—"}`, `สำหรับ ${company.name} · ${company.ref ?? "—"}`)}</div> : null;
+}
+
+export function managedCardState(card: BoCard, ctx?: ApplyContext) {
+  return ctx?.managed ? managedApplyState((ctx.companies ?? []).map((x) => x.listing.id), (card.managedApps ?? []).map((x) => x.businessId)) : null;
+}
+
 export function ApplyButton({ ctx, onApply, size }: { ctx: ApplyContext | undefined; onApply: () => void; size?: "lg" }) {
   const { c } = useBw();
   const [tip, setTip] = useState(false);
+  if (ctx?.managed && !ctx.companies?.length) return null;
   if (ctx?.state === "approved")
-    return <button type="button" className={cn("bw-btn bw-amber", size)} onClick={onApply}><Send className="h-4 w-4" />{c("Apply", "สมัคร")}</button>;
+    return <Button variant="unstyled" type="button" className={cn("bw-btn bw-amber", size)} onClick={onApply}><Send className="h-4 w-4" />{c("Apply", "สมัคร")}</Button>;
   const why = ctx?.state === "pending"
     ? c("Your account is pending approval. You can apply once PitchSnack approves it.", "บัญชีของคุณกำลังรอการอนุมัติ คุณจะสมัครได้เมื่อ PitchSnack อนุมัติแล้ว")
     : c("Register your company first. You can apply once PitchSnack approves it.", "ลงทะเบียนบริษัทของคุณก่อน คุณจะสมัครได้เมื่อ PitchSnack อนุมัติแล้ว");
@@ -143,9 +155,9 @@ export function ApplyButton({ ctx, onApply, size }: { ctx: ApplyContext | undefi
 export function ShareButton({ narrow, onShare }: { narrow?: boolean; onShare: () => void }) {
   const { c } = useBw();
   return (
-    <button type="button" className={cn("bw-btn bw-outline", narrow && "bw-icon-only")} title={c("Share", "แชร์")} aria-label={c("Share", "แชร์")} onClick={onShare}>
+    <Button variant="unstyled" type="button" className={cn("bw-btn bw-outline", narrow && "bw-icon-only")} title={c("Share", "แชร์")} aria-label={c("Share", "แชร์")} onClick={onShare}>
       <Share2 className="h-4 w-4" />{!narrow && <span>{c("Share", "แชร์")}</span>}
-    </button>
+    </Button>
   );
 }
 
@@ -161,7 +173,8 @@ export function BuyOrderCard({ card, persona, applyCtx, mode = "browse", sharedW
   const boxId = useId();
   const closed = card.status === "closed";
   const posted = card.status === "posted";
-  const applied = mode === "browse" && persona === "seller" && !!card.myApp;
+  const managedState = managedCardState(card, applyCtx);
+  const applied = mode === "browse" && persona === "seller" && (managedState ? managedState === "applied" : !!card.myApp);
   const grey = closed || applied;
   const rootRef = useRef<HTMLElement>(null);
   const [narrow, setNarrow] = useState(false);
@@ -191,11 +204,11 @@ export function BuyOrderCard({ card, persona, applyCtx, mode = "browse", sharedW
       : (n ? c(`Applications · ${n} new`, `ใบสมัคร · ใหม่ ${n}`) : c(`Applications · ${card.appsTotal}`, `ใบสมัคร · ${card.appsTotal}`));
     buttons.push(<Link key="apps" to="/marketplace/pipeline/invitations" search={{ view: "applications" }} className="bw-btn bw-navy"><Users className="h-4 w-4" />{label}</Link>);
   } else if (persona === "seller") {
-    if (mode === "applications" && card.myApp) buttons.push(<div key="st" className="flex-[2] min-w-0"><AppState card={card} /></div>);
-    else if (card.myApp) buttons.push(<span key="ap" className="bw-btn bw-applied"><Check className="h-4 w-4" />{c("Applied", "สมัครแล้ว")}</span>);
+    if (mode === "applications" && card.myApp) buttons.push(<div key="st" className="flex-[2] min-w-0"><AppState card={card} /><ForCompany company={card.forCompany} /></div>);
+    else if (applied || (!managedState && card.myApp)) buttons.push(<span key="ap" className="bw-btn bw-applied"><Check className="h-4 w-4" />{c("Applied", "สมัครแล้ว")}</span>);
     else if (posted) buttons.push(<ApplyButton key="ap" ctx={applyCtx} onApply={onApply} />);
   }
-  buttons.push(<button key="vd" type="button" className="bw-btn bw-outline" onClick={onDetails}>{c("View details", "ดูรายละเอียด")}</button>);
+  buttons.push(<Button variant="unstyled" key="vd" type="button" className="bw-btn bw-outline" onClick={onDetails}>{c("View details", "ดูรายละเอียด")}</Button>);
   const three = canShare && buttons.length >= 2;
   if (canShare) buttons.push(<ShareButton key="sh" narrow={three && narrow} onShare={onShare} />);
 

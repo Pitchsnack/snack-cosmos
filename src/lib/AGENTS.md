@@ -4,3 +4,4 @@
 - Startups Directory list reads rows with deferMedia and fills card images via signStartupListMedia (RLS re-read) + useListMedia's browser cache; other listStartups callers still get signed URLs inline.
 
 - Businesses Wanted: buy_orders/_applications/_views have RLS on with no client policies; every read/write goes through buy-orders.functions.ts (role-checked, whitelisted BoCard DTO); browser-safe ranges/match/dates live in buy-orders.ts. Buyer identity and {client} never leave the server except {client} to admins.
+- Businesses Wanted Admin personas use Control-authorized server functions; managed seller eligibility combines the existing ownership projection with Control workspace and approved listing gates, while application DTOs carry per-company history so tab presentation cannot grant access.

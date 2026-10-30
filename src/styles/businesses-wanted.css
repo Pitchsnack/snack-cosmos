@@ -166,6 +166,11 @@
 
 .bw-apply-body { padding: 20px 22px; overflow-y: auto; }
 .bw-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--bw-mute, #6B7280); margin-bottom: 6px; }
+.bw-company-select { height: 42px; border-radius: 8px; }
+.bw-company-select[aria-invalid="true"] { border-color: var(--destructive); }
+.bw-for-company { display: flex; align-items: center; gap: 5px; margin-top: 5px; font-size: 11.5px; color: var(--bw-mute, var(--muted-foreground)); overflow-wrap: anywhere; }
+.bw-buttons:has(.bw-for-company) { flex-wrap: wrap; }
+.bw-buttons:has(.bw-for-company) > div:first-child { flex-basis: 100%; }
 .bw-listing { display: flex; gap: 12px; background: #FAFBFC; border: 1px solid #EEF0F3; border-radius: 14px; padding: 12px 14px; }
 .dark .bw-listing { background: rgba(255,255,255,.03); border-color: var(--bw-line); }
 .bw-ltile { width: 48px; height: 48px; border-radius: 12px; color: #fff; display: grid; place-items: center; flex: none; }

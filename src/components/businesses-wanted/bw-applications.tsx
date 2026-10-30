@@ -11,6 +11,7 @@ import { coverOf, fmtDay } from "@/lib/buy-orders";
 import { applicationsToCheck, decideApplication, listApplications, type AppRow, type BoCard } from "@/lib/buy-orders.functions";
 import { BuyOrderCard, useBw, useSectorName } from "./bw-card";
 import { BuyOrderDetails } from "./bw-details";
+import { ShareDialog } from "./bw-share";
 import { sectorIcon } from "./bw-icons";
 import { cn } from "@/lib/utils";
 
@@ -34,17 +35,20 @@ export function ApplicationsTab({ seller, control = false }: { seller: boolean; 
   const fn = useServerFn(listApplications);
   const q = useQuery({ queryKey: [...APPS_QUERY, seller ? "seller" : "buyer"], queryFn: () => fn({ data: { as: seller ? "seller" : "buyer" } }) });
   const [details, setDetails] = useState<BoCard | null>(null);
+  const [share, setShare] = useState<BoCard | null>(null);
   if (q.isPending) return <p className="pipeline-empty">{c("Loading…", "กำลังโหลด…")}</p>;
   if (q.error) return <p role="alert" className="pipeline-empty">{(q.error as Error).message}</p>;
-  const d = q.data!;
+  const d = q.data;
+  if (!d) return null;
   if (d.mode === "seller") {
     if (!d.cards.length) return <div className="bw-empty mt-4"><b>{c("You haven’t applied to a buy order yet.", "คุณยังไม่ได้สมัครประกาศซื้อ")}</b><span>{c("Find one in Businesses Wanted and click Apply.", "ค้นหาในธุรกิจที่ผู้ซื้อต้องการ แล้วกดสมัคร")}</span></div>;
     return (
       <>
         <div className="bw-grid mt-4">
-          {d.cards.map((x) => <BuyOrderCard key={x.id} card={x} persona="seller" mode="applications" onDetails={() => setDetails(x)} onApply={() => {}} onShare={() => navigator.clipboard?.writeText(`${window.location.origin}/marketplace/businesses-wanted?bo=${x.ref}`).then(() => toast.success(c("Link copied.", "คัดลอกลิงก์แล้ว")))} />)}
+          {d.cards.map((x) => <BuyOrderCard key={x.applicationId ?? x.id} card={x} persona="seller" mode="applications" onDetails={() => setDetails(x)} onApply={() => {}} onShare={() => setShare(x)} />)}
         </div>
-        {details && <BuyOrderDetails card={details} persona="seller" onClose={() => setDetails(null)} onApply={() => {}} onShare={() => {}} />}
+        {details && <BuyOrderDetails card={details} persona="seller" onClose={() => setDetails(null)} onApply={() => {}} onShare={setShare} />}
+        {share && <ShareDialog card={share} onClose={() => setShare(null)} />}
       </>
     );
   }

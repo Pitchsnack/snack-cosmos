@@ -22,7 +22,7 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
   const qc = useQueryClient();
   const list = useServerFn(listBuyOrders);
   const ctxFn = useServerFn(myApplyContext);
-  const q = useQuery({ queryKey: BO_QUERY, queryFn: () => list() });
+  const q = useQuery({ queryKey: [...BO_QUERY, persona], queryFn: () => list({ data: { persona } }) });
   const ctxQ = useQuery({ queryKey: ["buy-orders-apply-ctx"], queryFn: () => ctxFn(), enabled: persona === "seller" });
 
   const [search, setSearch] = useState("");
@@ -83,7 +83,7 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
   const detailCard = cards.find((x) => x.id === details) ?? null;
   const shareCard = cards.find((x) => x.id === shareId) ?? null;
   const applyCard = cards.find((x) => x.id === applyId) ?? null;
-  const refresh = () => { qc.invalidateQueries({ queryKey: BO_QUERY }); qc.invalidateQueries({ queryKey: ["buy-orders-new"] }); };
+  const refresh = () => { qc.invalidateQueries({ queryKey: BO_QUERY }); qc.invalidateQueries({ queryKey: ["buy-orders-new"] }); qc.invalidateQueries({ queryKey: ["buy-order-apps"] }); qc.invalidateQueries({ queryKey: ["buy-orders-apply-ctx"] }); };
 
   const sel = (value: string, set: (v: string) => void, first: string, opts: string[], aria: string) => (
     <label className="bw-select">
@@ -133,7 +133,7 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
 
       <ChooseIndustry open={choose} counts={counts} total={base.length} picked={sector} onClose={() => setChoose(false)} onPick={(s) => { setSector(s); setChoose(false); }} />
       {detailCard && !applyCard && <BuyOrderDetails card={detailCard} persona={p} applyCtx={ctxQ.data} onClose={() => setDetails(null)} onApply={(x) => setApplyId(x.id)} onShare={share} />}
-      {applyCard && ctxQ.data?.listing && <ApplyDialog card={applyCard} ctx={ctxQ.data} onClose={() => setApplyId(null)} onDone={() => { setApplyId(null); refresh(); }} />}
+      {applyCard && ctxQ.data && (ctxQ.data.listing || ctxQ.data.managed) && <ApplyDialog card={applyCard} ctx={ctxQ.data} onClose={() => setApplyId(null)} onDone={() => { setApplyId(null); refresh(); }} />}
       {shareCard && <ShareDialog card={shareCard} onClose={() => setShareId(null)} />}
       <span hidden>{BO_SECTORS.length}</span>
     </div>

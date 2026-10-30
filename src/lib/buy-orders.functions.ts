@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { addMonths, bkkToday, checkDraft, draftRow, effectiveStatus, isOpen, PERIODS, type BoAppStatus, type BoDraft, type BoKind, type BoStatus } from "@/lib/buy-orders";
+import { addMonths, bkkToday, canShareOrder, checkDraft, draftRow, effectiveStatus, isOpen, sealedOnly, PERIODS, type BoAppStatus, type BoDraft, type BoKind, type BoStatus } from "@/lib/buy-orders";
 
 /**
  * Businesses Wanted. Every read and write goes through here with the service client,
@@ -33,12 +33,50 @@ export type BoCard = {
   client: { id: string; name: string | null; ref: string | null; writer: string | null } | null;
   /** The sender's name, when this buy order was shared with the viewer by email (newest share). */
   sharedBy?: string | null; sharedAt?: string | null;
+  managedApps?: { id: string; businessId: string; company: string; ref: string | null; status: BoAppStatus; appliedAt: string }[];
+  applicationId?: string; forCompany?: { name: string; ref: string | null };
 };
 
 export type ApplyContext = {
   state: "approved" | "pending" | "none";
   listing: { id: string; codeName: string | null; ref: string | null; sector: string | null; province: string | null; country: string | null; revenue: string | null; dealType: string | null } | null;
+  managed?: boolean;
+  companies?: { name: string; listing: NonNullable<ApplyContext["listing"]> }[];
 };
+
+/** Reuse the authoritative management projection, scoped to the Control workspace. */
+async function managedSellers(sb: any, liveOnly = true): Promise<NonNullable<ApplyContext["companies"]>> {
+  const { controlTenantId, managedStartupIds } = await import("@/lib/managed.server");
+  const ctl = await controlTenantId(sb);
+  if (!ctl) return [];
+  const { data: sts, error } = await sb.from("startups").select("id, startup_name, sector, city, address_province_state, headquarters, last_year_revenue").eq("tenant_id", ctl);
+  if (error) throw new Error(error.message);
+  const managed = await managedStartupIds(sb, (sts ?? []).map((s: any) => s.id));
+  if (!managed.size) return [];
+  const { data: hps, error: hpError } = await sb.from("hidden_profiles").select("id, startup_id, ref_no, code_name, approval_status, live, deal_type").in("startup_id", [...managed]);
+  if (hpError) throw new Error(hpError.message);
+  const { isBuyerVisible } = await import("@/lib/hidden-profile");
+  const by = new Map<string, any>((sts ?? []).map((s: any) => [s.id, s]));
+  return (hps ?? []).filter((h: any) => !liveOnly || isBuyerVisible(h)).map((h: any) => {
+    const s = by.get(h.startup_id);
+    const live = h.live ?? {};
+    const hq = (s.headquarters ?? "").toLowerCase();
+    return { name: s.startup_name ?? h.ref_no ?? "—", listing: {
+      id: h.id, codeName: live.code_name ?? h.code_name ?? null, ref: h.ref_no ?? null, sector: s.sector ?? null,
+      province: (s.address_province_state || (s.city ?? "").split(",")[0] || "").trim() || null,
+      country: ["Vietnam", "Malaysia", "Indonesia"].find((c) => hq.includes(c.toLowerCase())) ?? "Thailand",
+      revenue: s.last_year_revenue ?? null, dealType: live.deal_type ?? h.deal_type ?? null,
+    } };
+  }).sort((a: any, b: any) => a.name.localeCompare(b.name));
+}
+
+async function attachManagedApps(sb: any, cards: BoCard[], companies: NonNullable<ApplyContext["companies"]>) {
+  if (!companies.length || !cards.length) return;
+  const { data, error } = await sb.from("buy_order_applications").select("id, buy_order_id, business_id, status, applied_at").in("business_id", companies.map((c) => c.listing.id)).in("buy_order_id", cards.map((c) => c.id)).order("applied_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  const by = new Map(companies.map((c) => [c.listing.id, c]));
+  for (const card of cards) card.managedApps = (data ?? []).filter((a: any) => a.buy_order_id === card.id).map((a: any) => ({ id: a.id, businessId: a.business_id, company: by.get(a.business_id)?.name ?? "—", ref: by.get(a.business_id)?.listing.ref ?? null, status: a.status, appliedAt: a.applied_at }));
+}
 
 async function myInvestorIds(sb: any, userId: string): Promise<string[]> {
   const { data } = await sb.from("buyer_profiles").select("investor_id").eq("user_id", userId).not("investor_id", "is", null);
@@ -131,17 +169,23 @@ async function cardsFor(sb: any, rows: any[], userId: string, isAdmin: boolean, 
 /** Businesses Wanted: posted and closed buy orders of both kinds, as the cards show them. */
 export const listBuyOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{ cards: BoCard[]; isAdmin: boolean }> => {
+  .inputValidator((d: { persona: "seller" | "buyer" | "advisor" }) => z.object({ persona: z.enum(["seller", "buyer", "advisor"]) }).parse(d))
+  .handler(async ({ context, data }): Promise<{ cards: BoCard[]; isAdmin: boolean }> => {
     const role = await viewerRole(context.userId);
     if (!role) throw new Error("This page isn't available for your account");
+    if (role === "admin") await requireControlAdmin(context);
     const sb = await admin();
     let q = sb.from("buy_orders").select("*").in("status", ["posted", "closed"]).order("posted_at", { ascending: false });
     // PitchSnack Control (admins, Buyer tab) sees Sealed buy orders only.
-    if (role === "admin") q = q.eq("kind", "sealed");
-    const { data, error } = await q;
+    if (sealedOnly(role, data.persona)) q = q.eq("kind", "sealed");
+    const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    const seller = role === "seller" || role === "admin" ? await mySellerListing(context.userId) : null;
-    const cards = await cardsFor(sb, data ?? [], context.userId, role === "admin", seller?.facts.id ?? null);
+    const seller = role === "seller" ? await mySellerListing(context.userId) : null;
+    const cards = await cardsFor(sb, rows ?? [], context.userId, role === "admin", seller?.facts.id ?? null);
+    if (role === "admin" && data.persona !== "buyer") {
+      for (const card of cards) { card.client = null; card.appsTotal = null; card.appsNew = null; card.yours = false; }
+      if (data.persona === "seller") await attachManagedApps(sb, cards, await managedSellers(sb, false));
+    }
     if (role !== "admin") {
       const { data: sh } = await sb.from("share_invitations").select("buy_order_id, sender_user_id, sent_at").eq("joined_user_id", context.userId).not("buy_order_id", "is", null).order("sent_at", { ascending: false });
       const rows = (sh ?? []) as any[];
@@ -160,12 +204,15 @@ export const listBuyOrders = createServerFn({ method: "GET" })
 /** How many buy orders were posted in the last 7 days (the menu pill). */
 export const newBuyOrderCount = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    if (!(await viewerRole(context.userId))) return { n: 0 };
+  .inputValidator((d: { persona: "seller" | "buyer" | "advisor" }) => z.object({ persona: z.enum(["seller", "buyer", "advisor"]) }).parse(d))
+  .handler(async ({ context, data }) => {
+    const role = await viewerRole(context.userId);
+    if (!role) return { n: 0 };
+    if (role === "admin") await requireControlAdmin(context);
     const sb = await admin();
     const since = new Date(Date.now() - 7 * 86400_000).toISOString();
     let q = sb.from("buy_orders").select("id", { count: "exact", head: true }).eq("status", "posted").gte("posted_at", since);
-    if ((await viewerRole(context.userId)) === "admin") q = q.eq("kind", "sealed");
+    if (sealedOnly(role, data.persona)) q = q.eq("kind", "sealed");
     const { count } = await q;
     return { n: count ?? 0 };
   });
@@ -176,6 +223,11 @@ export const myApplyContext = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<ApplyContext> => {
     const role = await viewerRole(context.userId);
     if (role !== "seller" && role !== "admin") return { state: "none", listing: null };
+    if (role === "admin") {
+      await requireControlAdmin(context);
+      const companies = await managedSellers(await admin());
+      return { state: companies.length ? "approved" : "none", listing: null, managed: true, companies };
+    }
     const s = await mySellerListing(context.userId);
     if (!s) return { state: "none", listing: null };
     return { state: s.approved ? "approved" : s.pending ? "pending" : "none", listing: s.facts };
@@ -199,18 +251,27 @@ export const recordBuyOrderView = createServerFn({ method: "POST" })
 /** Apply: the seller's approved listing, to a posted buy order, once. */
 export const applyToBuyOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; note?: string | null }) =>
-    z.object({ id: z.string().uuid(), note: z.string().trim().max(500).nullable().optional() }).parse(d))
+  .inputValidator((d: { id: string; businessId?: string; note?: string | null }) =>
+    z.object({ id: z.string().uuid(), businessId: z.string().uuid().optional(), note: z.string().trim().max(500).nullable().optional() }).parse(d))
   .handler(async ({ context, data }) => {
     const role = await viewerRole(context.userId);
     if (role !== "seller" && role !== "admin") throw new Error("Only sellers can apply");
-    const s = await mySellerListing(context.userId);
-    if (!s?.approved) throw new Error(BO_CHANGED);
+    if (role === "admin") await requireControlAdmin(context);
     const sb = await admin();
+    let businessId: string;
+    if (role === "admin") {
+      const selected = (await managedSellers(sb)).find((c) => c.listing.id === data.businessId);
+      if (!selected) throw new Error(BO_CHANGED);
+      businessId = selected.listing.id;
+    } else {
+      const s = await mySellerListing(context.userId);
+      if (!s?.approved || (data.businessId && data.businessId !== s.facts.id)) throw new Error(BO_CHANGED);
+      businessId = s.facts.id;
+    }
     const { data: bo } = await sb.from("buy_orders").select("id, status, closes_on").eq("id", data.id).maybeSingle();
     if (!bo || !isOpen(bo.status, bo.closes_on)) throw new Error(BO_CHANGED);
     const { error } = await sb.from("buy_order_applications").insert({
-      buy_order_id: bo.id, business_id: s.facts.id, seller_user_id: context.userId, note: data.note || null,
+      buy_order_id: bo.id, business_id: businessId, seller_user_id: context.userId, note: data.note || null,
     });
     if (error) throw new Error(error.code === "23505" ? BO_CHANGED : error.message);
     return { ok: true };
@@ -291,9 +352,29 @@ export const listApplications = createServerFn({ method: "GET" })
   .inputValidator((d: { as: "seller" | "buyer" }) => z.object({ as: z.enum(["seller", "buyer"]) }).parse(d))
   .handler(async ({ context, data }): Promise<{ mode: "seller"; cards: BoCard[] } | { mode: "review"; rows: AppRow[] }> => {
     const role = await viewerRole(context.userId);
+    if (!role) throw new Error("Not allowed");
+    if (role === "admin") await requireControlAdmin(context);
     const sb = await admin();
     if (data.as === "seller") {
       if (role !== "seller" && role !== "admin") return { mode: "seller", cards: [] };
+      if (role === "admin") {
+        const companies = await managedSellers(sb, false);
+        if (!companies.length) return { mode: "seller", cards: [] };
+        const { data: apps, error } = await sb.from("buy_order_applications").select("id, buy_order_id, business_id, status, applied_at").in("business_id", companies.map((c) => c.listing.id)).order("applied_at", { ascending: false });
+        if (error) throw new Error(error.message);
+        if (!apps?.length) return { mode: "seller", cards: [] };
+        const { data: rows, error: rowError } = await sb.from("buy_orders").select("*").in("id", [...new Set(apps.map((a: any) => a.buy_order_id))]);
+        if (rowError) throw new Error(rowError.message);
+        const cards = await cardsFor(sb, rows ?? [], context.userId, false, null);
+        for (const card of cards) { card.yours = false; card.appsTotal = null; card.appsNew = null; }
+        await attachManagedApps(sb, cards, companies);
+        const by = new Map(cards.map((c) => [c.id, c]));
+        const companyBy = new Map(companies.map((c) => [c.listing.id, c]));
+        return { mode: "seller", cards: apps.flatMap((a: any) => {
+          const card = by.get(a.buy_order_id), company = companyBy.get(a.business_id);
+          return card && company ? [{ ...card, applicationId: a.id, forCompany: { name: company.name, ref: company.listing.ref }, myApp: { status: a.status, appliedAt: a.applied_at } }] : [];
+        }) };
+      }
       const s = await mySellerListing(context.userId);
       if (!s) return { mode: "seller", cards: [] };
       const { data: apps } = await sb.from("buy_order_applications").select("buy_order_id, applied_at").eq("business_id", s.facts.id).order("applied_at", { ascending: false });
@@ -639,17 +720,19 @@ export const sendBuyOrderShare = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ id: z.string().uuid(), email: z.string().trim().email().max(254).transform((v) => v.toLowerCase()), lang: z.enum(["en", "th"]) }).parse(d))
   .handler(async ({ context, data }) => {
     const role = await viewerRole(context.userId);
-    if (!role || role === "admin") throw new Error("Not available");
+    if (!role) throw new Error("Not available");
+    if (role === "admin") await requireControlAdmin(context);
     const sb = await admin();
     const { data: r } = await sb.from("buy_orders").select("*").eq("id", data.id).maybeSingle();
     if (!r || effectiveStatus(r.status, r.closes_on) !== "posted") throw new Error(BO_CHANGED);
     const mine = await myInvestorIds(sb, context.userId);
-    if (mine.includes(r.investor_profile_id)) throw new Error("Not available");
+    if (!canShareOrder(role, r.kind === "advertisement" && mine.includes(r.investor_profile_id))) throw new Error("Not available");
     const { count } = await sb.from("share_invitations").select("id", { count: "exact", head: true }).eq("sender_user_id", context.userId).not("buy_order_id", "is", null).gte("sent_at", new Date(Date.now() - 60000).toISOString());
     if ((count ?? 0) >= 10) throw new Error("Please wait before sending again");
     const [card] = await cardsFor(sb, [r], context.userId, false, null);
     const { data: me } = await sb.from("users").select("first_name, last_name").eq("id", context.userId).maybeSingle();
     const name = senderName(me);
+    if (role === "admin" && ![me?.first_name, me?.last_name].filter(Boolean).join(" ").trim()) throw new Error("Add your full name before sharing");
     const { data: ex } = await sb.from("users").select("id").ilike("email", data.email.replace(/[\\%_]/g, "\\$&")).limit(1);
     let existing = !!ex?.length;
     if (!existing) { const { data: f } = await sb.rpc("share_email_has_account", { _email: data.email }); existing = !!f; }
