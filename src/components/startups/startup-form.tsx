@@ -475,7 +475,7 @@ export function StartupForm({
   const [founders, setFounders] = useState<FounderDraft[]>(
     startup?.founders.map((f) => ({
       full_name: f.full_name, position: f.position, linkedin_url: f.linkedin_url, bio: f.bio,
-      bio_story: initialFounderStory(f.bio, f.bio_story, th ? "th" : "en", startup?.year_founded?.toString() ?? "", founderRevenueLabel(normRevBand(startup?.last_year_revenue), th ? "th" : "en")), photo_url: f.photo_url,
+      bio_story: f.bio_story ?? null, bio_th: f.bio_th ?? null, bio_story_th: f.bio_story_th ?? null, photo_url: f.photo_url,
     })) ?? [],
   );
 
@@ -621,9 +621,12 @@ export function StartupForm({
     isoStandards: isoStandards as ISOStandard[],
     investorIds,
     founders: founders.filter((f) => f.full_name.trim()).map((f, display_order) => {
-      const lang = th ? "th" : "en";
-      const story = {...initialFounderStory(f.bio, f.bio_story, lang, yearFounded, founderRevenueLabel(lastYearRevenue, lang)), lang} as ReturnType<typeof initialFounderStory>;
-      return {...f, display_order, bio_story:story, bio:story.mode === "lines" ? composeFounderBio(story) : f.bio};
+      // English story in bio/bio_story, Thai in bio_th/bio_story_th; each keeps its own parts and mode.
+      const story = initialFounderStory(f.bio, f.bio_story, "en", yearFounded, founderRevenueLabel(lastYearRevenue, "en"));
+      const thTouched = !!(f.bio_story_th || f.bio_th);
+      const storyTh = thTouched ? {...initialFounderStory(f.bio_th, f.bio_story_th, "th", yearFounded, founderRevenueLabel(lastYearRevenue, "th")), lang: "th" as const} : null;
+      return {...f, display_order, bio_story:story, bio:story.mode === "lines" ? composeFounderBio(story) : f.bio,
+        bio_story_th: storyTh, bio_th: storyTh ? (storyTh.mode === "lines" ? composeFounderBio(storyTh) : f.bio_th ?? null) : null};
     }),
   });
 
@@ -1640,7 +1643,7 @@ export function StartupForm({
         <p className="text-xs text-destructive">⚠ Missing: add at least one founder</p>
       )}
       <EditSec id="founders" tone="seller" active={secOn("founders")}>
-        <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} year={yearFounded} sales={founderRevenueLabel(lastYearRevenue, th ? "th" : "en")} addOnOpen={section === "founders-add"} />
+        <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} year={yearFounded} sales={founderRevenueLabel(lastYearRevenue, th ? "th" : "en")} salesFor={(l) => founderRevenueLabel(lastYearRevenue, l)} addOnOpen={section === "founders-add"} />
         <p className="mt-2 flex gap-1.5 text-[12.5px] text-muted-foreground"><Shield size={14} className="shrink-0" />{tr("PitchSnack checks the owner's name against your company's list of directors, and the year founded and the sales against your company's records.", "PitchSnack ตรวจสอบชื่อเจ้าของกับรายชื่อกรรมการของบริษัท และตรวจสอบปีที่ก่อตั้งและยอดขายกับข้อมูลของบริษัท")}</p>
       </EditSec>
 

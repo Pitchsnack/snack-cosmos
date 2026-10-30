@@ -38,12 +38,13 @@ function StoryPart({value, hint, onChange}: {value: string; hint: string; onChan
     onInput={e => {const el = e.currentTarget; const plain = plainStoryPart(el.textContent ?? ""); if (el.textContent !== plain) el.textContent = plain; onChange(plain);}} />;
 }
 
-export function FounderStoryEditor({bio, story: saved, year, sales, onChange}: {
-  bio?: string | null; story?: FounderStory | null; year: string; sales: string;
+export function FounderStoryEditor({bio, story: saved, year, sales, onChange, lang: forced}: {
+  bio?: string | null; story?: FounderStory | null; year: string; sales: string; lang?: "en" | "th";
   onChange: (patch: {bio: string; bio_story: FounderStory}) => void;
 }) {
   const {language} = useTranslation();
-  const lang: "en" | "th" = language === "th" ? "th" : "en";
+  // Lines follow the story's language (Edit information's text switch); stories saved before keep theirs.
+  const lang: "en" | "th" = saved?.lang ?? forced ?? (language === "th" ? "th" : "en");
   const tr = useTr();
   const story = initialFounderStory(bio, saved, lang, year, sales);
   const textarea = useRef<HTMLTextAreaElement>(null);
