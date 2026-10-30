@@ -66,6 +66,7 @@ import {
 import { AutoEnrichButton } from "./auto-enrich-button";
 import { AttachmentCard, attachmentMissing } from "./attachment-card";
 import { LicenceLists } from "./licence-lists";
+import { LangTag, missingLangHint, useBiList, useBiText } from "@/components/common/text-lang";
 import { CompactFields, EditInfoFooter, EditInfoTabsSlot, MainTabs, TabHead, TabRow, useEditInfo, useTr } from "@/components/common/edit-info-popup";
 import { PublicViewTab, normalizePublicTab, usePublicDraft, type PublicTab } from "@/components/hidden-profile/public-view-fields";
 import { saveHiddenProfile } from "@/lib/hidden-profiles.functions";
@@ -395,13 +396,18 @@ export function StartupForm({
   const [city, setCity] = useState(startup?.city ?? prefill?.city ?? "");
 
   // Company information
-  const [shortDescription, setShortDescription] = useState(startup?.short_description ?? "");
-  const [longDescription, setLongDescription] = useState(startup?.long_description ?? "");
+  // Bilingual texts: English in today's fields, Thai in the _th twins (text-lang.tsx).
+  const shortBi = useBiText(startup?.short_description, startup?.short_description_th);
+  const longBi = useBiText(startup?.long_description, startup?.long_description_th);
+  const shortDescription = shortBi.value, setShortDescription = shortBi.set;
+  const longDescription = longBi.value, setLongDescription = longBi.set;
 
   // Tags & classification
-  const [productTags, setProductTags] = useState<string[]>(startup?.product_tags ?? []);
+  const productBi = useBiList(startup?.product_tags, startup?.product_tags_th);
+  const productTags = productBi.value, setProductTags = productBi.set;
   const [productTagDraft, setProductTagDraft] = useState("");
-  const [marketTags, setMarketTags] = useState<string[]>(startup?.market_tags ?? []);
+  const marketBi = useBiList(startup?.market_tags, startup?.market_tags_th);
+  const marketTags = marketBi.value, setMarketTags = marketBi.set;
   const [marketTagDraft, setMarketTagDraft] = useState("");
   const [regulatoryLicenses, setRegulatoryLicenses] = useState<RegulatoryLicence[]>(
     startup?.regulatory_licenses ?? prefill?.licences ?? [],
@@ -605,8 +611,12 @@ export function StartupForm({
     region: (region || null) as "APAC" | "EMEA" | "LATAM" | "NA" | null,
     linkedinUrl: linkedinUrl || null,
     investmentStage: (investmentStage as typeof STAGES[number]) || null,
-    productTags,
-    marketTags,
+    productTags: productBi.en,
+    marketTags: marketBi.en,
+    productTagsTh: productBi.th,
+    marketTagsTh: marketBi.th,
+    shortDescriptionTh: shortBi.th.trim() || null,
+    longDescriptionTh: longBi.th.trim() || null,
     regulatoryLicenses,
     isoStandards: isoStandards as ISOStandard[],
     investorIds,
@@ -640,8 +650,8 @@ export function StartupForm({
           websiteUrl: websiteUrl || null,
           city: city || null,
           industry: industryArray,
-          shortDescription: shortDescription || null,
-          longDescription: longDescription || null,
+          shortDescription: shortBi.en || null,
+          longDescription: longBi.en || null,
           status: status as never,
           visibility: visibility as never,
           owningAgentUserId: isMyStartupsCreate && principalRef ? principalRef : owningAgentUserId,
@@ -688,8 +698,8 @@ export function StartupForm({
           websiteUrl: websiteUrl || null,
           city: city || null,
           industry: industryArray,
-          shortDescription: shortDescription || null,
-          longDescription: longDescription || null,
+          shortDescription: shortBi.en || null,
+          longDescription: longBi.en || null,
           logoPath,
           media: resolvedMedia,
           ...buildProfileBase(),
@@ -764,8 +774,8 @@ export function StartupForm({
     isEdit,
     tenantId, startupName, companyType, businessAddress: JSON.stringify(addr), registeredName, registeredNumber, companySize, lastYearRevenue,
     yearFounded, email, headquarters,
-    region, city, websiteUrl, linkedinUrl, shortDescription, longDescription,
-    industries, productTags, marketTags, investmentStage,
+    region, city, websiteUrl, linkedinUrl, shortDescription: shortBi.en + "\u0000" + shortBi.th, longDescription: longBi.en + "\u0000" + longBi.th,
+    industries, productTags: [...productBi.en, "\u0000", ...productBi.th], marketTags: [...marketBi.en, "\u0000", ...marketBi.th], investmentStage,
     status, visibility, investorIds, founders,
     owningAgentUserId, owningAiAgentId, media,
   });
@@ -1502,16 +1512,16 @@ export function StartupForm({
 
       {/* Descriptions */}
       <EditSec id="description" tone="seller" active={secOn("description")} className="space-y-1.5">
-        <Label className={miss(isStrEmpty(shortDescription)) ? MISSING_LABEL : undefined}>Short Description</Label>
-        <Textarea rows={2} maxLength={500} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)}
-          placeholder={miss(isStrEmpty(shortDescription)) ? missingPh("Short Description") : undefined}
-          className={miss(isStrEmpty(shortDescription)) ? MISSING_INPUT : undefined} />
+        <Label className={miss(!shortBi.filled) ? MISSING_LABEL : undefined}>Short Description<LangTag /></Label>
+        <Textarea rows={2} maxLength={500} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} lang={shortBi.lang}
+          placeholder={miss(!shortBi.filled) ? missingPh("Short Description") : shortBi.placeholder()}
+          className={miss(!shortBi.filled) ? MISSING_INPUT : undefined} />
       </EditSec>
       <EditSec id="product" tone="seller" active={secOn("product")} className="space-y-1.5">
-        <Label className={miss(isStrEmpty(longDescription)) ? MISSING_LABEL : undefined}>Long Description</Label>
-        <Textarea rows={4} maxLength={5000} value={longDescription} onChange={(e) => setLongDescription(e.target.value)}
-          placeholder={miss(isStrEmpty(longDescription)) ? missingPh("Long Description") : undefined}
-          className={`startup-long-description ${miss(isStrEmpty(longDescription)) ? MISSING_INPUT : ""}`} />
+        <Label className={miss(!longBi.filled) ? MISSING_LABEL : undefined}>Long Description<LangTag /></Label>
+        <Textarea rows={4} maxLength={5000} value={longDescription} onChange={(e) => setLongDescription(e.target.value)} lang={longBi.lang}
+          placeholder={miss(!longBi.filled) ? missingPh("Long Description") : longBi.placeholder()}
+          className={`startup-long-description ${miss(!longBi.filled) ? MISSING_INPUT : ""}`} />
       </EditSec>
 
   </>);
@@ -1572,8 +1582,8 @@ export function StartupForm({
 
       {/* Product tags */}
       <EditSec id="product-tags" tone="seller" active={secOn("product-tags")} className="space-y-1.5">
-        <Label className={miss(productTags.length === 0) ? MISSING_LABEL : undefined}>Product & Service Tags ({productTags.length}/5)</Label>
-        {miss(productTags.length === 0) && (
+        <Label className={miss(!productBi.en.length && !productBi.th.length) ? MISSING_LABEL : undefined}>Product & Service Tags ({productTags.length}/5)<LangTag /></Label>
+        {miss(!productBi.en.length && !productBi.th.length) && (
           <p className="text-xs text-destructive">⚠ Missing: add at least one product tag</p>
         )}
         <div className="flex flex-wrap gap-2">
@@ -1585,7 +1595,8 @@ export function StartupForm({
           ))}
         </div>
         <div className="flex gap-2">
-          <Input value={productTagDraft} onChange={(e) => setProductTagDraft(e.target.value)} maxLength={50}
+          <Input value={productTagDraft} onChange={(e) => setProductTagDraft(e.target.value)} maxLength={50} lang={productBi.lang}
+            placeholder={productBi.missing ? missingLangHint(productBi.lang, th, true) : undefined}
             disabled={productTags.length >= 5}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addProductTag(); }}} />
           <Button type="button" variant="outline" size="sm" onClick={addProductTag} disabled={productTags.length >= 5}>Add</Button>
@@ -1594,7 +1605,7 @@ export function StartupForm({
 
       {/* Market tags — optional: who the company sells to and where (MARKETS on the public card) */}
       <EditSec id="market-tags" tone="seller" active={secOn("market-tags")} className="space-y-1.5">
-        <Label>{tr(`Market Tags (${marketTags.length}/5)`, `แท็กตลาด (${marketTags.length}/5)`)}</Label>
+        <Label>{tr(`Market Tags (${marketTags.length}/5)`, `แท็กตลาด (${marketTags.length}/5)`)}<LangTag /></Label>
         <p className="!mt-[2px] mb-2 text-[12px] text-[#6A7181] dark:text-muted-foreground">{tr("Who you sell to and where. They show under MARKETS on your public card.", "ลูกค้าของท่านคือใครและอยู่ที่ใด แท็กเหล่านี้จะแสดงในหัวข้อตลาดบนการ์ดสาธารณะของท่าน")}</p>
         <div className="flex flex-wrap gap-2">
           {marketTags.map((t) => (
@@ -1606,7 +1617,7 @@ export function StartupForm({
         </div>
         <div className="flex gap-2">
           <Input value={marketTagDraft} onChange={(e) => setMarketTagDraft(e.target.value)} maxLength={50}
-            placeholder={tr("e.g. Hotels and restaurants in Bangkok", "เช่น โรงแรมและร้านอาหารในกรุงเทพฯ")}
+            placeholder={marketBi.missing ? missingLangHint(marketBi.lang, th, true) : tr("e.g. Hotels and restaurants in Bangkok", "เช่น โรงแรมและร้านอาหารในกรุงเทพฯ")} lang={marketBi.lang}
             disabled={marketTags.length >= 5}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addMarketTag(); }}} />
           <Button type="button" variant="outline" size="sm" onClick={addMarketTag} disabled={marketTags.length >= 5}>Add</Button>
@@ -1777,9 +1788,9 @@ export function StartupForm({
   const privateCounts: Record<PrivateTab, number> = {
     address: [registeredName, addr.street, addr.district, addr.province, addr.postal].filter((x) => !x?.trim()).length,
     images: attachmentMissing(media),
-    about: [has(yearFounded), has(startupName), has(headquarters), has(city), has(email), has(shortDescription), has(longDescription)].filter((x) => !x).length,
+    about: [has(yearFounded), has(startupName), has(headquarters), has(city), has(email), shortBi.filled, longBi.filled].filter((x) => !x).length,
     owner: founders.some((f) => f.full_name.trim()) ? 0 : 1,
-    market: (industries.length ? 0 : 1) + (productTags.length ? 0 : 1),
+    market: (industries.length ? 0 : 1) + (productBi.en.length || productBi.th.length ? 0 : 1),
     licenses: 0,
     admin: 0,
   };
