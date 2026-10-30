@@ -1,4 +1,5 @@
 import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
+import { sectorChips } from "@/lib/business-types";
 import { OwnerHandoverBox } from "@/components/handover/owner-check";
 import { useManagedIds } from "@/hooks/use-managed-ids";
 import { ManagedBadge } from "@/components/common/managed-badge";
@@ -736,7 +737,7 @@ function AddressDialog({ f, open, onOpenChange }: { f: AdvisorFirm; open: boolea
 
 function ClientFacts({ f }: { f: AdvisorFirm }) {
   const band = dealBandLabels(f.dealBand);
-  const sectors = f.sectorAgnostic ? [tr("Sector agnostic")] : f.sectors;
+  const sectors = f.sectorAgnostic ? [tr("Sector agnostic")] : sectorChips(f.sectors, f.sectorPicks);
   const cell = (label: string, v: React.ReactNode) => (
     <div className="min-w-0 border-[#E9EBF0] p-3 dark:border-border max-[640px]:border-b [&:not(:last-child)]:min-[641px]:border-r">
       <div className="text-[11.5px] text-[#6B7280]">{tr(label)}</div>
