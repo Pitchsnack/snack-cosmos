@@ -2,9 +2,11 @@ import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { CircleCheck, EyeOff, Lock, Send, Share2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { placeOf, coverOf } from "@/lib/buy-orders";
 import { sendBuyOrderShare, type BoCard } from "@/lib/buy-orders.functions";
 import { useBw } from "./bw-card";
+import { sectorIcon } from "./bw-icons";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -16,6 +18,7 @@ export function ShareDialog({ card, onClose }: { card: BoCard; onClose: () => vo
   const [sent, setSent] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
+  const Icon = sectorIcon(card.sector);
 
   const submit = async () => {
     if (busy) return;
@@ -42,11 +45,12 @@ export function ShareDialog({ card, onClose }: { card: BoCard; onClose: () => vo
             <DialogDescription className="bw-share-d">{c("Know a business owner who may be interested in selling? Send them this opportunity.", "รู้จักเจ้าของธุรกิจที่อาจสนใจขายหรือไม่? ส่งโอกาสนี้ให้เขา")}</DialogDescription>
           </div>
         </div>
+        <div className="bw-share-body">
         <div className="bw-share-lab">{c("BUY ORDER", "ประกาศซื้อ")}</div>
         <div className="bw-share-box">
-          <span className="bw-share-sec" style={{ background: coverOf(card.sector).gradient }} />
+          <span className="bw-share-sec" style={{ background: coverOf(card.sector).gradient }}><Icon size={24} strokeWidth={1.8} aria-hidden="true" /></span>
           <div className="min-w-0">
-            <div><b>{card.name}</b> · {card.ref}</div>
+            <div className="bw-share-name"><b>{card.name}</b> <span>· {card.ref}</span></div>
             <div className="bw-share-meta">{placeOf(card.cities, card.location)} · {c("Target revenue", "รายได้เป้าหมาย")} {card.targetRevenue} · {c("Price range", "ช่วงราคา")} {card.priceRange}</div>
             <span className="bw-pill bw-share-hidden"><EyeOff className="h-3 w-3" />{c("Buyer’s name hidden", "ไม่แสดงชื่อผู้ซื้อ")}</span>
           </div>
@@ -56,10 +60,11 @@ export function ShareDialog({ card, onClose }: { card: BoCard; onClose: () => vo
         <form className="bw-share-row" noValidate onSubmit={(e) => { e.preventDefault(); void submit(); }}>
           <input id="bw-share-email" ref={ref} type="email" placeholder="name@company.com" value={email} aria-invalid={!!err} aria-describedby={err ? "bw-share-err" : undefined}
             onChange={(e) => { setEmail(e.target.value); if (err) setErr(null); }} className={err ? "bad" : ""} />
-          <button type="submit" className="bw-share-send" disabled={busy}><Send className="h-4 w-4" />{c("Send invitation", "ส่งคำเชิญ")}</button>
+          <Button variant="unstyled" type="submit" className="bw-share-send" disabled={busy}><Send className="h-4 w-4" />{c("Send invitation", "ส่งคำเชิญ")}</Button>
         </form>
         {err && <p id="bw-share-err" role="alert" className="bw-share-err">{err}</p>}
         {sent && <p role="status" className="bw-share-ok"><CircleCheck className="h-4 w-4" />{c("Invitation sent to", "ส่งคำเชิญไปที่")} <b>{sent}</b>.</p>}
+        </div>
       </DialogContent>
     </Dialog>
   );
