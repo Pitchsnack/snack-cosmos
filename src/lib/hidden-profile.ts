@@ -80,6 +80,12 @@ export interface HiddenDraft {
   market_tags?: string[] | null;
   /** Optional uploaded cover picture (startup-media storage path); null = sector vector art. */
   cover_image_url?: string | null;
+  /** Thai twins of the typed texts (English stays in the fields above). */
+  headline_th?: string;
+  description_th?: string;
+  highlights_th?: string[];
+  customers_summary_th?: string;
+  reason_th?: string | null;
 }
 
 export interface HiddenProfileRow extends HiddenDraft {
@@ -318,9 +324,13 @@ export function identityTerms(f: EntryFacts): { term: string; reason: string }[]
 }
 
 function fieldText(d: Partial<HiddenDraft>, field: HiddenTextField): string {
-  const v = d[field as keyof HiddenDraft];
-  if (Array.isArray(v)) return v.join("\n");
-  return (v as string | null | undefined) ?? "";
+  const one = (k: string) => {
+    const v = (d as Record<string, unknown>)[k];
+    if (Array.isArray(v)) return v.join("\n");
+    return (v as string | null | undefined) ?? "";
+  };
+  // Both languages are checked: Thai twins live beside the English field.
+  return [one(field), one(`${field}_th`)].filter(Boolean).join("\n");
 }
 
 /** Whole-word, case-insensitive, longest match first. */
@@ -385,5 +395,10 @@ export function pickDraft(r: Partial<HiddenDraft>): HiddenDraft {
     product_tags: r.product_tags ?? null,
     market_tags: r.market_tags ?? null,
     cover_image_url: r.cover_image_url ?? null,
+    headline_th: r.headline_th ?? "",
+    description_th: r.description_th ?? "",
+    highlights_th: [...(r.highlights_th ?? []), "", "", "", ""].slice(0, 4),
+    customers_summary_th: r.customers_summary_th ?? "",
+    reason_th: r.reason_th ?? null,
   };
 }

@@ -19,7 +19,7 @@ import {
 } from "@/lib/hidden-profile";
 
 const COLS =
-  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, asking_price_thb, asking_price_band, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, owner_stays, handover_months, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, pending_cover, new_until, featured, directory_category, submitted_at, decided_at, decision_note, decision_reasons, decision_fields";
+  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, asking_price_thb, asking_price_band, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, owner_stays, handover_months, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, pending_cover, new_until, featured, directory_category, submitted_at, decided_at, decision_note, decision_reasons, decision_fields, headline_th, description_th, highlights_th, customers_summary_th, reason_th";
 
 type Sb = SupabaseClient<Database>;
 
@@ -123,6 +123,11 @@ const DraftSchema = z.object({
   product_tags: z.array(z.string().max(60)).max(20).nullable().optional(),
   market_tags: z.array(z.string().max(60)).max(20).nullable().optional(),
   cover_image_url: z.string().max(500).nullable().optional(),
+  headline_th: z.string().max(120).optional(),
+  description_th: z.string().max(420).optional(),
+  highlights_th: z.array(z.string().max(200)).max(4).optional(),
+  customers_summary_th: z.string().max(400).optional(),
+  reason_th: z.string().max(400).nullable().optional(),
   // One-step approval: the seller's suggested listing name and headline.
   suggested_listing_name: z.string().trim().max(120, "Keep it to 120 characters.").nullable().optional(),
   suggested_headline: z.string().trim().max(120, "Keep it to 120 characters.").nullable().optional(),
@@ -159,6 +164,7 @@ export const saveHiddenProfile = createServerFn({ method: "POST" })
       .update({
         ...draftNoCover,
         highlights: data.draft.highlights,
+        ...(data.draft.highlights_th ? { highlights_th: data.draft.highlights_th } : {}),
         has_unpublished_changes: isBuyerVisible(cur as { approval_status?: string | null }),
         ...approvalPatch,
         updated_by: context.userId,
@@ -189,7 +195,7 @@ export const publishHiddenProfile = createServerFn({ method: "POST" })
     const { data: cur } = await sb.from("hidden_profiles").select("approval_status").eq("startup_id", data.startupId).maybeSingle();
     const wasLive = isBuyerVisible(cur as { approval_status?: string | null } | null);
     const { data: isAdm } = await (sb as any).rpc("is_control", { _user_id: context.userId });
-    const cleaned: Record<string, unknown> = { ...draft, highlights: draft.highlights.filter((h) => h.trim()) };
+    const cleaned: Record<string, unknown> = { ...draft, highlights: draft.highlights.filter((h) => h.trim()), highlights_th: (draft.highlights_th ?? []).filter((h) => h.trim()) };
     if (!isAdm) delete cleaned.code_name;
     const { data: row, error } = await sb
       .from("hidden_profiles")
