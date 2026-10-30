@@ -19,6 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
 import { FirmEditForm } from "@/components/advisor/advisor-firm-edit";
+import { AdvisorEditPopup } from "@/components/advisor/advisor-edit-popup";
 import { EditInfoPopup, useEditInfo } from "@/components/common/edit-info-popup";
 import { CredMark, DocMark, FirmStatusPill, VerificationBox, VerificationChip, chipKey, businessDays } from "@/components/advisor/advisor-verification";
 import { listAdminAdvisorFirms, decideAdvisor, type AdminFirm } from "@/lib/advisor-admin.functions";
@@ -354,17 +355,6 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
       </Sec>
       {f.v.state === "pending" && <p className="text-xs text-muted-foreground">Waiting {businessDays(f.v.requestedAt)} business day(s) · {chipKey(f.v) === "re_check" ? "re-check" : "first check"}</p>}
     </div>
-  );
-}
-
-/** ⋮ › Edit: the shared Edit information pop-up over the Directory, saving through Admin's existing advisor save. */
-function AdvisorEditPopup({ id, onClose }: { id: string; onClose: () => void }) {
-  const fn = useServerFn(getAdvisorFirmForAdmin);
-  const { data } = useQuery({ queryKey: ["advisor-admin-edit", id], queryFn: () => fn({ data: { id } }) });
-  return (
-    <EditInfoPopup open subtitle={data?.name ?? ""} companyName={data?.name || "Advisor firm"} onClosed={onClose}>
-      {data ? <FirmEditForm firm={data} onDone={onClose} /> : <Skeleton className="h-[500px]" />}
-    </EditInfoPopup>
   );
 }
 
