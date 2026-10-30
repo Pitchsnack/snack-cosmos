@@ -1,9 +1,9 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { Undo2, Calendar, ChevronDown, Eye, EyeOff, Lock, Megaphone, Send, Share2, User, Users, Check, Clock, CircleCheck, Info } from "lucide-react";
 import { useTranslation } from "@/i18n/language";
-import { boSector, closesInDays, coverOf, fmtDay, isNew, managedApplyState } from "@/lib/buy-orders";
+import { boSector, localizeCard, closesInDays, coverOf, fmtDay, isNew, managedApplyState } from "@/lib/buy-orders";
 import { citiesDisplay } from "@/lib/buy-order-defaults";
 import { Button } from "@/components/ui/button";
 import { Building } from "lucide-react";
@@ -14,9 +14,13 @@ import { resolveBuyOrderCover } from "@/lib/buy-order-cover";
 import { useSectorImages } from "@/hooks/use-sector-images";
 import { typeLabel } from "@/lib/investor-bands";
 
+/** Shows the cards inside it in one language, whatever the app's language (Control's Preview, Admin's check). */
+const BwLangCtx = createContext<"en" | "th" | null>(null);
+export const BwLang = BwLangCtx.Provider;
 export function useBw() {
   const { language } = useTranslation();
-  const th = language === "th";
+  const forced = useContext(BwLangCtx);
+  const th = forced ? forced === "th" : language === "th";
   return { th, c: (en: string, t: string) => (th ? t : en) };
 }
 
@@ -172,11 +176,12 @@ export function ShareButton({ narrow, onShare }: { narrow?: boolean; onShare: ()
 
 export type CardMode = "browse" | "applications" | "preview" | "mine";
 
-export function BuyOrderCard({ card, persona, applyCtx, mode = "browse", sharedWithYou, onDetails, onApply, onShare, onEdit, onSend, busy }: {
+export function BuyOrderCard({ card: rawCard, persona, applyCtx, mode = "browse", sharedWithYou, onDetails, onApply, onShare, onEdit, onSend, busy }: {
   card: BoCard; persona: "seller" | "buyer" | "advisor"; applyCtx?: ApplyContext; mode?: CardMode; sharedWithYou?: boolean;
   onDetails: () => void; onApply: () => void; onShare: () => void; onEdit?: () => void; onSend?: () => void; busy?: boolean;
 }) {
   const { c, th } = useBw();
+  const card = localizeCard(rawCard, th);
   const sectorName = useSectorName();
   const [more, setMore] = useState(false);
   const boxId = useId();

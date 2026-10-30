@@ -1,3 +1,4 @@
+import { localizeCard } from "@/lib/buy-orders";
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { CircleCheck, EyeOff, Lock, Send, Share2 } from "lucide-react";
@@ -11,8 +12,9 @@ import { sectorIcon } from "./bw-icons";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function ShareDialog({ card, onClose }: { card: BoCard; onClose: () => void }) {
+export function ShareDialog({ card: rawCard, onClose }: { card: BoCard; onClose: () => void }) {
   const { c, th } = useBw();
+  const card = localizeCard(rawCard, th);
   const send = useServerFn(sendBuyOrderShare);
   const [email, setEmail] = useState("");
   const [err, setErr] = useState<string | null>(null);

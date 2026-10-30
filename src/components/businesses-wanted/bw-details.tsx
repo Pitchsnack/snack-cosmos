@@ -1,3 +1,4 @@
+import { localizeCard } from "@/lib/buy-orders";
 import { Link } from "@tanstack/react-router";
 import { Building, Share2 } from "lucide-react";
 import { useEffect } from "react";
@@ -10,11 +11,12 @@ import { recordBuyOrderView, type ApplyContext, type BoCard } from "@/lib/buy-or
 import { AppState, ApplyButton, BuyerChip, Cover, ForCompany, KindPill, managedCardState, ShareButton, StatusPill, useBw, useSectorName } from "./bw-card";
 import { cn } from "@/lib/utils";
 
-export function BuyOrderDetails({ card, persona, applyCtx, onClose, onApply, onShare }: {
+export function BuyOrderDetails({ card: rawCard, persona, applyCtx, onClose, onApply, onShare }: {
   card: BoCard | null; persona: "seller" | "buyer" | "advisor"; applyCtx?: ApplyContext;
   onClose: () => void; onApply: (c: BoCard) => void; onShare: (c: BoCard) => void;
 }) {
   const { c, th } = useBw();
+  const card = rawCard && localizeCard(rawCard, th);
   const sectorName = useSectorName();
   const record = useServerFn(recordBuyOrderView);
   useEffect(() => {

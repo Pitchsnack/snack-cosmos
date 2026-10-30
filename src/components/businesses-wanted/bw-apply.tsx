@@ -1,3 +1,4 @@
+import { localizeCard } from "@/lib/buy-orders";
 import { useRef, useState } from "react";
 import { Check, EyeOff, Lock, Send, AlertTriangle } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -10,8 +11,9 @@ import { applyToBuyOrder, type ApplyContext, type BoCard } from "@/lib/buy-order
 import { sectorIcon } from "./bw-icons";
 import { useBw, useSectorName } from "./bw-card";
 
-export function ApplyDialog({ card, ctx, onClose, onDone }: { card: BoCard; ctx: ApplyContext; onClose: () => void; onDone: (changed: boolean) => void }) {
+export function ApplyDialog({ card: rawCard, ctx, onClose, onDone }: { card: BoCard; ctx: ApplyContext; onClose: () => void; onDone: (changed: boolean) => void }) {
   const { c, th } = useBw();
+  const card = localizeCard(rawCard, th);
   const sectorName = useSectorName();
   const apply = useServerFn(applyToBuyOrder);
   const [note, setNote] = useState("");

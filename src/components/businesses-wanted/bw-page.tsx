@@ -54,7 +54,7 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
   const passes = (x: BoCard, skipSector = false) => {
     const s = search.trim().toLowerCase();
     if (s) {
-      const hay = [x.name, x.sector, sectorName(x.sector), x.ref, x.description, x.location, x.cities, x.buyerType, x.country, x.products].filter(Boolean).join(" ").toLowerCase();
+      const hay = [x.name, x.sector, sectorName(x.sector), x.ref, x.description, x.location, x.cities, x.buyerType, x.country, x.products, x.nameTh, x.descriptionTh, x.productsTh].filter(Boolean).join(" ").toLowerCase();
       if (!hay.includes(s)) return false;
     }
     if (!skipSector && sector && x.sector !== sector) return false;
