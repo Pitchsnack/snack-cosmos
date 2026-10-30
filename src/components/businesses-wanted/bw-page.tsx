@@ -6,6 +6,7 @@ import { ChevronDown, Search, Target } from "lucide-react";
 import { usePersona } from "@/hooks/use-marketplace";
 import { Button } from "@/components/ui/button";
 import { BO_SECTORS, SELLER_BANDS, boSector, citiesOf, overlaps, rangeOf, sectorOrder } from "@/lib/buy-orders";
+import { citiesDisplay } from "@/lib/buy-order-defaults";
 import { listBuyOrders, myApplyContext, type BoCard } from "@/lib/buy-orders.functions";
 import { BuyOrderCard, useBw, useSectorName } from "./bw-card";
 import { BuyOrderDetails } from "./bw-details";
@@ -16,7 +17,7 @@ import { ChooseIndustry, IndustryRow } from "./bw-industries";
 export const BO_QUERY = ["buy-orders"] as const;
 
 export function BusinessesWantedPage({ bo }: { bo?: string }) {
-  const { c } = useBw();
+  const { c, th } = useBw();
   const sectorName = useSectorName();
   const { persona, role } = usePersona();
   const navigate = useNavigate();

@@ -5,6 +5,7 @@ import { Calendar, Check, Lock, Plus, X, EyeOff } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { addMonths, bkkToday, fmtDay, placeOf, raiSqm } from "@/lib/buy-orders";
+import { citiesDisplay, profitLabel } from "@/lib/buy-order-defaults";
 import { recordBuyOrderView, type ApplyContext, type BoCard } from "@/lib/buy-orders.functions";
 import { AppState, ApplyButton, BuyerChip, Cover, ForCompany, KindPill, managedCardState, ShareButton, StatusPill, useBw, useSectorName } from "./bw-card";
 import { cn } from "@/lib/utils";
@@ -54,7 +55,7 @@ export function BuyOrderDetails({ card, persona, applyCtx, onClose, onApply, onS
         <Cover card={card} height={96} top={<><StatusPill card={card} /><span /></>} />
         <button type="button" className="bw-x" aria-label={c("Close", "ปิด")} onClick={onClose}><X className="h-4 w-4" /></button>
         <div className="bw-dbody">
-          <DialogTitle className="bw-dtitle">{card.name} <span>{card.ref} · {placeOf(card.cities, card.location)}</span></DialogTitle>
+          <DialogTitle className="bw-dtitle">{card.name} <span>{card.ref} · {placeOf(citiesDisplay(card.cities, th), card.location)}</span></DialogTitle>
           <DialogDescription className="bw-ddesc">{card.description}</DialogDescription>
           <div className="mt-2.5 flex flex-wrap items-center gap-2"><BuyerChip card={card} solid /><KindPill kind={card.kind} bordered /></div>
           <div className="bw-dline"><Calendar className="h-[13px] w-[13px]" />{date}</div>
@@ -78,18 +79,18 @@ export function BuyOrderDetails({ card, persona, applyCtx, onClose, onApply, onS
             <section className="bw-dsec">
               <h4>{c("What the buyer wants", "สิ่งที่ผู้ซื้อต้องการ")}</h4>
               <Row l={c("Industry", "อุตสาหกรรม")} v={<>{sectorName(card.sector)} <span className="text-[#9CA3AF]">(SET)</span></>} />
-              <Row l={c("Products", "สินค้า")} v={card.products} />
+              <Row l={c("Products and services", "สินค้าและบริการ")} v={card.products} />
               <Row l={c("Location", "ที่ตั้ง")} v={card.location} />
-              <Row l={c("City", "เมือง")} v={any(card.cities)} />
+              <Row l={c("City", "เมือง")} v={citiesDisplay(card.cities, th)} />
               <Row l={c("Property size", "ขนาดที่ดิน")} v={<>{any(card.propertySize)}{sqm && <span className="text-[#9CA3AF]"> ({sqm} {c("sqm", "ตร.ม.")})</span>}</>} />
               <Row l={c("Factory size", "ขนาดโรงงาน")} v={any(card.factorySize)} />
             </section>
             <section className="bw-dsec">
               <h4>{c("Size and deal", "ขนาดและดีล")}</h4>
               <Row l={c("Target revenue", "รายได้เป้าหมาย")} v={card.targetRevenue} />
-              <Row l={c("Profit", "กำไร")} v={card.profit} />
+              <Row l={c("Profit", "กำไร")} v={profitLabel(card.profit, th)} />
               <Row l={c("Deal type", "รูปแบบดีล")} v={card.dealTypes.join(" · ")} />
-              <Row l={c("Price range", "ช่วงราคา")} v={card.priceRange} />
+              <Row l={c("Target company price range", "ช่วงราคาบริษัทเป้าหมาย")} v={card.priceRange} />
               <Row l={c("Timing", "ระยะเวลา")} v={card.timing} />
             </section>
             <section className="bw-dsec">
