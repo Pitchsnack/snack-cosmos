@@ -27,7 +27,7 @@ export function StandardListingCard({ l, deal, privateData, publicOnly, status, 
     cover={(children) => p ? <div className="standard-card-private-cover">{p.photoUrl ? <img src={p.photoUrl} alt="" /> : <div className="standard-card-logo">{logo ? <img src={logo} alt="" /> : initials}</div>}{children}</div> : <SectorArt src={l.coverUrl} art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId}>{children}</SectorArt>}
     badges={[...(l.certified ? [{ label: 'Certified' }] : []), ...(l.verified ? [{ label: 'Verified company' }] : []), ...(l.hasFinancials ? [{ label: 'Verified financials', financial: true }] : [])]}
     figures={[{ label: language==='th' && year ? `รายได้ปี ${Number(p?.fy || `20${year}`)+543}` : `${t('Revenue')}${year ? ` FY${year}` : ''}`, value: p ? (p.revenue != null ? fmtThb(p.revenue) : null) : publicRevenueLabel(l.revenueBand) }, { label: 'Deal type', value: deal?.dealType ? t(deal.dealType) : null }]}
-    fit={{ label: 'Asking price', value: price, second: price ? t(exact ? (p ? 'Exact' : 'NDA approved') : 'Range') : null }} textRow={{ label: 'Sector', value: cardValue(l.sector,language) }}
+    fit={{ label: 'Asking price', value: price, second: null }} textRow={{ label: 'Sector', value: cardValue(l.sector,language) }}
     more={<>
       {!!l.highlights?.length && <StandardCardSection label="Highlights"><ul className="standard-card-highlights">{l.highlights.filter((v) => v.trim()).map((h, index) => <li key={index}><Check aria-hidden /><span>{h}</span></li>)}</ul></StandardCardSection>}
       {!!l.productTags.length && <StandardCardSection label="Products & services"><StandardCardChips values={l.productTags} /></StandardCardSection>}
