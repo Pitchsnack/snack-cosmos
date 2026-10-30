@@ -362,6 +362,7 @@ function SignupInner() {
       const res = await finish({ data: {
         name: coName.trim(), year: individual ? null : year, size: individual ? null : size,
         website: web.trim() ? web.trim().replace(/^https?:\/\//i, "").replace(/\/+$/, "") : null,
+        lang,
       } });
       void res;
       setBusy(false); setFail(false); go(7);
