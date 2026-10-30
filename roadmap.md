@@ -1,9 +1,9 @@
 # One-step approval — roadmap
 
 ## Businesses Wanted filter bars — 30 October 2026
-- [ ] Align grouped filters on Businesses Wanted and Admin Advertisement at desktop/tablet/phone widths.
-- [ ] Set exact EN/TH Admin Buyer subtitle and persona-coloured MARKETPLACE eyebrow; preserve existing card rules.
-- [ ] Verify signed-in pages, filter interactions, both languages and layout dimensions.
+- [x] Align grouped filters on Businesses Wanted and Admin Advertisement at desktop/tablet/phone widths.
+- [x] Set exact EN/TH Admin Buyer subtitle and persona-coloured MARKETPLACE eyebrow; preserve existing card rules.
+- [x] Verify signed-in Admin personas, EN/TH layouts at 1440/1280/1024/390, search/kind controls and 18 existing rule tests; no runtime errors or horizontal overflow. Shared layouts apply to users; no other account was impersonated.
 
 ## Buy-order photo covers — 30 October 2026
 - [x] Add protected cover fields/storage and shared upload/picked/oldest/drawn resolution.
