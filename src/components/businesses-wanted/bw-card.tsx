@@ -11,6 +11,7 @@ import { sectorIcon } from "./bw-icons";
 import { cn } from "@/lib/utils";
 import { resolveBuyOrderCover } from "@/lib/buy-order-cover";
 import { useSectorImages } from "@/hooks/use-sector-images";
+import { typeLabel } from "@/lib/investor-bands";
 
 export function useBw() {
   const { language } = useTranslation();
@@ -88,9 +89,9 @@ export function KindPill({ kind, bordered }: { kind: BoCard["kind"]; bordered?: 
 }
 
 export function BuyerChip({ card, solid }: { card: BoCard; solid?: boolean }) {
-  const { c } = useBw();
+  const { c, th } = useBw();
   const { t } = useTranslation();
-  const label = `${card.buyerType.split(" · ").map((part) => t(part)).join(" · ")}${card.country ? ` · ${t(card.country)}` : ""}`;
+  const label = `${card.buyerType.split(" · ").map((part) => th ? t(typeLabel(part)) : part).join(" · ")}${card.country ? ` · ${t(card.country)}` : ""}`;
   return (
     <span className={cn("bw-pill bw-chip", solid && "bw-chip-solid")} title={c("The buyer’s name stays private", "ชื่อผู้ซื้อถูกเก็บเป็นความลับ")}>
       <EyeOff className="h-3 w-3 shrink-0" />
