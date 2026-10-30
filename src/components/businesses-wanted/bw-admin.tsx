@@ -11,6 +11,7 @@ import { BuyOrderCard, useBw, useSectorName } from "./bw-card";
 import { sectorIcon } from "./bw-icons";
 import { BoFields, cardToDraft, draftCard, focusFirst } from "./bw-form";
 import { cn } from "@/lib/utils";
+import { BuyOrderPicture } from "./bw-picture";
 
 const ADMIN_Q = ["buy-orders", "admin"] as const;
 const EDITABLE: BoField[] = ["name", "description", "targetRevenue", "priceRange", "location", "cities", "propertySize", "factorySize", "mustHave", "periodMonths"];
@@ -281,6 +282,7 @@ function CheckPanel({ row, onDone }: { row: AdminBoRow; onDone: () => void }) {
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const sealed = row.kind === "sealed";
+  const [cover, setCover] = useState(row.cover);
   const set = (p: Partial<BoDraft>) => setD((v) => ({ ...v, ...p }));
   const run = async (action: "post" | "send_back") => {
     const e = checkDraft(d, false);
@@ -309,7 +311,8 @@ function CheckPanel({ row, onDone }: { row: AdminBoRow; onDone: () => void }) {
         <BoFields d={d} set={set} errs={errs} only={EDITABLE} />
         <div>
           <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">{c("What sellers and buyers will see", "สิ่งที่ผู้ขายและผู้ซื้อจะเห็น")}</div>
-          <BuyOrderCard card={{ ...draftCard(d, { buyerType: row.buyerType, country: row.country }, { id: row.id, ref: row.ref, kind: row.kind }) }} persona="buyer" mode="preview" onDetails={() => {}} onApply={() => {}} onShare={() => {}} />
+          <BuyOrderCard card={draftCard(d, { buyerType: row.buyerType, country: row.country }, { ...row, cover })} persona="buyer" mode="preview" onDetails={() => {}} onApply={() => {}} onShare={() => {}} />
+          <BuyOrderPicture card={{ ...row, cover }} onSaved={setCover} />
         </div>
       </div>
       <div className="-mx-5 -mb-5 mt-5 border-t bg-muted/40 px-5 py-4">
