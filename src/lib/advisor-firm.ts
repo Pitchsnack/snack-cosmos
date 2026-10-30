@@ -71,7 +71,7 @@ export const FEE_TYPES: { value: FeeType; label: string }[] = [
   { value: "other", label: "Other (write your own)" },
 ];
 /** Form shape: amount = digits only; pct = as typed. */
-export type FeeDetail = { type: FeeType; amount: string; pct: string; words: string };
+export type FeeDetail = { type: FeeType; amount: string; pct: string; words: string; wordsTh?: string };
 export const newFee = (): FeeDetail => ({ type: "quote", amount: "", pct: "", words: "" });
 export const feeNeedsAmount = (t: FeeType) => t === "fixed" || t === "hourly" || t === "retainer" || t === "retainer_success";
 export const feeNeedsPct = (t: FeeType) => t === "success" || t === "retainer_success";
@@ -119,8 +119,8 @@ export function feeError(service: string, f: FeeDetail): { msg: string; amount?:
 /* ------------------------------ The record ------------------------------ */
 
 export type FirmStatus = "draft" | "live" | "paused";
-export type FirmTeam = { id?: string; name: string; role: string | null; email: string | null };
-export type FirmCredential = { id?: string; name: string; note: string | null; status: "pending" | "verified" | "rejected"; checkedAt: string | null };
+export type FirmTeam = { id?: string; name: string; role: string | null; roleTh?: string | null; email: string | null };
+export type FirmCredential = { id?: string; name: string; nameTh?: string | null; note: string | null; noteTh?: string | null; status: "pending" | "verified" | "rejected"; checkedAt: string | null };
 export type FirmDocument = { id?: string; path: string; name: string; type: string | null; checkedAt: string | null; validUntil: string | null; url?: string | null };
 export type FirmReview = { id: string; role: "seller" | "buyer"; detail: string | null; service: string | null; stars: number; comment: string | null; at: string };
 
@@ -132,7 +132,7 @@ export type AdvisorFirm = {
   id: string; refNo: string; name: string; firmType: string; logoPath: string | null; logoUrl: string | null; logoSource: "upload" | "enrich" | null;
   /** Up to 3 photos (slot 1–3), shown after the NDA-free card. */
   media?: { slot: number; path: string; url: string | null }[];
-  description: string | null; yearFounded: number | null; city: string | null; country: string | null;
+  description: string | null; descriptionTh?: string | null; yearFounded: number | null; city: string | null; country: string | null;
   services: string[]; fees: Record<string, string>; feeDetails: Record<string, FeeDetail>;
   dealBand: string | null; teamSize: number | null;
   languages: string[]; sectors: string[]; sectorAgnostic?: boolean; sectorPicks?: { types: string[]; kinds: Record<string, string[]>; other: string[] } | null;
