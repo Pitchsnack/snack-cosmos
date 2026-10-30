@@ -132,6 +132,9 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     resumed.current = true;
     const first = WIZARD_QS.find((q) => !skipSet.has(q) && !isAnswered(q));
     setCur((first ?? "review") as WizardQ);
+    // Every answer still valid and Auto Enrich already ran on these details: reopen at Review & complete.
+    const w = firm.wizard as { enrichSig?: string; enrich?: AdvisorEnrichResult } | null;
+    if (!first && requiredOk && w?.enrich && w.enrichSig === `${a.web}|${a.reg}|${a.name}`) { setEnrich(w.enrich); setPhase("complete"); }
   }, [isAnswered]);
 
   // ---- autosave ----
