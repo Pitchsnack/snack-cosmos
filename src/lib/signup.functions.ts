@@ -110,10 +110,13 @@ export const finishSignup = createServerFn({ method: "POST" })
     year: z.string().regex(/^\d{4}$/).nullable(),
     size: z.string().max(10).nullable(),
     website: z.string().trim().max(200).nullable(),
+    lang: z.enum(["en", "th"]).optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = await admin();
     const uid = context.userId;
+    // Setup language: set once, from the sign-up page's language; a DB trigger keeps it from changing later.
+    if (data.lang) await sb.from("users").update({ setup_language: data.lang }).eq("id", uid).is("setup_language", null);
     const { data: u } = await sb.auth.admin.getUserById(uid);
     if (!u?.user?.email_confirmed_at) throw new Error("Confirm your email first.");
     const { data: a } = await sb.from("signup_answers").select("*").eq("user_id", uid).maybeSingle();
