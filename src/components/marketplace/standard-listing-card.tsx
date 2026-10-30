@@ -3,7 +3,7 @@ import { Check } from 'lucide-react';
 import { SectorArt } from '@/components/hidden-profile/bits';
 import { useMediaUrl, type ListingDeal } from '@/components/hidden-profile/public-listing-card';
 import { useTranslation } from '@/i18n/language';
-import type { PublicListing } from '@/lib/public-listing';
+import { listingText, type PublicListing } from '@/lib/public-listing';
 import { cardAskingPrice, cardNdaStatus, publicRevenueLabel } from '@/lib/standard-card';
 import { StandardBrowseCard, StandardCardChips, StandardCardSection } from './standard-browse-card';
 import { fmtThb } from '@/lib/asking-price';
@@ -22,8 +22,9 @@ export function StandardListingCard({ l, deal, privateData, publicOnly, status, 
   const year = p?.fy != null ? String(p.fy).slice(-2) : p ? null : '25';
   const date = l.publishedAt ? new Date(l.publishedAt).toLocaleDateString(language === 'th' ? 'th-TH' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
   const initials = p?.companyName.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-  return <StandardBrowseCard title={p?.companyName || l.headline} subtitle={p ? l.headline : undefined} refNo={l.refNo} place={contactPlace(p?.location || l.location?.replace(/, Thailand$/, ''),language)}
-    description={p ? p.description : l.description} status={cardNdaStatus(status)} hideStatus={hideStatus} newDays={l.newDays} managed={l.managed} topRight={topRight} tag={tag} selected={selected} onOpen={onSelect} className={className}
+  const lt = listingText(l, language);
+  return <StandardBrowseCard title={p?.companyName || lt.headline} subtitle={p ? lt.headline : undefined} refNo={l.refNo} place={contactPlace(p?.location || l.location?.replace(/, Thailand$/, ''),language)}
+    description={p ? p.description : lt.description} status={cardNdaStatus(status)} hideStatus={hideStatus} newDays={l.newDays} managed={l.managed} topRight={topRight} tag={tag} selected={selected} onOpen={onSelect} className={className}
     cover={(children) => p ? <div className="standard-card-private-cover">{p.photoUrl ? <img src={p.photoUrl} alt="" /> : <div className="standard-card-logo">{logo ? <img src={logo} alt="" /> : initials}</div>}{children}</div> : <SectorArt src={l.coverUrl} art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId}>{children}</SectorArt>}
     badges={[...(l.certified ? [{ label: 'Certified' }] : []), ...(l.verified ? [{ label: 'Verified company' }] : []), ...(l.hasFinancials ? [{ label: 'Verified financials', financial: true }] : [])]}
     figures={[{ label: language==='th' && year ? `รายได้ปี ${Number(p?.fy || `20${year}`)+543}` : `${t('Revenue')}${year ? ` FY${year}` : ''}`, value: p ? (p.revenue != null ? fmtThb(p.revenue) : null) : publicRevenueLabel(l.revenueBand) }, { label: 'Deal type', value: deal?.dealType ? t(deal.dealType) : null }]}

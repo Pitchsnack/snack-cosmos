@@ -58,6 +58,8 @@ export interface PublicListing {
   publishedAt: string | null;
   /** Days since going live while under 14 (NEW); null otherwise. */
   newDays: number | null;
+  /** Thai twins of the seller's texts; readers in Thai use them, falling back to English. */
+  th?: { headline: string; description: string; highlights: string[]; customerProfile: string };
   /** A PitchSnack private client (Control, Admin-owned). Only the flag is sent. */
   managed?: boolean;
   /** Seller-written public highlights (filled ones only, in order). */
@@ -399,6 +401,17 @@ function lower(t: string) {
     .join(" ");
 }
 
+/** The listing's texts in the reader's language (Thai falls back to English per field). */
+export function listingText(l: Pick<PublicListing, "headline" | "description"> & { th?: PublicListing["th"]; highlights?: string[]; customerProfile?: string }, lang: string) {
+  const th = lang === "th" ? l.th : undefined;
+  return {
+    headline: th?.headline || l.headline,
+    description: th?.description || l.description,
+    highlights: th?.highlights?.length ? th.highlights : l.highlights ?? [],
+    customerProfile: th?.customerProfile || l.customerProfile || "",
+  };
+}
+
 export function certificationsOf(s: ListingSource) {
   return [
     ...(s.iso_standards ?? []).map((x) => x.split(" – ")[0]),
@@ -422,6 +435,10 @@ export function buildPublicListing(
     public_image_id?: string | null;
     live?: boolean;
     published_at?: string | null;
+    headline_th?: string | null;
+    description_th?: string | null;
+    highlights_th?: string[] | null;
+    customers_summary_th?: string | null;
   } | null,
   hasFinancials: boolean,
 ): PublicListing {
@@ -455,6 +472,12 @@ export function buildPublicListing(
     live: !!p?.live,
     publishedAt: p?.published_at ?? null,
     newDays: newDaysOf(p?.live ? p?.published_at : null),
+    th: {
+      headline: p?.headline_th?.trim() || "",
+      description: p?.description_th?.trim() || "",
+      highlights: (p?.highlights_th ?? []).map((h) => h?.trim() ?? "").filter(Boolean).slice(0, 4),
+      customerProfile: p?.customers_summary_th?.trim() || "",
+    },
   };
 }
 
