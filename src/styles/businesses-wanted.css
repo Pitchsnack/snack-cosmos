@@ -357,3 +357,28 @@ select.bw-in { height: 42px; padding-top: 0; padding-bottom: 0; line-height: 1.2
 /* The wider Target company price range list, and two-line card labels that still line up */
 .bw-select-wide select { min-width: 220px; }
 .bw-cell small { min-height: 2.3em; display: flex; align-items: flex-end; }
+
+/* Buy orders in English and Thai */
+.bw-seg { display: inline-flex; background: #EEF0F3; border-radius: 10px; padding: 3px; gap: 2px; }
+.bw-seg button { height: 30px; padding: 0 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #4B5563; }
+.bw-seg button[aria-checked="true"] { background: #fff; color: #0E162F; box-shadow: 0 1px 3px rgba(16,24,40,.12); }
+.dark .bw-seg { background: rgba(255,255,255,.08); }
+.dark .bw-seg button { color: #CBD5E1; }
+.dark .bw-seg button[aria-checked="true"] { background: hsl(var(--card)); color: hsl(var(--foreground)); }
+.bw-langrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 14px; }
+.bw-langrow .bw-lab { margin: 0; }
+.bw-langrow-hint { flex: 1 1 220px; min-width: 0; font-size: 12px; color: #6B7280; }
+.bw-ltag { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 5px; font-size: 10.5px; font-weight: 700; vertical-align: 1px; margin-left: 4px; }
+.bw-ltag-en { background: #EEF0F3; color: #4B5563; }
+.bw-ltag-th { background: #FFF1E2; color: #C2410C; }
+.bw-ltabs { display: flex; gap: 18px; border-bottom: 1px solid hsl(var(--border)); margin-bottom: 14px; }
+.bw-ltabs button { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; padding: 8px 0; margin-bottom: -1px; border-bottom: 2px solid transparent; color: #6B7280; }
+.bw-ltabs button[aria-selected="true"] { font-weight: 600; color: hsl(var(--foreground)); border-bottom-color: var(--role-color, #F6A823); }
+.bw-lpill, .bw-thai-missing { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.bw-lpill-miss, .bw-thai-missing { background: #FEF3C7; color: #92400E; }
+.bw-lpill-done { background: #DCFCE7; color: #166534; }
+.bw-src { background: #F4F5F8; border-radius: 10px; padding: 9px 12px; font-size: 13px; color: #374151; white-space: pre-line; margin-bottom: 6px; overflow-wrap: anywhere; }
+.bw-src small { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #6B7280; margin-bottom: 2px; }
+.dark .bw-src { background: rgba(255,255,255,.05); color: #E5E7EB; }
+.bw-lmissing { display: flex; gap: 8px; align-items: flex-start; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 10px; padding: 9px 12px; font-size: 13px; color: #92400E; margin-bottom: 10px; }
+.bw-ltabs + * .bw-in[aria-invalid="true"], .bw-in[aria-invalid="true"] { border-color: #D92D20; }

@@ -276,22 +276,82 @@ function Applicants({ row, per }: { row: AdminBoRow; per: number }) {
   );
 }
 
-/** The check: Admin edits, live card, Send back / Post (section 11.5). */
+const TEXT_LABEL: Record<BoText, [string, string]> = {
+  name: ["Name on the card", "ชื่อบนการ์ด"], description: ["Description", "คำอธิบาย"], products: ["Products and services", "สินค้าและบริการ"],
+  mustHave: ["Must have", "ต้องมี"], niceToHave: ["Nice to have", "มีก็ดี"], timing: ["Timing", "ช่วงเวลา"],
+};
+
+/** The other language's tab: each text the buy order has, the writer's words in a grey box and a box to type under it. */
+function TranslatePanel({ d, set, src, flagged }: { d: BoDraft; set: (p: Partial<BoDraft>) => void; src: "en" | "th"; flagged: Set<string> }) {
+  const { c } = useBw();
+  const tgt = src === "en" ? "th" : "en";
+  const val = (f: BoText, l: "en" | "th") => String(d[textKey(f, l)] ?? "");
+  const shown = BO_TEXTS.filter((f) => val(f, src).trim() || val(f, tgt).trim());
+  return (
+    <div className="grid gap-4">
+      <p className="text-[13px] text-[#6B7280]">{tgt === "th"
+        ? c("Type the Thai for each text. Sellers and buyers who use PitchSnack in Thai see it.", "พิมพ์ข้อความภาษาไทยของแต่ละช่อง ผู้ขายและผู้ซื้อที่ใช้ PitchSnack เป็นภาษาไทยจะเห็นข้อความนี้")
+        : c("Type the English for each text. Sellers and buyers who use PitchSnack in English see it.", "พิมพ์ข้อความภาษาอังกฤษของแต่ละช่อง ผู้ขายและผู้ซื้อที่ใช้ PitchSnack เป็นภาษาอังกฤษจะเห็นข้อความนี้")}</p>
+      {shown.map((f) => {
+        const k = textKey(f, tgt);
+        const id = `bo-${k}`;
+        const bullets = f === "mustHave" || f === "niceToHave";
+        const source = bullets ? val(f, src).split("\n").filter(Boolean).map((x) => `• ${x}`).join("\n") : val(f, src);
+        const v = val(f, tgt);
+        const bad = flagged.has(k) && !v.trim();
+        const on = (x: string) => set({ [k]: x } as Partial<BoDraft>);
+        return (
+          <div key={f}>
+            <label className="bw-lab" htmlFor={id}>{c(TEXT_LABEL[f][0], TEXT_LABEL[f][1])} <LangTag lang={tgt} /></label>
+            <div className="bw-src"><small>{src === "en" ? c("English", "ภาษาอังกฤษ") : c("Thai", "ภาษาไทย")}</small>{source || "—"}</div>
+            {bullets ? <BulletArea id={id} rows={f === "mustHave" ? 4 : 2} value={v} invalid={bad} onChange={on} />
+              : f === "description" ? <><textarea id={id} aria-invalid={bad || undefined} className="bw-in" rows={4} wrap="soft" maxLength={400} value={v} onChange={(e) => on(e.target.value)} /><p className="bw-hint text-right">{v.length} / 400</p></>
+              : f === "products" ? <textarea id={id} aria-invalid={bad || undefined} className="bw-in" rows={2} wrap="soft" maxLength={500} value={v} onChange={(e) => on(e.target.value)} />
+              : <input id={id} aria-invalid={bad || undefined} className="bw-in" maxLength={f === "name" ? 40 : 200} value={v} onChange={(e) => on(e.target.value)} />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** The check: Admin edits, the other language, live card, Send back / Post (section 11.5). */
 function CheckPanel({ row, onDone }: { row: AdminBoRow; onDone: () => void }) {
   const { c, th } = useBw();
   const qc = useQueryClient();
   const decide = useServerFn(adminDecideBuyOrder);
-  const [d, setD] = useState<BoDraft>(() => cardToDraft(row));
+  const src: "en" | "th" = row.textLang === "th" ? "th" : "en";
+  const tgt: "en" | "th" = src === "en" ? "th" : "en";
+  const [d, setD] = useState<BoDraft>(() => { const x = cardToDraft(row); return { ...x, ...translatedDefaults(x, row.country, src) }; });
   const [errs, setErrs] = useState<Partial<Record<BoField, string>>>({});
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<"en" | "th">("en");
+  const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const sealed = row.kind === "sealed";
   const [cover, setCover] = useState(row.cover);
   const set = (p: Partial<BoDraft>) => setD((v) => ({ ...v, ...p }));
+  const missing = missingLangs(d);
+  const tgtName = tgt === "th" ? c("Thai", "ภาษาไทย") : c("English", "ภาษาอังกฤษ");
+  const fields = missing.map((m) => c(TEXT_LABEL[m.field][0], TEXT_LABEL[m.field][1])).join(", ");
+  const openTarget = () => {
+    const keys = missing.map((m) => textKey(m.field, m.side));
+    setTab(tgt); setFlagged(new Set(keys));
+    setTimeout(() => document.getElementById(`bo-${keys[0]}`)?.focus(), 30);
+  };
   const run = async (action: "post" | "send_back") => {
     const e = checkDraft(d, false);
     setErrs(e);
-    if (Object.keys(e).length) { focusFirst(e); return; }
+    if (Object.keys(e).length) {
+      const k = Object.keys(e).find((x) => /^(name|description|products|mustHave|niceToHave|timing)(Th)?$/.test(x));
+      if (k) setTab(k.endsWith("Th") ? "th" : "en");
+      focusFirst(e); return;
+    }
+    if (action === "post" && missing.length) {
+      openTarget();
+      toast.error(tgt === "th" ? c("Add the Thai first. It’s in the Thai tab.", "เพิ่มข้อความภาษาไทยก่อน อยู่ในแท็บภาษาไทย") : c("Add the English first. It’s in the English tab.", "เพิ่มข้อความภาษาอังกฤษก่อน อยู่ในแท็บภาษาอังกฤษ"));
+      return;
+    }
     setBusy(true);
     try {
       await decide({ data: { id: row.id, action, draft: d, note: note ?? undefined } });
@@ -304,18 +364,30 @@ function CheckPanel({ row, onDone }: { row: AdminBoRow; onDone: () => void }) {
     } finally { setBusy(false); qc.invalidateQueries({ queryKey: ["buy-orders"] }); }
   };
   const written = fmtDay(row.sentToAdminAt, th, false);
+  const pill = missing.length
+    ? <span className="bw-lpill bw-lpill-miss">{c(`${missing.length} missing`, `ยังขาด ${missing.length}`)}</span>
+    : <span className="bw-lpill bw-lpill-done">✓ {c("Done", "ครบแล้ว")}</span>;
   return (
     <div>
       <div className="flex flex-wrap gap-2"><span className="bw-spill bw-s-wait">● {c("Waiting for Admin", "รอแอดมินตรวจ")}</span><span className="bw-spill bw-s-closed">{sealed ? <><Lock className="h-3 w-3" />{c("Sealed", "ปิดผนึก")}</> : c("Advertisement", "ประกาศ")}</span></div>
-      <h2 className="mt-2 text-[21px] font-bold">{row.name} <span className="text-[14px] font-normal text-[#6B7280]">{row.ref}</span></h2>
+      <h2 className="mt-2 text-[21px] font-bold">{localizeCard(row, th).name} <span className="text-[14px] font-normal text-[#6B7280]">{row.ref}</span></h2>
       <p className="text-[13px] text-[#4B5563]">{sealed
         ? <>{c(`Written by ${row.client?.writer ?? "—"}, PitchSnack Control, on ${written} · for `, `เขียนโดย ${row.client?.writer ?? "—"} ทีม PitchSnack Control เมื่อ ${written} · สำหรับ `)}<b>{row.client?.name ?? "—"} · {row.client?.ref ?? "—"}</b>. {c("Only PitchSnack sees the client.", "เฉพาะ PitchSnack เท่านั้นที่เห็นลูกค้า")}</>
         : <>{c(`Written by the buyer, ${row.client?.writer ?? "—"}, on ${written} · `, `เขียนโดยผู้ซื้อ ${row.client?.writer ?? "—"} เมื่อ ${written} · `)}<b>{row.company ?? "—"} · {row.client?.ref ?? "—"}</b>. {c("Sellers see the buyer’s name after the NDA.", "ผู้ขายจะเห็นชื่อผู้ซื้อหลัง NDA")}</>}</p>
       <div className="mt-4 grid gap-5 min-[1100px]:grid-cols-[minmax(0,1fr)_320px]">
-        <BoFields d={d} set={set} errs={errs} only={EDITABLE} />
+        <div className="min-w-0">
+          <div className="bw-ltabs" role="tablist" aria-label={c("Language", "ภาษา")}>
+            {(["en", "th"] as const).map((l) => (
+              <button key={l} type="button" role="tab" aria-selected={tab === l} onClick={() => setTab(l)}>
+                {l === "en" ? c("English", "ภาษาอังกฤษ") : c("Thai", "ภาษาไทย")}{l === tgt && pill}
+              </button>
+            ))}
+          </div>
+          {tab === src ? <BoFields d={d} set={set} errs={errs} only={EDITABLE} tl={src} /> : <TranslatePanel d={d} set={set} src={src} flagged={flagged} />}
+        </div>
         <div>
           <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">{c("What sellers and buyers will see", "สิ่งที่ผู้ขายและผู้ซื้อจะเห็น")}</div>
-          <BuyOrderCard card={draftCard(d, { buyerType: row.buyerType, country: row.country }, { ...row, cover })} persona="buyer" mode="preview" onDetails={() => {}} onApply={() => {}} onShare={() => {}} />
+          <BwLang value={tab}><BuyOrderCard card={draftCard(d, { buyerType: row.buyerType, country: row.country }, { ...row, cover })} persona="buyer" mode="preview" onDetails={() => {}} onApply={() => {}} onShare={() => {}} /></BwLang>
           <BuyOrderPicture card={{ ...row, cover }} onSaved={setCover} />
         </div>
       </div>
@@ -327,11 +399,19 @@ function CheckPanel({ row, onDone }: { row: AdminBoRow; onDone: () => void }) {
             <div className="mt-2 flex justify-end gap-2"><Button variant="outline" onClick={() => setNote(null)}><X className="h-4 w-4" />{c("Cancel", "ยกเลิก")}</Button><Button disabled={!note.trim() || busy} onClick={() => run("send_back")}>{c("Send back", "ส่งกลับ")}</Button></div>
           </div>
         )}
+        {note === null && missing.length > 0 && (
+          <div className="bw-lmissing" role="status">
+            <Globe className="h-[15px] w-[15px] shrink-0" />
+            <span>{tgt === "th" ? c(`Add the Thai before posting: ${fields}.`, `เพิ่มข้อความภาษาไทยก่อนเผยแพร่: ${fields}`) : c(`Add the English before posting: ${fields}.`, `เพิ่มข้อความภาษาอังกฤษก่อนเผยแพร่: ${fields}`)}
+              {tab !== tgt && <> <button type="button" className="underline font-semibold" onClick={openTarget}>{tgt === "th" ? c("Open the Thai tab", "เปิดแท็บภาษาไทย") : c("Open the English tab", "เปิดแท็บภาษาอังกฤษ")}</button></>}</span>
+          </div>
+        )}
         {note === null && <div className="flex flex-wrap justify-end gap-2">
           <Button variant="outline" onClick={() => setNote("")}><Undo2 className="h-4 w-4" />{sealed ? c("Send back to Control", "ส่งกลับให้ Control") : c("Send back to the buyer", "ส่งกลับให้ผู้ซื้อ")}</Button>
-          <Button disabled={busy} className="bg-[#F6A823] text-[#0E162F] hover:bg-[#E09612]" onClick={() => run("post")}><Check className="h-4 w-4" />{c("Post buy order", "ลงประกาศซื้อ")}</Button>
+          <Button disabled={busy} aria-disabled={missing.length > 0 || undefined} className={cn("bg-[#F6A823] text-[#0E162F] hover:bg-[#E09612]", missing.length > 0 && "opacity-45")} onClick={() => run("post")}><Check className="h-4 w-4" />{c("Post buy order", "ลงประกาศซื้อ")}</Button>
         </div>}
       </div>
+      <span className="sr-only">{tgtName}</span>
     </div>
   );
 }
