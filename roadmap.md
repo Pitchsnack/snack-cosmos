@@ -2,7 +2,7 @@
 
 ## Buy-order Share pop-up — 30 October 2026
 - [x] Restore shared dialog padding, grey text, industry icon and bordered/focused email input; preserve text, validation and sending.
-- [ ] Verify card/details entry points and EN/TH desktop/390px layouts.
+- [x] Verified signed-in Admin Seller card/details entry points, EN desktop and TH 390px layouts, sector icon, focus ring and required-email error; 30 existing tests pass and build OK. Shared dialog covers other personas; no email sent or other account impersonated.
 
 ## Businesses Wanted menu NEW tag — 30 October 2026
 - [x] Replace the "{n} new" amber/white pill (count, tooltip, fill) on the Businesses Wanted menu row with the app's own NEW tag, always shown; keep icon, name, place, link and the cards' NEW pill.
