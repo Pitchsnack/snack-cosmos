@@ -302,7 +302,14 @@ type CardText = { headline: string; description: string | null; realName: string
 function Preview({ item, name, card, lang, exclusive }: { item: OneStepItem; name: string; card: CardText; lang: TextLang; exclusive: boolean }) {
   const { t: appT } = useTranslation(), c = item.review.card;
   // The cards follow the review's Texts in switch, as a reader with the app in that language sees them.
-  const t = (s: string) => lang === "th" ? TH[s] ?? s : s;
+  const t = (s: string) => {
+    if (lang !== "th") return s;
+    if (TH[s]) return TH[s];
+    const m = /^Owner stays (\d+) months? after the sale$/.exec(s);
+    if (m) return `เจ้าของอยู่ช่วยต่อ ${m[1]} เดือนหลังการขาย`;
+    if (s === "Owner leaves at completion") return "เจ้าของออกเมื่อการขายเสร็จสิ้น";
+    return s;
+  };
   return <div lang={lang}><h4>{appT(exclusive ? "Exclusive view" : "Listing view")}{lang === "th" && <span className="os-lang-tag is-th os-cap-tag">ไทย</span>}</h4><div className="os-preview-card"><div className="os-cover"><SectorArt sector={c.sector ?? c.type} /><span className={`os-chip ${exclusive ? "os-green" : "os-grey"}`}>{exclusive && <Lock size={12} />}{t(exclusive ? "Exclusive view" : item.kind === "advisor" ? "Open to sellers and buyers" : item.kind === "seller" ? "Identity hidden" : "Name hidden")}</span></div><div className="os-preview-content"><h3>{exclusive || item.kind === "advisor" ? card.realName : name || t("Your listing name")}</h3><p className="os-muted">{[exclusive ? name : null, c.ref, t(c.type ?? ""), t(c.place ?? "")].filter(Boolean).join(" · ")}</p><strong>{card.headline}</strong><p>{card.description}</p><dl>{c.figs.map(([label, value]) => <div key={label}><dt>{t(label)}</dt><dd>{t(value)}</dd></div>)}</dl>{exclusive && <div className="os-exclusive">{[["Website", c.website], ["Address", card.address], ["Founded", c.founded], [item.kind === "seller" ? "Owner" : "Contact", card.contact]].filter(([, v]) => !!v).map(([label, value]) => <div key={label}><span>{t(label ?? "")}</span><strong>{value}</strong></div>)}</div>}</div></div></div>;
 }
 function reviewText(value: string | null, t: (s: string) => string, language: "en" | "th"): string | null {
