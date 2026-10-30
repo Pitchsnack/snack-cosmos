@@ -134,6 +134,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     setCur((first ?? "review") as WizardQ);
     // Every answer still valid and Auto Enrich already ran on these details: reopen at Review & complete.
     const w = firm.wizard as { enrichSig?: string; enrich?: AdvisorEnrichResult } | null;
+    console.log("RESUME", JSON.stringify({ first, sig: w?.enrichSig, mine: `${a.web}|${a.reg}|${a.name}`, has: !!w?.enrich }));
     if (!first && w?.enrich && w.enrichSig === `${a.web}|${a.reg}|${a.name}`) { setEnrich(w.enrich); setPhase("complete"); }
   }, [isAnswered]);
 
