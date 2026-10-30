@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Calendar, Check, ClipboardCheck, Clock, LayoutList, Columns2, Lock, Search, Undo2, Users, X } from "lucide-react";
+import { Calendar, Check, ClipboardCheck, Globe, Clock, LayoutList, Columns2, Lock, Search, Undo2, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { addMonths, BO_GROUPS, bkkToday, checkDraft, coverOf, daysBetween, fmtDay, PERIODS, periodLabel, type BoDraft, type BoField } from "@/lib/buy-orders";
+import { addMonths, BO_GROUPS, BO_TEXTS, bkkToday, checkDraft, localizeCard, missingLangs, textKey, type BoText, coverOf, daysBetween, fmtDay, PERIODS, periodLabel, type BoDraft, type BoField } from "@/lib/buy-orders";
 import { adminBuyOrderApplicants, adminBuyOrders, adminDecideBuyOrder, adminExtendBuyOrder, type AdminBoFilter, type AdminBoRow, type AppRow } from "@/lib/buy-orders.functions";
-import { BuyOrderCard, useBw, useSectorName } from "./bw-card";
+import { BuyOrderCard, BwLang, useBw, useSectorName } from "./bw-card";
+import { translatedDefaults } from "@/lib/buy-order-defaults";
 import { sectorIcon } from "./bw-icons";
-import { BoFields, cardToDraft, draftCard, focusFirst } from "./bw-form";
+import { BoFields, BulletArea, cardToDraft, draftCard, focusFirst, LangTag } from "./bw-form";
 import { cn } from "@/lib/utils";
 import { BuyOrderPicture } from "./bw-picture";
 
@@ -29,7 +30,8 @@ function useStatus() {
       const n = r.closesOn ? daysBetween(bkkToday(), r.closesOn) : 99;
       p = n <= 30 ? <span className="bw-spill bw-s-soon">{n === 1 ? c("Closes in 1 day", "ปิดในอีก 1 วัน") : c(`Closes in ${n} days`, `ปิดในอีก ${n} วัน`)}</span> : <span className="bw-spill bw-s-open">{c("Open", "เปิดรับ")}</span>;
     }
-    return <span className="inline-flex flex-wrap gap-1">{p}{ext}</span>;
+    const thai = r.thaiMissing ? <span className="bw-thai-missing">{c("Thai missing", "ยังไม่มีภาษาไทย")}</span> : null;
+    return <span className="inline-flex flex-wrap gap-1">{p}{thai}{ext}</span>;
   };
 }
 
@@ -153,7 +155,7 @@ export function AdminAdvertisementPage() {
             {d.rows.length === 0 && <p className="px-4 py-8 text-center text-sm text-[#6B7280]">{c("No buy orders match. Try another word or filter.", "ไม่พบประกาศซื้อ ลองคำหรือตัวกรองอื่น")}</p>}
             {d.rows.map((r) => (
               <div key={r.id} className={cn("bw-arow", r.status === "waiting" && "bw-wait")} onClick={() => clickRow(r)}>
-                <span className="flex min-w-0 items-center gap-3"><Tile38 sector={r.sector} /><span className="min-w-0"><span className={cn("block truncate text-[14px]", r.status === "closed" && "text-[#6B7280]")}><b>{r.name}</b> · {r.ref}</span><KindLine r={r} /></span></span>
+                <span className="flex min-w-0 items-center gap-3"><Tile38 sector={r.sector} /><span className="min-w-0"><span className={cn("block truncate text-[14px]", r.status === "closed" && "text-[#6B7280]")}><b>{localizeCard(r, th).name}</b> · {r.ref}</span><KindLine r={r} /></span></span>
                 <span>{status(r)}</span>
                 <span className="text-[13px]">{r.postedAt ? fmtDay(r.postedAt, th, false) : "–"}</span>
                 <span className="text-[13px]">{r.closesOn ? <>{fmtDay(r.closesOn, th)}<br /><span className="text-[12px] text-[#6B7280]">{periodLabel(r.periodMonths, th)}</span></> : "–"}</span>
@@ -171,7 +173,7 @@ export function AdminAdvertisementPage() {
                 {d.rows.map((r) => (
                   <button key={r.id} type="button" onClick={() => setOpenId(r.id)} className={cn("flex gap-3 rounded-xl border bg-card p-3 text-left", open?.id === r.id && "outline outline-2 outline-[#F6A823]")}>
                     <Tile38 sector={r.sector} size={44} />
-                    <span className="min-w-0 space-y-1"><span className="block truncate text-[13.5px]"><b>{r.name}</b> · {r.ref}</span><KindLine r={r} /><span className="block">{status(r)}</span>
+                    <span className="min-w-0 space-y-1"><span className="block truncate text-[13.5px]"><b>{localizeCard(r, th).name}</b> · {r.ref}</span><KindLine r={r} /><span className="block">{status(r)}</span>
                       <span className="block text-[12px] text-[#6B7280]">{c(`${r.applied} applicants · ${r.appsNew ?? 0} new`, `ผู้สมัคร ${r.applied} · ใหม่ ${r.appsNew ?? 0}`)}</span></span>
                   </button>
                 ))}
