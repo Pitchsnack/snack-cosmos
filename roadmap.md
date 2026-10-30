@@ -1,5 +1,9 @@
 # One-step approval — roadmap
 
+## Buy-order cover pills — 30 October 2026
+- [ ] Isolate cover pill styles and align top/bottom rows across shared card views without changing cover heights or pictures.
+- [ ] Verify EN/TH, photo/drawn covers, narrow layouts, status rules and existing seller Apply controls.
+
 ## Businesses Wanted filter bars — 30 October 2026
 - [x] Align grouped filters on Businesses Wanted and Admin Advertisement at desktop/tablet/phone widths.
 - [x] Set exact EN/TH Admin Buyer subtitle and persona-coloured MARKETPLACE eyebrow; preserve existing card rules.
