@@ -1,5 +1,10 @@
 # One-step approval — roadmap
 
+## Businesses Wanted menu NEW tag — 30 October 2026
+- [x] Replace the "{n} new" amber/white pill (count, tooltip, fill) on the Businesses Wanted menu row with the app's own NEW tag, always shown; keep icon, name, place, link and the cards' NEW pill.
+- [x] Verify Seller/Buyer/Advisor personas and Control admin: tag matches Advertisement's dashed style, no fill on the selected row (row text colour), folded menu hides it, Thai shows ใหม่, cards keep their NEW pill; 30 buy-order tests pass, build OK, no runtime errors.
+
+
 ## Buy-order cover pills — 30 October 2026
 - [x] Isolate cover pill styles and align top/bottom rows across shared card views; preserve 112px pictures and prevent the 96px details cover shrinking.
 - [x] Verify signed-in Admin Buyer/Seller, EN/TH at 390px and 300px cards, photo/drawn fallback and details; all 30 buy-order rule tests pass, no runtime errors.
