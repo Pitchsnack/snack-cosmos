@@ -354,7 +354,7 @@ select.bw-in { height: 42px; padding-top: 0; padding-bottom: 0; line-height: 1.2
 .bw-city-other { margin: 6px 8px 2px; padding-top: 8px; border-top: 1px solid var(--bw-soft); font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #6B7280; }
 .bw-city-none { padding: 10px 8px; font-size: 13px; color: var(--bw-mute); }
 
-/* The wider Target company price range list, and two-line card labels that still line up */
+/* The wider Target company price list, and two-line card labels that still line up */
 .bw-select-wide select { min-width: 220px; }
 .bw-cell small { min-height: 2.3em; display: flex; align-items: flex-end; }
 

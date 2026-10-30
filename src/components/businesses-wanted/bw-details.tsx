@@ -92,7 +92,7 @@ export function BuyOrderDetails({ card: rawCard, persona, applyCtx, onClose, onA
               <Row l={c("Target revenue", "รายได้เป้าหมาย")} v={card.targetRevenue} />
               <Row l={c("Profit", "กำไร")} v={profitLabel(card.profit, th)} />
               <Row l={c("Deal type", "รูปแบบดีล")} v={card.dealTypes.join(" · ")} />
-              <Row l={c("Target company price range", "ช่วงราคาบริษัทเป้าหมาย")} v={card.priceRange} />
+              <Row l={c("Target company price", "ราคาบริษัทเป้าหมาย")} v={card.priceRange} />
               <Row l={c("Timing", "ระยะเวลา")} v={card.timing} />
             </section>
             <section className="bw-dsec">

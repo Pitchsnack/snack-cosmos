@@ -258,7 +258,7 @@ export function BuyOrderCard({ card: rawCard, persona, applyCtx, mode = "browse"
           <div className="bw-cell"><small>{c("Property size", "ขนาดที่ดิน")}</small><b className="bw-one bw-sm">{any(card.propertySize)}</b></div>
           <div className="bw-cell"><small>{c("Factory size", "ขนาดโรงงาน")}</small><b className="bw-one bw-sm">{any(card.factorySize)}</b></div>
           <div className="bw-cell"><small>{c("Target revenue", "รายได้เป้าหมาย")}</small><b>{card.targetRevenue}</b></div>
-          <div className="bw-cell"><small>{c("Target company price range", "ช่วงราคาบริษัทเป้าหมาย")}</small><b>{card.priceRange}</b></div>
+          <div className="bw-cell"><small>{c("Target company price", "ราคาบริษัทเป้าหมาย")}</small><b>{card.priceRange}</b></div>
           {more && <>
             <div className="bw-cell bw-span bw-deal"><small>{c("Deal type", "รูปแบบดีล")}</small><b className="bw-sm">{card.dealTypes.join(" · ") || "—"}</b></div>
             <div className="bw-cell bw-span"><small>{c("Must have", "ต้องมี")}</small><b className="bw-sm">{card.mustHave.join(" · ") || "—"}</b></div>

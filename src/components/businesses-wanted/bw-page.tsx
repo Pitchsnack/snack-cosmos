@@ -115,7 +115,7 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
           <span className="truncate">{sector ? sectorName(sector) : c("All industries", "ทุกอุตสาหกรรม")}</span><ChevronDown className="h-4 w-4 shrink-0" />
         </Button>
         {sel(rev, setRev, c("Target revenue", "รายได้เป้าหมาย"), SELLER_BANDS.map((b) => b.label), c("Target revenue", "รายได้เป้าหมาย"))}
-        {sel(price, setPrice, c("Target company price range", "ช่วงราคาบริษัทเป้าหมาย"), SELLER_BANDS.map((b) => b.label), c("Target company price range", "ช่วงราคาบริษัทเป้าหมาย"), undefined, true)}
+        {sel(price, setPrice, c("Target company price", "ราคาบริษัทเป้าหมาย"), SELLER_BANDS.map((b) => b.label), c("Target company price", "ราคาบริษัทเป้าหมาย"), undefined, true)}
         {sel(city, setCity, c("All cities", "ทุกเมือง"), allCities, c("City", "เมือง"), (o) => citiesDisplay(o, th))}
         </div>
       </div>
