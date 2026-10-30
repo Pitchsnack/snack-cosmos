@@ -9,7 +9,7 @@ export const BO_SHARE_COPY = {
   shared: ['shared', 'แชร์'],
   title: ['an acquisition opportunity with you', 'โอกาสซื้อกิจการให้ท่าน'],
   body: ['A verified buyer on PitchSnack is looking to acquire a business like the one below. If you’re interested, contact the PitchSnack team. The buyer’s identity will remain private.', 'ผู้ซื้อที่ผ่านการยืนยันบน PitchSnack กำลังมองหาธุรกิจแบบด้านล่างนี้ หากท่านสนใจ โปรดติดต่อทีมงาน PitchSnack ตัวตนของผู้ซื้อจะถูกเก็บเป็นความลับ'],
-  buyer: ['Buyer', 'ผู้ซื้อ'], location: ['Location', 'สถานที่'], rev: ['Target revenue', 'รายได้เป้าหมาย'], price: ['Price range', 'ช่วงราคา'], deal: ['Deal type', 'รูปแบบดีล'], close: ['Applications close', 'ปิดรับสมัคร'],
+  buyer: ['Buyer', 'ผู้ซื้อ'], location: ['Location', 'สถานที่'], rev: ['Target revenue', 'รายได้เป้าหมาย'], price: ['Target company price range', 'ช่วงราคาบริษัทเป้าหมาย'], deal: ['Deal type', 'รูปแบบดีล'], close: ['Applications close', 'ปิดรับสมัคร'],
   hidden: ['Name hidden', 'ไม่แสดงชื่อ'], sealed: ['Sealed · managed by PitchSnack', 'ปิดผนึก · ดูแลโดย PitchSnack'],
   view: ['View buyer request', 'ดูความต้องการของผู้ซื้อ'],
   hintNew: ['New to PitchSnack? You’ll create an account first, and the buy order opens straight after. No access code needed.', 'ยังไม่มีบัญชี PitchSnack? ท่านจะสร้างบัญชีก่อน แล้วประกาศซื้อจะเปิดขึ้นทันที ไม่ต้องใช้รหัสเข้าใช้งาน'],

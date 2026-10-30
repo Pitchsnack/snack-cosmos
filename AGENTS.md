@@ -1,5 +1,5 @@
 # Decisions
-- Businesses Wanted DTOs own persona privacy/access; scoped filter grids prevent collisions. Shared cover rows use pill tokens; public `.bw` pill/close styles stay scoped. Persona tokens theme pages.
+- Businesses Wanted DTOs own persona privacy/access; scoped filter grids avoid collisions. Cover rows use pill tokens; public `.bw` styles scoped. Persona tokens theme pages. Form defaults: browser-safe src/lib/buy-order-defaults.ts.
 - Marketplace Contacts shares role UI; list/card reads recheck active NDA and owner/view access before shared projection, keeping Admin access separate.
 - Admin contacts use a dedicated Control+Admin-authorized directory and separate admin_contact_notes, keyed by user ID; lazy company DTOs adapt shared cards without viewer controls, and profile/status/sign-in/NDA projections serve both Admin entry points without changing marketplace privacy.
 - Seller founders use a browser-safe structured story helper and the existing founder bio plus nullable bio_story; existing startup authorization/saving and bio display gates remain authoritative.
@@ -19,7 +19,7 @@
 - Messages share messages-page.tsx; check membership each call. admin-help.server.ts requires Control+Admin; latest receipt clears team unread; user DTOs hide admin identity. Users ?edit= opens editor; chat profiles read-only.
 - Buyer My Company: buyer_profiles.investor_id links to the Investors Directory row (buyer-investor.functions.ts); sellers get toPublic() only until NDA.
 - Loading: meta.pageLoading; LOI: config/loi-request.json; tour: marketplaceMenu/data-tour + mark_welcome_tour_seen().
-- Covers: listing resolveCover/SectorArt (pick → oldest → drawn); buy-order resolveBuyOrderCover (upload first) via signed DTOs and Control Admin review. Shared Sector images processing keeps listing behavior unchanged; private public-images.
+- Covers: listing resolveCover/SectorArt (pick → oldest → drawn); buy-order resolveBuyOrderCover (upload first), signed DTOs, Control review; shared Sector images processing; private public-images.
 - Seller Browse uses listBrowseInvestors: code names, ranges, revenue minimum; investor-browse.ts filters public ranges, never exact figures.
 - Buyer investor profiles go live only by Admin approval (buyer_profiles.approval_status, decideBuyerProfile); setBuyerListing sends unapproved profiles to review.
 - Email alerts: wording defaults in src/config/email-alerts.ts, Admin overrides/switches in email_alert_settings; every send goes through sendAlert (email-alerts.server.ts), which checks the user switch and logs to email_alert_log; pipeline emails fire from pipeline log() so steps and emails never drift.
