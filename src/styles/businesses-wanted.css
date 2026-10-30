@@ -1,11 +1,33 @@
 /* Businesses Wanted — page, cards, pop-ups. Covers, Sealed pill/box, navy/amber buttons and NEW keep their colours in dark mode. */
-.bw-page { --bw-line: #E6E8EC; --bw-soft: #EEF0F3; --bw-text: #111827; --bw-mute: #6B7280; --bw-card: #fff; --bw-bg: #F6F7F9;
-  background: var(--bw-bg); min-height: 100%; padding: 28px 28px 48px; color: var(--bw-text); }
+.bw-page { --bw-line: #E6E8EC; --bw-soft: #EEF0F3; --bw-text: #111827; --bw-mute: #6B7280; --bw-card: #fff; --bw-bg: #F6F7F9; --bw-filter-border: #DCDFE5;
+  background: var(--bw-bg); min-height: 100%; min-width: 0; padding: 28px 28px 48px; color: var(--bw-text); container: bw-page / inline-size; }
 .dark .bw-page, .dark .bw-dialog { --bw-line: hsl(var(--border, 220 13% 25%)); --bw-soft: rgba(255,255,255,.08); --bw-text: #F3F4F6; --bw-mute: #9CA3AF; --bw-card: #151A28; --bw-bg: #0E121C; }
 .bw-eyebrow { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--role-accent, #F6A823); }
 .bw-h1 { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 28px; font-weight: 700; margin-top: 6px; }
 .bw-sub { color: var(--bw-mute); font-size: 14px; margin-top: 4px; line-height: 1.5; }
-.bw-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.bw-page > .bw-eyebrow { color: var(--role-accent); letter-spacing: 0; }
+.bw-page .bw-filters { display: grid; grid-template-columns: minmax(200px, 1fr) auto; align-items: center; gap: 10px; margin-top: 18px; }
+.bw-page .bw-filter-lists { display: grid; grid-template-columns: 200px repeat(3, 145px); align-items: center; gap: 10px; min-width: 0; }
+.bw-page .bw-filters-admin { margin-top: 14px; }
+.bw-page .bw-filters-admin .bw-filter-lists { grid-template-columns: 150px 200px 180px; }
+.bw-page .bw-filter-results { margin-top: 14px; }
+.bw-page .bw-filters .bw-search, .bw-page .bw-filters .bw-select, .bw-page .bw-filters select.bw-in { box-sizing: border-box; min-width: 0; width: 100%; height: 44px; margin: 0; border: 1px solid var(--bw-filter-border); border-radius: 12px; background: var(--bw-card); color: var(--bw-text); }
+.dark .bw-page { --bw-filter-border: var(--bw-line); }
+.bw-page .bw-filters .bw-search { display: flex; align-items: center; gap: 8px; padding: 0 12px; }
+.bw-page .bw-filters .bw-search > svg { flex-shrink: 0; color: var(--bw-mute); }
+.bw-page .bw-filters .bw-search input { width: 100%; height: 100%; padding: 0; border: 0; font-size: 14px; color: inherit; }
+.bw-page .bw-filters select { width: 100%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bw-page .bw-filters .bw-indbtn { width: 100%; }
+@container bw-page (max-width: 899px) {
+  .bw-page .bw-filters { grid-template-columns: minmax(0, 1fr); }
+  .bw-page .bw-filter-lists, .bw-page .bw-filters-admin .bw-filter-lists { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .bw-page .bw-filters-admin .bw-filter-lists { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .bw-page .bw-filters { grid-template-columns: minmax(0, 1fr); }
+  .bw-page .bw-filter-lists, .bw-page .bw-filters-admin .bw-filter-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bw-page .bw-filters-admin .bw-filter-lists > :last-child { grid-column: 1 / -1; }
+}
 .bw-search, .bw-select { height: 44px; border-radius: 12px; border: 1px solid #DCDFE5; background: var(--bw-card); display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 14px; color: var(--bw-text); }
 .dark .bw-search, .dark .bw-select { border-color: var(--bw-line); }
 .bw-search { flex: 1 1 320px; min-width: 0; }

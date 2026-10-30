@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronDown, Search, Target } from "lucide-react";
 import { usePersona } from "@/hooks/use-marketplace";
+import { Button } from "@/components/ui/button";
 import { BO_SECTORS, SELLER_BANDS, boSector, citiesOf, overlaps, rangeOf, sectorOrder } from "@/lib/buy-orders";
 import { listBuyOrders, myApplyContext, type BoCard } from "@/lib/buy-orders.functions";
 import { BuyOrderCard, useBw, useSectorName } from "./bw-card";
@@ -17,7 +18,7 @@ export const BO_QUERY = ["buy-orders"] as const;
 export function BusinessesWantedPage({ bo }: { bo?: string }) {
   const { c } = useBw();
   const sectorName = useSectorName();
-  const { persona } = usePersona();
+  const { persona, role } = usePersona();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const list = useServerFn(listBuyOrders);
@@ -76,6 +77,7 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
   const p = persona as "seller" | "buyer" | "advisor";
   const sub = p === "seller"
     ? <>{c("Buyers seeking businesses in selected industries.", "ผู้ซื้อที่กำลังมองหาธุรกิจในอุตสาหกรรมที่เลือก")}<br />{c("Qualified Buyers. Specific Mandates. Ready to Acquire.", "ผู้ซื้อที่ผ่านการคัดกรอง ความต้องการชัดเจน พร้อมซื้อกิจการ")}</>
+    : p === "buyer" && role === "admin" ? c("Sealed buy orders posted for the buyers PitchSnack looks after. Write new ones in Advertisement, and check who applies in Pipeline › NDA Invitations › Applications. Advertisements go straight to their buyers.", "ประกาศรับซื้อแบบปิดผนึกที่ลงไว้ให้ผู้ซื้อที่ PitchSnack ดูแล เขียนประกาศใหม่ได้ที่เมนู ประกาศทั่วไป และตรวจสอบผู้สมัครได้ที่ ดีลที่ดำเนินอยู่ › คำเชิญ NDA › ใบสมัคร ส่วนประกาศทั่วไปจะส่งตรงถึงผู้ซื้อ")
     : p === "buyer" ? c("What buyers on PitchSnack are looking for. Buyers’ names stay private. Share a buy order with someone who may have a business that fits.", "สิ่งที่ผู้ซื้อบน PitchSnack กำลังมองหา ชื่อผู้ซื้อถูกเก็บเป็นความลับ แชร์ประกาศให้คนที่อาจมีธุรกิจที่เหมาะ")
     : c("What buyers on PitchSnack are looking for. Buyers’ names stay private.", "สิ่งที่ผู้ซื้อบน PitchSnack กำลังมองหา ชื่อผู้ซื้อถูกเก็บเป็นความลับ");
 
@@ -97,22 +99,24 @@ export function BusinessesWantedPage({ bo }: { bo?: string }) {
   );
 
   return (
-    <div className="bw-page">
+    <div className="bw-page" data-mkt-view={persona}>
       <div className="bw-eyebrow"><Target className="h-3.5 w-3.5" />{c("MARKETPLACE", "มาร์เก็ตเพลส")}</div>
       <h1 className="bw-h1">{c("Businesses Wanted by Buyers", "ธุรกิจที่ผู้ซื้อต้องการ")}</h1>
       <p className="bw-sub">{sub}</p>
 
       <div className="bw-filters">
         <label className="bw-search">
-          <Search className="h-4 w-4 text-[#6B7280]" />
+          <Search className="h-4 w-4 shrink-0" />
           <input aria-label={c("Search buy orders", "ค้นหาประกาศซื้อ")} placeholder={c("Search industry, country or ref", "ค้นหาอุตสาหกรรม ประเทศ หรือรหัส")} value={search} onChange={(e) => setSearch(e.target.value)} />
         </label>
-        <button type="button" className="bw-select bw-indbtn" onClick={() => setChoose(true)}>
+        <div className="bw-filter-lists">
+        <Button variant="unstyled" type="button" className="bw-select bw-indbtn" onClick={() => setChoose(true)}>
           <span className="truncate">{sector ? sectorName(sector) : c("All industries", "ทุกอุตสาหกรรม")}</span><ChevronDown className="h-4 w-4 shrink-0" />
-        </button>
+        </Button>
         {sel(rev, setRev, c("Target revenue", "รายได้เป้าหมาย"), SELLER_BANDS.map((b) => b.label), c("Target revenue", "รายได้เป้าหมาย"))}
         {sel(price, setPrice, c("Price range", "ช่วงราคา"), SELLER_BANDS.map((b) => b.label), c("Price range", "ช่วงราคา"))}
         {sel(city, setCity, c("All cities", "ทุกเมือง"), allCities, c("City", "เมือง"))}
+        </div>
       </div>
 
       <IndustryRow sectors={tileSectors} counts={counts} total={base.length} picked={sector} onPick={setSector} onAll={() => setChoose(true)} />
