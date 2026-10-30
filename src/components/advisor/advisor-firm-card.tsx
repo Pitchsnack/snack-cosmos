@@ -1,4 +1,5 @@
 import { ManagedBadge } from "@/components/common/managed-badge";
+import { sectorChips } from "@/lib/business-types";
 import type React from "react";
 import { useState } from "react";
 import { BadgeCheck, Building2, ChevronDown, ChevronUp } from "lucide-react";
@@ -161,7 +162,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, foot,
           <div className="space-y-1.5">
             <MoreRow label={tr("Languages")} value={f.languages.map(tr).join(" · ") || tr("Not added")} />
             {(f.sectorAgnostic || f.sectors.length > 0) && <MoreRow label={tr("Sectors")} value={
-              <span className="flex flex-wrap gap-1">{(f.sectorAgnostic ? [tr("Sector agnostic")] : f.sectors).map((s) => <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[12px]">{s}</span>)}</span>} />}
+              <span className="flex flex-wrap gap-1">{(f.sectorAgnostic ? [tr("Sector agnostic")] : sectorChips(f.sectors, f.sectorPicks)).map((s) => <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[12px]">{s}</span>)}</span>} />}
           </div>
         )}
       </div>
