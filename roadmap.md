@@ -1,5 +1,10 @@
 # One-step approval — roadmap
 
+## Buy-order photo covers — 30 October 2026
+- [ ] Add protected cover fields/storage and shared upload/picked/oldest/drawn resolution.
+- [ ] Show pictures on all buy-order covers and add bilingual Admin Change picture dialog.
+- [ ] Test cover precedence, file limits/authorization and check live controls without invented business data.
+
 ## Paid reports — no-orders queue
 - [x] Include successful linked DBD companies with zero orders in the server directory and sixth queue.
 - [x] Add row, panel and seven-report Admin presentation without mutations or access changes.
