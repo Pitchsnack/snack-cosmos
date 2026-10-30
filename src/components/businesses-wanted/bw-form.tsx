@@ -52,7 +52,7 @@ function BulletArea({ id, rows, value, onChange }: { id: string; rows: number; v
   return (
     <>
       <textarea
-        ref={ref} id={id} className="bw-in" rows={rows} value={text}
+        ref={ref} id={id} className="bw-in bw-bullet-area" rows={rows} wrap="soft" value={text}
         onFocus={() => { if (!text) emit(BULLET); }}
         onChange={(e) => {
           const raw = e.target.value;
@@ -150,7 +150,7 @@ export function BoFields({ d, set, errs, clients, only }: {
       {show("description") && (
         <div className="bw-span2">
           <label className="bw-lab" htmlFor="bo-description">{c("Description", "คำอธิบาย")} {only && <em>{c("up to three sentences", "ไม่เกิน 3 ประโยค")}</em>}</label>
-          <textarea {...inv("description")} className="bw-in" rows={4} maxLength={400} value={d.description} onChange={(e) => set({ description: e.target.value })} />
+          <textarea {...inv("description")} className="bw-in" rows={4} wrap="soft" maxLength={400} value={d.description} onChange={(e) => set({ description: e.target.value })} />
           <div className="flex justify-between gap-3"><p className="bw-hint">{c("Up to three sentences: who the buyer is, what they want and why. No names.", "ไม่เกิน 3 ประโยค: ผู้ซื้อคือใคร ต้องการอะไร และเพราะเหตุใด ห้ามระบุชื่อ")}</p><p className="bw-hint shrink-0">{d.description.length} / 400</p></div>
           {errText("description")}
         </div>
@@ -167,7 +167,7 @@ export function BoFields({ d, set, errs, clients, only }: {
       )}
       {show("propertySize") && <div><label className="bw-lab" htmlFor="bo-propertySize">{c("Property size", "ขนาดที่ดิน")}</label>{sel("propertySize", PROPERTY_SIZES)}<p className="bw-hint">{c("The land, in rai (1 rai = 1,600 sqm).", "ที่ดิน หน่วยเป็นไร่ (1 ไร่ = 1,600 ตร.ม.)")}</p></div>}
       {show("factorySize") && <div><label className="bw-lab" htmlFor="bo-factorySize">{c("Factory size", "ขนาดโรงงาน")}</label>{sel("factorySize", FACTORY_SIZES)}<p className="bw-hint">{c("The factory’s floor area.", "พื้นที่ใช้สอยของโรงงาน")}</p></div>}
-      {show("products") && <div className="bw-span2"><label className="bw-lab" htmlFor="bo-products">{c("Products and services", "สินค้าและบริการ")}</label><textarea id="bo-products" className="bw-in" rows={2} maxLength={500} value={d.products} onChange={(e) => set({ products: e.target.value })} /></div>}
+      {show("products") && <div className="bw-span2"><label className="bw-lab" htmlFor="bo-products">{c("Products and services", "สินค้าและบริการ")}</label><textarea id="bo-products" className="bw-in" rows={2} wrap="soft" maxLength={500} value={d.products} onChange={(e) => set({ products: e.target.value })} /></div>}
       {show("targetRevenue") && !only && ranges("targetRevenue")}
       {show("dealTypes") && (
         <div className="bw-span2" role="group" aria-labelledby="bo-deal-l">

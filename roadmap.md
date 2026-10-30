@@ -1,5 +1,9 @@
 # One-step approval — roadmap
 
+## Buy order form text boxes — 30 October 2026
+- [x] Expand and wrap the four shared text boxes, align all labels and remove repeated business from EN/TH Agribusiness defaults; preserve saving, counts, hints and bullets.
+- [ ] Verify signed-in form at desktop and 390px, Thai defaults, overflow/resizing and existing tests.
+
 ## Buy-order Share pop-up — 30 October 2026
 - [x] Restore shared dialog padding, grey text, industry icon and bordered/focused email input; preserve text, validation and sending.
 - [x] Verified signed-in Admin Seller card/details entry points, EN desktop and TH 390px layouts, sector icon, focus ring and required-email error; 30 existing tests pass and build OK. Shared dialog covers other personas; no email sent or other account impersonated.

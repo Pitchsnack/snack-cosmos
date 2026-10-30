@@ -47,8 +47,8 @@
 .bw-views i { width: 26px; height: 22px; border-radius: 6px; display: grid; place-items: center; color: #6B7280; }
 .bw-views i.is-on { background: #F6A823; color: #1F2328; }
 .bw-search { display: flex; gap: 6px; margin-top: 12px; }
-.bw-in, .bw-dd { height: 30px; background: #fff; border: 1px solid #E5E7EB; border-radius: 8px; font-size: .64em; display: flex; align-items: center; white-space: nowrap; }
-.bw-in { flex: 1; padding: 0 10px; gap: 6px; color: #6B7280; } .bw-in em { color: #9CA3AF; }
+.bw .bw-in, .bw-dd { height: 30px; background: #fff; border: 1px solid #E5E7EB; border-radius: 8px; font-size: .64em; display: flex; align-items: center; white-space: nowrap; }
+.bw .bw-in { flex: 1; padding: 0 10px; gap: 6px; color: #6B7280; } .bw .bw-in em { color: #9CA3AF; }
 .bw-dd { padding: 0 8px 0 10px; gap: 8px; color: #374151; }
 .bw-row { display: flex; gap: 12px; padding: 0 0 16px 16px; overflow: hidden; -webkit-mask-image: linear-gradient(to right, #000 60%, transparent 97%); mask-image: linear-gradient(to right, #000 60%, transparent 97%); }
 .bw-lc { flex: none; width: 258px; background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(16,24,40,.05); }
