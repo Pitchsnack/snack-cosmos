@@ -55,9 +55,9 @@
 .bw-lc2 { box-shadow: none; }
 .bw-cv { position: relative; height: 104px; background: #C9D3DF center/cover no-repeat; }
 .bw-cv84 { height: 84px; }
-.bw-pill { position: absolute; top: 8px; left: 8px; display: flex; background: #fff; border-radius: 99px; overflow: hidden; box-shadow: 0 1px 4px rgba(10,20,30,.22); color: #2B2F36; white-space: nowrap; }
-.bw-pill > span { display: flex; align-items: center; gap: 4px; padding: 3px 7px; font-size: .56em; font-weight: 600; }
-.bw-pill > b { background: #F5A524; color: #3B2300; font-size: .52em; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 3px 7px; display: flex; align-items: center; }
+.bw .bw-pill { position: absolute; top: 8px; left: 8px; display: flex; background: #fff; border-radius: 99px; overflow: hidden; box-shadow: 0 1px 4px rgba(10,20,30,.22); color: #2B2F36; white-space: nowrap; }
+.bw .bw-pill > span { display: flex; align-items: center; gap: 4px; padding: 3px 7px; font-size: .56em; font-weight: 600; }
+.bw .bw-pill > b { background: #F5A524; color: #3B2300; font-size: .52em; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 3px 7px; display: flex; align-items: center; }
 .bw-star { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 7px; background: #fff; display: grid; place-items: center; box-shadow: 0 1px 4px rgba(10,20,30,.22); }
 .bw-lb { padding: 10px 12px 12px; }
 .bw-lt { font-size: .8em; font-weight: 600; line-height: 1.3; text-wrap: balance; white-space: pre-line; }
@@ -78,7 +78,7 @@
 
 /* picture 2 */
 .bw-dark2 .bw-eb, .bw-dark2 .bw-sub, .bw-dark2 .bw-foot { color: #4B5563; }
-.bw-x { width: 24px; height: 24px; display: grid; place-items: center; color: #6B7280; }
+.bw .bw-x { width: 24px; height: 24px; display: grid; place-items: center; color: #6B7280; }
 .bw-ndac { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
 .bw-ndat { display: flex; align-items: center; gap: 8px; }
 .bw-tile { width: 26px; height: 26px; border-radius: 8px; background: #E6EFF6; color: #30669A; display: grid; place-items: center; flex: none; }

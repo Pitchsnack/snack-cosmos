@@ -1,5 +1,10 @@
 # One-step approval — roadmap
 
+## Buy-order cover pills — 30 October 2026
+- [x] Isolate cover pill styles and align top/bottom rows across shared card views; preserve 112px pictures and prevent the 96px details cover shrinking.
+- [x] Verify signed-in Admin Buyer/Seller, EN/TH at 390px and 300px cards, photo/drawn fallback and details; all 30 buy-order rule tests pass, no runtime errors.
+- [ ] Other-account seller Apply and Applications/Admin-check cards — unavailable in this session: no eligible managed seller or applications, and no waiting orders. Shared card implementation updated; no data invented or changed.
+
 ## Businesses Wanted filter bars — 30 October 2026
 - [x] Align grouped filters on Businesses Wanted and Admin Advertisement at desktop/tablet/phone widths.
 - [x] Set exact EN/TH Admin Buyer subtitle and persona-coloured MARKETPLACE eyebrow; preserve existing card rules.

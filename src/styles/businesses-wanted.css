@@ -1,4 +1,5 @@
 /* Businesses Wanted — page, cards, pop-ups. Covers, Sealed pill/box, navy/amber buttons and NEW keep their colours in dark mode. */
+:root { --bw-pill-surface: rgba(255,255,255,.95); --bw-pill-ink: #374151; --bw-pill-shadow: 0 1px 2px rgba(16,24,40,.12); --bw-cover-dark: #151A28; --bw-cover-light: #fff; --bw-cover-amber: #F6A823; --bw-cover-new-ink: #0E162F; --bw-cover-muted: #6B7280; --bw-cover-dot-muted: #9CA3AF; --bw-cover-dot-soon: #F59E0B; --bw-cover-dot-waiting: #7C3AED; --bw-cover-dot-back: #DC2626; }
 .bw-page { --bw-line: #E6E8EC; --bw-soft: #EEF0F3; --bw-text: #111827; --bw-mute: #6B7280; --bw-card: #fff; --bw-bg: #F6F7F9; --bw-filter-border: #DCDFE5;
   background: var(--bw-bg); min-height: 100%; min-width: 0; padding: 28px 28px 48px; color: var(--bw-text); container: bw-page / inline-size; }
 .dark .bw-page, .dark .bw-dialog { --bw-line: hsl(var(--border, 220 13% 25%)); --bw-soft: rgba(255,255,255,.08); --bw-text: #F3F4F6; --bw-mute: #9CA3AF; --bw-card: #151A28; --bw-bg: #0E121C; }
@@ -68,7 +69,7 @@
 .bw-grey .bw-card-cover { filter: grayscale(1); opacity: .6; }
 .bw-grey .bw-card-head, .bw-grey .bw-card-box { opacity: .55; }
 
-.bw-cover { position: relative; overflow: hidden; color: #fff; }
+.bw-cover { position: relative; flex-shrink: 0; overflow: hidden; color: var(--bw-cover-light); }
 .bw-cover-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .bw-cover-closed { filter: grayscale(1); opacity: .6; }
 .bw-grey .bw-card-cover:has(.bw-cover-closed) { filter: none; opacity: 1; }
@@ -76,10 +77,17 @@
 .bw-cover-top, .bw-cover-bottom { position: absolute; left: 12px; right: 12px; display: flex; justify-content: space-between; gap: 6px; align-items: flex-start; }
 .bw-cover-top { top: 12px; flex-wrap: wrap; }
 .bw-cover-top > .bw-chip { margin-left: auto; }
-.bw-cover-bottom { bottom: 12px; align-items: center; }
-.bw-row-l { display: flex; gap: 6px; flex-wrap: wrap; }
-.bw-pill { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 10px; border-radius: 999px; background: rgba(255,255,255,.95); color: #374151; font-size: 11.5px; font-weight: 600; box-shadow: 0 1px 2px rgba(16,24,40,.12); white-space: nowrap; }
-.bw-chip { white-space: normal; max-width: 100%; height: auto; min-height: 24px; text-align: right; }
+.bw-cover-bottom { bottom: 12px; align-items: center; flex-wrap: wrap-reverse; }
+.bw-cover-bottom > .bw-stats { margin-left: auto; }
+.bw-row-l { display: flex; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.bw-pill { position: static; display: inline-flex; align-items: center; flex-shrink: 0; gap: 5px; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--bw-pill-surface); color: var(--bw-pill-ink); font-size: 11.5px; font-weight: 600; line-height: 1; letter-spacing: 0; box-shadow: var(--bw-pill-shadow); white-space: nowrap; }
+.bw-chip { max-width: 100%; min-width: 0; text-align: right; }
+.bw-chip > span { overflow: hidden; text-overflow: ellipsis; }
+.bw-chip > svg { width: 13px; height: 13px; }
+.bw-cover .bw-yours, .bw-cover .bw-shared { background: var(--bw-pill-surface); color: var(--bw-pill-ink); }
+.bw-cover .bw-shared svg { color: inherit; }
+.bw-advertisement svg { color: var(--bw-cover-muted); }
+.bw-sealed svg { color: var(--bw-cover-amber); }
 .bw-chip-solid { background: #F3F4F6; box-shadow: none; height: 26px; }
 .bw-bordered { border: 1px solid #E5E7EB; box-shadow: none; }
 .bw-dot { width: 4px; height: 4px; border-radius: 999px; background: #D1D5DB; }
@@ -87,10 +95,14 @@
 .bw-shared { background: #EEF2FF; color: #3730A3; }
 .bw-shared svg { color: #4F46E5; }
 .bw-status i { width: 7px; height: 7px; border-radius: 999px; }
+.bw-status-muted i { background: var(--bw-cover-dot-muted); }
+.bw-status-soon i { background: var(--bw-cover-dot-soon); }
+.bw-status-waiting i { background: var(--bw-cover-dot-waiting); }
+.bw-status-back i { background: var(--bw-cover-dot-back); }
 .bw-status-new { padding-right: 0; overflow: hidden; }
-.bw-new-end { background: #F6A823; color: #0E162F; height: 100%; display: inline-flex; align-items: center; padding: 0 8px; margin-left: 4px; font-size: 10.5px; letter-spacing: .06em; }
-.bw-new { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; background: #F6A823; color: #0E162F; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; }
-.bw-sealed { background: #151A28; color: #fff; cursor: help; }
+.bw-new-end { background: var(--bw-cover-amber); color: var(--bw-cover-new-ink); height: 100%; display: inline-flex; align-items: center; padding: 0 8px; margin-left: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: 0; }
+.bw-new { display: inline-flex; align-items: center; flex-shrink: 0; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--bw-cover-amber); color: var(--bw-cover-new-ink); font-size: 10.5px; font-weight: 700; letter-spacing: 0; box-shadow: var(--bw-pill-shadow); }
+.bw-sealed { background: var(--bw-cover-dark); color: var(--bw-cover-light); cursor: help; }
 .bw-sealed:focus-visible { outline: 2px solid #F6A823; outline-offset: 2px; }
 .bw-sealed-box { position: fixed; z-index: 1000; width: min(416px, calc(100vw - 16px)); background: #151A28; color: #fff; font-size: 12.5px; font-weight: 500; line-height: 1.55; padding: 10px 14px; border-radius: 10px; box-shadow: 0 10px 28px rgba(16,24,40,.28); pointer-events: none; }
 
