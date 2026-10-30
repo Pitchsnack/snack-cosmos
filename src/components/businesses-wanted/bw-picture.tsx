@@ -25,7 +25,7 @@ export function BuyOrderPicture({ card, onSaved }: { card: BoCard; onSaved: (cov
   return <>
     <Button ref={trigger} variant="outline" className="mt-3 h-9 w-full" onClick={() => setOpen(true)}><Image />{c("Change picture", "เปลี่ยนรูปภาพ")}</Button>
     <p title={line} className="mt-1.5 truncate text-xs text-muted-foreground">{line}</p>
-    {open && <PictureDialog card={card} onSaved={onSaved} onClose={() => setOpen(false)} returnFocus={() => trigger.current?.focus()} />}
+    {open && <PictureDialog card={card} onSaved={onSaved} onClose={() => setOpen(false)} returnFocus={() => requestAnimationFrame(() => trigger.current?.focus())} />}
   </>;
 }
 
