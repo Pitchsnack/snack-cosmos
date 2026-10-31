@@ -195,7 +195,7 @@ export const TH_COMPANY_SETUP: Record<string, string> = {
   "Name hidden": "ซ่อนชื่อ",
   "Name after NDA": "ชื่อหลัง NDA",
   "Proof of funds": "หลักฐานเงินทุน",
-  "Individual Investor": "นักลงทุนรายบุคคล",
+  "Individual Investor": "นักลงทุนรายบุคคลที่มีความเชี่ยวชาญ",
   "Management buy-in": "การเข้าซื้อกิจการโดยผู้บริหารภายนอก",
   "Asia": "เอเชีย",
   "Australia": "ออสเตรเลีย",
