@@ -529,7 +529,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   return (
     <div className="overflow-hidden rounded-[14px] border border-border">
       <div className="px-5 pt-5">
-        <PanelHead kind="public" title={setupText(title)} meta={[p.ref_no, p.country].filter(Boolean).join(" · ")}
+        <PanelHead kind="public" title={setupText(title)} meta={[p.ref_no, p.country ? tr(p.country) : null].filter(Boolean).join(" · ")}
           thumb={<div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-[10px]", tone.bg, tone.fg)}><TypeIcon type={org.type} className="h-6 w-6" /></div>}
           editLabel="Edit information" onEdit={() => openProfileEdit({ section: "description", from: "public" })} pill={pill}
           deleteDraft={iv ? { kind: "investor", id: iv.id, invalidate: [KEY, ["buyer-investor"]] } : undefined} />
@@ -538,7 +538,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
         <div className="flex flex-col gap-3 rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
           <BuyerBrowseCard {...props} managed={managedIds.has(iv?.id ?? "")} expanded editable={(k) => openProfileEdit({ section: PART_SEC[k], from: "public" })} cardFooter={
             <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border pt-2 text-[11.5px] text-[#6B7280] dark:text-muted-foreground">
-              <span className="truncate">{setupText(title)} · {p.ref_no}</span><span className="shrink-0">{since}</span>
+              <span className="truncate">{setupText(title)} · {p.ref_no}</span><span className="shrink-0">{setupText(since)}</span>
             </div>
           } />
         </div>
@@ -551,9 +551,9 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E9EBEF] bg-[#FAFAFB] px-5 py-3.5 text-[13px] text-[#6A7181] dark:border-border dark:bg-muted/40 dark:text-muted-foreground">
         {state === "live"
-          ? <span>{setupText("Live in Browse investors since")} {p.live_since ? fmtDate(p.live_since) : "—"} · {org.ndas}{setupText("NDA")}{org.ndas === 1 ? "" : "s"} · {org.lois}{setupText("LOI")}{org.lois === 1 ? "" : "s"}</span>
+          ? <span>{setupText("Live in Browse investors since")} {p.live_since ? fmtDateL(p.live_since, language) : "—"} · {org.ndas}{setupText("NDA")}{org.ndas === 1 ? "" : "s"} · {org.lois}{setupText("LOI")}{org.lois === 1 ? "" : "s"}</span>
           : state === "pending"
-            ? <span>{setupText("Submitted on")} {(p as any).submitted_at ? fmtDate((p as any).submitted_at) : "—"}{setupText("· sellers can't find you yet")}</span>
+            ? <span>{setupText("Submitted on")} {(p as any).submitted_at ? fmtDateL((p as any).submitted_at, language) : "—"}{setupText("· sellers can't find you yet")}</span>
           : state === "changes" || state === "declined"
             ? <span>{setupText("Fix what PitchSnack asked with Edit information, then register again.")}</span>
           : state === "paused"
