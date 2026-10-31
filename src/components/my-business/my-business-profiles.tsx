@@ -486,11 +486,12 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
   const right = current && draftSetup ? (
     <DraftCompanyPanel role="seller" name={current.startup_name || tr("New business")} banner={<SellerSetupBanner setup={draftSetup} />}
       onEdit={() => openEdit(current.id, "private", "images")}
-      onFinish={() => void navigate({ to: "/my-startups/setup/$id", params: { id: current.id } })} />
+      onFinish={() => void navigate({ to: "/my-startups/setup/$id", params: { id: current.id } })}
+      deleteDraft={{ kind: "startup", id: current.id, invalidate: [["startups"]], onDeleted: () => closeDeleted(current.id) }} />
   ) : current && sel ? (
     <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm" style={{ overflow: "visible" }}>
       {sel.view === "public" ? (
-        <PublicPanel key={current.id} s={current} pill={pill} />
+        <PublicPanel key={current.id} s={current} pill={pill} onDeleted={() => closeDeleted(current.id)} />
       ) : (
         <>
           <div className="mb-2 flex items-center justify-between gap-3">
