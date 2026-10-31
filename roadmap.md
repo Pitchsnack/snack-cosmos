@@ -1,8 +1,9 @@
 # One-step approval — roadmap
 
 ## Seller optional setup — 31 October 2026
-- [ ] Update Website actions/tooltip, optional answered rules and seller missing-step icons across wizard/banner.
-- [ ] Test progress/resume rules and EN/TH desktop/phone presentation with test accounts, preserving buyer/advisor setup.
+- [x] Update Website actions/tooltip, optional answered rules and seller-only missing-step icons across wizard/banner; buyer/advisor shared bar remains unchanged.
+- [x] Seven progress/resume tests pass; test seller EN/TH at 1440/390/360 has no overflow, correct action order, disabled-button tooltip and Escape dismissal; No company website advances and appears on Review. Test website restored through UI and read back; build OK. Supplied interactive reference exercised.
+- [ ] Control test-account presentation, empty Licences Review and missing-icon visual checks — blocked on a dedicated Control test identity and suitable empty draft; shared seller implementation and pure rules tested without using Dan's login.
 
 ## Admin Plans Reports — 31 October 2026
 - [x] Central report prices, history/scheduling, quarterly allowances and transactional usage; preserve existing workflows and bundle.
