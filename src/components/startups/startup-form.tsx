@@ -1646,7 +1646,7 @@ export function StartupForm({
   const peopleJsx = (<>
       {/* Founders */}
       {miss(founders.filter((f) => f.full_name.trim()).length === 0) && (
-        <p className="text-xs text-destructive">⚠ Missing: add at least one founder</p>
+        <p className="text-xs text-destructive">{tr("⚠ Missing: add at least one founder", "⚠ ยังขาด: เพิ่มผู้ก่อตั้งอย่างน้อยหนึ่งคน")}</p>
       )}
       <EditSec id="founders" tone="seller" active={secOn("founders")}>
         <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} year={yearFounded} sales={founderRevenueLabel(lastYearRevenue, th ? "th" : "en")} salesFor={(l) => founderRevenueLabel(lastYearRevenue, l)} addOnOpen={section === "founders-add"} />
@@ -1973,9 +1973,9 @@ export function StartupForm({
       {editCtx ? (
         <EditInfoFooter>
           {createAttempted && !isEdit && !canSubmit && <p className="basis-full text-[13px] font-medium text-destructive">To create the startup, fill in: {!startupName.trim() && "Company Name (About Company), "}{!tenantId && "Tenant, "}{(!owningAgentUserId || !owningAiAgentId) && "required ownership (Admin settings)."}</p>}
-          <Button type="button" variant="outline" onClick={() => editCtx?.requestClose()}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={() => editCtx?.requestClose()}>{tr("Cancel", "ยกเลิก")}</Button>
           <Button type="submit" form="startup-edit-form" disabled={submitting} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            {submitting ? "Saving…" : isEdit ? "Save changes" : "Create startup"}
+            {submitting ? tr("Saving…", "กำลังบันทึก…") : isEdit ? tr("Save changes", "บันทึกการเปลี่ยนแปลง") : tr("Create startup", "สร้างบริษัท")}
           </Button>
         </EditInfoFooter>
       ) : (
