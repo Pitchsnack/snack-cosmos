@@ -145,7 +145,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">{setupText("My Company")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{firms.length}{setupText("firm profile")}{firms.length === 1 ? "" : "s"}{setupText("you own or manage")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{setupText(`${firms.length} firm profile${firms.length === 1 ? "" : "s"} you own or manage`)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" className={cn("h-9 gap-1.5", savedOnly && "border-accent text-accent")} onClick={() => setSavedOnly((v) => !v)} aria-pressed={savedOnly} title={setupText("Saved")}>
@@ -271,7 +271,7 @@ function ChecklistPill({ f, onItem }: { f: AdvisorFirm; onItem: (s: EditSection)
         <div className="absolute right-0 top-full z-50 mt-2 w-[340px] max-w-[calc(100vw-2rem)] rounded-[14px] border border-border bg-card p-4 text-left shadow-xl">
           <div className="flex items-center justify-between text-[14px] font-bold"><span>{setupText("Profile setup")}</span><span className="text-profile">{pct}%</span></div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className={cn("h-full rounded-full", full ? "bg-emerald-600" : "bg-profile")} style={{ width: `${pct}%` }} /></div>
-          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{todo.length}{setupText("item")}{todo.length === 1 ? "" : "s"}{setupText("left before you can publish")}</p>}
+          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{setupText(`${todo.length} item${todo.length === 1 ? "" : "s"} left before you can publish`)}</p>}
           {todo.length > 0 && (
             <Group title={setupText("To do")}>
               {todo.map((i) => <Row key={i.key} label={i.label} link="Add →" circle="solid" onClick={() => { setOpen(false); onItem(i.section); }} />)}
@@ -620,7 +620,7 @@ function SetupBanner({ f, onOpen }: { f: AdvisorFirm; onOpen: () => void }) {
         </p>
         <div className="mt-2 flex items-center gap-2.5">
           <div className="h-1.5 w-[180px] overflow-hidden rounded-full border border-[#B9E6DF] bg-white dark:border-[#1F5A52] dark:bg-background"><div className="h-full bg-[#0F766E] dark:bg-[#5EEAD4]" style={{ width: `${(n / Math.max(1, N)) * 100}%` }} /></div>
-          <span className="text-[12px] font-semibold text-[#0F766E] dark:text-[#5EEAD4]">{n}{setupText("of")} {N}{setupText("answered")}</span>
+          <span className="text-[12px] font-semibold text-[#0F766E] dark:text-[#5EEAD4]">{setupText(`${n} of ${N} answered`)}</span>
         </div>
       </div>
       <Button data-tour-btn onClick={onOpen} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90 max-[860px]:w-full">{setupText(n === 0 ? "Start setup →" : "Continue setup →")}</Button>
@@ -679,7 +679,7 @@ function ServicesDialog({ f, open, onOpenChange }: { f: AdvisorFirm; open: boole
         </div>
         <div className="max-h-[56vh] overflow-y-auto p-5"><ServiceTiles picked={picked} onToggle={toggle} /></div>
         <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-3.5">
-          {picked.length ? <span className="text-[13.5px] font-semibold text-[#0F766E]">{picked.length}{setupText("selected")}</span> : <span className="text-[13.5px] font-semibold text-[#B45309]">{setupText("Pick at least one service.")}</span>}
+          {picked.length ? <span className="text-[13.5px] font-semibold text-[#0F766E]">{setupText(`${picked.length} selected`)}</span> : <span className="text-[13.5px] font-semibold text-[#B45309]">{setupText("Pick at least one service.")}</span>}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>{setupText("Cancel")}</Button>
             <Button disabled={!picked.length || busy} onClick={submit} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90">{setupText("Save services")}</Button>

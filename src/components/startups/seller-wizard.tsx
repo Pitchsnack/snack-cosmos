@@ -431,7 +431,7 @@ export function SellerWizard({
       <div className={`mx-auto ${cur.id === "web" ? "max-w-[800px]" : "max-w-[680px]"} px-5 pb-16 pt-10`}>
         <div className="mb-2.5 flex items-baseline justify-between text-[13px] text-[#6b7280]">
           <b className="font-semibold text-[#111827]">{tr(SECTIONS[cur.sec])}</b>
-          <span>{setupText("Step")} {pos + 1}{setupText("of")} {shown.length}</span>
+          <span>{setupText(`Step ${pos + 1} of ${shown.length}`)}</span>
         </div>
         <div className="mb-6 mt-5">
           <StepBar missedIcon steps={items} lineTo={lineTo} onPick={openStep} label={L("Setup steps", "ขั้นตอนการตั้งค่า")} stepWord={stepWord} missedWord={L("Not answered", "ยังไม่ได้ตอบ")} />

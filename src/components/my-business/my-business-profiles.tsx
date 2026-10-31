@@ -132,7 +132,7 @@ function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) 
         <div className="absolute right-0 top-full z-50 mt-2 w-[360px] max-w-[calc(100vw-2rem)] rounded-[14px] border border-border bg-card p-4 text-left shadow-xl">
           <div className="flex items-center justify-between text-[14px] font-bold"><span>{setupText("Profile setup")}</span><span className="text-profile">{pct}%</span></div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className={cn("h-full rounded-full", full ? "bg-emerald-600" : "bg-profile")} style={{ width: `${pct}%` }} /></div>
-          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{missingRequired}{setupText("required item")}{missingRequired === 1 ? "" : "s"}{setupText("before you can submit")}</p>}
+          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{setupText(`${missingRequired} required item${missingRequired === 1 ? "" : "s"} before you can submit`)}</p>}
 
           {!full && next && (
             <div className="mt-3 rounded-[10px] border border-profile-line bg-profile-soft p-3">
@@ -161,7 +161,7 @@ function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) 
             <div className="mt-3">
               {!full && (
                 <button type="button" onClick={() => setShowDone((v) => !v)} className="inline-flex items-center gap-1 text-[12px] font-semibold text-muted-foreground">
-                  {done.length}{setupText("completed")} <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showDone && "rotate-180")} />
+                  {setupText(`${done.length} completed`)} <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showDone && "rotate-180")} />
                 </button>
               )}
               {(showDone || full) && (

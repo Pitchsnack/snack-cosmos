@@ -117,7 +117,7 @@ function BuyerPill({ p, org, onItem, setup }: { p: BuyerProfile; org: BuyerOrg; 
         <div className="absolute right-0 top-full z-50 mt-2 w-[340px] max-w-[calc(100vw-2rem)] rounded-[14px] border border-border bg-card p-4 text-left shadow-xl">
           <div className="flex items-center justify-between text-[14px] font-bold"><span>{setupText("Profile setup")}</span><span className="text-profile">{pct}%</span></div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className={cn("h-full rounded-full", full ? "bg-emerald-600" : "bg-profile")} style={{ width: `${pct}%` }} /></div>
-          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{missingRequired}{setupText("required item")}{missingRequired === 1 ? "" : "s"}{setupText("before you can publish")}</p>}
+          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{setupText(`${missingRequired} required item${missingRequired === 1 ? "" : "s"} before you can publish`)}</p>}
           {!full && next && (
             <div className="mt-3 rounded-[10px] border border-profile-line bg-profile-soft p-3">
               <div className="text-[10.5px] font-bold uppercase tracking-wider text-profile">{setupText("Next step")}</div>
@@ -217,7 +217,7 @@ export function BuyerMyCompany() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">{setupText("My Company")}</h1>
-            {isAdmin && <p className="mt-1 text-sm text-muted-foreground">{total}{setupText("investor profile")}{total === 1 ? "" : "s"}{setupText("you own or manage")}</p>}
+            {isAdmin && <p className="mt-1 text-sm text-muted-foreground">{setupText(`${total} investor profile${total === 1 ? "" : "s"} you own or manage`)}</p>}
           </div>
           {isAdmin && <AddInvestorProfileButton onClick={() => void addProfile.run()} busy={addProfile.busy} />}
         </div>
@@ -252,7 +252,7 @@ export function BuyerMyCompany() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">{setupText("My Company")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{total}{setupText("investor profile")}{total === 1 ? "" : "s"}{setupText("you own or manage")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{setupText(`${total} investor profile${total === 1 ? "" : "s"} you own or manage`)}</p>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" role="switch" aria-checked={favOnly} aria-label={favOnly ? "Show all my investor profiles" : "Show only favorites"}
@@ -589,7 +589,7 @@ export function SetupBanner({ n, N, onOpen }: { n: number; N: number; onOpen: ()
             : `Sellers can't find your profile yet. Answer ${N} short questions. It takes about 3 minutes and saves as you go.`)}
         </p>
         <div className="mt-2 flex items-center gap-2 text-[12px] text-muted-foreground">
-          <span>{n}{setupText("of")} {N}{setupText("answered")}</span>
+          <span>{setupText(`${n} of ${N} answered`)}</span>
           <div className="h-1 w-32 overflow-hidden rounded-full bg-card"><div className="h-full bg-[#1E2A4A] dark:bg-[#818CF8]" style={{ width: `${(n / N) * 100}%` }} /></div>
         </div>
       </div>
