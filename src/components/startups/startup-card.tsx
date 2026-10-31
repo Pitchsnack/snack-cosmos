@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import {REPORT_KEYS} from '@/lib/reports-hub';
 import { bizName } from "@/lib/biz-name";
 import { useState, type CSSProperties } from "react";
@@ -79,7 +80,7 @@ export function StartupCard({
   const { isFavorite } = useFavoriteStartups();
   const { row: listingRow } = useHiddenProfile(s.id);
   const isNew = !!listingRow?.new_until && new Date(listingRow.new_until).getTime() > Date.now();
-  const newBadge = isNew ? <span className="absolute right-2 top-2 z-20 rounded-full bg-emerald-600 px-2 py-0.5 text-[10.5px] font-bold text-primary-foreground">NEW</span> : null;
+  const newBadge = isNew ? <span className="absolute right-2 top-2 z-20 rounded-full bg-emerald-600 px-2 py-0.5 text-[10.5px] font-bold text-primary-foreground">{setupText("NEW")}</span> : null;
   const bookmarked = isFavorite(s.id);
 
   const [isPressed, setIsPressed] = useState(false);
@@ -196,7 +197,7 @@ export function StartupCard({
         </div>
 
         {/* Short description */}
-        {reportCount !== undefined && <span className="hub-pill mb-2 self-start">Reports · {reportCount} of {REPORT_KEYS.length} ready</span>}
+        {reportCount !== undefined && <span className="hub-pill mb-2 self-start">{setupText("Reports ·")} {reportCount}{setupText("of")} {REPORT_KEYS.length}{setupText("ready")}</span>}
         {s.short_description && (
           <p className={descClass}>
             {s.short_description}
@@ -219,8 +220,7 @@ export function StartupCard({
         {s.year_founded && (
           <div className="mb-1 flex items-center gap-1.5 text-xs text-foreground">
             <img src={anchorIcon} alt="" aria-hidden className="h-3 w-3 shrink-0" />
-            <span>
-              Est. <span className="text-muted-foreground">{s.year_founded}</span>
+            <span>{setupText("Est.")} <span className="text-muted-foreground">{s.year_founded}</span>
             </span>
           </div>
         )}
@@ -232,7 +232,7 @@ export function StartupCard({
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
                 <span className="cursor-default truncate">
-                  <span className="font-medium text-foreground">Industry:</span> {industryText}
+                  <span className="font-medium text-foreground">{setupText("Industry:")}</span> {industryText}
                 </span>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-[250px] text-xs">
@@ -254,7 +254,7 @@ export function StartupCard({
               itemClassName="bg-muted/50 text-muted-foreground border-transparent"
               leading={
                 <span className="mr-0.5 mt-0.5 inline-flex shrink-0 items-center text-[10px] text-muted-foreground">
-                  <span>Market:</span>
+                  <span>{setupText("Market:")}</span>
                 </span>
               }
             />
@@ -266,7 +266,7 @@ export function StartupCard({
           <div className="mt-1 flex items-start gap-1.5 overflow-hidden">
             <span className="mt-0.5 inline-flex shrink-0 items-center gap-1.5 text-[10px] text-muted-foreground">
               <Users className="h-3 w-3 shrink-0" />
-              <span>Investors:</span>
+              <span>{setupText("Investors:")}</span>
             </span>
             <div className="min-w-0 flex-1">
               <OverflowRow

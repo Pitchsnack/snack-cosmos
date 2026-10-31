@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { BuyerDescriptionEditor } from "./buyer-description-editor";
 import { LangTag, missingLangHint, useTextLang } from "@/components/common/text-lang";
 import { descriptionChanged } from "@/lib/buyer-description";
@@ -116,7 +117,7 @@ function TagEditor({
         <Input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={placeholder} maxLength={maxLength}
           onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
           disabled={values.length >= max} />
-        <Button type="button" variant="outline" size="sm" onClick={add} disabled={values.length >= max}>Add</Button>
+        <Button type="button" variant="outline" size="sm" onClick={add} disabled={values.length >= max}>{setupText("Add")}</Button>
       </div>
     </>
   );
@@ -138,7 +139,7 @@ export function BuyerInvestorEdit({ section, add, id, directory, initialView }: 
     meta: { pageLoading: true },
   });
   if (isLoading || (directory && directoryData.isLoading)) return <div className="mx-auto max-w-3xl space-y-4"><Skeleton className="h-10" /><Skeleton className="h-[600px]" /></div>;
-  if (error || !data) return <p className="text-sm text-muted-foreground">Couldn't load your profile. Please refresh.</p>;
+  if (error || !data) return <p className="text-sm text-muted-foreground">{setupText("Couldn't load your profile. Please refresh.")}</p>;
   return <Form data={data} section={section} add={add} directory={directory} initialView={initialView} directoryRecord={directoryData.data} />;
 }
 
@@ -153,7 +154,7 @@ export function BuyerInvestorForm({ data, setup, onCreated }: { data: Data; setu
 function Tag({ s }: { s?: SourceTag }) {
   if (!s) return null;
   const cls = s === "Your answer" ? "bg-[#EEF1F7] text-[#1E2A4A] dark:bg-[#1B2140] dark:text-[#C7CEF5]" : s === "Auto Enrich" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-muted text-muted-foreground";
-  return <span className={`ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>{s}</span>;
+  return <span className={`ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>{setupText(s)}</span>;
 }
 
 export type Data = Awaited<ReturnType<typeof getMyBuyerInvestor>>;
@@ -406,11 +407,11 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       const ready = !!f.ticket_band && deals.length > 0 && industries.length > 0 && (!showsStages(typeOf, agent ? actsFor : null) || stages.length > 0);
       const msg = live ? "Profile saved. Sellers see the changes in Browse investors."
         : ready ? "Profile saved as a draft. Publish it when you're ready." : "Profile saved as a draft. Finish the required items to publish.";
-      if (setup) setup.onSaved(msg);
-      else { toast.success(msg); if (pop) { pop.setDirty(false); pop.done(); } else back(); }
+      if (setup) setup.onSaved(setupText(msg));
+      else { toast.success(setupText(msg)); if (pop) { pop.setDirty(false); pop.done(); } else back(); }
     } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   };
-  const Err = ({ k }: { k: string }) => errs[k] && errs[k] !== "leak" ? <p className="text-[12.5px] text-[#B42318]">{errs[k]}</p> : null;
+  const Err = ({ k }: { k: string }) => errs[k] && errs[k] !== "leak" ? <p className="text-[12.5px] text-[#B42318]">{setupText(errs[k])}</p> : null;
   const req = <span className="ml-[3px] text-[12px] font-semibold text-[#B42318] relative -top-0.5">*</span>;
   const corp = isCorporateBuyer(typeOf);
   const allStages = Array.from(new Set([...STAGE_OPTIONS, ...stages]));
@@ -423,11 +424,11 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       {!setup && !pop && (
         <>
           <Link to="/marketplace/my-company" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Back to My Company
+            <ArrowLeft className="h-4 w-4" />{setupText("Back to My Company")}
           </Link>
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Edit profile</h1>
-            <p className="mt-1 text-sm text-muted-foreground">The same investor record Admin edits in Investors Directory. Changes show in both places.</p>
+            <h1 className="text-3xl font-semibold tracking-tight">{setupText("Edit profile")}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{setupText("The same investor record Admin edits in Investors Directory. Changes show in both places.")}</p>
           </div>
         </>
       )}
@@ -435,7 +436,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       <form noValidate={!!pop} id="buyer-edit-form" onSubmit={submit} onChange={() => pop?.setDirty(true)} className={pop ? "space-y-4 pt-5 text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}>
         {pop && !setup ? <>
           <EditInfoTabsSlot><MainTabs tone="buyer" idBase="buyer-edit" value={view} onChange={(v) => {setView(v);setTab(v === "public" ? "description" : "media");}} tabs={[{key:"public",label:tr("Listing view"),icon:<Eye />,count:0},{key:"private",label:tr("Exclusive view"),icon:<Lock />,count:buyerMissing.about+buyerMissing.media+buyerMissing.people}]} /></EditInfoTabsSlot>
-          <TabRow idBase="buyer-edit" label="Buyer information" value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Description & Mandate")}] : [{key:"media",label:tr("Images & Logo"),count:buyerMissing.media},{key:"about",label:tr("About Company"),count:buyerMissing.about,error:!!onCreated && !!errs.creation && !f.investor_name.trim()},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Team"),count:buyerMissing.people},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />,error:!!onCreated && !!errs.creation && (!tenant || !human || !ai)}]:[])]} />
+          <TabRow idBase="buyer-edit" label={setupText("Buyer information")} value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Description & Mandate")}] : [{key:"media",label:tr("Images & Logo"),count:buyerMissing.media},{key:"about",label:tr("About Company"),count:buyerMissing.about,error:!!onCreated && !!errs.creation && !f.investor_name.trim()},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Team"),count:buyerMissing.people},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />,error:!!onCreated && !!errs.creation && (!tenant || !human || !ai)}]:[])]} />
           {tab === "media" && <div className="space-y-4"><TabHead title={tr("Images & Logo")} />        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
@@ -451,7 +452,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
                     disabled={busy}
                   />
                 </TooltipTrigger>
-                <TooltipContent side="bottom">Fills empty fields only</TooltipContent>
+                <TooltipContent side="bottom">{setupText("Fills empty fields only")}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
@@ -461,15 +462,15 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           {tab === "about" && <div className="space-y-4"><TabHead title={tr("Company Info")}>{autoEnrich}</TabHead>        {/* Row 1: Year Founded | Company Name | Investor Classification */}
         <div className={individual ? "grid gap-4 sm:grid-cols-2" : "grid gap-4 sm:grid-cols-3"}>
           <div className="space-y-1.5">
-            <Label>Year Founded{!individual && req}<Tag s={src.year_founded} /></Label>
+            <Label>{setupText("Year Founded")}{!individual && req}<Tag s={src.year_founded} /></Label>
             <Input id="f-year_founded" inputMode="numeric" maxLength={4} aria-required={!individual} value={f.year_founded}
-              onChange={(e) => setF((o) => ({ ...o, year_founded: e.target.value.replace(/\D/g, "").slice(0, 4) }))} placeholder="e.g. 2014"
+              onChange={(e) => setF((o) => ({ ...o, year_founded: e.target.value.replace(/\D/g, "").slice(0, 4) }))} placeholder={setupText("e.g. 2014")}
               className={errs.year_founded ? "border-[#B42318]" : ""} />
             <Err k="year_founded" />
           </div>
           <div className="space-y-1.5">
-            <Label>Company Name{req}<Tag s={src.investor_name} /></Label>
-            <Input id="f-investor_name" aria-required value={f.investor_name} onChange={set("investor_name")} placeholder="e.g. Acme Ventures" maxLength={120}
+            <Label>{setupText("Company Name")}{req}<Tag s={src.investor_name} /></Label>
+            <Input id="f-investor_name" aria-required value={f.investor_name} onChange={set("investor_name")} placeholder={setupText("e.g. Acme Ventures")} maxLength={120}
               className={errs.investor_name && !f.investor_name.trim() ? "creation-invalid" : ""} />
             {!f.investor_name.trim() && <Err k="investor_name" />}
           </div>
@@ -477,7 +478,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             <div className="space-y-1.5">
               <Label>{tr("Registered Number")}{f.country === "Thailand" && req}<Tag s={src.registration_no} /></Label>
               <Input id="f-registration_no" value={f.registration_no} aria-required={f.country === "Thailand"}
-                maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? "13 digits" : ""}
+                maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? setupText("13 digits") : ""}
                 inputMode={f.country === "Thailand" ? "numeric" : undefined}
                 onChange={(e) => setF((o) => ({ ...o, registration_no: o.country === "Thailand" ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value }))}
                 onBlur={() => setErrs((o) => ({...o, registration_no: regError(f.registration_no, f.country) ?? ""}))} className={errs.registration_no ? "border-destructive" : ""} />
@@ -486,19 +487,19 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           )}
         </div>
 <CompactFields two={individual}>          {!agent && <S cur={setup ? undefined : sec} id="classification" className="space-y-1.5">
-            <Label>Investor Classification<Tag s={src.investor_type} /></Label>
+            <Label>{setupText("Investor Classification")}<Tag s={src.investor_type} /></Label>
             <Select value={f.investor_type || "none"} onValueChange={(v) => setF((o) => ({ ...o, investor_type: v === "none" ? "" : v }))}>
-              <SelectTrigger><SelectValue placeholder="Select classification" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={setupText("Select classification")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— Select —</SelectItem>
+                <SelectItem value="none">{setupText("— Select —")}</SelectItem>
                 {Array.from(new Set([...INVESTOR_CLASSIFICATIONS, ...(f.investor_type ? [f.investor_type] : [])])).map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                  <SelectItem key={c} value={c}>{setupText(c)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </S>}
         {agent && <S cur={setup ? undefined : sec} id="classification">
-          <ActsForField value={actsFor} onChange={(v) => { setActsFor(v); setErrs((e) => ({ ...e, acts_for: "" })); }} error={errs.acts_for || null} label={<>Acts for<Tag s={src.investor_type} /></>} />
+          <ActsForField value={actsFor} onChange={(v) => { setActsFor(v); setErrs((e) => ({ ...e, acts_for: "" })); }} error={errs.acts_for || null} label={<>{setupText("Acts for")}<Tag s={src.investor_type} /></>} />
         </S>}
 
         {!individual && (
@@ -512,14 +513,14 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           <div data-edit-sec="region" className="relative space-y-1.5">
             {sec === "region" && <div aria-hidden className="edit-sec-box is-buyer" />}
             <div className="flex h-6 items-center gap-1.5">
-              <Label>Region</Label>
+              <Label>{setupText("Region")}</Label>
               <TooltipProvider delayDuration={150}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       type="button"
                       className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      aria-label="Re-detect region from Country"
+                      aria-label={setupText("Re-detect region from Country")}
                       onClick={() => {
                         const suggested = regionForCountry(f.country);
                         setF((o) => ({ ...o, region: suggested || "" }));
@@ -533,14 +534,14 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
                       <RefreshCw className="h-3.5 w-3.5" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent>Re-detect from Country</TooltipContent>
+                  <TooltipContent>{setupText("Re-detect from Country")}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
             <Select value={f.region || ""} onValueChange={(v) => setF((o) => ({ ...o, region: v === "__clear__" ? "" : v }))}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select Region" /></SelectTrigger>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={setupText("Select Region")} /></SelectTrigger>
               <SelectContent>
-                {f.region && <SelectItem value="__clear__" className="text-muted-foreground">Clear selection</SelectItem>}
+                {f.region && <SelectItem value="__clear__" className="text-muted-foreground">{setupText("Clear selection")}</SelectItem>}
                 {REGION_OPTIONS.map((r) => (
                   <SelectItem key={r.value} value={r.value}>
                     <span className="font-medium">{r.label}</span>
@@ -553,12 +554,12 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 </CompactFields>        {/* Row 3: Email | Company URL | LinkedIn URL */}
         <div className="grid sm:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <Label>Email Address</Label>
-            <Input type="email" value={f.email} onChange={set("email")} placeholder="investor@example.com" maxLength={255} />
+            <Label>{setupText("Email Address")}</Label>
+            <Input type="email" value={f.email} onChange={set("email")} placeholder={setupText("investor@example.com")} maxLength={255} />
           </div>
           <div className="space-y-1.5">
             <EditableUrlField
-              label="Company URL *"
+              label={setupText("Company URL *")}
               value={f.website_url}
               onChange={(v) => setF((o) => ({ ...o, website_url: v }))}
               placeholder="https://www.yourfirm.com"
@@ -567,7 +568,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             <Err k="website_url" />
           </div>
           <EditableUrlField
-            label="LinkedIn URL"
+            label={setupText("LinkedIn URL")}
             value={f.linkedin_url}
             onChange={(v) => setF((o) => ({ ...o, linkedin_url: v }))}
             placeholder="https://www.linkedin.com/company/…"
@@ -594,17 +595,17 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
         {/* About */}
         <div className="space-y-1.5">
-          <Label>About Company<LangTag /></Label>
+          <Label>{setupText("About Company")}<LangTag /></Label>
           <Textarea lang={tl} value={bv("short_description")} onChange={(e) => bset("short_description")(e.target.value)} rows={3} maxLength={2000} className="startup-long-description"
-            placeholder={bph("short_description", "Brief description of the company")} />
+            placeholder={bph("short_description", setupText("Brief description of the company"))} />
         </div>
 
-{directory && <div className="space-y-1.5"><Label>Bio</Label><Textarea value={bio} onChange={e=>setBio(e.target.value)} maxLength={2000} /></div>}{directory && <div className="space-y-1.5"><Label>Long Description</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</div>}
-          {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")}>{autoEnrich}</TabHead>{directory && <div className="space-y-1.5"><Label>Legal name</Label><Input value={legalName} onChange={e=>setLegalName(e.target.value)} maxLength={255} /></div>}        {/* Row 4: Firm Name, then the address box */}
+{directory && <div className="space-y-1.5"><Label>{setupText("Bio")}</Label><Textarea value={bio} onChange={e=>setBio(e.target.value)} maxLength={2000} /></div>}{directory && <div className="space-y-1.5"><Label>{setupText("Long Description")}</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</div>}
+          {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")}>{autoEnrich}</TabHead>{directory && <div className="space-y-1.5"><Label>{setupText("Legal name")}</Label><Input value={legalName} onChange={e=>setLegalName(e.target.value)} maxLength={255} /></div>}        {/* Row 4: Firm Name, then the address box */}
         <div className="grid gap-4">
           <div className="space-y-1.5">
-            <Label>Firm Name</Label>
-            <Input id="f-firm_name" value={f.firm_name} onChange={set("firm_name")} placeholder="e.g. Sequoia Capital" maxLength={100} />
+            <Label>{setupText("Firm Name")}</Label>
+            <Input id="f-firm_name" value={f.firm_name} onChange={set("firm_name")} placeholder={setupText("e.g. Sequoia Capital")} maxLength={100} />
           </div>
         </div>
         <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec={sec === "address" ? "address" : "country"}>
@@ -619,14 +620,14 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 </div>}
           {tab === "industries" && <div className="space-y-4"><TabHead title={tr("Industries & Portfolio")} />        {/* Tags */}
         <S cur={setup ? undefined : sec} id="keywords" className="space-y-1.5">
-          <Label>Product &amp; Service Tags (Up to 5)<LangTag /></Label>
+          <Label>{setupText("Product &amp; Service Tags (Up to 5)")}<LangTag /></Label>
           <TagEditor values={kwView} onChange={setKw} max={5} maxLength={50}
-            placeholder="Example: Portfolio Management, Due Diligence" />
+            placeholder={setupText("Example: Portfolio Management, Due Diligence")} />
         </S>
 
         {/* Preferred Stages */}
         {showsStages(typeOf, agent ? actsFor : null) && <S cur={setup ? undefined : sec} id="stages" className="space-y-1.5">
-          <Label>Preferred Stages</Label>
+          <Label>{setupText("Preferred Stages")}</Label>
           <div className="flex flex-wrap gap-2">
             {allStages.map((s) => (
               <Pill key={s} active={stages.includes(s)} onClick={() => setStages(toggle(stages, s))}>{s}</Pill>
@@ -636,26 +637,25 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
         {/* Preferred Industries */}
         <S cur={setup ? undefined : sec} id="industries" className="space-y-1.5">
-          <Label>Preferred Industries<Tag s={src.preferred_industries} /></Label>
+          <Label>{setupText("Preferred Industries")}<Tag s={src.preferred_industries} /></Label>
           <SetSectorPicker mode="multi" value={industries.filter((x) => x !== SECTOR_AGNOSTIC)}
             onChange={(v) => setIndustries([...(agnostic ? [SECTOR_AGNOSTIC] : []), ...v])}
             limitMsg="Pick up to 5 industries, or Sector agnostic."
             agnostic={{ on: agnostic, onToggle: (on) => setIndustries(on ? [SECTOR_AGNOSTIC, ...industries.filter((x) => x !== SECTOR_AGNOSTIC)] : industries.filter((x) => x !== SECTOR_AGNOSTIC)),
               line: "I look at companies in every industry",
               note: "Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you.",
-              summary: <>Sellers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} />
+              summary: <>{setupText("Sellers see")} <b className="text-foreground">{setupText("Sector agnostic")}</b>{setupText("on your card.")}</> }} />
         </S>
 
-        {directory && <><CompactFields two><div className="space-y-1.5"><Label>Min. target revenue (US$M)</Label><Input type="number" min={0} value={revenueMin} onChange={e=>setRevenueMin(e.target.value)} /></div><div className="space-y-1.5"><Label>Max. target revenue (US$M)</Label><Input type="number" min={0} value={revenueMax} onChange={e=>setRevenueMax(e.target.value)} /></div></CompactFields><RelationshipLinksEditor mode="startups" title="Portfolio Startups" rows={linkedPortfolio} onChange={r=>{setLinkedPortfolio(r);setLinkedDirty(true);}} /><RelationshipLinksEditor mode="investors" title="Portfolio Investors" rows={portfolioInvestors} onChange={r=>{setPortfolioInvestors(r);setPortfolioInvestorsDirty(true);}} /></>}
+        {directory && <><CompactFields two><div className="space-y-1.5"><Label>{setupText("Min. target revenue (US$M)")}</Label><Input type="number" min={0} value={revenueMin} onChange={e=>setRevenueMin(e.target.value)} /></div><div className="space-y-1.5"><Label>{setupText("Max. target revenue (US$M)")}</Label><Input type="number" min={0} value={revenueMax} onChange={e=>setRevenueMax(e.target.value)} /></div></CompactFields><RelationshipLinksEditor mode="startups" title={setupText("Portfolio Startups")} rows={linkedPortfolio} onChange={r=>{setLinkedPortfolio(r);setLinkedDirty(true);}} /><RelationshipLinksEditor mode="investors" title={setupText("Portfolio Investors")} rows={portfolioInvestors} onChange={r=>{setPortfolioInvestors(r);setPortfolioInvestorsDirty(true);}} /></>}
         {/* Portfolio Startups */}
         <S cur={setup ? undefined : sec} id="portfolio" className="space-y-1.5">
-          <Label>Portfolio Startups</Label>
+          <Label>{setupText("Portfolio Startups")}</Label>
           {inv.portfolio.filter((n) => !inv.portfolio_extra.includes(n)).length > 0 && (
-            <p className="text-xs text-muted-foreground">
-              Linked in Investors Directory: {inv.portfolio.filter((n) => !inv.portfolio_extra.includes(n)).join(", ")}
+            <p className="text-xs text-muted-foreground">{setupText("Linked in Investors Directory:")} {inv.portfolio.filter((n) => !inv.portfolio_extra.includes(n)).join(", ")}
             </p>
           )}
-          <TagEditor values={portfolio} onChange={(v)=>{setPortfolio(v);setPortfolioDirty(true);}} max={50} placeholder="Add a portfolio company" />
+          <TagEditor values={portfolio} onChange={(v)=>{setPortfolio(v);setPortfolioDirty(true);}} max={50} placeholder={setupText("Add a portfolio company")} />
         </S>
 
 </div>}
@@ -674,15 +674,15 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           </div>
           <p className="flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.")}</p>
           <BuyerDescriptionEditor value={bv("description")} onChange={bset("description")} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
-        {directory && <CompactFields><div className="space-y-1.5"><Label>AUM</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>Min Ticket Size</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>Max Ticket Size</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
+        {directory && <CompactFields><div className="space-y-1.5"><Label>{setupText("AUM")}</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>{setupText("Min Ticket Size")}</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>{setupText("Max Ticket Size")}</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
 <div className="buyer-mandate-money">        {showsFund && (
           <S cur={setup ? undefined : sec} id="fund">
             <div className="space-y-1.5">
               <Label>{corp ? tr("Group revenue band") : <>{tr("Fund's AUM")} <span className="buyer-label-explanation">{tr("(Assets under management)")}</span></>}<Tag s={src.aum_band} /></Label>
               <Select value={f.aum_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, aum_band: v === "none" ? "" : v }))}>
-                <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={setupText("Not set")} /></SelectTrigger>
                 <SelectContent>
-                  {!inv.aum_band && <SelectItem value="none">Not set</SelectItem>}
+                  {!inv.aum_band && <SelectItem value="none">{setupText("Not set")}</SelectItem>}
                   {AUM_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -693,9 +693,9 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         <S cur={setup ? undefined : sec} id="mandate" className="space-y-1.5">
           <Label>{tr("Average investment per deal")}<Tag s={src.ticket_band} /></Label>
           <Select value={f.ticket_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, ticket_band: v === "none" ? "" : v }))}>
-            <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={setupText("Not set")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Not set</SelectItem>
+              <SelectItem value="none">{setupText("Not set")}</SelectItem>
               {TICKET_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
             </SelectContent>
           </Select>
@@ -707,9 +707,9 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           <S cur={setup ? undefined : sec} id="revenue" className="space-y-1.5">
           <Label>{tr("Min. target revenue")} <span className="buyer-label-explanation">{tr("(The minimum company revenue you would consider acquiring)")}</span><Tag s={src.revenue_min_band} /></Label>
           <Select value={f.rev_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, rev_band: v === "none" ? "" : v }))}>
-            <SelectTrigger className="max-w-[360px]"><SelectValue placeholder="Not set" /></SelectTrigger>
+            <SelectTrigger className="max-w-[360px]"><SelectValue placeholder={setupText("Not set")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Not set</SelectItem>
+              <SelectItem value="none">{setupText("Not set")}</SelectItem>
               {REV_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
             </SelectContent>
           </Select>
@@ -735,7 +735,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
  </div>}
           {tab === "people" && <div className="space-y-4"><TabHead title={tr("Team")} />        {/* For verification */}
         <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">For verification · also visible to Admin</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{setupText("For verification · also visible to Admin")}</h3>
           <p className="text-[12.5px] text-muted-foreground">{tr("Your name is checked against your company's list of directors.")}</p>
           <S cur={setup ? undefined : sec} id="people" className="space-y-1.5">
             <Label>{tr(pop ? "Team members" : "Decision makers")}</Label>
@@ -746,7 +746,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
                     <Input key={k} lang={k === "role" ? tl : undefined} placeholder={k === "role" && tlSw ? `Role (${tl.toUpperCase()})` : k[0].toUpperCase() + k.slice(1)} value={k === "role" && tl === "th" ? ((p as any).role_th ?? (tlSw ? "" : p.role)) : p[k]}
                       onChange={(e) => setPeople((o) => o.map((x, j) => (j === i ? { ...x, [k === "role" && tl === "th" ? "role_th" : k]: e.target.value } : x)))} />
                   ))}
-                  <Button type="button" variant="ghost" size="icon" aria-label="Remove" onClick={() => setPeople((o) => o.filter((_, j) => j !== i))}>
+                  <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove")} onClick={() => setPeople((o) => o.filter((_, j) => j !== i))}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -759,11 +759,11 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </div>
 
 </div>}
-          {tab === "admin" && admin && <div className="space-y-4"><TabHead title={tr("Admin settings")} /><p className="text-sm text-muted-foreground">Only Admin sees this tab.</p>
-          {directory ? <CompactFields two><div className="space-y-1.5"><Label>Tenant *</Label><Select value={tenant} onValueChange={setTenant}><SelectTrigger id="investor-tenant" className={errs.creation && !tenant ? "creation-invalid" : undefined}><SelectValue placeholder="Choose tenant" /></SelectTrigger><SelectContent>{tenants.data?.map(t=><SelectItem key={t.id} value={t.id}>{t.tenantName}</SelectItem>)}</SelectContent></Select></div>
-          <div className="space-y-1.5"><Label className={errs.creation && !human ? "text-destructive" : undefined}>Owning Agent *</Label><Select value={human} onValueChange={setHuman}><SelectTrigger className={errs.creation && !human ? "creation-invalid" : undefined}><SelectValue placeholder="Choose agent" /></SelectTrigger><SelectContent>{humans.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div>
-          <div className="space-y-1.5"><Label className={errs.creation && !ai ? "text-destructive" : undefined}>Owning AI Agent *</Label><Select value={ai} onValueChange={setAi}><SelectTrigger className={errs.creation && !ai ? "creation-invalid" : undefined}><SelectValue placeholder="Choose AI agent" /></SelectTrigger><SelectContent>{ais.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div><div className="space-y-1.5"><Label>Status</Label><Select value={directoryStatus} onValueChange={(v)=>setDirectoryStatus(v as typeof directoryStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Prospect","Active","Engaged","Investing","Inactive","Archived"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div><div className="space-y-1.5"><Label>Visibility</Label><Select value={directoryVisibility} onValueChange={(v)=>setDirectoryVisibility(v as typeof directoryVisibility)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Private","Tenant","Shared","Archived"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div></CompactFields> : <><Label>Verification status</Label><Input readOnly value={data.verification.status} /><p className="text-sm text-muted-foreground">Change it in Approvals.</p></>}
-          <Label>Verification status</Label><Input readOnly value={data.verification.status} /><Button type="button" variant="link" onClick={()=>{pop?.requestClose();void navigate({to:"/approvals",search:{tab:"buyers"} as never});}}>Change it in Approvals</Button></div>}
+          {tab === "admin" && admin && <div className="space-y-4"><TabHead title={tr("Admin settings")} /><p className="text-sm text-muted-foreground">{setupText("Only Admin sees this tab.")}</p>
+          {directory ? <CompactFields two><div className="space-y-1.5"><Label>{setupText("Tenant *")}</Label><Select value={tenant} onValueChange={setTenant}><SelectTrigger id="investor-tenant" className={errs.creation && !tenant ? "creation-invalid" : undefined}><SelectValue placeholder={setupText("Choose tenant")} /></SelectTrigger><SelectContent>{tenants.data?.map(t=><SelectItem key={t.id} value={t.id}>{t.tenantName}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-1.5"><Label className={errs.creation && !human ? "text-destructive" : undefined}>{setupText("Owning Agent *")}</Label><Select value={human} onValueChange={setHuman}><SelectTrigger className={errs.creation && !human ? "creation-invalid" : undefined}><SelectValue placeholder={setupText("Choose agent")} /></SelectTrigger><SelectContent>{humans.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-1.5"><Label className={errs.creation && !ai ? "text-destructive" : undefined}>{setupText("Owning AI Agent *")}</Label><Select value={ai} onValueChange={setAi}><SelectTrigger className={errs.creation && !ai ? "creation-invalid" : undefined}><SelectValue placeholder={setupText("Choose AI agent")} /></SelectTrigger><SelectContent>{ais.data?.map(u=><SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent></Select></div><div className="space-y-1.5"><Label>{setupText("Status")}</Label><Select value={directoryStatus} onValueChange={(v)=>setDirectoryStatus(v as typeof directoryStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Prospect","Active","Engaged","Investing","Inactive","Archived"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div><div className="space-y-1.5"><Label>{setupText("Visibility")}</Label><Select value={directoryVisibility} onValueChange={(v)=>setDirectoryVisibility(v as typeof directoryVisibility)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Private","Tenant","Shared","Archived"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div></CompactFields> : <><Label>{setupText("Verification status")}</Label><Input readOnly value={data.verification.status} /><p className="text-sm text-muted-foreground">{setupText("Change it in Approvals.")}</p></>}
+          <Label>{setupText("Verification status")}</Label><Input readOnly value={data.verification.status} /><Button type="button" variant="link" onClick={()=>{pop?.requestClose();void navigate({to:"/approvals",search:{tab:"buyers"} as never});}}>{setupText("Change it in Approvals")}</Button></div>}
         </> : <>        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
@@ -779,7 +779,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
                     disabled={busy}
                   />
                 </TooltipTrigger>
-                <TooltipContent side="bottom">Fills empty fields only</TooltipContent>
+                <TooltipContent side="bottom">{setupText("Fills empty fields only")}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
@@ -788,33 +788,33 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         {/* Row 1: Year Founded | Company Name | Investor Classification */}
         <div className={agent ? "grid grid-cols-[100px_1fr] gap-4" : "grid grid-cols-[100px_1fr_220px] gap-4"}>
           <div className="space-y-1.5">
-            <Label>Year Founded{!individual && req}<Tag s={src.year_founded} /></Label>
+            <Label>{setupText("Year Founded")}{!individual && req}<Tag s={src.year_founded} /></Label>
             <Input id="f-year_founded" inputMode="numeric" maxLength={4} aria-required={!individual} value={f.year_founded}
-              onChange={(e) => setF((o) => ({ ...o, year_founded: e.target.value.replace(/\D/g, "").slice(0, 4) }))} placeholder="e.g. 2014"
+              onChange={(e) => setF((o) => ({ ...o, year_founded: e.target.value.replace(/\D/g, "").slice(0, 4) }))} placeholder={setupText("e.g. 2014")}
               className={errs.year_founded ? "border-[#B42318]" : ""} />
             <Err k="year_founded" />
           </div>
           <div className="space-y-1.5">
-            <Label>Company Name{req}<Tag s={src.investor_name} /></Label>
-            <Input id="f-investor_name" aria-required value={f.investor_name} onChange={set("investor_name")} placeholder="e.g. Acme Ventures" maxLength={120}
+            <Label>{setupText("Company Name")}{req}<Tag s={src.investor_name} /></Label>
+            <Input id="f-investor_name" aria-required value={f.investor_name} onChange={set("investor_name")} placeholder={setupText("e.g. Acme Ventures")} maxLength={120}
               className={errs.investor_name ? "border-[#B42318]" : ""} />
             <Err k="investor_name" />
           </div>
           {!agent && <S cur={setup ? undefined : sec} id="classification" className="space-y-1.5">
-            <Label>Investor Classification<Tag s={src.investor_type} /></Label>
+            <Label>{setupText("Investor Classification")}<Tag s={src.investor_type} /></Label>
             <Select value={f.investor_type || "none"} onValueChange={(v) => setF((o) => ({ ...o, investor_type: v === "none" ? "" : v }))}>
-              <SelectTrigger><SelectValue placeholder="Select classification" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={setupText("Select classification")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— Select —</SelectItem>
+                <SelectItem value="none">{setupText("— Select —")}</SelectItem>
                 {Array.from(new Set([...INVESTOR_CLASSIFICATIONS, ...(f.investor_type ? [f.investor_type] : [])])).map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                  <SelectItem key={c} value={c}>{setupText(c)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </S>}
         </div>
         {agent && <S cur={setup ? undefined : sec} id="classification">
-          <ActsForField value={actsFor} onChange={(v) => { setActsFor(v); setErrs((e) => ({ ...e, acts_for: "" })); }} error={errs.acts_for || null} label={<>Acts for<Tag s={src.investor_type} /></>} />
+          <ActsForField value={actsFor} onChange={(v) => { setActsFor(v); setErrs((e) => ({ ...e, acts_for: "" })); }} error={errs.acts_for || null} label={<>{setupText("Acts for")}<Tag s={src.investor_type} /></>} />
         </S>}
 
         <div className="grid grid-cols-[220px_1fr] gap-4">
@@ -830,14 +830,14 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <div className="flex h-6 items-center gap-1.5">
-              <Label>Region</Label>
+              <Label>{setupText("Region")}</Label>
               <TooltipProvider delayDuration={150}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       type="button"
                       className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      aria-label="Re-detect region from Country"
+                      aria-label={setupText("Re-detect region from Country")}
                       onClick={() => {
                         const suggested = regionForCountry(f.country);
                         setF((o) => ({ ...o, region: suggested || "" }));
@@ -851,14 +851,14 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
                       <RefreshCw className="h-3.5 w-3.5" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent>Re-detect from Country</TooltipContent>
+                  <TooltipContent>{setupText("Re-detect from Country")}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
             <Select value={f.region || ""} onValueChange={(v) => setF((o) => ({ ...o, region: v === "__clear__" ? "" : v }))}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select Region" /></SelectTrigger>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={setupText("Select Region")} /></SelectTrigger>
               <SelectContent>
-                {f.region && <SelectItem value="__clear__" className="text-muted-foreground">Clear selection</SelectItem>}
+                {f.region && <SelectItem value="__clear__" className="text-muted-foreground">{setupText("Clear selection")}</SelectItem>}
                 {REGION_OPTIONS.map((r) => (
                   <SelectItem key={r.value} value={r.value}>
                     <span className="font-medium">{r.label}</span>
@@ -873,12 +873,12 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         {/* Row 3: Email | Company URL | LinkedIn URL */}
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <Label>Email Address</Label>
-            <Input type="email" value={f.email} onChange={set("email")} placeholder="investor@example.com" maxLength={255} />
+            <Label>{setupText("Email Address")}</Label>
+            <Input type="email" value={f.email} onChange={set("email")} placeholder={setupText("investor@example.com")} maxLength={255} />
           </div>
           <div className="space-y-1.5">
             <EditableUrlField
-              label="Company URL *"
+              label={setupText("Company URL *")}
               value={f.website_url}
               onChange={(v) => setF((o) => ({ ...o, website_url: v }))}
               placeholder="https://www.yourfirm.com"
@@ -887,7 +887,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             <Err k="website_url" />
           </div>
           <EditableUrlField
-            label="LinkedIn URL"
+            label={setupText("LinkedIn URL")}
             value={f.linkedin_url}
             onChange={(v) => setF((o) => ({ ...o, linkedin_url: v }))}
             placeholder="https://www.linkedin.com/company/…"
@@ -897,8 +897,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         {/* Row 4: Firm Name, then the address box */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label>Firm Name</Label>
-            <Input value={f.firm_name} onChange={set("firm_name")} placeholder="e.g. Sequoia Capital" maxLength={100} />
+            <Label>{setupText("Firm Name")}</Label>
+            <Input value={f.firm_name} onChange={set("firm_name")} placeholder={setupText("e.g. Sequoia Capital")} maxLength={100} />
           </div>
         </div>
         <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec="country">
@@ -916,50 +916,50 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             <div className="space-y-1.5">
               <Label>{corp ? "Group revenue band" : "Fund's AUM band"}<Tag s={src.aum_band} /></Label>
               <Select value={f.aum_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, aum_band: v === "none" ? "" : v }))}>
-                <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={setupText("Not set")} /></SelectTrigger>
                 <SelectContent>
-                  {!inv.aum_band && <SelectItem value="none">Not set</SelectItem>}
+                  {!inv.aum_band && <SelectItem value="none">{setupText("Not set")}</SelectItem>}
                   {AUM_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
                 </SelectContent>
               </Select>
-              <p className="text-[12px] text-muted-foreground">Sellers see this band on your card.</p>
+              <p className="text-[12px] text-muted-foreground">{setupText("Sellers see this band on your card.")}</p>
             </div>
             <div className="space-y-1.5">
-              <Label>{corp ? "Exact group revenue (US$)" : "Exact AUM (US$)"} <span className="text-[#9CA3AF] font-normal">optional</span></Label>
-              <Input inputMode="numeric" value={f.aum_exact} placeholder="e.g. 120,000,000"
+              <Label>{corp ? "Exact group revenue (US$)" : "Exact AUM (US$)"} <span className="text-[#9CA3AF] font-normal">{setupText("optional")}</span></Label>
+              <Input inputMode="numeric" value={f.aum_exact} placeholder={setupText("e.g. 120,000,000")}
                 onChange={(e) => { const d = e.target.value.replace(/[^\d]/g, ""); setF((o) => ({ ...o, aum_exact: d ? Number(d).toLocaleString("en-US") : "" })); }} />
-              <p className="text-[12px] text-muted-foreground">Private. Only sellers who approve your NDA see it.</p>
+              <p className="text-[12px] text-muted-foreground">{setupText("Private. Only sellers who approve your NDA see it.")}</p>
             </div>
           </div></S>
         )}
         <S cur={setup ? undefined : sec} id="mandate" className="space-y-1.5">
-          <Label>Average investment per deal<Tag s={src.ticket_band} /></Label>
+          <Label>{setupText("Average investment per deal")}<Tag s={src.ticket_band} /></Label>
           <Select value={f.ticket_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, ticket_band: v === "none" ? "" : v }))}>
-            <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={setupText("Not set")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Not set</SelectItem>
+              <SelectItem value="none">{setupText("Not set")}</SelectItem>
               {TICKET_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
             </SelectContent>
           </Select>
-          <p className="text-[12px] text-muted-foreground">Fills Min / Max Ticket Size. Sellers see this range on your card and filter Browse investors by it.</p>
+          <p className="text-[12px] text-muted-foreground">{setupText("Fills Min / Max Ticket Size. Sellers see this range on your card and filter Browse investors by it.")}</p>
         </S>
         {/* Buying Requirement */}
         <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
-          <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">Buying Requirement</div>
+          <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">{setupText("Buying Requirement")}</div>
           <S cur={setup ? undefined : sec} id="revenue" className="space-y-1.5">
-          <Label>Min. target revenue<Tag s={src.revenue_min_band} /></Label>
+          <Label>{setupText("Min. target revenue")}<Tag s={src.revenue_min_band} /></Label>
           <Select value={f.rev_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, rev_band: v === "none" ? "" : v }))}>
-            <SelectTrigger className="max-w-[360px]"><SelectValue placeholder="Not set" /></SelectTrigger>
+            <SelectTrigger className="max-w-[360px]"><SelectValue placeholder={setupText("Not set")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Not set</SelectItem>
+              <SelectItem value="none">{setupText("Not set")}</SelectItem>
               {REV_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
             </SelectContent>
           </Select>
-          <p className="text-[12px] text-muted-foreground">The smallest company revenue you'll buy. Sellers can filter by it.</p>
+          <p className="text-[12px] text-muted-foreground">{setupText("The smallest company revenue you'll buy. Sellers can filter by it.")}</p>
           </S>
         </div>
         <S cur={setup ? undefined : sec} id="focus" className="space-y-1.5">
-          <Label>Investment Focus<Tag s={src.deal_types} /></Label>
+          <Label>{setupText("Investment Focus")}<Tag s={src.deal_types} /></Label>
           <div className="flex flex-wrap gap-2">
             {allDeals.map((d) => <Pill key={d} active={deals.includes(d)} onClick={() => setDeals(toggle(deals, d))}>{d}</Pill>)}
           </div>
@@ -967,21 +967,21 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
         {/* About */}
         <div className="space-y-1.5">
-          <Label>About Company<LangTag /></Label>
+          <Label>{setupText("About Company")}<LangTag /></Label>
           <Textarea lang={tl} value={bv("short_description")} onChange={(e) => bset("short_description")(e.target.value)} rows={3} maxLength={2000} className="startup-long-description"
-            placeholder={bph("short_description", "Brief description of the company")} />
+            placeholder={bph("short_description", setupText("Brief description of the company"))} />
         </div>
 
         {/* Tags */}
         <S cur={setup ? undefined : sec} id="keywords" className="space-y-1.5">
-          <Label>Product &amp; Service Tags (Up to 5)<LangTag /></Label>
+          <Label>{setupText("Product &amp; Service Tags (Up to 5)")}<LangTag /></Label>
           <TagEditor values={kwView} onChange={setKw} max={5} maxLength={50}
-            placeholder="Example: Portfolio Management, Due Diligence" />
+            placeholder={setupText("Example: Portfolio Management, Due Diligence")} />
         </S>
 
         {/* Geography */}
         <S cur={setup ? undefined : sec} id="geography" className="space-y-1.5">
-          <Label>Geography<Tag s={src.geography} /></Label>
+          <Label>{setupText("Geography")}<Tag s={src.geography} /></Label>
           <div className="flex flex-wrap gap-2">
             {allGeo.map((g) => <Pill key={g} active={focus.includes(g)} onClick={() => setFocus(toggle(focus, g, 10))}>{g}</Pill>)}
           </div>
@@ -989,7 +989,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
         {/* Preferred Stages */}
         {showsStages(typeOf, agent ? actsFor : null) && <S cur={setup ? undefined : sec} id="stages" className="space-y-1.5">
-          <Label>Preferred Stages</Label>
+          <Label>{setupText("Preferred Stages")}</Label>
           <div className="flex flex-wrap gap-2">
             {allStages.map((s) => (
               <Pill key={s} active={stages.includes(s)} onClick={() => setStages(toggle(stages, s))}>{s}</Pill>
@@ -999,37 +999,36 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
         {/* Preferred Industries */}
         <S cur={setup ? undefined : sec} id="industries" className="space-y-1.5">
-          <Label>Preferred Industries<Tag s={src.preferred_industries} /></Label>
+          <Label>{setupText("Preferred Industries")}<Tag s={src.preferred_industries} /></Label>
           <SetSectorPicker mode="multi" value={industries.filter((x) => x !== SECTOR_AGNOSTIC)}
             onChange={(v) => setIndustries([...(agnostic ? [SECTOR_AGNOSTIC] : []), ...v])}
             limitMsg="Pick up to 5 industries, or Sector agnostic."
             agnostic={{ on: agnostic, onToggle: (on) => setIndustries(on ? [SECTOR_AGNOSTIC, ...industries.filter((x) => x !== SECTOR_AGNOSTIC)] : industries.filter((x) => x !== SECTOR_AGNOSTIC)),
               line: "I look at companies in every industry",
               note: "Sellers may avoid sector-agnostic investors because there's no clear focus. Picking up to 5 industries helps the right sellers find you.",
-              summary: <>Sellers see <b className="text-foreground">Sector agnostic</b> on your card.</> }} />
+              summary: <>{setupText("Sellers see")} <b className="text-foreground">{setupText("Sector agnostic")}</b>{setupText("on your card.")}</> }} />
         </S>
 
         <BuyerDescriptionEditor value={bv("description")} onChange={bset("description")} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} />
 
         {/* Portfolio Startups */}
         <S cur={setup ? undefined : sec} id="portfolio" className="space-y-1.5">
-          <Label>Portfolio Startups</Label>
+          <Label>{setupText("Portfolio Startups")}</Label>
           {inv.portfolio.filter((n) => !inv.portfolio_extra.includes(n)).length > 0 && (
-            <p className="text-xs text-muted-foreground">
-              Linked in Investors Directory: {inv.portfolio.filter((n) => !inv.portfolio_extra.includes(n)).join(", ")}
+            <p className="text-xs text-muted-foreground">{setupText("Linked in Investors Directory:")} {inv.portfolio.filter((n) => !inv.portfolio_extra.includes(n)).join(", ")}
             </p>
           )}
-          <TagEditor values={portfolio} onChange={(v)=>{setPortfolio(v);setPortfolioDirty(true);}} max={50} placeholder="Add a portfolio company" />
+          <TagEditor values={portfolio} onChange={(v)=>{setPortfolio(v);setPortfolioDirty(true);}} max={50} placeholder={setupText("Add a portfolio company")} />
         </S>
 
         {/* For verification */}
         <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">For verification · also visible to Admin</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{setupText("For verification · also visible to Admin")}</h3>
           {!individual && (
             <div className="space-y-1.5">
-              <Label>{f.country === "Thailand" ? <>Company Registration Number (เลขทะเบียนนิติบุคคล){req}</> : <>Company registration number <span className="font-normal text-[#9CA3AF]">optional</span></>}<Tag s={src.registration_no} /></Label>
+              <Label>{f.country === "Thailand" ? <>{setupText("Company Registration Number (เลขทะเบียนนิติบุคคล)")}{req}</> : <>{setupText("Company registration number")} <span className="font-normal text-[#9CA3AF]">{setupText("optional")}</span></>}<Tag s={src.registration_no} /></Label>
               <Input id="f-registration_no" value={f.registration_no} aria-required={f.country === "Thailand"}
-                maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? "13 digits" : ""}
+                maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? setupText("13 digits") : ""}
                 inputMode={f.country === "Thailand" ? "numeric" : undefined}
                 onChange={(e) => setF((o) => ({ ...o, registration_no: o.country === "Thailand" ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value }))}
                 className={errs.registration_no ? "border-[#B42318]" : ""} />
@@ -1046,7 +1045,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
                     <Input key={k} lang={k === "role" ? tl : undefined} placeholder={k === "role" && tlSw ? `Role (${tl.toUpperCase()})` : k[0].toUpperCase() + k.slice(1)} value={k === "role" && tl === "th" ? ((p as any).role_th ?? (tlSw ? "" : p.role)) : p[k]}
                       onChange={(e) => setPeople((o) => o.map((x, j) => (j === i ? { ...x, [k === "role" && tl === "th" ? "role_th" : k]: e.target.value } : x)))} />
                   ))}
-                  <Button type="button" variant="ghost" size="icon" aria-label="Remove" onClick={() => setPeople((o) => o.filter((_, j) => j !== i))}>
+                  <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove")} onClick={() => setPeople((o) => o.filter((_, j) => j !== i))}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -1061,18 +1060,17 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 </>}
         {pop ? (
           <EditInfoFooter>
-          {errs.creation && missingCreationFields("investor",f.investor_name,tenant,human,ai).length > 0 && <p className="basis-full text-[13px] font-medium text-destructive">To add the investor, fill in: {missingCreationFields("investor",f.investor_name,tenant,human,ai).join(", ")}. Company Name is in About Company; ownership is in Admin settings.</p>}
-            <Button type="button" variant="outline" onClick={back} disabled={busy}>Cancel</Button>
+          {errs.creation && missingCreationFields("investor",f.investor_name,tenant,human,ai).length > 0 && <p className="basis-full text-[13px] font-medium text-destructive">{setupText("To add the investor, fill in:")} {missingCreationFields("investor",f.investor_name,tenant,human,ai).join(", ")}{setupText(". Company Name is in About Company; ownership is in Admin settings.")}</p>}
+            <Button type="button" variant="outline" onClick={back} disabled={busy}>{setupText("Cancel")}</Button>
             <Button type="submit" form="buyer-edit-form" disabled={busy}>{busy ? "Saving…" : onCreated ? "Add investor" : "Save changes"}</Button>
           </EditInfoFooter>
         ) : (
         <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-card">
-          <p className="text-xs text-muted-foreground">
-            Required fields are marked with <span className="text-destructive">*</span>
+          <p className="text-xs text-muted-foreground">{setupText("Required fields are marked with")} <span className="text-destructive">*</span>
           </p>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={back} disabled={busy}>{setup ? "Back to answers" : "Cancel"}</Button>
-            <Button type="submit" disabled={busy}>{busy ? "Saving…" : setup ? "Save profile" : "Save changes"}</Button>
+            <Button type="button" variant="outline" onClick={back} disabled={busy}>{setupText(setup ? "Back to answers" : "Cancel")}</Button>
+            <Button type="submit" disabled={busy}>{setupText(busy ? "Saving…" : setup ? "Save profile" : "Save changes")}</Button>
           </div>
         </div>
         )}

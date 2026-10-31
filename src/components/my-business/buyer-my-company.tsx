@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { revenueBandLabel } from "@/lib/revenue-bands";
 import { useTranslation } from "@/i18n/language";
 import { useManagedIds } from "@/hooks/use-managed-ids";
@@ -63,7 +64,7 @@ function StatusChip({ status }: { status: BuyerProfile["status"] }) {
   return (
     <span className={cn("rounded-full px-2 py-0.5 text-[10.5px] font-bold",
       status === "live" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-amber-500/15 text-amber-700 dark:text-amber-400")}>
-      {STATUS_LABEL[status]}
+      {setupText(STATUS_LABEL[status])}
     </span>
   );
 }
@@ -71,7 +72,7 @@ function StatusChip({ status }: { status: BuyerProfile["status"] }) {
 function Line({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-2 border-t border-[#F0F1F4] py-1.5 text-[12.5px] dark:border-border">
-      <span className="text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground">{setupText(label)}</span>
       <span className="min-w-0 truncate text-right">{children}</span>
     </div>
   );
@@ -114,28 +115,28 @@ function BuyerPill({ p, org, onItem, setup }: { p: BuyerProfile; org: BuyerOrg; 
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-[340px] max-w-[calc(100vw-2rem)] rounded-[14px] border border-border bg-card p-4 text-left shadow-xl">
-          <div className="flex items-center justify-between text-[14px] font-bold"><span>Profile setup</span><span className="text-profile">{pct}%</span></div>
+          <div className="flex items-center justify-between text-[14px] font-bold"><span>{setupText("Profile setup")}</span><span className="text-profile">{pct}%</span></div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className={cn("h-full rounded-full", full ? "bg-emerald-600" : "bg-profile")} style={{ width: `${pct}%` }} /></div>
-          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{missingRequired} required item{missingRequired === 1 ? "" : "s"} before you can publish</p>}
+          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{setupText(`${missingRequired} required item${missingRequired === 1 ? "" : "s"} before you can publish`)}</p>}
           {!full && next && (
             <div className="mt-3 rounded-[10px] border border-profile-line bg-profile-soft p-3">
-              <div className="text-[10.5px] font-bold uppercase tracking-wider text-profile">Next step</div>
-              <div className="mt-1 text-[13.5px] font-bold">{HELP[next.key].cta}</div>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">{HELP[next.key].help}</p>
-              <button type="button" onClick={() => go(next.key)} className="mt-2 inline-flex h-8 items-center rounded-lg bg-profile px-3 text-[12.5px] font-semibold text-primary-foreground hover:opacity-90">{HELP[next.key].cta}</button>
+              <div className="text-[10.5px] font-bold uppercase tracking-wider text-profile">{setupText("Next step")}</div>
+              <div className="mt-1 text-[13.5px] font-bold">{setupText(HELP[next.key].cta)}</div>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">{setupText(HELP[next.key].help)}</p>
+              <button type="button" onClick={() => go(next.key)} className="mt-2 inline-flex h-8 items-center rounded-lg bg-profile px-3 text-[12.5px] font-semibold text-primary-foreground hover:opacity-90">{setupText(HELP[next.key].cta)}</button>
             </div>
           )}
           {req.filter((i) => i !== next).length > 0 && (
-            <Group title="Required">{req.filter((i) => i !== next).map((i) => <Row key={i.key} label={i.label} link={HELP[i.key].link} onClick={() => go(i.key)} circle="solid" />)}</Group>
+            <Group title={setupText("Required")}>{req.filter((i) => i !== next).map((i) => <Row key={i.key} label={i.label} link={HELP[i.key].link} onClick={() => go(i.key)} circle="solid" />)}</Group>
           )}
-          {opt.length > 0 && <Group title="Optional">{opt.map((i) => <Row key={i.key} label={i.label} link={HELP[i.key].link} onClick={() => go(i.key)} circle="dashed" />)}</Group>}
+          {opt.length > 0 && <Group title={setupText("Optional")}>{opt.map((i) => <Row key={i.key} label={i.label} link={HELP[i.key].link} onClick={() => go(i.key)} circle="dashed" />)}</Group>}
           {done.length > 0 && (
             <div className="mt-3 space-y-1">
               {done.map((i) => <div key={i.key} className="flex items-center gap-2 py-0.5 text-[12.5px] text-muted-foreground"><Check className="h-4 w-4 text-emerald-600" />{i.label}</div>)}
             </div>
           )}
-          {setup && <button type="button" onClick={() => { setOpen(false); setup.onClick(); }} className="mt-3 inline-flex h-9 w-full items-center justify-center rounded-lg bg-[#1E2A4A] text-[13px] font-semibold text-white hover:bg-[#101d43]">{setup.label}</button>}
-          <p className="mt-3 border-t border-border pt-2 text-[11.5px] text-muted-foreground">Complete profiles get more NDA approvals.</p>
+          {setup && <button type="button" onClick={() => { setOpen(false); setup.onClick(); }} className="mt-3 inline-flex h-9 w-full items-center justify-center rounded-lg bg-[#1E2A4A] text-[13px] font-semibold text-white hover:bg-[#101d43]">{setupText(setup.label)}</button>}
+          <p className="mt-3 border-t border-border pt-2 text-[11.5px] text-muted-foreground">{setupText("Complete profiles get more NDA approvals.")}</p>
         </div>
       )}
     </div>
@@ -177,7 +178,7 @@ export function BuyerMyCompany() {
   const total = 1 + extraIds.length;
 
   if (isLoading) return <div className="space-y-6"><Skeleton className="h-20" /><Skeleton className="h-12" /><div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[420px]" /><Skeleton className="h-[520px]" /></div></div>;
-  if (error || !data) return <p className="text-sm text-muted-foreground">Couldn't load your investor profile. Please refresh.</p>;
+  if (error || !data) return <p className="text-sm text-muted-foreground">{setupText("Couldn't load your investor profile. Please refresh.")}</p>;
   const { profile: p, org } = data as { profile: BuyerProfile; org: BuyerOrg };
   const onItem = (k: BuyerItemKey) => { setView(HELP[k].view); setEdit(HELP[k].section); };
   const q = search.trim().toLowerCase();
@@ -215,8 +216,8 @@ export function BuyerMyCompany() {
         {!oneCompany && <SignupWelcome role="buyer" setupDone={false} />}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">My Company</h1>
-            {isAdmin && <p className="mt-1 text-sm text-muted-foreground">{total} investor profile{total === 1 ? "" : "s"} you own or manage</p>}
+            <h1 className="text-3xl font-semibold tracking-tight">{setupText("My Company")}</h1>
+            {isAdmin && <p className="mt-1 text-sm text-muted-foreground">{setupText(`${total} investor profile${total === 1 ? "" : "s"} you own or manage`)}</p>}
           </div>
           {isAdmin && <AddInvestorProfileButton onClick={() => void addProfile.run()} busy={addProfile.busy} />}
         </div>
@@ -235,7 +236,7 @@ export function BuyerMyCompany() {
   if (oneCompany) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-semibold tracking-tight">My Company</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">{setupText("My Company")}</h1>
         <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
           <div className="space-y-5"><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected /> : <Skeleton className="h-[260px]" />} /></div>
           <div className="min-w-0 lg:self-start">{rightPanel}</div>
@@ -250,8 +251,8 @@ export function BuyerMyCompany() {
       <SignupWelcome role="buyer" setupDone={!!iv?.setup_done_at} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">My Company</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{total} investor profile{total === 1 ? "" : "s"} you own or manage</p>
+          <h1 className="text-3xl font-semibold tracking-tight">{setupText("My Company")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{setupText(`${total} investor profile${total === 1 ? "" : "s"} you own or manage`)}</p>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" role="switch" aria-checked={favOnly} aria-label={favOnly ? "Show all my investor profiles" : "Show only favorites"}
@@ -259,10 +260,10 @@ export function BuyerMyCompany() {
             className={cn("inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors",
               favOnly ? "border-accent/50 bg-accent/10 text-accent" : "border-input bg-background text-muted-foreground hover:text-foreground")}>
             <Star className={cn("h-4 w-4", favOnly && "fill-accent")} />
-            <span>&nbsp;</span>
+            <span>{setupText("&nbsp;")}</span>
             <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-semibold", favOnly ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground")}>0</span>
           </button>
-          <Button variant={layout === "profiles" ? "default" : "outline"} size="sm" className="h-9" onClick={() => setLayout("profiles")}>Profiles</Button>
+          <Button variant={layout === "profiles" ? "default" : "outline"} size="sm" className="h-9" onClick={() => setLayout("profiles")}>{setupText("Profiles")}</Button>
           <ViewToggle value={layout === "profiles" ? ("" as never) : layout} onChange={(l) => { setLayout(l); if (l === "split") setView("private"); }} />
           {isAdmin
             ? <AddInvestorProfileButton onClick={() => void addProfile.run()} busy={addProfile.busy} />
@@ -272,37 +273,37 @@ export function BuyerMyCompany() {
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex min-w-[16rem] flex-1 items-center gap-2 rounded-md bg-muted/60 px-3">
           <Search className="h-4 w-4 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search my investor profiles by name, type, country…" className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={setupText("Search my investor profiles by name, type, country…")} className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" />
         </div>
         <Select value={type} onValueChange={setType}>
           <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value="all">All types</SelectItem>{TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+          <SelectContent><SelectItem value="all">{setupText("All types")}</SelectItem>{TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
         </Select>
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="h-9 w-36"><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="draft">Draft</SelectItem><SelectItem value="live">Live</SelectItem><SelectItem value="paused">Paused</SelectItem></SelectContent>
+          <SelectContent><SelectItem value="all">{setupText("All statuses")}</SelectItem><SelectItem value="draft">{setupText("Draft")}</SelectItem><SelectItem value="live">{setupText("Live")}</SelectItem><SelectItem value="paused">{setupText("Paused")}</SelectItem></SelectContent>
         </Select>
-        <Input value={sector} onChange={(e) => setSector(e.target.value)} placeholder="Sector" className="h-9 w-36" />
-        <Input value={hq} onChange={(e) => setHq(e.target.value)} placeholder="HQ" className="h-9 w-32" />
+        <Input value={sector} onChange={(e) => setSector(e.target.value)} placeholder={setupText("Sector")} className="h-9 w-36" />
+        <Input value={hq} onChange={(e) => setHq(e.target.value)} placeholder={setupText("HQ")} className="h-9 w-32" />
         <Select value={sort} onValueChange={setSort}>
           <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="updated_desc">Recently updated</SelectItem>
-            <SelectItem value="created_desc">Recently created</SelectItem>
-            <SelectItem value="name_asc">Name A–Z</SelectItem>
-            <SelectItem value="name_desc">Name Z–A</SelectItem>
+            <SelectItem value="updated_desc">{setupText("Recently updated")}</SelectItem>
+            <SelectItem value="created_desc">{setupText("Recently created")}</SelectItem>
+            <SelectItem value="name_asc">{setupText("Name A–Z")}</SelectItem>
+            <SelectItem value="name_desc">{setupText("Name Z–A")}</SelectItem>
           </SelectContent>
         </Select>
         {hasFilter && (
-          <Button variant="ghost" size="sm" onClick={() => { setSearch(""); setType("all"); setStatus("all"); setSector(""); setHq(""); }} className="gap-1"><X className="h-4 w-4" /> Clear</Button>
+          <Button variant="ghost" size="sm" onClick={() => { setSearch(""); setType("all"); setStatus("all"); setSector(""); setHq(""); }} className="gap-1"><X className="h-4 w-4" />{setupText("Clear")}</Button>
         )}
         <Button variant="outline" size="sm" onClick={() => void refetch()} disabled={isFetching} className="gap-2">
-          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} /> Refresh
+          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />{setupText("Refresh")}
         </Button>
       </div>
       {extras}
       {!matches ? (
-        <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">No companies match your filters</div>
+        <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">{setupText("No companies match your filters")}</div>
       ) : layout === "profiles" ? (
         <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
           <div className="space-y-5"><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected /> : <Skeleton className="h-[260px]" />} /></div>
@@ -327,11 +328,11 @@ export function BuyerMyCompany() {
       </Dialog>
       <Dialog open={newOpen} onOpenChange={setNewOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Investor profile</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">Your buyer account already has an investor profile. You can update it here; another profile cannot be added to this account.</p>
+          <DialogHeader><DialogTitle>{setupText("Investor profile")}</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{setupText("Your buyer account already has an investor profile. You can update it here; another profile cannot be added to this account.")}</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setNewOpen(false)}>Cancel</Button>
-            <Button onClick={() => { setNewOpen(false); openProfileEdit({ from: "public" }); }}>Edit my profile</Button>
+            <Button variant="outline" onClick={() => setNewOpen(false)}>{setupText("Cancel")}</Button>
+            <Button onClick={() => { setNewOpen(false); openProfileEdit({ from: "public" }); }}>{setupText("Edit my profile")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -363,8 +364,8 @@ function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfil
   return (
     <div>
       <div role="tablist" className="relative z-10 h-[58px]">
-        <FolderTab side="left" active={view === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title="Listing view" sub="Seller preview" open tone="indigo" onClick={() => onView("public")} />
-        <FolderTab side="right" active={view === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title="Exclusive view" sub="Shared after NDA" open tone="green" onClick={() => onView("private")} />
+        <FolderTab side="left" active={view === "public"} icon={<Eye className="h-4 w-4 shrink-0" />} title={setupText("Listing view")} sub={setupText("Seller preview")} open tone="indigo" onClick={() => onView("public")} />
+        <FolderTab side="right" active={view === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title={setupText("Exclusive view")} sub={setupText("Shared after NDA")} open tone="green" onClick={() => onView("private")} />
       </div>
       {view === "public" ? (
         <BuyerBrowseCard {...props} managed={managedIds.has(iv?.id ?? "")} onClick={() => onView("public")} className="rounded-b-[14px] rounded-t-none border-accent" />
@@ -383,9 +384,9 @@ function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit, pill }: {
   onItem: (k: BuyerItemKey) => void; onEdit: (s: Section) => void; pill: React.ReactNode;
 }) {
   return <div className="space-y-5">
-    <div role="tablist" aria-label="Profile visibility" className="flex gap-1 border-b border-border pb-2">
-      <Button role="tab" aria-selected={view === "public"} variant={view === "public" ? "secondary" : "ghost"} size="sm" onClick={() => setView("public")}><Eye className="mr-2 h-4 w-4" /> Listing view</Button>
-      <Button role="tab" aria-selected={view === "private"} variant={view === "private" ? "secondary" : "ghost"} size="sm" onClick={() => setView("private")}><Lock className="mr-2 h-4 w-4" /> Exclusive view</Button>
+    <div role="tablist" aria-label={setupText("Profile visibility")} className="flex gap-1 border-b border-border pb-2">
+      <Button role="tab" aria-selected={view === "public"} variant={view === "public" ? "secondary" : "ghost"} size="sm" onClick={() => setView("public")}><Eye className="mr-2 h-4 w-4" />{setupText("Listing view")}</Button>
+      <Button role="tab" aria-selected={view === "private"} variant={view === "private" ? "secondary" : "ghost"} size="sm" onClick={() => setView("private")}><Lock className="mr-2 h-4 w-4" />{setupText("Exclusive view")}</Button>
     </div>
     {view === "public"
       ? <PublicPanel p={p} org={org} pill={pill} onEdit={onEdit} />
@@ -407,18 +408,18 @@ function BuyerDirectoryItem({ p, org, mode, selected, onClick }: {
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-semibold group-hover:text-accent">{name}</div>
-        <div className="mt-1 text-xs font-normal text-muted-foreground">{org.type || <span className="text-[#9CA3AF]">Not added</span>}</div>
+        <div className="mt-1 text-xs font-normal text-muted-foreground">{org.type || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</div>
         <div className="mt-1"><StatusChip status={p.status} /></div>
       </div>
     </div>
     <div className={cn("min-w-0 text-xs font-normal text-foreground/80", mode === "list" ? "hidden flex-1 md:block" : "w-full")}>
-      <p className="line-clamp-2">{p.private_description || p.description || p.headline || <span className="text-[#9CA3AF]">Not added</span>}</p>
+      <p className="line-clamp-2">{p.private_description || p.description || p.headline || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</p>
       <div className="mt-2 flex flex-wrap gap-1">
-        {p.sectors.length ? p.sectors.slice(0, 4).map((x) => <span key={x} className="rounded-full border border-transparent bg-muted/50 px-2 py-0.5 text-[10.5px] text-muted-foreground">{x}</span>) : <span className="text-[#9CA3AF]">Sectors not added</span>}
+        {p.sectors.length ? p.sectors.slice(0, 4).map((x) => <span key={x} className="rounded-full border border-transparent bg-muted/50 px-2 py-0.5 text-[10.5px] text-muted-foreground">{x}</span>) : <span className="text-[#9CA3AF]">{setupText("Sectors not added")}</span>}
       </div>
     </div>
     <div className={cn("flex items-center gap-2 text-xs font-normal text-muted-foreground", mode === "list" ? "ml-auto shrink-0" : "mt-auto w-full justify-between")}>
-      <span className="inline-flex items-center gap-1">{ticket ? <><Coins className="h-3 w-3" /> {ticket}</> : <><MapPin className="h-3 w-3" /> {[p.city, p.country].filter(Boolean).join(", ") || <span className="text-[#9CA3AF]">Not added</span>}</>}</span>
+      <span className="inline-flex items-center gap-1">{ticket ? <><Coins className="h-3 w-3" /> {ticket}</> : <><MapPin className="h-3 w-3" /> {[p.city, p.country].filter(Boolean).join(", ") || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</>}</span>
       <ArrowRight className="h-3.5 w-3.5 text-accent" />
     </div>
   </Button>;
@@ -437,8 +438,8 @@ function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill, deleteDr
       {thumb}
       <div className="min-w-0 flex-1">
         {kind === "public"
-          ? <span className="inline-flex rounded-full bg-[#EEF0FF] px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-[#4338CA] dark:bg-indigo-950/50 dark:text-indigo-300">Listing view · Seller preview</span>
-          : <span className="inline-flex rounded-full bg-[#E8F6EE] px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-[#166534] dark:bg-green-950/50 dark:text-green-400">Exclusive view · Shared after NDA</span>}
+          ? <span className="inline-flex rounded-full bg-[#EEF0FF] px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-[#4338CA] dark:bg-indigo-950/50 dark:text-indigo-300">{setupText("Listing view · Seller preview")}</span>
+          : <span className="inline-flex rounded-full bg-[#E8F6EE] px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-[#166534] dark:bg-green-950/50 dark:text-green-400">{setupText("Exclusive view · Shared after NDA")}</span>}
         <h2 className="mt-0.5 truncate text-[21px] font-bold leading-tight">{title}</h2>
         <div className="truncate text-[13px] text-muted-foreground">{meta}</div>
       </div>
@@ -453,8 +454,8 @@ function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill, deleteDr
 function Box({ title, rows }: { title: string; rows: [string, React.ReactNode][] }) {
   return (
     <div className="rounded-[12px] border border-border p-3.5">
-      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
-      {rows.map(([l, v]) => <Line key={l} label={l}>{v ?? <span className="text-[#9CA3AF]">Not added</span>}</Line>)}
+      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{setupText(title)}</div>
+      {rows.map(([l, v]) => <Line key={setupText(l)} label={setupText(l)}>{v ?? <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</Line>)}
     </div>
   );
 }
@@ -524,7 +525,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   return (
     <div className="overflow-hidden rounded-[14px] border border-border">
       <div className="px-5 pt-5">
-        <PanelHead kind="public" title={title} meta={[p.ref_no, p.country].filter(Boolean).join(" · ")}
+        <PanelHead kind="public" title={setupText(title)} meta={[p.ref_no, p.country].filter(Boolean).join(" · ")}
           thumb={<div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-[10px]", tone.bg, tone.fg)}><TypeIcon type={org.type} className="h-6 w-6" /></div>}
           editLabel="Edit information" onEdit={() => openProfileEdit({ section: "description", from: "public" })} pill={pill}
           deleteDraft={iv ? { kind: "investor", id: iv.id, invalidate: [KEY, ["buyer-investor"]] } : undefined} />
@@ -533,38 +534,38 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
         <div className="flex flex-col gap-3 rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
           <BuyerBrowseCard {...props} managed={managedIds.has(iv?.id ?? "")} expanded editable={(k) => openProfileEdit({ section: PART_SEC[k], from: "public" })} cardFooter={
             <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border pt-2 text-[11.5px] text-[#6B7280] dark:text-muted-foreground">
-              <span className="truncate">{title} · {p.ref_no}</span><span className="shrink-0">{since}</span>
+              <span className="truncate">{setupText(title)} · {p.ref_no}</span><span className="shrink-0">{since}</span>
             </div>
           } />
         </div>
         <div className={cn("my-4 flex items-start gap-2 text-[13px]", leaks.length ? "text-[#B42318]" : "text-[#15803D] dark:text-green-400")}>
           {leaks.length ? <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> : <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />}
           {leaks.length
-            ? <span><b className="font-semibold">Identity check:</b> {leaks.join(", ")} · remove them in Edit public view.</span>
-            : <span><b className="font-semibold">Identity check passed</b> · no firm name, website or contact details in the public text.</span>}
+            ? <span><b className="font-semibold">{setupText("Identity check:")}</b> {leaks.join(", ")}{setupText("· remove them in Edit public view.")}</span>
+            : <span><b className="font-semibold">{setupText("Identity check passed")}</b>{setupText("· no firm name, website or contact details in the public text.")}</span>}
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E9EBEF] bg-[#FAFAFB] px-5 py-3.5 text-[13px] text-[#6A7181] dark:border-border dark:bg-muted/40 dark:text-muted-foreground">
         {state === "live"
-          ? <span>Live in Browse investors since {p.live_since ? fmtDate(p.live_since) : "—"} · {org.ndas} NDA{org.ndas === 1 ? "" : "s"} · {org.lois} LOI{org.lois === 1 ? "" : "s"}</span>
+          ? <span>{setupText("Live in Browse investors since")} {p.live_since ? fmtDate(p.live_since) : "—"} · {org.ndas}{setupText("NDA")}{org.ndas === 1 ? "" : "s"} · {org.lois}{setupText("LOI")}{org.lois === 1 ? "" : "s"}</span>
           : state === "pending"
-            ? <span>Submitted on {(p as any).submitted_at ? fmtDate((p as any).submitted_at) : "—"} · sellers can't find you yet</span>
+            ? <span>{setupText("Submitted on")} {(p as any).submitted_at ? fmtDate((p as any).submitted_at) : "—"}{setupText("· sellers can't find you yet")}</span>
           : state === "changes" || state === "declined"
-            ? <span>Fix what PitchSnack asked with Edit information, then register again.</span>
+            ? <span>{setupText("Fix what PitchSnack asked with Edit information, then register again.")}</span>
           : state === "paused"
-            ? <span>Hidden from Browse investors since {fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}.</span>
+            ? <span>{setupText("Hidden from Browse investors since")} {fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}.</span>
             : !setupDone && iv
-              ? <span>Finish setting up your profile to publish it.</span>
-              : <span><b className="font-semibold text-foreground">Draft</b> · not live yet. Register once: PitchSnack checks your firm and publishes your profile together.</span>}
+              ? <span>{setupText("Finish setting up your profile to publish it.")}</span>
+              : <span><b className="font-semibold text-foreground">{setupText("Draft")}</b>{setupText("· not live yet. Register once: PitchSnack checks your firm and publishes your profile together.")}</span>}
         {state === "live"
-          ? <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)}>Remove your company profile from listing</Button>
+          ? <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)}>{setupText("Remove your company profile from listing")}</Button>
           : state === "pending"
-            ? <span className="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3.5 text-[13.5px] font-semibold text-[#1D4ED8]"><Clock className="h-4 w-4" />Pending approval</span>
+            ? <span className="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3.5 text-[13.5px] font-semibold text-[#1D4ED8]"><Clock className="h-4 w-4" />{setupText("Pending approval")}</span>
           : state === "paused"
-            ? <Button size="sm" className="whitespace-normal bg-[#1E2A4A] text-center text-white hover:bg-[#101d43]" disabled={listing.isPending} onClick={() => listing.mutate("live")}>List my company so that sellers can contact me</Button>
+            ? <Button size="sm" className="whitespace-normal bg-[#1E2A4A] text-center text-white hover:bg-[#101d43]" disabled={listing.isPending} onClick={() => listing.mutate("live")}>{setupText("List my company so that sellers can contact me")}</Button>
           : state === "draft" && !setupDone && iv
-            ? <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => openWizard()}>Finish setup to publish</Button>
-            : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />Register your company</Button>}
+            ? <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => openWizard()}>{setupText("Finish setup to publish")}</Button>
+            : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />{setupText("Register your company")}</Button>}
       </div>
       <ReviewCompanyDialog open={reviewOpen} role="buyer" data={reviewData} failures={failures} submitting={reg.isPending}
         onEdit={(section) => { setReviewOpen(false); openProfileEdit({ section: section === "company" ? "company" : "description", from: section === "company" ? "private" : "public" }); }}
@@ -582,17 +583,17 @@ export function SetupBanner({ n, N, onOpen }: { n: number; N: number; onOpen: ()
     <div data-tour-banner data-tour-n={N} data-tour-m={3} className="mb-4 flex flex-col gap-3 rounded-[14px] border border-[#CFD2FB] bg-[#EEF0FF] px-[18px] py-4 min-[860px]:flex-row min-[860px]:items-center dark:border-[#2E3570] dark:bg-[#1B2140]">
       <div className="hidden h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-card text-[#4338CA] min-[860px]:grid"><Flag className="h-5 w-5" /></div>
       <div className="min-w-0 flex-1">
-        <div className="text-[14.5px] font-bold">{n === 0 ? "Set up your investor profile" : "Finish setting up your investor profile"}</div>
+        <div className="text-[14.5px] font-bold">{setupText(n === 0 ? "Set up your investor profile" : "Finish setting up your investor profile")}</div>
         <p className="mt-0.5 text-[13px] text-muted-foreground">
-          {all ? `All ${N} questions are answered. Check your profile and save it, then publish it to Browse investors.`
-            : `Sellers can't find your profile yet. Answer ${N} short questions. It takes about 3 minutes and saves as you go.`}
+          {setupText(all ? `All ${N} questions are answered. Check your profile and save it, then publish it to Browse investors.`
+            : `Sellers can't find your profile yet. Answer ${N} short questions. It takes about 3 minutes and saves as you go.`)}
         </p>
         <div className="mt-2 flex items-center gap-2 text-[12px] text-muted-foreground">
-          <span>{n} of {N} answered</span>
+          <span>{setupText(`${n} of ${N} answered`)}</span>
           <div className="h-1 w-32 overflow-hidden rounded-full bg-card"><div className="h-full bg-[#1E2A4A] dark:bg-[#818CF8]" style={{ width: `${(n / N) * 100}%` }} /></div>
         </div>
       </div>
-      <Button size="sm" data-tour-btn className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={onOpen}>{n === 0 ? "Start setup →" : "Continue setup →"}</Button>
+      <Button size="sm" data-tour-btn className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={onOpen}>{setupText(n === 0 ? "Start setup →" : "Continue setup →")}</Button>
     </div>
   );
 }
@@ -601,8 +602,8 @@ function Sec({ title, onEdit, action = "Edit", children }: { title: string; onEd
   return (
     <section className="mt-5 first:mt-0">
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-[11px] font-medium uppercase tracking-wider text-[#6B7280] dark:text-muted-foreground">{title}</span>
-        <button type="button" onClick={onEdit} className="text-[12.5px] font-medium text-blue-600 hover:underline">{action}</button>
+        <span className="text-[11px] font-medium uppercase tracking-wider text-[#6B7280] dark:text-muted-foreground">{setupText(title)}</span>
+        <button type="button" onClick={onEdit} className="text-[12.5px] font-medium text-blue-600 hover:underline">{setupText(action)}</button>
       </div>
       {children}
     </section>
@@ -612,7 +613,7 @@ function R({ label, value }: { label: string; value: React.ReactNode }) {
   const empty = value == null || value === "";
   return (
     <div className="grid grid-cols-[160px_1fr] gap-3 border-t border-[#F0F1F4] py-2 text-[13px] dark:border-border">
-      <span className="text-[#6B7280] dark:text-muted-foreground">{label}</span>
+      <span className="text-[#6B7280] dark:text-muted-foreground">{setupText(label)}</span>
       <span className={cn("min-w-0 break-words", empty ? "text-[#9CA3AF]" : "text-[#374151] dark:text-foreground/85")}>{empty ? "Not added" : value}</span>
     </div>
   );
@@ -625,17 +626,17 @@ function PrivatePanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg
       <PanelHead kind="private" title={org.name ?? "Your firm"} meta={[org.type ?? "Investor", [p.city, p.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
         thumb={<Logo p={p} org={org} size={56} />} editLabel="Edit profile" onEdit={() => onEdit("company")} pill={pill} />
       <div className="[&>div]:bg-[#F3F4F6] dark:[&>div]:bg-muted">
-        <Intro icon={<Lock className="h-4 w-4 text-muted-foreground" />}>Your full firm details. Only sellers who approve your NDA can see this.</Intro>
+        <Intro icon={<Lock className="h-4 w-4 text-muted-foreground" />}>{setupText("Your full firm details. Only sellers who approve your NDA can see this.")}</Intro>
       </div>
-      <Sec title="Company" onEdit={() => onEdit("company")}>
-        <R label="Name" value={org.name} /><R label="Legal name" value={p.legal_name} /><R label="Registration no." value={org.registrationNo} />
-        <R label="Website" value={web} /><R label="Address" value={p.address} />
+      <Sec title={setupText("Company")} onEdit={() => onEdit("company")}>
+        <R label={setupText("Name")} value={org.name} /><R label={setupText("Legal name")} value={p.legal_name} /><R label={setupText("Registration no.")} value={org.registrationNo} />
+        <R label={setupText("Website")} value={web} /><R label={setupText("Address")} value={p.address} />
       </Sec>
-      <Sec title="Fund" onEdit={() => onEdit("fund")}>
-        <R label="Assets under management" value={p.aum_exact} /><R label="Ticket size" value={p.ticket_exact} />
-        <R label="Track record" value={p.track_record} /><R label="Decision process" value={p.decision_process} />
+      <Sec title={setupText("Fund")} onEdit={() => onEdit("fund")}>
+        <R label={setupText("Assets under management")} value={p.aum_exact} /><R label={setupText("Ticket size")} value={p.ticket_exact} />
+        <R label={setupText("Track record")} value={p.track_record} /><R label={setupText("Decision process")} value={p.decision_process} />
       </Sec>
-      <Sec title="Decision makers" onEdit={() => onEdit("people")}>
+      <Sec title={setupText("Decision makers")} onEdit={() => onEdit("people")}>
         {p.people.map((m, i) => (
           <div key={i} className="flex items-center gap-3 border-t border-[#F0F1F4] py-2 text-[13px] dark:border-border">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-muted text-[11.5px] font-semibold text-muted-foreground">{m.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
@@ -643,14 +644,14 @@ function PrivatePanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg
             <div className="shrink-0 text-right text-[12px] text-muted-foreground"><div>{m.email}</div><div>{m.phone}</div></div>
           </div>
         ))}
-        <button type="button" onClick={() => onEdit("people")} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-border py-2 text-[13px] font-medium text-muted-foreground hover:bg-muted"><Plus className="h-4 w-4" />Add a decision maker</button>
+        <button type="button" onClick={() => onEdit("people")} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-border py-2 text-[13px] font-medium text-muted-foreground hover:bg-muted"><Plus className="h-4 w-4" />{setupText("Add a decision maker")}</button>
       </Sec>
-      <Sec title="Mandate" onEdit={() => onEdit("mandate")}>
-        <R label="Sectors" value={p.sectors.join(", ")} /><R label="Stages" value={p.stages.join(", ")} /><R label="Deal types" value={p.deal_types.join(", ")} />
-        <MandateBands /><R label="Geography" value={p.geography} />
+      <Sec title={setupText("Mandate")} onEdit={() => onEdit("mandate")}>
+        <R label={setupText("Sectors")} value={p.sectors.join(", ")} /><R label={setupText("Stages")} value={p.stages.join(", ")} /><R label={setupText("Deal types")} value={p.deal_types.join(", ")} />
+        <MandateBands /><R label={setupText("Geography")} value={p.geography} />
       </Sec>
-      <Sec title="Portfolio" action="Add" onEdit={() => onEdit("portfolio")}>
-        <R label="Current holdings" value={p.portfolio.length ? p.portfolio.map((h) => h.note ? `${h.name} (${h.note})` : h.name).join(", ") : null} />
+      <Sec title={setupText("Portfolio")} action={setupText("Add")} onEdit={() => onEdit("portfolio")}>
+        <R label={setupText("Current holdings")} value={p.portfolio.length ? p.portfolio.map((h) => h.note ? `${h.name} (${h.note})` : h.name).join(", ") : null} />
       </Sec>
     </div>
   );
@@ -672,7 +673,7 @@ function SplitPrivate() {
 function MandateBands() {
   const iv = useBuyerInvestor().data?.investor;
   return <>
-    <R label="Ticket size" value={bandText(iv?.ticket_band)} />
-    <R label="Min. target revenue" value={bandText(iv?.revenue_min_band)} />
+    <R label={setupText("Ticket size")} value={bandText(iv?.ticket_band)} />
+    <R label={setupText("Min. target revenue")} value={bandText(iv?.revenue_min_band)} />
   </>;
 }

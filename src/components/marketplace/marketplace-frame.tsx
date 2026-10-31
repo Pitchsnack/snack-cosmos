@@ -326,7 +326,7 @@ export function PersonaCard({ collapsed = false }: { collapsed?: boolean }) {
               "bg-[var(--role-pill-bg)] text-[var(--role-pill-fg)]",
             )}
           >
-            {persona}
+            {t(cap(persona))}
           </span>
           {u?.planInfo && role !== "admin" && <PlanBadge name={u.planInfo.name} style={u.planInfo.badgeStyle} ended={u.planInfo.ended} />}
           {persona === 'seller' && <VerificationSidebarChip state={verification.data} />}
@@ -528,7 +528,7 @@ export function MarketplaceEmptyMenu({ collapsed = false }: { collapsed?: boolea
     >
       <it.icon className="h-4 w-4 shrink-0" />
       <span className="min-w-0">{it.to === '/my-reports' ? vc('My reports','รายงานของฉัน') : it.to === '/my-verification' ? vc(it.label) : t(it.label)}</span>
-      {it.to === '/my-reports' && hubIsNew() && <span className="hub-new">NEW</span>}
+      {it.to === '/my-reports' && hubIsNew() && <span className="hub-new">{t("NEW")}</span>}
       {it.to === '/marketplace/advertisement' && <span className="hub-new ml-auto">{vc('NEW','ใหม่')}</span>}
       {it.to === '/my-verification' && <VerificationMenuStatus state={verification.data} />}
       {it.to === "/marketplace/pipeline" && <PipelineCountBadge />}

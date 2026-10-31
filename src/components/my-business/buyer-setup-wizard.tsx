@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
 import { descriptionWords, singleLineDescription } from '@/lib/buyer-description';
 import { useFocusNeeded } from "@/components/common/need-fill";
@@ -44,8 +45,8 @@ const inp = "h-[50px] w-full rounded-[12px] border border-[#DCDFE5] bg-white px-
 const errCls = "!border-[#B42318]";
 const lbl = "mb-[7px] block text-[13.5px] font-semibold text-[#434A5C] dark:text-muted-foreground";
 const Req = () => <span aria-hidden className="relative -top-0.5 ml-[3px] text-[12px] font-semibold text-[#B42318]">*</span>;
-const Opt = () => <span className="ml-1.5 font-normal text-[#9CA3AF]">optional</span>;
-const Err = ({ m }: { m: string | null | false | undefined }) => (m ? <p className="mt-1.5 text-[13px] text-[#B42318]">{m}</p> : null);
+const Opt = () => <span className="ml-1.5 font-normal text-[#9CA3AF]">{setupText("optional")}</span>;
+const Err = ({ m }: { m: string | null | false | undefined }) => (m ? <p className="mt-1.5 text-[13px] text-[#B42318]">{setupText(m)}</p> : null);
 
 function fromData(d: Data): A {
   const inv = d.investor;
@@ -101,7 +102,7 @@ function Choice({ list, value, onPick, cols, icon }: {
 function Checks({ title, note, req, items, value, onChange }: { title: string; note: string; req?: boolean; items: string[]; value: string[]; onChange: (v: string[]) => void }) {
   return (
     <div>
-      <div className="mb-2.5 text-[14px] font-semibold">{title}{req && <Req />} <span className="ml-1 text-[12.5px] font-normal text-[#9CA3AF]">{note}</span></div>
+      <div className="mb-2.5 text-[14px] font-semibold">{title}{req && <Req />} <span className="ml-1 text-[12.5px] font-normal text-[#9CA3AF]">{setupText(note)}</span></div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {items.map((it) => {
           const on = value.includes(it);
@@ -332,7 +333,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     try { await cap(flush()); } catch { /* flush already toasts */ }
     void qc.invalidateQueries({ queryKey: ["buyer-investor"] });
     void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
-    toast.success(live ? "Your changes are saved." : tr("Saved as a draft. Continue setup any time from My Company."));
+    toast.success(live ? tr("Your changes are saved.") : tr("Saved as a draft. Continue setup any time from My Company."));
     const fallback = window.setTimeout(() => { window.location.href = `/marketplace/my-company?open=${data.investor.id}`; }, 1500);
     try { await navigate({ to: "/marketplace/my-company", search: { open: data.investor.id } }); window.clearTimeout(fallback); }
     catch { window.location.href = `/marketplace/my-company?open=${data.investor.id}`; }
@@ -343,7 +344,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
 
   // Enter = Continue (not on buttons/links/textarea).
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== tr("Enter") || phase !== "q") return;
+    if (e.key !== "Enter" || phase !== "q") return;
     const t = e.target as HTMLElement;
     if (t.closest("button, a, textarea, [role=combobox], [role=listbox]")) return;
     e.preventDefault();
@@ -383,22 +384,22 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         body: <><TypeTicks value={a.acts} onChange={(v) => set({ acts: v, type: v[0] ?? "" }, { acts_for_types: v })} /><Err m={forced.type && errors.type} /></> }
       : { req: true, t: tr("What type of investor is your firm?"), h: tr("Sellers see this, and it sets the artwork on your card."),
         body: <Choice cols icon list={WIZARD_TYPES} value={a.type} onPick={(v) => autoPick("type", { type: v }, { investor_type: v })} /> },
-    name: { req: true, t: addrOnly ? tr("What is your address?") : nameShort ? "What is your firm's name and registration number?" : tr("What is the name of your firm?"),
-      h: addrOnly ? tr("Sellers see your country and province, never the full address, until they approve your NDA.") : nameShort ? "Check that the name matches your firm's registration. Sellers don't see either before an NDA." : "ผู้ขายจะเห็นคำว่า “นักลงทุนรายบุคคล” แทนชื่อของคุณ จนกว่าผู้ขายจะอนุมัติ NDA ของคุณ",
+    name: { req: true, t: addrOnly ? tr("What is your address?") : nameShort ? tr("What is your firm's name and registration number?") : tr("What is the name of your firm?"),
+      h: addrOnly ? tr("Sellers see your country and province, never the full address, until they approve your NDA.") : nameShort ? tr("Check that the name matches your firm's registration. Sellers don't see either before an NDA.") : "ผู้ขายจะเห็นคำว่า “นักลงทุนรายบุคคล” แทนชื่อของท่าน จนกว่าผู้ขายจะอนุมัติ NDA ของท่าน",
       body: (
         <div className={addrOnly ? "pt-[6px]" : "space-y-4"}>
           {!addrOnly && (<div>
             <div className="flex flex-col gap-[14px] sm:flex-row">
               <div className="flex-1">
                 <label className={lbl} htmlFor="w-name">{tr("Firm name")}<Req /></label>
-                <input id="w-name" aria-required autoFocus {...(errors.name ? { "data-need": "1" } : {})} className={`${inp} ${errors.name ? "need-fill" : ""} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder="e.g. บริษัท ตัวอย่าง จำกัด"
+                <input id="w-name" aria-required autoFocus {...(errors.name ? { "data-need": "1" } : {})} className={`${inp} ${errors.name ? "need-fill" : ""} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder={setupText("e.g. บริษัท ตัวอย่าง จำกัด")}
                   onBlur={() => setTouched((t) => ({ ...t, name: true }))}
                   onChange={(e) => set({ name: e.target.value }, e.target.value.trim() ? { investor_name: e.target.value } : {})} />
               </div>
               {!individual && !hiddenF.has("year") && (
                 <div className="sm:w-[150px]">
                   <label className={lbl} htmlFor="w-year">{tr("Year founded")}<Req /></label>
-                  <input id="w-year" aria-required inputMode="numeric" maxLength={4} className={`${inp} ${show("year") ? errCls : ""}`} value={a.year} placeholder="e.g. 2014"
+                  <input id="w-year" aria-required inputMode="numeric" maxLength={4} className={`${inp} ${show("year") ? errCls : ""}`} value={a.year} placeholder={setupText("e.g. 2014")}
                     onBlur={() => setTouched((t) => ({ ...t, year: true }))}
                     onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 4); set({ year: v }, !yearError(v) ? { year_founded: Number(v) } : {}); }} />
                 </div>
@@ -411,14 +412,14 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             <div>
               <label className={lbl} htmlFor="w-reg">{thai ? <>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<Req /></> : <>{tr("Company registration number")}<Opt /></>}</label>
               <input id="w-reg" aria-required={thai} {...(errors.reg ? { "data-need": "1" } : {})} className={`${inp} ${errors.reg ? "need-fill" : ""} ${show("reg") ? errCls : ""}`} value={a.reg} inputMode={thai ? "numeric" : undefined}
-                maxLength={thai ? 13 : 50} placeholder={thai ? "13 digits" : ""}
+                maxLength={thai ? 13 : 50} placeholder={thai ? setupText("13 digits") : ""}
                 onBlur={() => setTouched((t) => ({ ...t, reg: true }))}
                 onChange={(e) => { const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value; set({ reg: v }, { registration_no: v }); }} />
               <Err m={show("reg")} />
               <p className="mt-2.5 flex items-start gap-2 text-[13px] text-[#434A5C] dark:text-muted-foreground">
                 <ShieldCheck className="mt-0.5 h-[15px] w-[15px] flex-none text-[#15803D]" />
                 <span><b className="font-semibold text-[#151A28] dark:text-foreground">{tr("Sellers want genuine buyers, not window shoppers.")}</b>{" "}
-                  {thai ? "We verify your firm with this number, then show sellers a Verified investor badge on your card." : `Adding your registration number in ${a.country} helps us verify your firm.`}</span>
+                  {thai ? tr("We verify your firm with this number, then show sellers a Verified investor badge on your card.") : L(`Adding your registration number in ${a.country} helps us verify your firm.`, `การเพิ่มเลขทะเบียนใน ${tr(a.country)} ช่วยให้เรายืนยันบริษัทของท่านได้`)}</span>
               </p>
             </div>
           )}
@@ -440,19 +441,19 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             <button type="button" disabled={!!errors.web}
               onClick={() => { window.open(normalizeUrl(a.web), "_blank", "noopener,noreferrer"); setWebOpened(true); }}
               className="inline-flex h-[50px] flex-none items-center justify-center gap-1.5 rounded-[12px] border border-[#DCDFE5] bg-white px-4 text-[15px] font-semibold text-[#1E2A4A] hover:border-[#1E2A4A] disabled:cursor-not-allowed disabled:text-[#C7CBD6] dark:border-border dark:bg-background dark:text-foreground">
-              <ExternalLink className="h-4 w-4" />Check website
+              <ExternalLink className="h-4 w-4" />{setupText("Check website")}
             </button>
           </div>
           {(a.web.trim() || forced.web) && errors.web ? <Err m={errors.web} />
-            : webOpened ? <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[#15803D]"><Check className="h-4 w-4" />Opened {normalizeUrl(a.web).replace(/^https?:\/\//, "").split("/")[0]} in a new tab. Make sure it is your firm.</p>
+            : webOpened ? <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[#15803D]"><Check className="h-4 w-4" />{setupText("Opened")} {normalizeUrl(a.web).replace(/^https?:\/\//, "").split("/")[0]}{setupText("in a new tab. Make sure it is your firm.")}</p>
             : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Click Check website to open it in a new tab and make sure it is your firm.")}</p>}
         </div>
       ) },
-    aum: { req: true, t: corp ? "What is your group's annual revenue in $USD?" : tr("How much does your firm manage (AUM) in $USD?"), h: tr("Sellers see this band, never an exact figure."),
+    aum: { req: true, t: corp ? tr("What is your group's annual revenue in $USD?") : tr("How much does your firm manage (AUM) in $USD?"), h: tr("Sellers see this band, never an exact figure."),
       body: <><Choice list={bandList(AUM_BANDS)} value={a.aum} onPick={(v) => autoPick("aum", { aum: v }, { aum_band: v })} /><Err m={forced.aum && errors.aum} /></> },
     ticket: { req: true, t: tr("What is your average investment per deal in $USD?"), h: tr("Sellers see this range on your card and filter Browse investors by it."),
       body: <><Choice list={bandList(TICKET_BANDS)} value={a.ticket} onPick={(v) => autoPick("ticket", { ticket: v }, { ticket_band: v })} /><Err m={forced.ticket && errors.ticket} /></> },
-    rev: { req: false, t: <>{tr("Minimum target company")} <i>revenue</i> (USD)</>, h: tr("Enter the minimum annual revenue a company must generate for you to consider it as an acquisition target."),
+    rev: { req: false, t: <>{tr("Minimum target company")} <i>{setupText("revenue")}</i>{setupText("(USD)")}</>, h: tr("Enter the minimum annual revenue a company must generate for you to consider it as an acquisition target."),
       body: <><Choice list={bandList(REV_BANDS)} value={a.rev} onPick={(v) => autoPick("rev", { rev: v }, { revenue_min_band: v })} /><Err m={forced.rev && errors.rev} /></> },
     deals: { req: true, t: tr("What kind of deals do you do?"), h: tr("Pick all that apply. Sellers see these on your card."),
       body: (
@@ -487,7 +488,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       body: (
         <div>
           <label className={lbl} htmlFor="w-desc">{tr("Description")} <span className="font-normal text-muted-foreground">{L('(1–2 sentences)', '(1–2 ประโยค)')}</span></label>
-          <textarea id="w-desc" rows={3} autoFocus value={a.desc} placeholder="e.g. Family office backing profitable Thai companies with succession or growth plans"
+          <textarea id="w-desc" rows={3} autoFocus value={a.desc} placeholder={setupText("e.g. Family office backing profitable Thai companies with succession or growth plans")}
             onBlur={() => setTouched((t) => ({ ...t, desc: true }))}
             onChange={(e) => {const desc = singleLineDescription(e.target.value);set({ desc }, { description: desc });}}
             onKeyDown={(e) => {if (e.key === 'Enter') e.preventDefault();}}
@@ -496,7 +497,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             <span className="text-destructive">{((touched.desc || forced.desc) || descErr !== 'Write at least 10 characters.') && descErr ? tr(descErr) : ''}</span>
             <span className="text-muted-foreground">{descriptionWords(a.desc)} / 25 {L('words','คำ')}</span>
           </div>
-          {leaks.length > 0 && <p className="mt-2 rounded-[10px] border border-[#F3D9A6] bg-[#FFF4E0] px-3.5 py-2.5 text-[13px] text-[#8A5A06]">{tr("Your description mentions")} <b>{leaks.join(", ")}</b>. Sellers read it before an NDA, so leave out names, websites and contact details.</p>}
+          {leaks.length > 0 && <p className="mt-2 rounded-[10px] border border-[#F3D9A6] bg-[#FFF4E0] px-3.5 py-2.5 text-[13px] text-[#8A5A06]">{tr("Your description mentions")} <b>{leaks.join(", ")}</b>{setupText(". Sellers read it before an NDA, so leave out names, websites and contact details.")}</p>}
           <div className="mt-5 rounded-[12px] border border-[#E9EBF0] bg-[#FBFBFD] p-4 dark:border-border dark:bg-muted/30">
             <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">{tr("How sellers see you")}</div>
             <PublicInvestorCard empty={tr("Not added")} i={{
@@ -528,13 +529,13 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       <button type="button" onClick={saveExit} disabled={exiting} aria-label={tr("Save and exit setup")}
         className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-[10px] border border-[#DCDFE5] bg-white px-3 text-[13px] font-semibold text-[#434A5C] transition-colors hover:bg-[#F6F7F9] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 dark:border-border dark:bg-background dark:text-foreground">
         {exiting ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
-        <span className="hidden sm:inline">{exiting ? "Exiting…" : tr("Save & exit")}</span>
+        <span className="hidden sm:inline">{setupText(exiting ? "Exiting…" : "Save & exit")}</span>
       </button>
     </div>
   );
   const header = (sec: string, right: string, pct: number) => (
     <>
-      <div className="flex items-baseline justify-between text-[15px]"><b className="font-semibold text-[#151A28] dark:text-foreground">{sec}</b><span className="text-[#6B7280]">{right}</span></div>
+      <div className="flex items-baseline justify-between text-[15px]"><b className="font-semibold text-[#151A28] dark:text-foreground">{setupText(sec)}</b><span className="text-[#6B7280]">{setupText(right)}</span></div>
       <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-[#E5E7EB] dark:bg-muted"><i className="block h-full bg-[#1E2A4A] transition-[width] duration-300 dark:bg-[#818CF8]" style={{ width: `${pct}%` }} /></div>
     </>
   );
@@ -551,9 +552,9 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           <div className={card}>
             <div key={step.id} ref={qRef} className="animate-in fade-in duration-200">
               <h1 className="text-[21px] font-bold leading-snug sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>
-                {q.t}{!optional && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">, required</span></>}
+                {typeof q.t === "string" ? setupText(q.t) : q.t}{!optional && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">{setupText(", required")}</span></>}
               </h1>
-              <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{q.h}</p>
+              <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{typeof q.h === "string" ? setupText(q.h) : q.h}</p>
               {q.body}
             </div>
             <div className="mt-8 flex flex-wrap items-center gap-2.5">
@@ -561,7 +562,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
               {optional && <button type="button" className={btnO} onClick={skip}>{tr("Skip")}</button>}
               <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
                 <button type="button" className={`${btnO} flex-1 cursor-pointer hover:bg-[#F6F7F9] active:scale-[0.98] disabled:cursor-wait sm:flex-none`} disabled={exiting} onClick={saveExit}>{exiting ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{tr("Saving…")}</span> : <>{tr("Save & exit")}</>}</button>
-                <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!continueOk} onClick={tryContinue}>{continueLabel}</button>
+                <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!continueOk} onClick={tryContinue}>{setupText(continueLabel)}</button>
               </div>
             </div>
           </div>
@@ -631,7 +632,7 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, on
                   <span className="w-[150px] flex-none text-[#6B7280]">{k}</span>
                   <span className="min-w-0 flex-1 font-semibold">
                     {status ?? v}
-                    {!status && tag && <span className={`ml-2 rounded px-1.5 py-0.5 text-[10.5px] font-semibold ${tag === "Range" ? "bg-[#EEF0FF] text-[#4338CA]" : "bg-muted text-muted-foreground"}`}>{tag}</span>}
+                    {!status && tag && <span className={`ml-2 rounded px-1.5 py-0.5 text-[10.5px] font-semibold ${tag === "Range" ? "bg-[#EEF0FF] text-[#4338CA]" : "bg-muted text-muted-foreground"}`}>{setupText(tag)}</span>}
                   </span>
                   <button type="button" className="text-[13px] font-semibold text-[#2563EB] hover:underline" onClick={() => onEdit(id)}>{id === "photos" && !v ? tr("Answer") : tr("Edit")}</button>
                 </div>
@@ -686,14 +687,14 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
     <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
       {header(tr("Auto Enrich"), tr("Almost done"), 100)}
       <div className={card}>
-        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{state === "done" ? "Your profile is filled in" : tr("Filling in your profile")}</h1>
-        <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{state === "done" ? `We found ${n} details. Check them in the next step.` : `We're reading ${domain} and public records. This takes a few seconds.`}</p>
+        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{setupText(state === "done" ? "Your profile is filled in" : tr("Filling in your profile"))}</h1>
+        <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{setupText(state === "done" ? `We found ${n} details. Check them in the next step.` : `We're reading ${domain} and public records. This takes a few seconds.`)}</p>
         <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
           {sources.filter((s) => s[3]).map(([t, sub, what]) => (
             <div key={t} className="flex items-center gap-3 border-b border-[#F0F1F4] px-4 py-3 last:border-0 dark:border-border">
               {state === "done" ? <Check className="h-5 w-5 text-[#15803D]" /> : <Loader2 className="h-5 w-5 animate-spin text-[#6B7280]" />}
               <div className="min-w-0 flex-1"><b className="block text-[14.5px] font-semibold">{t}</b><span className="text-[12.5px] text-[#6B7280]">{sub}</span></div>
-              {state === "done" && <span className="text-[13px] text-[#434A5C] dark:text-muted-foreground">{what}</span>}
+              {state === "done" && <span className="text-[13px] text-[#434A5C] dark:text-muted-foreground">{setupText(what)}</span>}
             </div>
           ))}
         </div>

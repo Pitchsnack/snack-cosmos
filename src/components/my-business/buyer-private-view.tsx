@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { useEffect, useRef, useState } from "react";
 import { useOpenProfileEdit } from "@/components/my-business/profile-edit-popup";
 import { useNavigate } from "@tanstack/react-router";
@@ -56,7 +57,7 @@ export function BuyerStatusBadge({ status }: { status: string }) {
   return (
     <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10.5px] font-bold",
       live ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-amber-500/15 text-amber-700 dark:text-amber-400")}>
-      {live ? "Live" : "Draft"}
+      {setupText(live ? "Live" : "Draft")}
     </span>
   );
 }
@@ -105,11 +106,11 @@ function Pill({ d, onEdit }: { d: BuyerInvestorData; onEdit: (key: string) => vo
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-[320px] max-w-[calc(100vw-2rem)] rounded-[14px] border border-border bg-card p-4 text-left shadow-xl">
-          <div className="flex items-center justify-between text-[14px] font-bold"><span>Profile setup</span><span className="text-profile">{pct}%</span></div>
+          <div className="flex items-center justify-between text-[14px] font-bold"><span>{setupText("Profile setup")}</span><span className="text-profile">{pct}%</span></div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className={cn("h-full rounded-full", full ? "bg-emerald-600" : "bg-profile")} style={{ width: `${pct}%` }} /></div>
-          {req.length > 0 && <p className="mt-1.5 text-[12px] text-muted-foreground">{req.length} required item{req.length === 1 ? "" : "s"} before you can submit for verification</p>}
-          {req.length > 0 && <Group title="Required">{req.map((x) => <Row key={x.key} label={x.label} link="Add →" onClick={() => { setOpen(false); onEdit(x.key); }} circle="solid" />)}</Group>}
-          {opt.length > 0 && <Group title="Optional">{opt.map((x) => <Row key={x.key} label={x.label} link="Add →" onClick={() => { setOpen(false); onEdit(x.key); }} circle="dashed" />)}</Group>}
+          {req.length > 0 && <p className="mt-1.5 text-[12px] text-muted-foreground">{req.length}{setupText("required item")}{req.length === 1 ? "" : "s"}{setupText("before you can submit for verification")}</p>}
+          {req.length > 0 && <Group title={setupText("Required")}>{req.map((x) => <Row key={x.key} label={x.label} link="Add →" onClick={() => { setOpen(false); onEdit(x.key); }} circle="solid" />)}</Group>}
+          {opt.length > 0 && <Group title={setupText("Optional")}>{opt.map((x) => <Row key={x.key} label={x.label} link="Add →" onClick={() => { setOpen(false); onEdit(x.key); }} circle="dashed" />)}</Group>}
           {done.length > 0 && <div className="mt-3 space-y-1">{done.map((x) => <div key={x.key} className="flex items-center gap-2 py-0.5 text-[12.5px] text-muted-foreground"><Check className="h-4 w-4 text-emerald-600" />{x.label}</div>)}</div>}
         </div>
       )}
@@ -151,41 +152,41 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
     <div className="-mx-5 -mt-5 mb-1 flex items-center gap-2 border-b border-border px-5 py-3">
       {onView && (
         <div role="tablist" className="flex gap-1">
-          <Button role="tab" aria-selected={view === "public"} variant={view === "public" ? "secondary" : "ghost"} size="sm" onClick={() => onView("public")}><Eye className="mr-2 h-4 w-4" />Listing view</Button>
-          <Button role="tab" aria-selected={view === "private"} variant={view === "private" ? "secondary" : "ghost"} size="sm" onClick={() => onView("private")}><Lock className="mr-2 h-4 w-4" />Exclusive view</Button>
+          <Button role="tab" aria-selected={view === "public"} variant={view === "public" ? "secondary" : "ghost"} size="sm" onClick={() => onView("public")}><Eye className="mr-2 h-4 w-4" />{setupText("Listing view")}</Button>
+          <Button role="tab" aria-selected={view === "private"} variant={view === "private" ? "secondary" : "ghost"} size="sm" onClick={() => onView("private")}><Lock className="mr-2 h-4 w-4" />{setupText("Exclusive view")}</Button>
         </div>
       )}
       <span className="flex-1" />
       <Pill d={d} onEdit={editItem} />
       <CompanyMenu name={i.investor_name || "Investor profile"} onEdit={edit}
         deleteDraft={{ kind: "investor", id: i.id, invalidate: [["buyer-profile", "me"], ["buyer-investor"], BUYER_INVESTOR_KEY] }}>
-        {web && <DropdownMenuItem onClick={() => window.open(web, "_blank", "noopener")}>Open website</DropdownMenuItem>}
+        {web && <DropdownMenuItem onClick={() => window.open(web, "_blank", "noopener")}>{setupText("Open website")}</DropdownMenuItem>}
       </CompanyMenu>
     </div>
   );
   const chips = (
     <>
-      <span className="inline-flex rounded-full bg-[#E8F6EE] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#166534] dark:bg-green-950/50 dark:text-green-400">Exclusive view · Shared after NDA</span>
+      <span className="inline-flex rounded-full bg-[#E8F6EE] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#166534] dark:bg-green-950/50 dark:text-green-400">{setupText("Exclusive view · Shared after NDA")}</span>
       <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold", v.cls)}>{v.label}</span>
     </>
   );
   const intro = (
     <>
       <div className="[&>div]:bg-[#F3F4F6] dark:[&>div]:bg-muted">
-        <Intro icon={<Lock className="h-4 w-4 text-muted-foreground" />}>Your full firm details. Only sellers who approve your NDA can see this.</Intro>
+        <Intro icon={<Lock className="h-4 w-4 text-muted-foreground" />}>{setupText("Your full firm details. Only sellers who approve your NDA can see this.")}</Intro>
       </div>
       {d.verification.status === "more_info" && d.verification.note && (
-        <p className="rounded-[10px] border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-900">More info needed: {d.verification.note}</p>
+        <p className="rounded-[10px] border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-900">{setupText("More info needed:")} {d.verification.note}</p>
       )}
     </>
   );
   const mediaAdd = (
     <button type="button" onClick={() => editAt("media")} className="grid aspect-video place-items-center rounded-lg border border-dashed border-border text-[12.5px] text-muted-foreground hover:bg-muted">
-      <span className="inline-flex items-center gap-1.5"><ImagePlus className="h-4 w-4" />Add media</span>
+      <span className="inline-flex items-center gap-1.5"><ImagePlus className="h-4 w-4" />{setupText("Add media")}</span>
     </button>
   );
   const afterPortfolio = (
-    <Section icon={Users} title="Decision makers" right={<SectionEditLink tone="buyer" onClick={() => editAt("people")} />}>
+    <Section icon={Users} title={setupText("Decision makers")} right={<SectionEditLink tone="buyer" onClick={() => editAt("people")} />}>
       {d.people.length ? <div className="space-y-2">{d.people.map((m, k) => (
         <div key={k} className="flex items-center gap-3 text-[13px]">
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-muted text-[11.5px] font-semibold text-muted-foreground">{initials(m.name)}</span>
@@ -194,7 +195,7 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
         </div>
       ))}</div> : (
         <button type="button" onClick={() => editAt("people", true)} className="flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-border py-3 text-[13px] font-medium text-muted-foreground hover:bg-muted">
-          <Users className="h-4 w-4" />Add decision maker<Plus className="h-4 w-4" />
+          <Users className="h-4 w-4" />{setupText("Add decision maker")}<Plus className="h-4 w-4" />
         </button>
       )}
     </Section>
@@ -203,7 +204,7 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
     <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
       <span className="text-[12.5px] text-muted-foreground">
         {req.length
-          ? <>{req.length} required item{req.length === 1 ? "" : "s"} before you can submit for verification: {req.map((x, k) => <span key={x.key}>{k > 0 && " · "}<button type="button" onClick={() => editItem(x.key)} className="font-medium text-blue-600">{x.label}</button></span>)}</>
+          ? <>{req.length}{setupText("required item")}{req.length === 1 ? "" : "s"}{setupText("before you can submit for verification:")} {req.map((x, k) => <span key={x.key}>{k > 0 && " · "}<button type="button" onClick={() => editItem(x.key)} className="font-medium text-blue-600">{x.label}</button></span>)}</>
           : "Ready to submit. Admin usually reviews within 1 business day."}
       </span>
       <span className="flex-1" />
@@ -217,7 +218,7 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
     <InvestorDetailPanel
       id={i.id}
       onSelectStartup={() => {}}
-      buyer={{ data: toDetail(d), topBar, chips, intro, mediaAdd, afterPortfolio, footer,
+      buyer={{ label: setupText, data: toDetail(d), topBar, chips, intro, mediaAdd, afterPortfolio, footer,
         sectionEdit: (k) => (k === "stages" && !showsStages(i.investor_type) ? null : <SectionEditLink tone="buyer" onClick={() => editAt(k)} />) }}
     />
   );

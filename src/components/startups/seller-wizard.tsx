@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Lock, AlertTriangle, Check as CheckIcon, Sparkles, Globe } from "lucide-react";
@@ -198,7 +199,7 @@ export function SellerWizard({
     if (focusTitle.current) { focusTitle.current = false; window.setTimeout(() => titleRef.current?.focus(), 30); }
   }, [cur.id]);
   const tipOf = (k: StepKey, st: StepItem["state"]) =>
-    st === "here" ? L("You are here", "คุณอยู่ที่ขั้นนี้")
+    st === "here" ? L("You are here", "ท่านอยู่ที่ขั้นนี้")
       : k === "review" ? L("Check your answers · click to go there", "ตรวจสอบคำตอบ · กดเพื่อไปที่ขั้นนี้")
       : st === "done" ? L("Answered · click to change", "ตอบแล้ว · กดเพื่อแก้ไข")
       : st === "missed" ? L("Not answered · click to answer", "ยังไม่ได้ตอบ · กดเพื่อตอบ")
@@ -232,11 +233,11 @@ export function SellerWizard({
       body: (
         <div className="space-y-4">
           <div><label className={fieldLbl}>{tr("Company name")}</label>
-            <input className={`${inp} ${needCls(!d.name.trim())}`} data-need={!d.name.trim() ? "1" : undefined} aria-required value={d.name} maxLength={255} autoFocus onChange={(e) => set({ name: e.target.value })} placeholder="e.g. Siam Foods Co., Ltd." /></div>
+            <input className={`${inp} ${needCls(!d.name.trim())}`} data-need={!d.name.trim() ? "1" : undefined} aria-required value={d.name} maxLength={255} autoFocus onChange={(e) => set({ name: e.target.value })} placeholder={setupText("e.g. Siam Foods Co., Ltd.")} /></div>
           <div><label className={fieldLbl}>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}</label>
             <input className={`${inp} ${needCls(!/^\d{13}$/.test(d.reg))}`} data-need={!/^\d{13}$/.test(d.reg) ? "1" : undefined} aria-required inputMode="numeric" value={d.reg} maxLength={13}
-              onChange={(e) => set({ reg: e.target.value.replace(/\D/g, "").slice(0, 13) })} placeholder="13 digits" />
-            <p className="mt-1.5 text-[13px] text-[#6b7280]">Used to verify your company.{d.reg && d.reg.length !== 13 ? ` ${d.reg.length}/13 digits.` : ""}</p></div>
+              onChange={(e) => set({ reg: e.target.value.replace(/\D/g, "").slice(0, 13) })} placeholder={setupText("13 digits")} />
+            <p className="mt-1.5 text-[13px] text-[#6b7280]">{setupText("Used to verify your company.")}{d.reg && d.reg.length !== 13 ? L(` ${d.reg.length}/13 digits.`, ` ${d.reg.length}/13 หลัก`) : ""}</p></div>
           <div className="pt-2">
             <AddressBox a={d.addr} thai city={d.addr.district} onChange={setAddr} need stars={false}
               show={(k) => (touched[k] ? ({ street: !d.addr.street.trim() ? "Add the number and street." : null, district: !d.addr.district.trim() ? "Add the city or district." : null, province: !d.addr.province ? "Choose the province or state." : null, postal: !d.addr.postal ? "Add the postal code." : /^\d{5}$/.test(d.addr.postal) ? null : tr("The postal code has 5 digits."), unit: null } as Record<string, string | null>)[k] ?? null : null)}
@@ -274,7 +275,7 @@ export function SellerWizard({
           {webState === "unreachable" && (
             <div className="mt-4 rounded-[10px] border border-[#fcd34d] bg-[#fffbeb] p-3.5">
               <p className="flex items-start gap-2 text-[13.5px] font-medium text-[#92400e]">
-                <AlertTriangle className="mt-0.5 h-4 w-4 flex-none" />We couldn't reach this website. Please check the address.
+                <AlertTriangle className="mt-0.5 h-4 w-4 flex-none" />{setupText("We couldn't reach this website. Please check the address.")}
               </p>
               <div className="mt-3 flex gap-2">
                 <button type="button" className="rounded-[9px] border border-[#e5e7eb] bg-white px-3.5 py-2 text-[13px] font-semibold text-[#374151]"
@@ -288,8 +289,8 @@ export function SellerWizard({
       ) },
     year: { t: tr("What year was the company founded?"),
       body: <div><input className={`${inp} max-w-[200px]`} inputMode="numeric" value={d.year} maxLength={4} autoFocus
-        onChange={(e) => set({ year: e.target.value.replace(/\D/g, "").slice(0, 4) })} placeholder={`e.g. ${THIS_YEAR - 10}`} />
-        {d.year.length === 4 && !valid.year && <p className="mt-1.5 text-[13px] text-destructive">Enter a year between 1800 and {THIS_YEAR}.</p>}</div> },
+        onChange={(e) => set({ year: e.target.value.replace(/\D/g, "").slice(0, 4) })} placeholder={setupText(`e.g. ${THIS_YEAR - 10}`)} />
+        {d.year.length === 4 && !valid.year && <p className="mt-1.5 text-[13px] text-destructive">{setupText(`Enter a year between 1800 and ${THIS_YEAR}.`)}</p>}</div> },
     rev: { t: tr("What was your company's revenue last year?"), h: tr("An approximate band is enough. Exact figures stay private."),
       body: <Radio list={THB_REVENUE_BANDS.map((b) => ({ value: b, label: b }))} value={normRevBand(d.rev)} onPick={(v) => pick({ rev: v })} /> },
     size: { t: tr("What is the size of your company?"), h: tr("Number of employees."),
@@ -310,7 +311,7 @@ export function SellerWizard({
             <div className="mt-2 flex gap-2">
               <input className="flex-1 rounded-[9px] border border-[#e5e7eb] px-3 py-2 text-[13.5px] outline-none" maxLength={120} placeholder={tr("Other licence")} value={otherLic} onChange={(e) => setOtherLic(e.target.value)} />
               <button type="button" className="rounded-[9px] border border-[#e5e7eb] bg-white px-3.5 text-[13px] font-semibold text-[#374151]"
-                onClick={() => { const n = otherLic.trim(); if (n && !d.licences.some((x) => x.name.toLowerCase() === n.toLowerCase())) set({ licences: [...d.licences, { category: "Business", name: n }] }); setOtherLic(""); }}>Add</button>
+                onClick={() => { const n = otherLic.trim(); if (n && !d.licences.some((x) => x.name.toLowerCase() === n.toLowerCase())) set({ licences: [...d.licences, { category: "Business", name: n }] }); setOtherLic(""); }}>{setupText("Add")}</button>
             </div></div>
           <div><h4 className="text-[14.5px] font-semibold">{tr("ISO and standards")}</h4>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -322,7 +323,7 @@ export function SellerWizard({
             <div className="mt-2 flex gap-2">
               <input className="flex-1 rounded-[9px] border border-[#e5e7eb] px-3 py-2 text-[13.5px] outline-none" maxLength={60} placeholder={tr("Other standard")} value={otherIso} onChange={(e) => setOtherIso(e.target.value)} />
               <button type="button" className="rounded-[9px] border border-[#e5e7eb] bg-white px-3.5 text-[13px] font-semibold text-[#374151]"
-                onClick={() => { const n = otherIso.trim(); if (n && !d.iso.includes(n)) set({ iso: [...d.iso, n] }); setOtherIso(""); }}>Add</button>
+                onClick={() => { const n = otherIso.trim(); if (n && !d.iso.includes(n)) set({ iso: [...d.iso, n] }); setOtherIso(""); }}>{setupText("Add")}</button>
             </div></div>
         </div>
       ) },
@@ -374,7 +375,7 @@ export function SellerWizard({
             const n = STEPS.findIndex((x) => x.id === k);
             const band = bandOf(d.price ?? null);
             const v: React.ReactNode = k === "photos" ? L(`Logo and ${d.photos ?? 0} photo${(d.photos ?? 0) === 1 ? "" : "s"}`, `โลโก้และรูปภาพ ${d.photos ?? 0} รูป`)
-              : k === "deal" ? (d.deal ? L(d.deal, d.deal) : "")
+              : k === "deal" ? (d.deal ? tr(d.deal) : "")
               : k === "handover" ? (d.stays === "yes" ? L(`Yes, for ${d.months ?? 6} month${(d.months ?? 6) === 1 ? "" : "s"} after the sale`, `ใช่ อยู่ต่อ ${d.months ?? 6} เดือนหลังการขาย`) : d.stays === "no" ? L("No, the owner leaves at completion", "ไม่ เจ้าของออกเมื่อการขายเสร็จสิ้น") : "")
               : k === "price" ? (d.price ? <span>{fmtThb(d.price)}<span className="mt-px block text-[12.5px] font-normal text-[#6B7280]">{L(`Buyers see ${bandInText(band?.label ?? "")} until you approve their NDA`, `ผู้ซื้อจะเห็น ${band?.th ?? ""} จนกว่าท่านจะอนุมัติ NDA`)}</span></span> : "")
               : d.listingName ?? "";
@@ -424,13 +425,13 @@ export function SellerWizard({
   return (
     <div className="wiz -m-4 min-h-[calc(100vh-54px)] bg-[#f5f6f8] text-[15px] text-[#111827] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       <div className="flex h-14 items-center gap-3 border-b border-[#e5e7eb] bg-white px-6">
-        <span className="text-[14px] font-semibold">{title}</span>
-        <span className="ml-auto text-[13px] text-[#9ca3af]">{justSaved ? "Saved just now" : tr("All changes saved")}</span>
+        <span className="text-[14px] font-semibold">{setupText(title)}</span>
+        <span className="ml-auto text-[13px] text-[#9ca3af]">{setupText(justSaved ? "Saved just now" : tr("All changes saved"))}</span>
       </div>
       <div className={`mx-auto ${cur.id === "web" ? "max-w-[800px]" : "max-w-[680px]"} px-5 pb-16 pt-10`}>
         <div className="mb-2.5 flex items-baseline justify-between text-[13px] text-[#6b7280]">
           <b className="font-semibold text-[#111827]">{tr(SECTIONS[cur.sec])}</b>
-          <span>Step {pos + 1} of {shown.length}</span>
+          <span>{setupText(`Step ${pos + 1} of ${shown.length}`)}</span>
         </div>
         <div className="mb-6 mt-5">
           <StepBar missedIcon steps={items} lineTo={lineTo} onPick={openStep} label={L("Setup steps", "ขั้นตอนการตั้งค่า")} stepWord={stepWord} missedWord={L("Not answered", "ยังไม่ได้ตอบ")} />
@@ -447,7 +448,7 @@ export function SellerWizard({
           </div>
           <div className={cur.id === "web" ? `seller-website-actions ${canSkip ? "has-no-website" : ""}` : "mt-8 flex items-center gap-2.5"}>
             <Button variant="unstyled" size="unstyled" type="button" onClick={back}
-              className={cur.id === "web" ? "seller-action seller-action-back" : "rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"}>{pos === 0 && full == null ? "ยกเลิก" : tr("Back")}</Button>
+              className={cur.id === "web" ? "seller-action seller-action-back" : "rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"}>{pos === 0 && full == null ? tr("Cancel") : tr("Back")}</Button>
             {canSkip && cur.id !== "web" && (
               <button type="button" className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"
                 ref={skipRef} onClick={() => advance()}>{tr("Skip")}</button>
@@ -481,7 +482,7 @@ export function SellerWizard({
                   advance();
                 }}
                 className={cur.id === "web" ? "seller-action seller-action-primary" : "rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]"}>
-                {cur.id === "review" ? tr("Continue to auto-fill") : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? tr("Back to review") : tr("Continue")}
+                {setupText(cur.id === "review" ? tr("Continue to auto-fill") : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? tr("Back to review") : tr("Continue"))}
 
               </Button>
             </div>
@@ -521,7 +522,7 @@ export function SellerWizard({
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#e5e7eb]">
                 <i className="block h-full bg-[#1e2a4a]" style={{ width: `${Math.round((sellerProgress(d, fromSignup).n / sellerProgress(d, fromSignup).N) * 100)}%` }} />
               </div>
-              <p className="mt-2 text-[13px] text-[#6b7280]">{sellerProgress(d, fromSignup).n} of {sellerProgress(d, fromSignup).N} questions answered</p>
+              <p className="mt-2 text-[13px] text-[#6b7280]">{setupText(`${sellerProgress(d, fromSignup).n} of ${sellerProgress(d, fromSignup).N} questions answered`)}</p>
               <div className="mt-5 flex justify-end gap-2">
                 <button type="button" onClick={() => setConfirmExit(false)} className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-semibold text-[#374151]">{tr("Keep going")}</button>
                 <button type="button" onClick={() => { store(d); onExit(); }} className="rounded-[10px] bg-[#1e2a4a] px-4 py-2.5 text-sm font-semibold text-white">{tr("Save & exit")}</button>

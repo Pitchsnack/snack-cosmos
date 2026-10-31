@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/i18n/language";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
@@ -59,8 +60,12 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/_authenticated/my-startups/")({
   head: () => ({
     meta: [
-      { title: "My Startups — SnackPortal2" },
+      { title: "My Businesses — PitchSnack" },
       { name: "description", content: "Manage the startup profiles you own and keep company information up to date." },
+      { property: "og:title", content: "My Businesses — PitchSnack" },
+      { property: "og:description", content: "Manage your business profiles and company information on PitchSnack." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   validateSearch: searchSchema,
@@ -169,7 +174,7 @@ function MyStartupsPageInner() {
           <h1 className="text-3xl font-semibold tracking-tight">{t("My Company")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {total > 0
-              ? `${total} business${total === 1 ? "" : "es"} you own or manage`
+              ? setupText(`${total} business${total === 1 ? "" : "es"} you own or manage`)
               : "Add and manage the startup profiles you own. Keep company details, media, founders and investors up to date."}
           </p>
         </div>
@@ -191,7 +196,7 @@ function MyStartupsPageInner() {
             )}
           >
             <Star className={cn("h-4 w-4", favOnly && "fill-accent")} />
-            <span>&nbsp;</span>
+            <span>{setupText("&nbsp;")}</span>
             <span
               className={cn(
                 "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
@@ -225,30 +230,30 @@ function MyStartupsPageInner() {
           <Input
             value={s.q ?? ""}
             onChange={(e) => update({ q: e.target.value || undefined })}
-            placeholder="Search my startups by name, description, industry, HQ…"
+            placeholder={setupText("Search my startups by name, description, industry, HQ…")}
             className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
           />
         </div>
-        <FilterSelect label="Stage" value={s.stage} options={STAGES} onChange={(v) => update({ stage: v })} />
-        <FilterSelect label="Type" value={s.ct} options={COMPANY_TYPES} onChange={(v) => update({ ct: v })} />
-        <Input value={s.industry ?? ""} onChange={(e) => update({ industry: e.target.value || undefined })} placeholder="Industry" className="h-9 w-36" />
-        <Input value={s.hq ?? ""} onChange={(e) => update({ hq: e.target.value || undefined })} placeholder="HQ" className="h-9 w-32" />
+        <FilterSelect label={setupText("Stage")} value={s.stage} options={STAGES} onChange={(v) => update({ stage: v })} />
+        <FilterSelect label={setupText("Type")} value={s.ct} options={COMPANY_TYPES} onChange={(v) => update({ ct: v })} />
+        <Input value={s.industry ?? ""} onChange={(e) => update({ industry: e.target.value || undefined })} placeholder={setupText("Industry")} className="h-9 w-36" />
+        <Input value={s.hq ?? ""} onChange={(e) => update({ hq: e.target.value || undefined })} placeholder={setupText("HQ")} className="h-9 w-32" />
         <Select value={sort} onValueChange={(v) => navigate({ search: (prev: typeof s) => ({ ...prev, sort: v as typeof SORT[number] }) })}>
           <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="updated_desc">Recently updated</SelectItem>
-            <SelectItem value="created_desc">Recently created</SelectItem>
-            <SelectItem value="name_asc">Name A–Z</SelectItem>
-            <SelectItem value="name_desc">Name Z–A</SelectItem>
+            <SelectItem value="updated_desc">{setupText("Recently updated")}</SelectItem>
+            <SelectItem value="created_desc">{setupText("Recently created")}</SelectItem>
+            <SelectItem value="name_asc">{setupText("Name A–Z")}</SelectItem>
+            <SelectItem value="name_desc">{setupText("Name Z–A")}</SelectItem>
           </SelectContent>
         </Select>
         {hasFilter && (
           <Button variant="ghost" size="sm" onClick={() => navigate({ search: (p: typeof s) => ({ view: p.view }) })} className="gap-1">
-            <X className="h-4 w-4" /> Clear
+            <X className="h-4 w-4" />{setupText("Clear")}
           </Button>
         )}
         <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="gap-2">
-          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} /> Refresh
+          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />{setupText("Refresh")}
         </Button>
       </div>
 
@@ -270,9 +275,9 @@ function MyStartupsPageInner() {
       ) : items.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">
           <Rocket className="mx-auto mb-2 h-8 w-8 opacity-50" />
-          <p className="mb-3">You don't own or manage any startups yet.</p>
+          <p className="mb-3">{setupText("You don't own or manage any startups yet.")}</p>
           {has("startups.write") && (
-            <AddBusinessButton size="sm" label="Add my business" />
+            <AddBusinessButton size="sm" label={setupText("Add my business")} />
           )}
         </div>
       ) : view === "profiles" ? (
@@ -371,7 +376,7 @@ function MyStartupsPageInner() {
             "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:w-full max-sm:max-h-[90vh] max-sm:rounded-t-2xl max-sm:rounded-b-none",
           )}
         >
-          <DialogTitle className="sr-only">My startup information</DialogTitle>
+          <DialogTitle className="sr-only">{setupText("My startup information")}</DialogTitle>
           <MyStartupPanelModalBody
             modalId={modalId}
             onClose={closeStartup}
@@ -406,7 +411,7 @@ function MyStartupPanelModalBody({
         <DialogClose
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          aria-label="Close"
+          aria-label={setupText("Close")}
           className={cn(
             "absolute right-3 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-md transition-opacity duration-150 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             visible ? "opacity-100" : "opacity-0 pointer-events-none",
@@ -436,7 +441,7 @@ function FilterSelect({ label, value, options, onChange }: { label: string; valu
     <Select value={value ?? "__all"} onValueChange={(v) => onChange(v === "__all" ? undefined : v)}>
       <SelectTrigger className="h-9 w-36"><SelectValue placeholder={label} /></SelectTrigger>
       <SelectContent>
-        <SelectItem value="__all">All {label.toLowerCase()}s</SelectItem>
+        <SelectItem value="__all">{setupText(`All ${label.toLowerCase()}s`)}</SelectItem>
         {options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
       </SelectContent>
     </Select>
