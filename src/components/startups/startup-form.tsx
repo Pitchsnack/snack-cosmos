@@ -1360,13 +1360,13 @@ export function StartupForm({
           })()}
         </div>
         <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="size">{secOn("size") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
-          <Label>Company Size</Label>
+          <Label>{tr("Company Size", "ขนาดบริษัท")}</Label>
           <Select value={companySize || "none"} onValueChange={(v) => setCompanySize(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Select company size" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={tr("Select company size", "เลือกขนาดบริษัท")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
+              <SelectItem value="none">{tr("— Select —", "— เลือก —")}</SelectItem>
               {sizeOptions.map((s) => (
-                <SelectItem key={s} value={s}>{s} employees</SelectItem>
+                <SelectItem key={s} value={s}>{sizeLabel(s, textLang)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -1374,7 +1374,7 @@ export function StartupForm({
 
         <div className="space-y-1.5">
           <div className="flex h-6 items-center gap-1.5">
-            <Label>Region</Label>
+            <Label>{tr("Region", "ภูมิภาค")}</Label>
             <TooltipProvider delayDuration={150}>
               <Tooltip>
                 <TooltipTrigger asChild>
