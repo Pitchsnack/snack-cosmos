@@ -1,4 +1,5 @@
 import { Eye } from "lucide-react";
+import { useTranslation } from "@/i18n/language";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -29,6 +30,7 @@ const NO_TENANT = "__none__";
  * does NOT change API/DB scope.
  */
 export function ViewAsSwitcher() {
+  const { t } = useTranslation();
   const {
     canUseSwitcher,
     requestedViewRole,
@@ -57,14 +59,14 @@ export function ViewAsSwitcher() {
         >
           <Eye className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">
-            {isPreviewMode ? VIEW_ROLE_LABELS[requestedViewRole] : "View as"}
+            {isPreviewMode ? t(VIEW_ROLE_LABELS[requestedViewRole]) : t("View as")}
           </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72" align="end" data-keep-sidebar>
         <div className="space-y-3">
           <div>
-            <div className="text-sm font-semibold leading-none">View as</div>
+            <div className="text-sm font-semibold leading-none">{t("View as")}</div>
             <p className="mt-1 text-xs text-muted-foreground">
               Preview the sidebar for another role. Presentation only — your
               real Control permissions are unchanged.

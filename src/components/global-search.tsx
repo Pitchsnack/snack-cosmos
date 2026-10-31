@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
+import { useTranslation } from "@/i18n/language";
 import {
   CommandDialog,
   CommandEmpty,
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/command";
 
 export function GlobalSearch() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
@@ -21,7 +23,7 @@ export function GlobalSearch() {
         className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         <Search className="h-4 w-4" />
-        <span className="hidden sm:inline">Search…</span>
+        <span className="hidden sm:inline">{t("Search…")}</span>
         <kbd className="ml-2 hidden rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[10px] sm:inline">
           ⌘K
         </kbd>

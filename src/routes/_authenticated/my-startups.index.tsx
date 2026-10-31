@@ -60,8 +60,12 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/_authenticated/my-startups/")({
   head: () => ({
     meta: [
-      { title: "My Startups — SnackPortal2" },
+      { title: "My Businesses — PitchSnack" },
       { name: "description", content: "Manage the startup profiles you own and keep company information up to date." },
+      { property: "og:title", content: "My Businesses — PitchSnack" },
+      { property: "og:description", content: "Manage your business profiles and company information on PitchSnack." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   validateSearch: searchSchema,
