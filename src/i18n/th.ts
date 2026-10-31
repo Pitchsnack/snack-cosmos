@@ -715,4 +715,5 @@ export const TH: Record<string, string> = { ...TH_ADVISORS, ...TH_WIZARDS, ...TH
   "Verified with the Department of Business Development": "ตรวจสอบกับกรมพัฒนาธุรกิจการค้าแล้ว",
   "PitchSnack checks this with the Department of Business Development": "PitchSnack จะตรวจสอบกับกรมพัฒนาธุรกิจการค้า",
   ...TH_APPROVAL,
+  ...TH_DELETE_DRAFT,
 };
