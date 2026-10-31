@@ -92,11 +92,12 @@ export function AttachmentCard({ value, onChange, name, sectorLine, intro, showG
           ) : (
             <>
               <div className="text-[13.5px] font-semibold text-[#151A28] dark:text-foreground">{tr("Why add them", "ทำไมควรเพิ่ม")}</div>
-              <ul className="mt-[10px] space-y-2">
+              <p className="mt-[10px] text-[13px] leading-[1.5] text-[#4B5563] dark:text-muted-foreground">{tr("Help buyers understand and remember your business more easily:", "ช่วยให้ผู้ซื้อเข้าใจและจดจำธุรกิจของคุณได้ง่ายขึ้น")}</p>
+              <ul className="mt-2 space-y-2">
                 {[
-                  tr("Create a logo and good-quality business photos to help buyers to understand and remember your company.", "สร้างโลโก้และรูปภาพธุรกิจคุณภาพดี เพื่อช่วยให้ผู้ซื้อเข้าใจและจดจำบริษัทของท่านได้"),
-                  tr("Make a stronger first impression.", "สร้างความประทับใจแรกที่ดียิ่งขึ้น"),
-                  tr("Help your profile get noticed. Some investors may skip listings without images when reviewing many opportunities.", "ช่วยให้โปรไฟล์ของท่านเป็นที่สังเกต นักลงทุนบางรายอาจข้ามรายการที่ไม่มีรูปภาพเมื่อพิจารณาหลายโอกาสพร้อมกัน"),
+                  tr("Makes a good first impression", "สร้างความประทับใจแรกที่ดี"),
+                  tr("Makes your profile look more trustworthy", "ทำให้โปรไฟล์ดูน่าเชื่อถือยิ่งขึ้น"),
+                  tr("Some investors may skip profiles without photos", "นักลงทุนบางรายอาจข้ามโปรไฟล์ที่ไม่มีรูปภาพ"),
                 ].map((t) => <li key={t} className="flex gap-2 text-[13px] leading-[1.5] text-[#4B5563] dark:text-muted-foreground"><Tick />{t}</li>)}
               </ul>
             </>
