@@ -63,7 +63,7 @@ export function DraftCompanyCard({ role, name, typeLine, typeClass, founded, siz
   role: "seller" | "buyer"; name: string; typeLine?: string | null; typeClass?: string; founded?: string | number | null; size?: string | null; website?: string | null; selected?: boolean;
 }) {
   const t = TINT[role];
-  const meta = [founded ? `Founded ${founded}` : null, size ? `${size} employees` : null].filter(Boolean).join(" · ");
+  const meta = [founded ? `${setupText("Founded")} ${founded}` : null, size ? `${size} ${setupText("Employees")}` : null].filter(Boolean).join(" · ");
   return (
     <div className={`relative overflow-hidden rounded-[14px] border bg-card ${selected ? "border-[#F6A823]" : "border-border"}`}>
       <div className={`relative h-[84px] ${t.bg} dark:opacity-80`}>

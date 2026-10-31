@@ -320,7 +320,7 @@ function RowTile({ icon, title, sub, right }: { icon: React.ReactNode; title: st
     <div className="flex items-center gap-3 border-b border-[#F0F1F3] py-2.5 last:border-0 dark:border-border">
       {icon}
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[14px] font-semibold">{setupText(title)}</div>
+        <div className="truncate text-[14px] font-semibold">{title}</div>
         {sub && <div className="truncate text-[12.5px] text-[#6A7181]">{sub}</div>}
       </div>
       {right}
@@ -479,7 +479,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
                 return (
                   <div key={s} className="flex flex-col rounded-[12px] border border-[#CFEAE5] bg-[#F2FAF8] px-3.5 py-3 dark:bg-muted/40">
                     <div className="grid h-[34px] w-[34px] place-items-center rounded-[9px] border border-[#CFEAE5] bg-white text-[#0F766E]"><def.icon className="h-4 w-4" /></div>
-                    <div className="mt-2 text-[14px] font-semibold">{s}</div>
+                    <div className="mt-2 text-[14px] font-semibold">{tr(s)}</div>
                     <div className="text-[12.5px] text-[#6A7181]">{setupText(def.line)}</div>
                     <div className="mt-auto pt-2.5">
                       <div className="border-t border-[#D3ECE7] pt-2">
@@ -641,7 +641,7 @@ export function ServiceTiles({ picked, onToggle }: { picked: string[]; onToggle:
             <input type="checkbox" checked={on} onChange={() => onToggle(s.name)} data-first={i === 0 || undefined} className="mt-2 h-[18px] w-[18px] shrink-0 accent-[#0F766E]" />
             <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] bg-[#E0F5F2] text-[#0F766E]"><s.icon className="h-4 w-4" /></span>
             <span className="min-w-0">
-              <span className="block text-[14px] font-semibold">{s.name}</span>
+              <span className="block text-[14px] font-semibold">{tr(s.name)}</span>
               <span className="block text-[12.5px] text-[#6A7181]">{setupText(s.line)}</span>
             </span>
           </label>

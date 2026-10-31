@@ -263,7 +263,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     if (withSave) {
       const cap = <T,>(p: Promise<T>) => Promise.race([p, new Promise<"slow">((r) => window.setTimeout(() => r("slow"), 1500))]);
       try { const r = await cap(flush()); ok = r !== false; } catch { ok = false; }
-      if (ok) toast.success(setupDone ? "Your changes are saved." : tr("Saved as a draft. Continue setup any time from My Company."));
+      if (ok) toast.success(setupDone ? tr("Your changes are saved.") : tr("Saved as a draft. Continue setup any time from My Company."));
       else toast.error(tr("Your last answer wasn't saved. Open the setup again to check it."));
     }
     void qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY });
@@ -278,7 +278,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== tr("Enter") || phase !== "q") return;
+    if (e.key !== "Enter" || phase !== "q") return;
     const t = e.target as HTMLElement;
     if (t.closest("button, a")) return;
     if (t.tagName === "TEXTAREA") { if (e.shiftKey) return; }
@@ -413,7 +413,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
             </button>
           </div>
           {(touched.webTyped && a.web.trim() || forced.web) && errors.web ? <p className="mt-1.5 text-[13px] text-[#B42318]">{errors.web}</p>
-            : webOpened ? <p className="mt-1.5 flex items-center gap-1 text-[13px] text-[#15803D]"><Check className="h-3.5 w-3.5" />{L(`Opened ${webOpened} in a new tab. Make sure it is your firm.`, `เปิด ${webOpened} ในแท็บใหม่แล้ว โปรดตรวจสอบว่าเป็นเว็บไซต์ของบริษัทคุณ`)}</p>
+            : webOpened ? <p className="mt-1.5 flex items-center gap-1 text-[13px] text-[#15803D]"><Check className="h-3.5 w-3.5" />{L(`Opened ${webOpened} in a new tab. Make sure it is your firm.`, `เปิด ${webOpened} ในแท็บใหม่แล้ว โปรดตรวจสอบว่าเป็นเว็บไซต์ของบริษัทท่าน`)}</p>
             : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Click Check website to open it in a new tab and make sure it is your firm.")}</p>}
         </div>
       ) },

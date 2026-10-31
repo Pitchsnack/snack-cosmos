@@ -264,7 +264,7 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   const managed = useManagedIds("startup", [s.id]);
   const badge = (
     <span className={cn("absolute left-2.5 top-2.5 z-10 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-bold", row ? APPROVAL_TONE[ap] : "bg-amber-500/15 text-amber-700 dark:text-amber-400")}>
-      {row ? (ap === "live_edits_pending" ? "Live · edits pending" : APPROVAL_LABEL[ap]) : "Preview"}
+      {setupText(row ? (ap === "live_edits_pending" ? "Live · edits pending" : APPROVAL_LABEL[ap]) : "Preview")}
     </span>
   );
   return (

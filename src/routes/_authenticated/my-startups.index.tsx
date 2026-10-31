@@ -170,7 +170,7 @@ function MyStartupsPageInner() {
           <h1 className="text-3xl font-semibold tracking-tight">{t("My Company")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {total > 0
-              ? `${total} business${total === 1 ? "" : "es"} you own or manage`
+              ? setupText(`${total} business${total === 1 ? "" : "es"} you own or manage`)
               : "Add and manage the startup profiles you own. Keep company details, media, founders and investors up to date."}
           </p>
         </div>
@@ -437,7 +437,7 @@ function FilterSelect({ label, value, options, onChange }: { label: string; valu
     <Select value={value ?? "__all"} onValueChange={(v) => onChange(v === "__all" ? undefined : v)}>
       <SelectTrigger className="h-9 w-36"><SelectValue placeholder={label} /></SelectTrigger>
       <SelectContent>
-        <SelectItem value="__all">{setupText("All")} {label.toLowerCase()}{setupText("s")}</SelectItem>
+        <SelectItem value="__all">{setupText(`All ${label.toLowerCase()}s`)}</SelectItem>
         {options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
       </SelectContent>
     </Select>

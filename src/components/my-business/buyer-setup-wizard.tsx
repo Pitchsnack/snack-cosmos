@@ -46,7 +46,7 @@ const errCls = "!border-[#B42318]";
 const lbl = "mb-[7px] block text-[13.5px] font-semibold text-[#434A5C] dark:text-muted-foreground";
 const Req = () => <span aria-hidden className="relative -top-0.5 ml-[3px] text-[12px] font-semibold text-[#B42318]">*</span>;
 const Opt = () => <span className="ml-1.5 font-normal text-[#9CA3AF]">{setupText("optional")}</span>;
-const Err = ({ m }: { m: string | null | false | undefined }) => (m ? <p className="mt-1.5 text-[13px] text-[#B42318]">{m}</p> : null);
+const Err = ({ m }: { m: string | null | false | undefined }) => (m ? <p className="mt-1.5 text-[13px] text-[#B42318]">{setupText(m)}</p> : null);
 
 function fromData(d: Data): A {
   const inv = d.investor;
@@ -102,7 +102,7 @@ function Choice({ list, value, onPick, cols, icon }: {
 function Checks({ title, note, req, items, value, onChange }: { title: string; note: string; req?: boolean; items: string[]; value: string[]; onChange: (v: string[]) => void }) {
   return (
     <div>
-      <div className="mb-2.5 text-[14px] font-semibold">{title}{req && <Req />} <span className="ml-1 text-[12.5px] font-normal text-[#9CA3AF]">{note}</span></div>
+      <div className="mb-2.5 text-[14px] font-semibold">{title}{req && <Req />} <span className="ml-1 text-[12.5px] font-normal text-[#9CA3AF]">{setupText(note)}</span></div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {items.map((it) => {
           const on = value.includes(it);
@@ -333,7 +333,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     try { await cap(flush()); } catch { /* flush already toasts */ }
     void qc.invalidateQueries({ queryKey: ["buyer-investor"] });
     void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
-    toast.success(live ? "Your changes are saved." : tr("Saved as a draft. Continue setup any time from My Company."));
+    toast.success(live ? tr("Your changes are saved.") : tr("Saved as a draft. Continue setup any time from My Company."));
     const fallback = window.setTimeout(() => { window.location.href = `/marketplace/my-company?open=${data.investor.id}`; }, 1500);
     try { await navigate({ to: "/marketplace/my-company", search: { open: data.investor.id } }); window.clearTimeout(fallback); }
     catch { window.location.href = `/marketplace/my-company?open=${data.investor.id}`; }
@@ -344,7 +344,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
 
   // Enter = Continue (not on buttons/links/textarea).
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== tr("Enter") || phase !== "q") return;
+    if (e.key !== "Enter" || phase !== "q") return;
     const t = e.target as HTMLElement;
     if (t.closest("button, a, textarea, [role=combobox], [role=listbox]")) return;
     e.preventDefault();
@@ -384,8 +384,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         body: <><TypeTicks value={a.acts} onChange={(v) => set({ acts: v, type: v[0] ?? "" }, { acts_for_types: v })} /><Err m={forced.type && errors.type} /></> }
       : { req: true, t: tr("What type of investor is your firm?"), h: tr("Sellers see this, and it sets the artwork on your card."),
         body: <Choice cols icon list={WIZARD_TYPES} value={a.type} onPick={(v) => autoPick("type", { type: v }, { investor_type: v })} /> },
-    name: { req: true, t: addrOnly ? tr("What is your address?") : nameShort ? "What is your firm's name and registration number?" : tr("What is the name of your firm?"),
-      h: addrOnly ? tr("Sellers see your country and province, never the full address, until they approve your NDA.") : nameShort ? "Check that the name matches your firm's registration. Sellers don't see either before an NDA." : "ผู้ขายจะเห็นคำว่า “นักลงทุนรายบุคคล” แทนชื่อของคุณ จนกว่าผู้ขายจะอนุมัติ NDA ของคุณ",
+    name: { req: true, t: addrOnly ? tr("What is your address?") : nameShort ? tr("What is your firm's name and registration number?") : tr("What is the name of your firm?"),
+      h: addrOnly ? tr("Sellers see your country and province, never the full address, until they approve your NDA.") : nameShort ? tr("Check that the name matches your firm's registration. Sellers don't see either before an NDA.") : "ผู้ขายจะเห็นคำว่า “นักลงทุนรายบุคคล” แทนชื่อของท่าน จนกว่าผู้ขายจะอนุมัติ NDA ของท่าน",
       body: (
         <div className={addrOnly ? "pt-[6px]" : "space-y-4"}>
           {!addrOnly && (<div>
@@ -412,14 +412,14 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             <div>
               <label className={lbl} htmlFor="w-reg">{thai ? <>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<Req /></> : <>{tr("Company registration number")}<Opt /></>}</label>
               <input id="w-reg" aria-required={thai} {...(errors.reg ? { "data-need": "1" } : {})} className={`${inp} ${errors.reg ? "need-fill" : ""} ${show("reg") ? errCls : ""}`} value={a.reg} inputMode={thai ? "numeric" : undefined}
-                maxLength={thai ? 13 : 50} placeholder={thai ? "13 digits" : ""}
+                maxLength={thai ? 13 : 50} placeholder={thai ? setupText("13 digits") : ""}
                 onBlur={() => setTouched((t) => ({ ...t, reg: true }))}
                 onChange={(e) => { const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value; set({ reg: v }, { registration_no: v }); }} />
               <Err m={show("reg")} />
               <p className="mt-2.5 flex items-start gap-2 text-[13px] text-[#434A5C] dark:text-muted-foreground">
                 <ShieldCheck className="mt-0.5 h-[15px] w-[15px] flex-none text-[#15803D]" />
                 <span><b className="font-semibold text-[#151A28] dark:text-foreground">{tr("Sellers want genuine buyers, not window shoppers.")}</b>{" "}
-                  {thai ? "We verify your firm with this number, then show sellers a Verified investor badge on your card." : `Adding your registration number in ${a.country} helps us verify your firm.`}</span>
+                  {thai ? tr("We verify your firm with this number, then show sellers a Verified investor badge on your card.") : L(`Adding your registration number in ${a.country} helps us verify your firm.`, `การเพิ่มเลขทะเบียนใน ${tr(a.country)} ช่วยให้เรายืนยันบริษัทของท่านได้`)}</span>
               </p>
             </div>
           )}
@@ -449,7 +449,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Click Check website to open it in a new tab and make sure it is your firm.")}</p>}
         </div>
       ) },
-    aum: { req: true, t: corp ? "What is your group's annual revenue in $USD?" : tr("How much does your firm manage (AUM) in $USD?"), h: tr("Sellers see this band, never an exact figure."),
+    aum: { req: true, t: corp ? tr("What is your group's annual revenue in $USD?") : tr("How much does your firm manage (AUM) in $USD?"), h: tr("Sellers see this band, never an exact figure."),
       body: <><Choice list={bandList(AUM_BANDS)} value={a.aum} onPick={(v) => autoPick("aum", { aum: v }, { aum_band: v })} /><Err m={forced.aum && errors.aum} /></> },
     ticket: { req: true, t: tr("What is your average investment per deal in $USD?"), h: tr("Sellers see this range on your card and filter Browse investors by it."),
       body: <><Choice list={bandList(TICKET_BANDS)} value={a.ticket} onPick={(v) => autoPick("ticket", { ticket: v }, { ticket_band: v })} /><Err m={forced.ticket && errors.ticket} /></> },
@@ -529,7 +529,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       <button type="button" onClick={saveExit} disabled={exiting} aria-label={tr("Save and exit setup")}
         className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-[10px] border border-[#DCDFE5] bg-white px-3 text-[13px] font-semibold text-[#434A5C] transition-colors hover:bg-[#F6F7F9] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 dark:border-border dark:bg-background dark:text-foreground">
         {exiting ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
-        <span className="hidden sm:inline">{exiting ? "Exiting…" : tr("Save & exit")}</span>
+        <span className="hidden sm:inline">{setupText(exiting ? "Exiting…" : "Save & exit")}</span>
       </button>
     </div>
   );
@@ -552,9 +552,9 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           <div className={card}>
             <div key={step.id} ref={qRef} className="animate-in fade-in duration-200">
               <h1 className="text-[21px] font-bold leading-snug sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>
-                {setupText(q.t)}{!optional && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">{setupText(", required")}</span></>}
+                {typeof q.t === "string" ? setupText(q.t) : q.t}{!optional && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">{setupText(", required")}</span></>}
               </h1>
-              <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{setupText(q.h)}</p>
+              <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{typeof q.h === "string" ? setupText(q.h) : q.h}</p>
               {q.body}
             </div>
             <div className="mt-8 flex flex-wrap items-center gap-2.5">

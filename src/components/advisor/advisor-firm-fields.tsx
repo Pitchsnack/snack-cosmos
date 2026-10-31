@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 export const Req = () => <span aria-hidden className="relative -top-0.5 ml-[3px] text-[12px] font-semibold text-[#B42318]">*</span>;
 export const Opt = () => <span className="ml-1.5 font-normal text-[#9CA3AF]">{tr("optional")}</span>;
-export const Err = ({ m }: { m: string | null | false | undefined }) => (m ? <p className="mt-1.5 text-[13px] text-[#B42318]">{m}</p> : null);
+export const Err = ({ m }: { m: string | null | false | undefined }) => (m ? <p className="mt-1.5 text-[13px] text-[#B42318]">{setupText(m)}</p> : null);
 const sub = "block text-[12px] font-medium text-[#6B7280] mb-1";
 const small = "h-10 w-full rounded-[10px] border border-[#DCDFE5] bg-white px-3 text-[14px] outline-none focus:border-[#1E2A4A] dark:border-border dark:bg-background";
 const bad = "!border-[#B42318]";
@@ -82,7 +82,7 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
         </div>
       )}
       {words && <p className="text-[12.5px] text-[#6B7280]">{tr(proposal ? "On the proposal" : "On your profile")}: <b className="font-semibold text-[#151A28] dark:text-foreground">{nowrapPct(words)}</b></p>}
-      {err && <p className="text-[13px] text-[#B42318]">{err.msg}</p>}
+      {err && <p className="text-[13px] text-[#B42318]">{setupText(err.msg)}</p>}
     </div>
   );
 }
