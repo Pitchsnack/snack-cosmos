@@ -1325,18 +1325,18 @@ export function StartupForm({
           {nameErr && isStrEmpty(startupName) && <p className="text-[12.5px] text-destructive">{tr(isEdit ? "Add the Company Name before you save." : "Needed to create the startup.", "กรุณากรอกชื่อบริษัทก่อนบันทึก")}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label>Registered Number</Label>
+          <Label>{tr("Registered Number", "เลขทะเบียนนิติบุคคล")}</Label>
           <Input
             value={registeredNumber}
             onChange={(e) => setRegisteredNumber(e.target.value)}
-            placeholder="e.g. 0105555078063"
+            placeholder={tr("e.g. 0105555078063", "เช่น 0105555078063")}
             maxLength={64}
           />
         </div>
       </div>
       </div>
 <CompactFields>        <div className="space-y-1.5">
-          <Label>Company Type</Label>
+          <Label>{tr("Company Type", "ประเภทบริษัท")}</Label>
           {(() => {
             const fromAdmin = companyTypeSource === "admin" && !companyTypeReset;
             const label = (v: string) => (th && v === "Individual" ? "บุคคลธรรมดา" : v);
