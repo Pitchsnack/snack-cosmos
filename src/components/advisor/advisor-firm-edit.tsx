@@ -338,7 +338,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           </F>
         </div>
         <p className="-mt-2 flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.")}</p>
-        <F label={<>{setupText("Description")}<LangTag /></>} req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={`${descV.length} / 300 · your card shows 3 lines`} htmlFor="fe-desc">
+        <F label={<>{setupText("Description")}<LangTag /></>} req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={setupText(`${descV.length} / 300 · your card shows 3 lines`)} htmlFor="fe-desc">
           <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} lang={tl} value={descV} onBlur={blur("desc")} onChange={(e) => setDesc(e.target.value)} />
         </F>
 </EditSec>}
@@ -362,7 +362,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {f.services.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2">
             {f.services.map((s) => (
-              <F key={s} label={`${s} · fee`} tag={src.fees && feeWords(f.fees[s] ?? newFee()) ? src.fees : undefined}>
+              <F key={s} label={`${tr(s)} · ${tr("Fee")}`} tag={src.fees && feeWords(f.fees[s] ?? newFee()) ? src.fees : undefined}>
                 <FeeControl service={s} value={f.fees[s] ?? newFee()} showErr={!!touched[`fee-${s}`]} onBlurAll={blur(`fee-${s}`)}
                   onChange={(v) => set("fees", { ...f.fees, [s]: v })} />
               </F>
@@ -434,7 +434,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
             <Input id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder={setupText("e.g. 2014")} value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
           </F>
         </div>
-        <F label={<>{setupText("Description")}<LangTag /></>} req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={`${descV.length} / 300 · your card shows 3 lines`} htmlFor="fe-desc">
+        <F label={<>{setupText("Description")}<LangTag /></>} req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={setupText(`${descV.length} / 300 · your card shows 3 lines`)} htmlFor="fe-desc">
           <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} lang={tl} value={descV} onBlur={blur("desc")} onChange={(e) => setDesc(e.target.value)} />
         </F>
       </Section>
@@ -446,7 +446,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {f.services.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2">
             {f.services.map((s) => (
-              <F key={s} label={`${s} · fee`} tag={src.fees && feeWords(f.fees[s] ?? newFee()) ? src.fees : undefined}>
+              <F key={s} label={`${tr(s)} · ${tr("Fee")}`} tag={src.fees && feeWords(f.fees[s] ?? newFee()) ? src.fees : undefined}>
                 <FeeControl service={s} value={f.fees[s] ?? newFee()} showErr={!!touched[`fee-${s}`]} onBlurAll={blur(`fee-${s}`)}
                   onChange={(v) => set("fees", { ...f.fees, [s]: v })} />
               </F>

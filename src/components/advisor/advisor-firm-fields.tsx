@@ -81,7 +81,7 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
             onChange={(e) => set(tl === "th" ? { wordsTh: e.target.value } : { words: e.target.value })} />
         </div>
       )}
-      {words && <p className="text-[12.5px] text-[#6B7280]">{tr(proposal ? "On the proposal" : "On your profile")}: <b className="font-semibold text-[#151A28] dark:text-foreground">{nowrapPct(words)}</b></p>}
+      {words && <p className="text-[12.5px] text-[#6B7280]">{tr(proposal ? "On the proposal" : "On your profile")}: <b className="font-semibold text-[#151A28] dark:text-foreground">{nowrapPct(words === "Request a Price Quote" ? tr(words) : words)}</b></p>}
       {err && <p className="text-[13px] text-[#B42318]">{setupText(err.msg)}</p>}
     </div>
   );
