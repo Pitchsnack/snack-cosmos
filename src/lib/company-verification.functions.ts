@@ -20,3 +20,4 @@ export const openCompanyVerification=createServerFn({method:'POST'}).middleware(
   const {verificationState}=await import('./company-verification.server');
   return verificationState(supabaseAdmin,context.userId,data.companyId,data.pipelineId);
 });
+export const orderCompanyVerification=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(d=>input.parse(d)).handler(async({context,data})=>{const {data:owner}=await context.supabase.rpc('verification_owner',{_uid:context.userId,_company:data.companyId});if(!owner)throw new Error('Not your company');const {supabaseAdmin}=await import('@/integrations/supabase/client.server');const {error}=await (supabaseAdmin as any).rpc('create_verification_report_order',{_uid:context.userId,_company:data.companyId});if(error)throw new Error(error.message);return {ok:true};});

@@ -55,17 +55,11 @@ export const createMyReportOrder = createServerFn({ method: "POST" })
     if (!ok) throw new Error("Not your business");
     const sb = await admin();
     const { data: existing } = await sb.from("report_orders").select("*").eq("startup_id", data.startupId).eq("kind", data.kind)
-      .not("status", "in", "(cancelled,refunded)").maybeSingle();
+      .in("status", ["paid", "generated"]).order('paid_at',{ascending:false}).limit(1).maybeSingle();
     if (existing) return existing;
     const paid = new Date();
     const due = addBusinessDays(paid, DUE_BUSINESS_DAYS);
-    const amount = (catalog.prices as Record<string, number>)[data.kind === 'pnl' ? 'financials' : data.kind];
-    if (!amount) throw new Error('This report has no configured checkout price');
-    const { data: row, error } = await sb.from("report_orders").insert({
-      startup_id: data.startupId, kind: data.kind, amount, currency: catalog.currency, status: "paid",
-      paid_at: paid.toISOString(), due_at: due.toISOString(), method: "Manual", payment_ref: `MAN-${Date.now().toString().slice(-6)}`,
-      ordered_by: ctx.userId,
-    }).select("*").single();
+    const { data: row, error } = await sb.rpc('create_report_order',{_uid:ctx.userId,_company:data.startupId,_kind:data.kind,_due:due.toISOString()});
     if (error) throw new Error(error.message);
     await sb.from("report_order_events").insert({ order_id: row.id, event: "paid", actor_id: ctx.userId,
       note: `${row.method} · ${row.payment_ref} · due ${fmtD(due)}` });
