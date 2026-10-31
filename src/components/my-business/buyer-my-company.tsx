@@ -33,6 +33,7 @@ import {
 } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
 import { CompanyMenu, DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company-menu";
+import type { DeleteDraftTarget } from "@/components/common/delete-draft";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { AlertTriangle, CheckCircle2, Flag } from "lucide-react";
 import { bandText, descriptionLeaks, typeName } from "@/lib/investor-bands";
@@ -429,7 +430,7 @@ function Logo({ p, org, size }: { p: BuyerProfile; org: BuyerOrg; size: number }
     : <div className={cn("grid shrink-0 place-items-center rounded-[12px] text-[16px] font-bold", tone.bg, tone.fg)} style={{ width: size, height: size }}>{(org.name ?? "?").slice(0, 1).toUpperCase()}</div>;
 }
 
-function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill }: { kind: View; thumb: React.ReactNode; title: string; meta: string; editLabel: string; onEdit: () => void; pill: React.ReactNode }) {
+function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill, deleteDraft }: { kind: View; thumb: React.ReactNode; title: string; meta: string; editLabel: string; onEdit: () => void; pill: React.ReactNode; deleteDraft?: Omit<DeleteDraftTarget, "name"> }) {
   return (
     <div className="mb-4 flex items-center gap-3.5 border-b border-border pb-4">
       {thumb}
@@ -442,7 +443,7 @@ function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill }: { kind
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
         {pill}
-        <CompanyMenu name={title} onEdit={onEdit} />
+        <CompanyMenu name={title} onEdit={onEdit} deleteDraft={deleteDraft} />
       </div>
     </div>
   );
