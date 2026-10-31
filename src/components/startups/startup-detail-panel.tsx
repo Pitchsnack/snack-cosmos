@@ -1,6 +1,7 @@
 import { bizName } from "@/lib/biz-name";
 import {AdminReportsControls,ReportsHubWindow} from '@/components/reports/reports-hub';
 import { OwnershipPanelSlot, OwnershipMenuItem } from "@/components/handover/ownership";
+import { DeleteDraftDialog, DeleteDraftMenuItem, useDraftDeleteState, type DeleteDraftTarget } from "@/components/common/delete-draft";
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
@@ -422,6 +423,8 @@ export function StartupDetailPanel({
   const [confirm, setConfirm] = useState<null | "archive" | "delete">(null);
   const deleteStartup = useDeleteControlRecords();
   const qc = useQueryClient();
+  const [draftDelOpen, setDraftDelOpen] = useState(false);
+  const draftDelState = useDraftDeleteState("startup", id, !!companyMenuDeleteDraft);
   const [shareOpen, setShareOpen] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [reportsOpen,setReportsOpen]=useState(false);
