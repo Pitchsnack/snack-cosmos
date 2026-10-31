@@ -34,7 +34,7 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
   const [failures, setFailures] = useState<string[]>([]);
   const done = () => { void qc.invalidateQueries({ queryKey: ["my-startups"] }); void qc.invalidateQueries({ queryKey: ["my-hidden-profiles"] }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); };
   const doSubmit = useMutation({
-    mutationFn: () => submit({ data: { listingId: profile.id } }),
+    mutationFn: () => submit({ data: { startupId: profile.startup_id } }),
     onSuccess: () => { setReviewOpen(false); setFailures([]); setSentOpen(true); done(); },
     onError: (e: Error) => setFailures([e.message]),
   });
