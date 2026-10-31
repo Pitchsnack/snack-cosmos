@@ -8,7 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Check, Flag, X } from "lucide-react";
 import { dismissWelcome, getSignupState } from "@/lib/signup.functions";
 import { ensureMySellerDraft, getSellerSetup } from "@/lib/seller-setup.functions";
-import { SELLER_STEPS, emptyDraft, sellerShown, sellerValid, sellerAnswered, sellerQuestionKeys, isMissed, firstUnanswered, joinNames, STEP_SHORT, STEP_FULL, stepIdx, type SellerDraft } from "@/lib/seller-wizard";
+import { SELLER_STEPS, emptyDraft, sellerShown, sellerValid, sellerAnswered, sellerQuestionKeys, isMissed, firstUnanswered, STEP_SHORT, STEP_FULL, stepIdx, type SellerDraft } from "@/lib/seller-wizard";
 import { buyerSkips, shownSteps } from "@/lib/buyer-wizard";
 import { WIZARD_QS, advisorSkips } from "@/lib/advisor-firm";
 import { SELLER_OPTS, BUYER_OPTS, BUYER_REL_OPTS, ADVISOR_OPTS } from "@/components/login/signup-copy";
@@ -174,30 +174,44 @@ export function SellerSetupBanner({ setup }: { setup: Awaited<ReturnType<typeof 
   const missed = keys.filter((k) => isMissed(k, draft));
   const ri = stepIdx(setup.reached);
   const lineTo = Math.max(0, keys.filter((k) => stepIdx(k) <= ri).length - 1 + (setup.reached === "review" ? 1 : 0));
-  const names = joinNames(missed.map((k) => L(...STEP_SHORT[k])), th);
   const next = firstUnanswered(draft, setup.fromSignup);
   return (
-    <div data-tour-banner data-tour-n={sellerN} data-tour-m={3} className="flex flex-wrap items-start gap-4 rounded-[14px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4 dark:border-[#2B4763] dark:bg-[#16283A]">
-      <span className="hidden h-10 w-10 place-items-center rounded-lg bg-white md:grid"><Flag className="h-5 w-5 text-[#2563EB]" /></span>
-      <div className="min-w-[240px] flex-1">
+    <div data-tour-banner data-tour-n={sellerN} data-tour-m={3} className="flex flex-col gap-4 rounded-[14px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4 dark:border-[#2B4763] dark:bg-[#16283A] md:grid md:grid-cols-[40px_minmax(0,1fr)_auto] md:gap-x-4 md:gap-y-0">
+      <span className="hidden h-10 w-10 place-items-center rounded-lg bg-white md:col-start-1 md:row-start-1 md:grid"><Flag className="h-5 w-5 text-[#2563EB]" /></span>
+      <div className="min-w-0 md:col-start-2 md:row-start-1">
         <p className="text-[14.5px] font-bold">{setupText(sellerDone ? "Finish setting up your business profile" : "Set up your business profile")}</p>
         <p className="text-[13px] text-muted-foreground">
           {setupText(sellerDone >= sellerN ? `All ${sellerN} questions are answered. Check your profile and save it.` : `Buyers can't find your business yet. Answer ${sellerN} short questions. It takes about 3 minutes and saves as you go.`)}
         </p>
-        <div className="mt-4 max-w-[470px]">
-          <StepBar missedIcon variant="banner" steps={items} lineTo={lineTo} onPick={open} label={L("Setup questions", "คำถามตั้งค่า")}
-            stepWord={(n) => L(`Step ${n}`, `ขั้นที่ ${n}`)} missedWord={L("Not answered", "ยังไม่ได้ตอบ")} />
-        </div>
-        <p className="mt-3 text-xs font-semibold text-[#2563EB] dark:text-[#8CBFF0]">
-          {L(`${sellerDone} of ${sellerN} answered`, `ตอบแล้ว ${sellerDone} จาก ${sellerN} ข้อ`)}
-          {missed.length > 0 && <span className="text-[#B91C1C] dark:text-red-400">{L(` · ${names} ${missed.length > 1 ? "aren't" : "isn't"} answered yet`, ` · ยังไม่ได้ตอบ: ${names}`)}</span>}
-        </p>
       </div>
-      <div className="flex flex-col items-end gap-1.5 max-[599px]:w-full">
+      <div className="flex flex-col items-end gap-1.5 max-[599px]:order-last max-[599px]:w-full md:col-start-3 md:row-start-1">
         <button type="button" data-tour-btn onClick={() => open(next)} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3E56] px-4 text-sm font-semibold text-white hover:opacity-90 max-[599px]:w-full">
           {setupText(sellerDone ? "Continue setup" : "Start setup")} <ArrowRight className="h-4 w-4" />
         </button>
       </div>
+      {/* The step bar runs from the text's left edge to the button's right edge. */}
+      <div className="mt-0 md:col-start-2 md:col-end-4 md:row-start-2 md:mt-4">
+        <StepBar missedIcon variant="banner" steps={items} lineTo={lineTo} onPick={open} label={L("Setup questions", "คำถามตั้งค่า")}
+          stepWord={(n) => L(`Step ${n}`, `ขั้นที่ ${n}`)} missedWord={L("Not answered", "ยังไม่ได้ตอบ")} />
+      </div>
+      {sellerDone > 0 && (
+        <div className="md:col-start-2 md:col-end-4 md:row-start-3">
+          <p className="mt-3.5 text-[13.5px] font-semibold text-[#374151] dark:text-[#C9D5F0]">
+            {L(`${sellerDone} of ${sellerN} answered`, `ตอบแล้ว ${sellerDone} จาก ${sellerN} ข้อ`)}
+          </p>
+          {missed.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-[13px] font-bold text-[#B91C1C] dark:text-red-400">{L("Not answered:", "ยังไม่ได้ตอบ:")}</span>
+              {missed.map((k) => (
+                <button key={k} type="button" onClick={() => open(k)} aria-label={L(...STEP_FULL[k])}
+                  className="inline-flex h-[30px] items-center whitespace-nowrap rounded-full border border-[#FECACA] bg-[#FEF2F2] px-3 text-[13px] font-semibold text-[#B91C1C] outline-none hover:bg-[#FEE2E2] focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/70">
+                  {L(...STEP_SHORT[k])}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
