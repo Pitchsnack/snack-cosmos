@@ -8,9 +8,9 @@ export type StepItem = { key: string; label: string; full: string; state: StepSt
  * Numbered step bar shared by setup wizards and banners: one column per step,
  * each a button that opens it. `lineTo` = index the navy line runs up to.
  */
-export function StepBar({ steps, lineTo, onPick, variant = "wizard", label, stepWord, missedWord, className }: {
+export function StepBar({ steps, lineTo, onPick, variant = "wizard", label, stepWord, missedWord, className, missedIcon = false }: {
   steps: StepItem[]; lineTo: number; onPick: (key: string) => void; variant?: "wizard" | "banner";
-  label: string; stepWord: (n: number) => string; missedWord: string; className?: string;
+  label: string; stepWord: (n: number) => string; missedWord: string; className?: string; missedIcon?: boolean;
 }) {
   const b = variant === "banner";
   const many = steps.length > 6;
@@ -40,7 +40,7 @@ export function StepBar({ steps, lineTo, onPick, variant = "wizard", label, step
                     s.state === "here" && "border-2 border-[#1E2A4A] bg-white text-[#1E2A4A] shadow-[0_0_0_5px_rgba(30,42,74,.14)] dark:border-[#8CA3D8] dark:bg-card dark:text-[#C9D5F0]",
                     s.state === "missed" && "bg-[#DC2626] text-white shadow-[0_0_0_5px_rgba(220,38,38,.16)]",
                     s.state === "todo" && "border-[1.5px] border-[#C9CED8] bg-white font-semibold text-[#6B7280] shadow-[0_0_0_4px_var(--sb-ring)] dark:border-border dark:bg-card dark:text-muted-foreground")}>
-                  {s.state === "done" ? <Check className={b ? "h-3.5 w-3.5" : "h-4 w-4"} strokeWidth={3} /> : i + 1}
+                  {s.state === "done" ? <Check className={b ? "h-3.5 w-3.5" : "h-4 w-4"} strokeWidth={3} /> : s.state === "missed" && missedIcon ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" className="h-4 w-4 max-[599px]:h-3 max-[599px]:w-3"><path d="M12 5v9M12 19h.01" /></svg> : i + 1}
                 </span>
                 <span aria-hidden="true" className={cn("mt-2 px-0.5 text-center leading-[1.35] group-hover:underline max-[599px]:hidden", lots ? "text-[11.5px]" : b ? "mt-1.5 text-[12px]" : "text-[12.5px]",
                   s.state === "done" && "font-medium text-[#374151] dark:text-foreground",
@@ -48,7 +48,7 @@ export function StepBar({ steps, lineTo, onPick, variant = "wizard", label, step
                   s.state === "missed" && "font-semibold text-[#B91C1C] dark:text-red-400",
                   s.state === "todo" && "font-medium text-[#6B7280] dark:text-muted-foreground")}>
                   {s.label}
-                  {s.state === "missed" && <span className={cn("block font-medium", b ? "text-[11px]" : "text-[11.5px]")}>{missedWord}</span>}
+                  {s.state === "missed" && !missedIcon && <span className={cn("block font-medium", b ? "text-[11px]" : "text-[11.5px]")}>{missedWord}</span>}
                 </span>
               </button>
               <span aria-hidden="true"
