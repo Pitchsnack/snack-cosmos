@@ -284,6 +284,8 @@ export function StartupForm({
   const { data: session } = useSessionContext();
   const { language } = useTranslation();
   const th = language === "th";
+  /** Lists, options and chips follow "Texts in" (the app language outside Edit information). */
+  const { lang: textLang } = useTextLang();
   const ctAdmin = session?.user?.accountRole === "admin" && workspace === "startups";
   const [companyTypeReset, setCompanyTypeReset] = useState(false);
   const [companyTypeSource, setCompanyTypeSource] = useState<string>((startup as any)?.company_type_source ?? "account");
@@ -827,7 +829,7 @@ export function StartupForm({
   const MISSING_INPUT =
     "border-destructive focus-visible:ring-destructive placeholder:text-destructive text-destructive";
   const MISSING_LABEL = "text-destructive";
-  const missingPh = (field: string) => `⚠ Missing: ${field}`;
+  const missingPh = (field: string) => missingLine(tr(field, field), th);
 
   /**
    * Empty-field-only merge of an Auto Enrich result. Never overwrites
