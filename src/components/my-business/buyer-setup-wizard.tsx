@@ -570,7 +570,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       )}
       {phase === "enrich" && (
         <Enrich a={a} header={header} card={card} btnO={btnO} btnP={btnP} onBack={() => { setPhase("q"); goTo("review"); }} onExit={saveExit}
-          onDone={(r) => { setEnrichRes(r); void qc.invalidateQueries({ queryKey: ["buyer-investor"] }).then(() => setPhase("complete")); }} />
+          onDone={(r) => { setEnrichRes(r); setPhase("complete"); void qc.invalidateQueries({ queryKey: ["buyer-investor"] }); }} />
       )}
       {phase === "complete" && (
         <Complete invId={data.investor.id} header={header} enrich={enrichRes} answered={a}
@@ -686,8 +686,8 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
     <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
       {header(tr("Auto Enrich"), tr("Almost done"), 100)}
       <div className={card}>
-        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{state === "done" ? "Your profile is filled in" : tr("Filling in your profile")}</h1>
-        <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{state === "done" ? `We found ${n} details. Check them in the next step.` : `We're reading ${domain} and public records. This takes a few seconds.`}</p>
+        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{state === "done" ? tr("Your profile is filled in") : tr("Filling in your profile")}</h1>
+        <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{state === "done" ? tr(`We found ${n} details. Check them in the next step.`) : `We're reading ${domain} and public records. This takes a few seconds.`}</p>
         <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
           {sources.filter((s) => s[3]).map(([t, sub, what]) => (
             <div key={t} className="flex items-center gap-3 border-b border-[#F0F1F4] px-4 py-3 last:border-0 dark:border-border">
