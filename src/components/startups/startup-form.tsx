@@ -1446,25 +1446,25 @@ export function StartupForm({
           </TooltipTrigger><TooltipContent>{th ? "ระยะการลงทุนใช้สำหรับสตาร์ทอัพ ส่วนนี้ของ PitchSnack ยังไม่เปิดใช้งาน" : "Investment stage is for startups. This part of PitchSnack isn't open yet."}</TooltipContent></Tooltip></TooltipProvider>
         </div>
 
-        <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="revenue">{secOn("revenue") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
-          <Label>Last Year&apos;s Revenue ({revenueCurrency})</Label>
+        <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative sm:col-span-2" data-edit-sec="revenue">{secOn("revenue") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
+          <Label>{tr(`Last Year's Revenue (${revenueCurrency})`, revenueCurrency === "THB" ? "รายได้ปีที่แล้ว (บาท)" : "รายได้ปีที่แล้ว (ดอลลาร์สหรัฐ)")}</Label>
           <Select value={lastYearRevenue || "none"} onValueChange={(v) => setLastYearRevenue(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Select revenue range" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={tr("Select revenue range", "เลือกช่วงรายได้")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
+              <SelectItem value="none">{tr("— Select —", "— เลือก —")}</SelectItem>
               {revenueOptions.map((s) => (
-                <SelectItem key={s} value={s}>{founderRevenueLabel(s, th ? "th" : "en")}</SelectItem>
+                <SelectItem key={s} value={s}>{founderRevenueLabel(s, textLang)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Row 3: Headquarters | Region | City */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* Row 3: Headquarters (1 col) | City (2 cols) */}
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
           <div className="flex h-6 items-center">
-            <Label className={miss(isStrEmpty(headquarters)) ? MISSING_LABEL : undefined}>Headquarters</Label>
+            <Label className={miss(isStrEmpty(headquarters)) ? MISSING_LABEL : undefined}>{tr("Headquarters", "สำนักงานใหญ่")}</Label>
           </div>
           <CountryCombobox
             value={headquarters}
@@ -1477,17 +1477,18 @@ export function StartupForm({
                 if (suggested) setRegion(suggested);
               }
             }}
-            placeholder={miss(isStrEmpty(headquarters)) ? missingPh("Headquarters") : "Select country..."}
+            placeholder={miss(isStrEmpty(headquarters)) ? missingPh("Headquarters") : tr("Select country...", "เลือกประเทศ…")}
             className={miss(isStrEmpty(headquarters)) ? MISSING_INPUT : undefined}
+            lang={textLang}
           />
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 sm:col-span-2">
           <div className="flex h-6 items-center">
-            <Label className={miss(isStrEmpty(city)) ? MISSING_LABEL : undefined}>City</Label>
+            <Label className={miss(isStrEmpty(city)) ? MISSING_LABEL : undefined}>{tr("City", "เมือง")}</Label>
           </div>
           <Input value={city} onChange={(e) => setCity(e.target.value)}
-            placeholder={miss(isStrEmpty(city)) ? missingPh("City") : "City"}
+            placeholder={miss(isStrEmpty(city)) ? missingPh("City") : tr("City", "เมือง")}
             className={miss(isStrEmpty(city)) ? MISSING_INPUT : undefined} />
         </div>
       </div>
