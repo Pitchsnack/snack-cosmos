@@ -78,7 +78,7 @@ export function StatusPill({ status, children }: { status: ListingStatus; childr
   return (
     <span className={cn("inline-flex h-[22px] items-center gap-1.5 rounded-full px-[9px] text-[11.5px] font-bold", STATUS_STYLE[status])}>
       <span className="h-1.5 w-1.5 rounded-full bg-current" />
-      {children ?? (status === "live" ? "Live" : status === "draft" ? "Draft" : "Paused")}
+      {children ?? setupText(status === "live" ? "Live" : status === "draft" ? "Draft" : "Paused")}
     </span>
   );
 }
@@ -166,11 +166,11 @@ function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: 
   return (
     <>
       <div className="flex items-baseline justify-between gap-3">
-        <div data-card-title className="text-[18px] font-semibold leading-snug text-[#111827] dark:text-foreground">{i.publishedListingName ?? typeName(i.type, i.actsFor)}</div>
+        <div data-card-title className="text-[18px] font-semibold leading-snug text-[#111827] dark:text-foreground">{i.publishedListingName ?? tr(typeName(i.type, i.actsFor))}</div>
         <div className="whitespace-nowrap text-[13px] tabular-nums text-[#6B7280] dark:text-muted-foreground">{i.refNo}{i.country && <><span className="mx-1.5 text-[#D1D5DB]">·</span><span className="font-medium text-[#4B5563] dark:text-foreground/80">{i.country}</span></>}</div>
       </div>
       {i.publishedHeadline && <div className="mt-0.5 text-[13.5px] font-semibold leading-snug text-[#374151] dark:text-foreground/85">{i.publishedHeadline}</div>}
-      {i.publishedListingName && <div className="mt-0.5 text-[12.5px] text-muted-foreground">{typeName(i.type, i.actsFor)}</div>}
+      {i.publishedListingName && <div className="mt-0.5 text-[12.5px] text-muted-foreground">{tr(typeName(i.type, i.actsFor))}</div>}
       {(i.verified || i.proofOfFunds) && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {i.verified && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />{setupText("Verified investor")}</Pill>}
@@ -190,7 +190,7 @@ function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: 
       {!oneRow && (
         <button type="button" onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }} onKeyDown={(e) => e.stopPropagation()}
           className="-mx-4 -mb-4 mt-3 flex h-11 w-[calc(100%+2rem)] items-center justify-center gap-1.5 border-t border-[#F0F1F4] text-[13px] font-semibold text-[#4B5563] hover:bg-muted/40 dark:border-border dark:text-muted-foreground">
-          {open ? "Show less" : "Show more"}{open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          {setupText(open ? "Show less" : "Show more")}{open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
       )}
     </>

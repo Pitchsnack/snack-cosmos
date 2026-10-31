@@ -57,7 +57,7 @@ export function BuyerStatusBadge({ status }: { status: string }) {
   return (
     <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10.5px] font-bold",
       live ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-amber-500/15 text-amber-700 dark:text-amber-400")}>
-      {live ? "Live" : "Draft"}
+      {setupText(live ? "Live" : "Draft")}
     </span>
   );
 }
@@ -218,7 +218,7 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
     <InvestorDetailPanel
       id={i.id}
       onSelectStartup={() => {}}
-      buyer={{ data: toDetail(d), topBar, chips, intro, mediaAdd, afterPortfolio, footer,
+      buyer={{ label: setupText, data: toDetail(d), topBar, chips, intro, mediaAdd, afterPortfolio, footer,
         sectionEdit: (k) => (k === "stages" && !showsStages(i.investor_type) ? null : <SectionEditLink tone="buyer" onClick={() => editAt(k)} />) }}
     />
   );

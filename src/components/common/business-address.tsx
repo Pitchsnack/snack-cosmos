@@ -68,7 +68,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
         <select id="addr-province" aria-required autoComplete="address-level1" className={cn(inp, nc("province"), "pr-8", show("province") && bad)} {...nd("province")} value={a.province}
           onBlur={() => onBlur("province")} onChange={(e) => onChange({ province: e.target.value })}>
           <option value="">{tr("Choose a province")}</option>
-          {THAI_PROVINCES_77.map((p) => <option key={p} value={p}>{p}</option>)}
+          {THAI_PROVINCES_77.map((p) => <option key={p} value={p}>{tr(p)}</option>)}
         </select>
       ) : (
         <input id="addr-province" autoComplete="address-level1" maxLength={80} className={inp} value={a.province} onChange={(e) => onChange({ province: e.target.value })} />

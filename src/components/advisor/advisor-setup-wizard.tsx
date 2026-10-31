@@ -422,7 +422,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
         <div>
           {feeNote && feeNote.length > 0 && (
             <p className="mb-3 flex gap-2 rounded-[10px] bg-[#F3F4F6] px-3.5 py-2.5 text-[13px] text-[#434A5C] dark:bg-muted dark:text-muted-foreground">
-              <Info className="mt-[1px] h-4 w-4 shrink-0" />{setupText("We've ticked the usual service")}{feeNote.length > 1 ? "s" : ""}{setupText("for")} {article(a.type)} {a.type.toLowerCase()}: {feeNote.join(" and ")}{setupText(". Add the others you offer.")}
+              <Info className="mt-[1px] h-4 w-4 shrink-0" />{L(`We've ticked the usual service${feeNote.length > 1 ? "s" : ""} for ${article(a.type)} ${a.type.toLowerCase()}: ${feeNote.join(" and ")}. Add the others you offer.`, `เราเลือกบริการทั่วไปสำหรับ${tr(a.type)}ไว้ให้แล้ว: ${feeNote.map(tr).join("และ")} เพิ่มบริการอื่นที่ท่านให้บริการได้`)}
             </p>
           )}
           <div className="grid items-start gap-2.5 sm:grid-cols-2">
