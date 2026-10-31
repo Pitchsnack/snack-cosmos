@@ -1608,7 +1608,7 @@ export function StartupForm({
             placeholder={productBi.missing ? missingLangHint(productBi.lang, th, true) : undefined}
             disabled={productTags.length >= 5}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addProductTag(); }}} />
-          <Button type="button" variant="outline" size="sm" onClick={addProductTag} disabled={productTags.length >= 5}>Add</Button>
+          <Button type="button" variant="outline" size="sm" onClick={addProductTag} disabled={productTags.length >= 5}>{tr("Add", "เพิ่ม")}</Button>
         </div>
       </EditSec>
 
@@ -1629,7 +1629,7 @@ export function StartupForm({
             placeholder={marketBi.missing ? missingLangHint(marketBi.lang, th, true) : tr("e.g. Hotels and restaurants in Bangkok", "เช่น โรงแรมและร้านอาหารในกรุงเทพฯ")} lang={marketBi.lang}
             disabled={marketTags.length >= 5}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addMarketTag(); }}} />
-          <Button type="button" variant="outline" size="sm" onClick={addMarketTag} disabled={marketTags.length >= 5}>Add</Button>
+          <Button type="button" variant="outline" size="sm" onClick={addMarketTag} disabled={marketTags.length >= 5}>{tr("Add", "เพิ่ม")}</Button>
         </div>
       </EditSec>
   </>);
