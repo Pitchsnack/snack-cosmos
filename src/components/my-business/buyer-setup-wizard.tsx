@@ -391,7 +391,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             <div className="flex flex-col gap-[14px] sm:flex-row">
               <div className="flex-1">
                 <label className={lbl} htmlFor="w-name">{tr("Firm name")}<Req /></label>
-                <input id="w-name" aria-required autoFocus {...(errors.name ? { "data-need": "1" } : {})} className={`${inp} ${errors.name ? "need-fill" : ""} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder="e.g. Acme Ventures"
+                <input id="w-name" aria-required autoFocus {...(errors.name ? { "data-need": "1" } : {})} className={`${inp} ${errors.name ? "need-fill" : ""} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder="e.g. บริษัท ตัวอย่าง จำกัด"
                   onBlur={() => setTouched((t) => ({ ...t, name: true }))}
                   onChange={(e) => set({ name: e.target.value }, e.target.value.trim() ? { investor_name: e.target.value } : {})} />
               </div>
