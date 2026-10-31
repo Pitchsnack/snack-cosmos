@@ -8,9 +8,9 @@ import type { RegulatoryLicence } from "@/lib/compliance";
 export type SellerRelation = "owner" | "family_owner" | "agent";
 
 export const SELLER_RELATIONS: { value: SellerRelation; label: string; hint: string }[] = [
-  { value: "owner", label: "Business owner", hint: "I am selling my own company" },
-  { value: "family_owner", label: "Family business owner", hint: "I am selling or considering the sale of my family business" },
-  { value: "agent", label: "Authorized representative (agent)", hint: "I am acting on behalf of the owner" },
+  { value: "owner", label: "เจ้าของกิจการ", hint: "ฉันเป็นเจ้าของกิจการและกำลังขายบริษัทของตนเอง" },
+  { value: "family_owner", label: "เจ้าของธุรกิจครอบครัว", hint: "ฉันเป็นเจ้าของธุรกิจครอบครัว และกำลังขายหรืออยู่ระหว่างพิจารณาขายกิจการ" },
+  { value: "agent", label: "ผู้แทนที่ได้รับมอบอำนาจ (ตัวแทน)", hint: "ฉันดำเนินการแทนเจ้าของกิจการตามที่ได้รับมอบหมาย" },
 ];
 
 /** Stored exactly as selected (THB bands) — never converted. */
