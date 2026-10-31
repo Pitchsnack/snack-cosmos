@@ -1535,16 +1535,16 @@ export function StartupForm({
 
   </>);
   const addressJsx = (<div className="space-y-4">        <EditSec id="address" tone="seller" active={secOn("address")} className="space-y-1.5">
-          <Label>Registered Name</Label>
+          <Label>{tr("Registered Name", "ชื่อที่จดทะเบียน")}</Label>
           <Input
             value={registeredName}
             onChange={(e) => setRegisteredName(e.target.value)}
-            placeholder="Official registered company name"
+            placeholder={tr("Official registered company name", "ชื่อบริษัทตามที่จดทะเบียนอย่างเป็นทางการ")}
             maxLength={255}
           />
         </EditSec>
         <div className="space-y-1.5">
-          <Label htmlFor="addr-street">Business Address</Label>
+          <Label htmlFor="addr-street">{tr("Business Address", "ที่อยู่ธุรกิจ")}</Label>
           <AddressBox noteOutside a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
             onCity={(v) => setAddr((x) => ({ ...x, district: v }))}
             onChange={(p) => setAddr((x) => ({ ...x, ...p }))} show={() => null} onBlur={() => {}}
