@@ -66,7 +66,8 @@ import {
 import { AutoEnrichButton } from "./auto-enrich-button";
 import { AttachmentCard, attachmentMissing } from "./attachment-card";
 import { LicenceLists } from "./licence-lists";
-import { LangTag, missingLangHint, useBiList, useBiText } from "@/components/common/text-lang";
+import { LangTag, missingLangHint, useBiList, useBiText, useTextLang } from "@/components/common/text-lang";
+import { countryLabel, industryLabel, missingLine, sizeLabel } from "@/i18n/th-edit-info";
 import { CompactFields, EditInfoFooter, EditInfoTabsSlot, MainTabs, TabHead, TabRow, useEditInfo, useTr } from "@/components/common/edit-info-popup";
 import { PublicViewTab, normalizePublicTab, usePublicDraft, type PublicTab } from "@/components/hidden-profile/public-view-fields";
 import { saveHiddenProfile } from "@/lib/hidden-profiles.functions";
