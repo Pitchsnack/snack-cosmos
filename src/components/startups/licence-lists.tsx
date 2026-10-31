@@ -55,7 +55,7 @@ function Box({ title, other, options, label, isOn, toggle, add }: {
             <button key={n} type="button" aria-pressed={on} onClick={() => toggle(n)}
               className={cn("inline-flex h-7 items-center rounded-full border px-[11px] text-[12.5px]",
                 on ? "border-[#F6A823] bg-[#FEF3DE] font-semibold text-[#8A4B06]" : "border-[#E5E7EB] bg-[#F3F4F6] text-[#4B5563] dark:border-border dark:bg-muted dark:text-muted-foreground")}>
-              {on && <Check className="mr-[5px] h-[13px] w-[13px]" />}{n}
+              {on && <Check className="mr-[5px] h-[13px] w-[13px]" />}{label ? label(n) : n}
             </button>
           );
         })}
@@ -63,7 +63,7 @@ function Box({ title, other, options, label, isOn, toggle, add }: {
       <div className="mt-3 flex gap-2">
         <Input value={draft} placeholder={other} maxLength={160} onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit(); } }} />
-        <Button type="button" variant="outline" size="sm" className="h-9" onClick={commit}>Add</Button>
+        <Button type="button" variant="outline" size="sm" className="h-9" onClick={commit}>{tr("Add", "เพิ่ม")}</Button>
       </div>
     </div>
   );
