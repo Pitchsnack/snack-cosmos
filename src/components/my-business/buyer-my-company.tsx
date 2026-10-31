@@ -22,7 +22,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { FolderTab, Group, Intro, Ring, Row, RowLine } from "@/components/my-business/my-business-profiles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BuyerBrowseCard, BuyerCover, TypeIcon, type CardPart } from "@/components/marketplace/buyer-browse-card";
+import { BuyerBrowseCard, BuyerCover, TypeIcon, shortCityTh, type CardPart } from "@/components/marketplace/buyer-browse-card";
 import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing, withdrawBuyerProfile } from "@/lib/buyer-profile.functions";
 import { registerBuyerCompany } from "@/lib/approvals-one-step.functions";
 import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approval/review-company-dialog";
@@ -423,7 +423,7 @@ function BuyerDirectoryItem({ p, org, mode, selected, onClick }: {
       </div>
     </div>
     <div className={cn("flex items-center gap-2 text-xs font-normal text-muted-foreground", mode === "list" ? "ml-auto shrink-0" : "mt-auto w-full justify-between")}>
-      <span className="inline-flex items-center gap-1">{ticket ? <><Coins className="h-3 w-3" /> {ticket}</> : <><MapPin className="h-3 w-3" /> {[p.city, p.country].filter(Boolean).map((v) => tr(v!)).join(", ") || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</>}</span>
+      <span className="inline-flex items-center gap-1">{ticket ? <><Coins className="h-3 w-3" /> {ticket}</> : <><MapPin className="h-3 w-3" /> {[p.city, p.country].filter(Boolean).map((v) => shortCityTh(tr(v!))).join(", ") || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</>}</span>
       <ArrowRight className="h-3.5 w-3.5 text-accent" />
     </div>
   </Button>;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TH } from "@/i18n/th";
+import { shortCityTh } from "@/components/marketplace/buyer-browse-card";
 
 // Buyer My Company / wizard list values and labels (lovable-buyer-english-thai-swapped brief).
 describe("buyer My Company Thai texts", () => {
