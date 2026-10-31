@@ -18,6 +18,9 @@ import {
 import { cn } from "@/lib/utils";
 import { usePeerAvailability } from "@/hooks/use-peer-availability";
 import { modelAvailability, type AvailabilityBadge } from "@/lib/peer-comparables";
+import { useTr } from "@/components/common/edit-info-popup";
+import { useTextLang } from "@/components/common/text-lang";
+import { businessModelLabel } from "@/i18n/th-edit-info";
 
 function norm(s: string) {
   return s.toLowerCase().replace(/[\s\-—–._&/]/g, "");
@@ -473,6 +476,7 @@ export function SectorBusinessModelFields({
   businessModel: string | null;
   onBusinessModelChange: (v: string | null) => void;
 }) {
+  const tr = useTr();
   const boxRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
 
