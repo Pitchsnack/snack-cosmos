@@ -1307,17 +1307,19 @@ export function StartupForm({
       {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
       <div className="@container">
       <div className="grid gap-4 sm:grid-cols-3">
-        <EditSec id="facts" tone="seller" active={secOn("facts")} className="space-y-1.5">
-          <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
-          <Input type="number" min={1800} max={new Date().getFullYear()}
-            value={yearFounded} onChange={(e) => setYearFounded(e.target.value)}
-            placeholder={miss(isStrEmpty(yearFounded)) ? missingPh("Year Founded") : "e.g. 2020"}
-            className={miss(isStrEmpty(yearFounded)) ? MISSING_INPUT : undefined} />
+        <EditSec id="facts" tone="seller" active={secOn("facts")}>
+          <div className="space-y-1.5">
+            <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>{tr("Year Founded", "ปีที่ก่อตั้ง")}</Label>
+            <Input type="number" min={1800} max={new Date().getFullYear()}
+              value={yearFounded} onChange={(e) => setYearFounded(e.target.value)}
+              placeholder={miss(isStrEmpty(yearFounded)) ? missingPh("Year Founded") : tr("e.g. 2020", "เช่น 2020")}
+              className={miss(isStrEmpty(yearFounded)) ? MISSING_INPUT : undefined} />
+          </div>
         </EditSec>
         <div className="space-y-1.5">
-          <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>Company Name <span className="text-destructive">*</span></Label>
+          <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>{tr("Company Name", "ชื่อบริษัท")} <span className="text-destructive">*</span></Label>
           <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
-            placeholder={miss(isStrEmpty(startupName)) ? missingPh("Company Name") : "Acme Inc."}
+            placeholder={miss(isStrEmpty(startupName)) ? missingPh("Company Name") : tr("Acme Inc.", "เช่น บริษัท ตัวอย่าง จำกัด")}
             className={nameErr && !startupName.trim() ? "creation-invalid" : miss(isStrEmpty(startupName)) ? MISSING_INPUT : undefined}
             id="sf-company-name" required={!popup && !editCtx} maxLength={255} />
           {nameErr && isStrEmpty(startupName) && <p className="text-[12.5px] text-destructive">{tr(isEdit ? "Add the Company Name before you save." : "Needed to create the startup.", "กรุณากรอกชื่อบริษัทก่อนบันทึก")}</p>}
