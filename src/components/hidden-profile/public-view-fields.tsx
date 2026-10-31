@@ -412,7 +412,7 @@ function SuggestedNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: strin
       <FieldRow label={tr("Listing name", "ชื่อประกาศ")} htmlFor="hp-suggested-name" right={`${val.length}/120`}>
         <Input id="hp-suggested-name" maxLength={120} value={val} placeholder={refNo || ""}
           onChange={(e) => setD((p) => ({ ...p, suggested_listing_name: e.target.value }))} className={BOX} />
-        <p className="mt-1 flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.", "ข้อเสนอของท่าน เราได้ปรับชื่อประกาศและพาดหัวของท่าน เพื่อลดความซ้ำซ้อนและให้ประกาศของท่านแยกแยะได้ง่ายขึ้น")}</p>
+        <p className="mt-1 flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.", "ข้อเสนอของท่าน เราได้ปรับชื่อประกาศและหัวข้อของท่าน เพื่อลดความซ้ำซ้อนและให้ประกาศของท่านแยกแยะได้ง่ายขึ้น")}</p>
       </FieldRow>
     </div>
   );
