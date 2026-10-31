@@ -1574,9 +1574,9 @@ export function StartupForm({
         </div>
         <div className="flex gap-2 mt-2">
           <Input value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)}
-            placeholder="Add custom industry…" maxLength={50}
+            placeholder={tr("Add custom industry…", "เพิ่มอุตสาหกรรมเอง…")} maxLength={50}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); }}} />
-          <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>Add</Button>
+          <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>{tr("Add", "เพิ่ม")}</Button>
         </div>
       </EditSec>
 
@@ -1591,9 +1591,9 @@ export function StartupForm({
 
       {/* Product tags */}
       <EditSec id="product-tags" tone="seller" active={secOn("product-tags")} className="space-y-1.5">
-        <Label className={miss(!productBi.en.length && !productBi.th.length) ? MISSING_LABEL : undefined}>Product & Service Tags ({productTags.length}/5)<LangTag /></Label>
+        <Label className={miss(!productBi.en.length && !productBi.th.length) ? MISSING_LABEL : undefined}>{tr(`Product & Service Tags (${productTags.length}/5)`, `แท็กสินค้าและบริการ (${productTags.length}/5)`)}<LangTag /></Label>
         {miss(!productBi.en.length && !productBi.th.length) && (
-          <p className="text-xs text-destructive">⚠ Missing: add at least one product tag</p>
+          <p className="text-xs text-destructive">{tr("⚠ Missing: add at least one product tag", "⚠ ยังขาด: เพิ่มแท็กสินค้าอย่างน้อยหนึ่งแท็ก")}</p>
         )}
         <div className="flex flex-wrap gap-2">
           {productTags.map((t) => (
