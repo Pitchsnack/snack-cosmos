@@ -310,6 +310,7 @@ export function BusinessModelPicker({
   const [activeIndex, setActiveIndex] = useState(0);
   const optionListRef = useRef<HTMLDivElement>(null);
   const selected = BUSINESS_MODELS.find((b) => b.value === value) ?? null;
+  const { lang } = useTextLang();
   const { data: availability } = usePeerAvailability(!!sector);
   const options = [null, ...BUSINESS_MODELS.map((model) => model.value)] as const;
 
@@ -370,7 +371,7 @@ export function BusinessModelPicker({
             )}
           >
             <span className={cn("truncate", !selected && !compact && "text-muted-foreground")}>
-              {selected?.label ?? (compact ? "Not set" : "Choose a business model…")}
+              {selected ? businessModelLabel(selected.label, lang) : (compact ? "Not set" : "Choose a business model…")}
             </span>
             {selected && !compact && (
               <span className="truncate text-[11.5px] text-[#9AA3AF]">{selected.hint}</span>
@@ -441,7 +442,7 @@ export function BusinessModelPicker({
                     activeIndex === index + 1 && b.value !== value && "bg-[#F8FAFD]",
                   )}
                 >
-                  <span className="shrink-0">{b.label}</span>
+                  <span className="shrink-0">{businessModelLabel(b.label, lang)}</span>
                   <span className="truncate text-[11.5px] text-[#9AA3AF]">{b.hint}</span>
                   {badge ? (
                     <AvailabilityBadgePill badge={badge} />
