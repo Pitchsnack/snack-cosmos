@@ -573,6 +573,7 @@ export function StartupDetailPanel({
                     <>
                       <DropdownMenuItem onSelect={companyMenuEdit}><Pencil className="mr-2.5 h-4 w-4 text-[#5B6576]" /> Edit information</DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-[#EEF0F3] dark:bg-border" />
+                      {companyMenuDeleteDraft && <DeleteDraftMenuItem state={draftDelState.data} onPick={() => setDraftDelOpen(true)} />}
                     </>
                   )}
                   <DropdownMenuItem onSelect={handleCopyLink}>
