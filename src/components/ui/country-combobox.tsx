@@ -127,6 +127,7 @@ export function CountryCombobox({
                 <CommandItem
                   key={country}
                   value={country}
+                  keywords={[countryLabel(country, lang)]}
                   onSelect={(currentValue) => {
                     onChange(
                       currentValue.toLowerCase() === value.toLowerCase() ? "" : country,
@@ -143,7 +144,7 @@ export function CountryCombobox({
                         : "opacity-0",
                     )}
                   />
-                  {country}
+                  {countryLabel(country, lang)}
                 </CommandItem>
               ))}
             </CommandGroup>
