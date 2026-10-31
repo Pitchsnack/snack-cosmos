@@ -8150,6 +8150,10 @@ export type Database = {
         Args: { _key: string; _uid: string }
         Returns: boolean
       }
+      cancel_report_price_change: {
+        Args: { _by: string; _id: string }
+        Returns: undefined
+      }
       claim_access_seat: {
         Args: { _code_id: string; _role: string; _uid: string }
         Returns: string
@@ -8193,6 +8197,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      create_verification_report_order: {
+        Args: { _company: string; _uid: string }
+        Returns: Json
       }
       current_term_start: { Args: { _uid: string }; Returns: string }
       dbd_apply_edit: {
@@ -8281,6 +8289,10 @@ export type Database = {
       next_inv_ref: { Args: never; Returns: string }
       normalize_url_key: { Args: { _url: string }; Returns: string }
       prune_sign_in_days: { Args: never; Returns: undefined }
+      publish_report_price_checked: {
+        Args: { _by: string; _expected: string; _key: string; _values: Json }
+        Returns: undefined
+      }
       record_report_open: {
         Args: { _ref: string; _report_key: string; _uid: string }
         Returns: boolean
@@ -8305,6 +8317,16 @@ export type Database = {
         Returns: boolean
       }
       role_is: { Args: { _role: string; _uid: string }; Returns: boolean }
+      schedule_report_price_edit: {
+        Args: {
+          _at: string
+          _by: string
+          _expected: string
+          _key: string
+          _values: Json
+        }
+        Returns: undefined
+      }
       share_email_has_account: { Args: { _email: string }; Returns: boolean }
       user_in_tenant: {
         Args: { _tenant: string; _user_id: string }

@@ -876,6 +876,13 @@
       "when": 1793450591569,
       "tag": "0124_central_report_prices_and_quarters",
       "breakpoints": true
+    },
+    {
+      "idx": 125,
+      "version": "7",
+      "when": 1793450819338,
+      "tag": "0125_atomic_report_price_publication",
+      "breakpoints": true
     }
   ]
 }
