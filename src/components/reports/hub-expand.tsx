@@ -3,7 +3,7 @@ import {createPortal} from 'react-dom';
 import {X} from 'lucide-react';
 
 /** Larger view of the open report. Buyer: covers the Reports pop-up. Seller: covers the page area. */
-export function HubExpandBox({anchor,title,tag,sub,icon,onClose,children,closeLabel,closeTip}:{anchor:HTMLElement|null;title:string;tag:ReactNode;sub:string;icon:ReactNode;onClose:()=>void;children:ReactNode;closeLabel:string;closeTip:string}){
+export function HubExpandBox({anchor,title,tag,sub,icon,onClose,children,closeLabel,closeTip}:{anchor:HTMLElement|null;title:ReactNode;tag:ReactNode;sub:string;icon:ReactNode;onClose:()=>void;children:ReactNode;closeLabel:string;closeTip:string}){
  const box=useRef<HTMLDivElement>(null);const close=useRef<HTMLButtonElement>(null);
  const dialog=anchor?.closest('.hub-dialog') as HTMLElement|null;
  const [rect,setRect]=useState<{top:number;left:number;width:number;height:number}|null>(null);
@@ -19,7 +19,7 @@ export function HubExpandBox({anchor,title,tag,sub,icon,onClose,children,closeLa
  },[anchor,dialog]);
  useEffect(()=>{close.current?.focus();
   const key=(e:KeyboardEvent)=>{
-   if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();onClose();return;}
+   if(e.key==='Escape'){if(document.querySelector('[data-radix-menu-content]'))return;e.preventDefault();e.stopImmediatePropagation();onClose();return;}
    if(e.key==='Tab'&&box.current){const f=[...box.current.querySelectorAll<HTMLElement>('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(x=>!x.hasAttribute('disabled'));if(!f.length)return;const first=f[0],last=f[f.length-1];
     if(!box.current.contains(document.activeElement)){e.preventDefault();first.focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
   };
