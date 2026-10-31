@@ -141,6 +141,8 @@ export function KeyFigures({ i, empty, oneRow, onPart }: { i: CardInvestor; empt
 }
 
 const shortPlace = (p: string) => p.replace(/\s+Sub-region$/i, "");
+/** Cards use the short Thai city form (กรุงเทพฯ); address pickers keep the official province name. */
+export const shortCityTh = (translated: string) => (translated === "กรุงเทพมหานคร" ? "กรุงเทพฯ" : translated);
 const shortChip = (s: string) => s.replace(/\(above 51%\)/i, "(51%+)");
 
 export function NameAfterNdaPill() {
@@ -180,7 +182,7 @@ function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: 
       {desc && <p className="mb-3 mt-1.5 text-[14px] leading-[1.5] text-[#374151] dark:text-foreground/85">{desc}{onPart && <span className="ml-2 inline-flex align-baseline"><PartEdit k="description" onPart={onPart} /></span>}</p>}
       <div className={desc ? "" : "mt-3"}><KeyFigures i={i} empty={empty} oneRow={oneRow} onPart={onPart} /></div>
       {showMore && (i.city || chips.length > 0) && <div className="mt-3">
-        {i.city && row(setupText("Based in"), tr(i.city), "based")}
+        {i.city && row(setupText("Based in"), shortCityTh(tr(i.city)), "based")}
         {chips.length > 0 && row(setupText("Focus"), (
           <div className="flex flex-wrap gap-1.5">
             {chips.map((c, k) => <span key={c + k} className="rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-[9px] py-0.5 text-[12px] text-[#374151] dark:border-border dark:bg-muted dark:text-foreground">{tr(c)}</span>)}
