@@ -35,7 +35,7 @@ type A = {
 };
 
 const ROLES: { value: BuyerRelation; label: string; hint: string }[] = [
-  { value: "individual", label: "Individual Investor", hint: "I am a sophisticated investor. I invest my own money." },
+  { value: "individual", label: "นักลงทุนรายบุคคลที่มีความเชี่ยวชาญ", hint: "I am a sophisticated investor. I invest my own money." },
   { value: "corporate", label: "Corporate Enterprise", hint: "My company invests in or buys businesses." },
   { value: "agent", label: "Authorised representative / adviser", hint: "I am acting on behalf of the buyer." },
 ];
