@@ -58,6 +58,10 @@ function toPublicLocal(p: BuyerProfile, org: BuyerOrg): PublicBuyer {
 }
 const monthYear = (d: string) => new Date(d).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+/** App-language date: Thai uses short Thai months and the Buddhist year (12 ต.ค. 2569). */
+const fmtDateL = (d: string, lang: string) => lang === "th"
+  ? new Intl.DateTimeFormat("th-TH", { timeZone: "Asia/Bangkok", day: "numeric", month: "short", year: "numeric" }).format(new Date(d))
+  : fmtDate(d);
 const STATUS_LABEL = { live: "Live", draft: "Draft", paused: "Paused" } as const;
 
 function StatusChip({ status }: { status: BuyerProfile["status"] }) {
@@ -481,7 +485,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const setupDone = !!iv?.setup_done_at;
   const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
   const leaks = descriptionLeaks([(p as any).suggested_listing_name, (p as any).suggested_headline, p.description].filter(Boolean).join("\n"), org.name ?? "", org.website ?? "");
-  const since = p.status === "live" && p.live_since ? `Live since ${fmtDate(p.live_since)}` : p.status === "paused" ? `Paused since ${fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}` : "Not published yet";
+  const since = p.status === "live" && p.live_since ? `Live since ${fmtDateL(p.live_since, language)}` : p.status === "paused" ? `Paused since ${fmtDateL(p.updated_at ?? p.live_since ?? new Date().toISOString(), language)}` : "Not published yet";
   // One-step approval: Register your company opens the review pop-up.
   const registerFn = useServerFn(registerBuyerCompany);
   const [reviewOpen, setReviewOpen] = useState(false);
