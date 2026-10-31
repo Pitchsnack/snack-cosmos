@@ -173,6 +173,7 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
         company_type: (inv.company_type ?? null) as string | null,
         company_type_source: (inv.company_type_source ?? "account") as string,
         setup_done_at: inv.setup_done_at as string | null,
+        setup_reached: inv.setup_reached as string | null,
         wizard: (inv.wizard ?? {}) as { answered?: string[]; pe_ticked?: boolean; from_signup?: string[] },
         investment_focus_raw: (inv.investment_focus ?? []) as string[],
         sector_picks: (inv.sector_picks ?? null) as { types: string[]; kinds: Record<string, string[]>; other: string[] } | null,
@@ -435,6 +436,7 @@ const Wizard = z.object({
   description: z.string().trim().optional(),
   answered: z.array(z.string().max(20)).max(20).optional(),
   pe_ticked: z.boolean().optional(),
+  setup_reached: z.enum(["role", "type", "name", "web", "aum", "ticket", "rev", "deals", "sectors", "photos", "desc", "review"]).optional(),
   acts_for_types: arr(7),
 });
 
@@ -452,6 +454,7 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     const inv: Record<string, unknown> = { updated_by: context.userId, updated_at: new Date().toISOString() };
     const bp: Record<string, unknown> = { updated_at: new Date().toISOString() };
     const has = (k: keyof typeof data) => data[k] !== undefined;
+    if (has("setup_reached")) inv.setup_reached = data.setup_reached;
     if (has("buyer_relation")) bp.buyer_relation = data.buyer_relation;
     if (has("investor_type")) inv.investor_type = data.investor_type || null;
     // A representative's types: Investor Classification is the first. Everyone else has none.

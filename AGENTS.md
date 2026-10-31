@@ -54,9 +54,10 @@
 - Pipeline Investor/Seller profile box is read-only from getProfileBox (profile-box.functions.ts): private person/firm facts only while the NDA is approved and valid, else the public investor profile; nothing is stored.
 - Seller's view of a buyer's private profile is InvestorDetailPanel with the buyer.seller option (private-investor-panel.tsx); private fields, media and portfolio come only from listSellerFavourites' approved-NDA gate, so directory changes show in both.
 
-- Shared editor layouts use EditInfoPopup, CompactFields and common/business-address; directory create rows own transient highlighting/focus so editor state never changes permissions or saving rules.
+- Editors share EditInfoPopup, CompactFields and business-address; directory row focus stays transient, never changing access or saves.
 
 - Buyer description counts and grandfathering use the browser-safe buyer-description helper in existing form/server validators; editor previews adapt unsaved public-only values into StandardInvestorCard, preserving existing persistence and authorization.
 
 - DBD fetch-once store: dbd_company_records (per registration number) is the only source of DBD facts; writes only via DB functions dbd_store_save/dbd_store_delete/dbd_apply_edit (Control-checked, trigger-guarded); seller report tables are materialised copies and analyst edits re-apply after refresh.
-- Subdirectories have their own AGENTS.md; read it before changing files there.
+- Read nested AGENTS.md before edits.
+- Buyer/advisor setup shares validity helpers and seller StepBar; authorised saves and monotonic setup_reached align progress.

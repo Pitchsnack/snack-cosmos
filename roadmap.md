@@ -1,5 +1,11 @@
 # One-step approval — roadmap
 
+## Buyer and advisor wizard step bars — 31 October 2026
+- [x] Reuse seller StepBar on shown questions and Review; bilingual labels and missing-question navigation; seller and banners' layouts unchanged. Current questions combine location with Firm/Address, so no separate Location step was invented.
+- [x] Persist monotonic setup_reached through authorised autosaves and triggers; derive completion from validity and optional-step passage; block Review on missing required answers. Existing fields reused, no historical backfill or direct record mutations.
+- [x] Test firm buyer, Individual Investor and advisor EN/TH at 1440/390/360; navigation, optional Skip/tick, Review blocking, saved reload and reference interactions checked; no browser errors.
+- [ ] Control test-account click-through blocked: designated admin.acme test account has TENANT_ADMIN, not CONTROL; no roles changed and Dan's login not used. Shared authorised Control reader/save paths implemented.
+
 ## Seller Edit information grid + Thai (brief: Edit_information_seller_About_Company_s_boxes_pasted.md) — 31 October 2026
 - [ ] 1. About Company one grid: Year Founded aligned with Company Name/Registered Number; Investment Stage·Revenue and Headquarters·City on the three-column grid (1+2 cols); stacks ≤640px.
 - [ ] 2. App-in-Thai: every label/hint/Missing/placeholder/button of section 2 Thai (header, Listing Identity, About Company, Address, Industry & Market, About Owner); view buttons Thai on Listing view.

@@ -7,3 +7,4 @@
 - Businesses Wanted Admin personas use Control-authorized server functions; managed seller eligibility combines the existing ownership projection with Control workspace and approved listing gates, while application DTOs carry per-company history so tab presentation cannot grant access.
 - Report pricing uses report_prices and plan_reports.free_per_quarter through transactional quote/order functions; Admin publication is version-checked and shared plan controls persist through plan history, so pricing and quarterly usage stay consistent across pages.
 - Seller setup separates sellerAnswered progress from sellerValid website validation; optional completion derives from setup_reached so ticks cannot enable URL actions or require new stored flags.
+- Buyer/advisor completion derives from valid saved fields and optional passage, never legacy answered flags; database triggers prevent setup_reached moving backwards without modifying existing rows.

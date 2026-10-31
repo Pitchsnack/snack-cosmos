@@ -1,3 +1,6 @@
+import { WizardStepBar } from "@/components/common/wizard-step-bar";
+import { ADVISOR_STEP_NAMES } from "@/lib/setup-step-labels";
+import { furthestStep, setupAnswered as questionAnswered, setupStepState } from "@/lib/setup-step-state";
 import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -66,6 +69,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const advUpUrl = useServerFn(createAdvisorUploadUrl);
   const setupDone = !!firm.setupDoneAt;
   const [a, setA] = useState<A>(() => fromFirm(firm));
+  const [reached, setReached] = useState<string | null>(firm.setupReached ?? null);
+  const reachedRef = useRef(reached);
   const [answered, setAnswered] = useState<string[]>(firm.setupAnswered);
   const [feeNote, setFeeNote] = useState<string[] | null>(null);
   const feeVisited = useRef(!!(firm.wizard as { feeVisited?: boolean }).feeVisited);
@@ -120,14 +125,14 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   };
   const qValid = (id: WizardQ) => fieldsOf[id].every((k) => !errors[k]);
   const show = (k: string) => ((touched[k] || forced[k]) && errors[k] && errors[k] !== "fee" && errors[k] !== "hint" ? errors[k] : null);
-  const isAnswered = useCallback((id: string) => answered.includes(id) && (id === "deal" || qValid(id as WizardQ)), [answered, a]); // eslint-disable-line react-hooks/exhaustive-deps
-  const requiredOk = WIZARD_QS.filter((q) => q !== "deal").every((q) => qValid(q));
+  const isAnswered = useCallback((id: string) => questionAnswered(id, qValid(id as WizardQ), ["deal", "logo"], STEPS, reached), [a, reached]); // eslint-disable-line react-hooks/exhaustive-deps
+  const requiredOk = WIZARD_QS.filter((q) => q !== "deal" && q !== "logo").every((q) => qValid(q));
 
   const skipOf = (x: A) => advisorSkips(fromSignup, { type: x.type, web: x.web, year: x.year, team: x.team, sectors: x.sectors, agnostic: x.agnostic });
   const skipSet = skipOf(a);
   const [cur, setCur] = useState<WizardQ>(() => {
     const sk = skipOf(fromFirm(firm));
-    return (WIZARD_QS.find((q) => !sk.has(q) && !firm.setupAnswered.includes(q)) ?? "review") as WizardQ;
+    return (WIZARD_QS.find((q) => !sk.has(q) && !questionAnswered(q, qValid(q), ["deal", "logo"], STEPS, firm.setupReached)) ?? "review") as WizardQ;
   });
   const hiddenF = advisorHidden(fromSignup, { type: a.type, web: a.web, year: a.year, team: a.team });
   const hid = (k: string, q: WizardQ) => full !== q && hiddenF.has(k);
@@ -196,7 +201,14 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     setAnswered(n);
     queue({ setup_answered: n });
   };
+  const remember = (id: WizardQ) => {
+    const next = furthestStep(STEPS, reachedRef.current, id);
+    if (next && next !== reachedRef.current) { reachedRef.current = next; setReached(next); queue({ setup_reached: next }); }
+  };
+  useEffect(() => { if (phase === "q") remember(cur); }, [cur, phase]);
+  const pickStep = (key: string) => { const id = shown.find(q => q === key); if (id) { setFromReview(false); setFull(null); goTo(id); } };
   const goTo = (id: WizardQ) => {
+    remember(id);
     setForced({}); setHint(null);
     // First visit to services: tick the usual ones for the firm type, each on Request a Price Quote.
     if (id === "services" && !feeVisited.current) {
@@ -253,7 +265,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     advTimer.current = window.setTimeout(() => advance("type"), 250);
   };
   const idx = Math.max(0, shown.indexOf(cur));
-  const back = () => { if (idx > 0) goTo(shown[idx - 1]!); };
+  const back = () => { if (idx > 0) goTo(shown[idx - 1] ?? "review"); };
 
   const [exiting, setExiting] = useState(false);
   const leave = async (withSave: boolean) => {
@@ -518,7 +530,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           </div>
         </div>
       ) },
-    logo: { req: true, t: tr("Add your logo and photos"), h: tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your work. Sellers and buyers see them on your profile."),
+    logo: { req: false, t: tr("Add your logo and photos"), h: tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your work. Sellers and buyers see them on your profile."),
       body: (
         <div>
           <LogoPhotosStep L={L} name={a.name || tr("Your firm")} sectorLine={[tr(a.type), [a.city || a.addr.province, tr(a.country)].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
@@ -550,12 +562,12 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
         </div>
       ) },
     review: { req: false, t: tr("Review your answers"), h: tr("Check them, then we'll fill in the rest of your profile."),
-      body: <Review a={a} errors={errors} onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
+      body: <Review a={a} errors={errors} invalid={WIZARD_QS.filter(k => k !== "deal" && k !== "logo" && !qValid(k))} missingNames={WIZARD_QS.filter(k => k !== "deal" && k !== "logo" && !qValid(k)).map(k => L(...ADVISOR_STEP_NAMES[k].full))} onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
   };
   const q = Q[cur];
   const continueLabel = cur === "review" ? tr("Continue to auto-fill") : fromProfile && cur === "services" ? tr("Back to your profile") : fromReview ? tr("Back to review") : tr("Continue");
   const continueOk = cur === "review" ? requiredOk : qValid(cur);
-  const optional = cur === "deal";
+  const optional = cur === "deal" || cur === "logo";
 
   // ---------------- layout ----------------
   const topBar = (
@@ -580,7 +592,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const header = (sec: string, right: string, pct: number) => (
     <>
       <div className="flex items-baseline justify-between text-[15px]"><b className="font-semibold text-[#151A28] dark:text-foreground">{sec}</b><span className="text-[#6B7280]">{right}</span></div>
-      <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-[#E5E7EB] dark:bg-muted"><i className="block h-full bg-[#1E2A4A] transition-[width] duration-300 dark:bg-[#818CF8]" style={{ width: `${pct}%` }} /></div>
+
     </>
   );
   const card = "mt-[22px] rounded-[14px] border border-[#E9EBF0] bg-white px-[18px] pb-5 pt-6 sm:mt-[34px] sm:rounded-[16px] sm:p-10 max-[380px]:px-[14px] dark:border-border dark:bg-card";
@@ -602,10 +614,16 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
       {phase === "q" && (
         <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
           {header(tr(SECTION[cur]), L(`Step ${idx + 1} of ${shown.length}`, `ขั้นตอนที่ ${idx + 1} จาก ${shown.length}`), ((idx + 1) / shown.length) * 100)}
+          <WizardStepBar lineTo={Math.max(idx, shown.indexOf(reached as WizardQ))} onPick={pickStep} steps={shown.map(id => {
+            const names = id === "team" && hid("team", "team") ? { short: ["Languages", "ภาษา"] as [string,string], full: ["Languages", "ภาษา"] as [string,string] } : ADVISOR_STEP_NAMES[id];
+            const state = setupStepState(id, cur, qValid(id), ["deal", "logo"], STEPS, reached);
+            const tip = state === "here" ? L("You are here", "ท่านอยู่ที่ขั้นนี้") : state === "done" ? L("Answered · click to change", "ตอบแล้ว · กดเพื่อแก้ไข") : state === "missed" ? L("Not answered · click to answer", "ยังไม่ได้ตอบ · กดเพื่อตอบ") : L("Not reached yet · click to go there", "ยังไม่ถึงขั้นนี้ · กดเพื่อไปที่ขั้นนี้");
+            return {key:id, label:L(...names.short), full:L(...names.full), state, tip};
+          })} />
           <div className={card} ref={cardRef}>
             <div key={cur} ref={qRef} className="animate-in fade-in duration-200">
               <h1 className="text-[21px] font-bold leading-snug sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>
-                {tr(q.t)}{!optional && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">{tr(", required")}</span></>}
+                {tr(q.t)}{q.req && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">{tr(", required")}</span></>}
               </h1>
               <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{tr(q.h)}</p>
               {q.body}
@@ -669,10 +687,10 @@ function LeavePopover({ onKeep, onLeave }: { onKeep: () => void; onLeave: () => 
   );
 }
 
-function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | null>; onEdit: (id: WizardQ) => void }) {
+function Review({ a, errors, invalid, missingNames, onEdit }: { a: A; errors: Record<string, string | null>; invalid: WizardQ[]; missingNames: string[]; onEdit: (id: WizardQ) => void }) {
   const thai = a.country === "Thailand";
   const miss = <b className="font-semibold text-[#B42318]">{tr("Missing")}</b>;
-  const notSet = <span className="text-[#9CA3AF]">{tr("Not set")}</span>;
+  const notSet = <span className="text-muted-foreground">{useTranslation().language === "th" ? "ไม่ได้ระบุ" : "Not given"}</span>;
   const addrOk = !errors["a-street"] && !errors["a-district"] && !errors["a-province"] && !errors["a-postal"];
   const addrLine = fullAddress({ addrStreet: a.addr.street, addrUnit: a.addr.unit, addrDistrict: thai ? a.addr.district : a.city, addrProvince: a.addr.province, addrPostal: a.addr.postal, country: a.country, city: a.city });
   const deal = dealBandLabels(a.deal);
@@ -698,7 +716,7 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
     ]],
     [tr("Contact"), [[tr("Email"), errors.email ? miss : a.email, "contact"], [tr("Phone"), errors.phone ? miss : a.phone, "contact"]]],
     [tr("Your card"), [
-      [tr("Logo and photos"), a.logo.path && a.photos ? (a.photos === 1 ? tr("Logo and 1 photo") : tr("Logo and {n} photos").replace("{n}", String(a.photos))) : null, "logo", !(a.logo.path && a.photos)],
+      [tr("Logo and photos"), a.logo.path && a.photos ? (a.photos === 1 ? tr("Logo and 1 photo") : tr("Logo and {n} photos").replace("{n}", String(a.photos))) : notSet, "logo", false],
       [tr("Description"), !a.desc.trim() ? miss : errors.desc ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b> : <span className="line-clamp-3">{a.desc}</span>, "desc"],
     ]],
   ];
@@ -708,17 +726,18 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
         <div key={g}>
           <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[.07em] text-[#151A28] dark:text-foreground">{g}</div>
           <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
-            {rows.map(([l, v, id, red], i) => (
+            {rows.map(([l, v, id], i) => { const red = invalid.includes(id); return (
               <div key={`${l}-${i}`} className={`flex items-start gap-3 border-b border-[#F0F1F4] px-4 py-2.5 text-[14px] last:border-0 dark:border-border ${red ? "bg-[#FEF2F2] dark:bg-[#3A1D1D]" : ""}`}>
                 <span className="w-[170px] shrink-0 text-[#6B7280] max-sm:w-[110px]">{l}</span>
                 {red ? <b className="flex min-w-0 flex-1 items-center gap-2 font-semibold text-[#B91C1C]"><span className="h-2 w-2 rounded-full bg-[#DC2626]" />{tr("Not answered")}</b>
                   : <span className="min-w-0 flex-1 break-words">{v}</span>}
                 <button type="button" onClick={() => onEdit(id)} className={`shrink-0 hover:underline ${red ? "font-bold text-[#B91C1C]" : "font-semibold text-[#1E2A4A] dark:text-foreground"}`}>{red ? tr("Answer") : tr("Edit")}</button>
               </div>
-            ))}
+            ); })}
           </div>
         </div>
       ))}
+      {missingNames.length > 0 && <p className="text-sm text-destructive">{tr("Answer {names} before you continue.").replace("{names}", missingNames.join(", "))}</p>}
     </div>
   );
 }
