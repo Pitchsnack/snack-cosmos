@@ -1554,15 +1554,15 @@ export function StartupForm({
   const marketJsx = (<>
       {/* Industry pills */}
       <EditSec id="tags" tone="seller" active={secOn("tags")} className="space-y-1.5">
-        <Label className={miss(industries.length === 0) ? MISSING_LABEL : undefined}>Industry</Label>
-        <p className="text-xs text-muted-foreground">how the market describes this company</p>
+        <Label className={miss(industries.length === 0) ? MISSING_LABEL : undefined}>{tr("Industry", "อุตสาหกรรม")}</Label>
+        <p className="text-xs text-muted-foreground">{tr("how the market describes this company", "คำที่ตลาดใช้อธิบายบริษัทนี้")}</p>
         {miss(industries.length === 0) && (
-          <p className="text-xs text-destructive">⚠ Missing: pick at least one industry</p>
+          <p className="text-xs text-destructive">{tr("⚠ Missing: pick at least one industry", "⚠ ยังขาด: เลือกอุตสาหกรรมอย่างน้อยหนึ่งรายการ")}</p>
         )}
         <div className="flex flex-wrap gap-2">
           {INDUSTRIES.map((ind) => (
             <Pill key={ind} active={industries.includes(ind)} onClick={() => setIndustries(toggle(industries, ind))}>
-              {ind}
+              {industryLabel(ind, textLang)}
             </Pill>
           ))}
           {industries.filter((i) => !INDUSTRIES.includes(i)).map((c) => (
