@@ -386,14 +386,22 @@ function PublicPanel({ s, pill, onDeleted }: { s: StartupListItem; pill: React.R
           {adminReview && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-9 w-9" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="max-w-[280px]">
                 <DropdownMenuItem asChild><Link to="/marketplace">View Marketplace</Link></DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DeleteDraftMenuItem state={delState.data} onPick={() => setDelOpen(true)} />
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+          {adminReview && (
+            <DeleteDraftDialog
+              target={delOpen ? { ...deleteDraft, name: row?.code_name || s.startup_name || "" } : null}
+              onClose={() => setDelOpen(false)}
+            />
+          )}
           {pill}
           {!adminReview && (
-            <CompanyMenu name={row?.code_name || s.startup_name || tr("New business")} onEdit={() => void create()}>
+            <CompanyMenu name={row?.code_name || s.startup_name || tr("New business")} onEdit={() => void create()} deleteDraft={deleteDraft}>
               <DropdownMenuItem asChild><Link to="/marketplace">View Marketplace</Link></DropdownMenuItem>
             </CompanyMenu>
           )}
