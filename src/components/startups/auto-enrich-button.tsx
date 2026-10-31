@@ -91,7 +91,7 @@ export function AutoEnrichButton({ websiteUrl, onEnriched, disabled }: Props) {
       title="Scrape the Website URL and back-fill empty fields"
     >
       {loading ? <ButtonSpinner invert={false} /> : <Sparkles className="h-3.5 w-3.5" />}
-      {loading ? "Enriching…" : "Auto Enrich"}
+      {loading ? tr("Enriching…", "กำลังเติมข้อมูล…") : tr("Auto Enrich", "เติมข้อมูลอัตโนมัติ")}
     </Button>
   );
 }
