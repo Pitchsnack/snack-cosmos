@@ -1496,7 +1496,7 @@ export function StartupForm({
       {/* Row 3: Email | Website | LinkedIn URL */}
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label className={miss(isStrEmpty(email)) ? MISSING_LABEL : undefined}>Email</Label>
+          <Label className={miss(isStrEmpty(email)) ? MISSING_LABEL : undefined}>{tr("Email", "อีเมล")}</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255}
             placeholder={miss(isStrEmpty(email)) ? missingPh("Email") : undefined}
             className={miss(isStrEmpty(email)) ? MISSING_INPUT : undefined} />
@@ -1510,10 +1510,10 @@ export function StartupForm({
           required={!isEdit && !editCtx}
         />
         <EditableUrlField
-          label="LinkedIn URL"
+          label={tr("LinkedIn URL", "ลิงก์ LinkedIn")}
           value={linkedinUrl}
           onChange={setLinkedinUrl}
-          placeholder="https://www.linkedin.com/company/… (optional)"
+          placeholder={tr("https://www.linkedin.com/company/… (optional)", "https://www.linkedin.com/company/... (ไม่บังคับ)")}
         />
 
       </div>
