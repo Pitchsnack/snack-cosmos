@@ -1815,13 +1815,13 @@ export function StartupForm({
     ...(ctAdmin && workspace === "startups" ? [{key:"admin" as const,label:tr("Admin settings", "การตั้งค่าผู้ดูแล"),icon:<Shield className="h-3.5 w-3.5" />,error:createAttempted && (!tenantId || !owningAgentUserId || !owningAiAgentId)}]:[]),
   ];
   const pubTabs = [
-    { key: "identity" as const, label: tr("Listing Identity", "ตัวตนของประกาศ"), count: pd.counts.identity },
+    { key: "identity" as const, label: tr("Listing Identity", "ข้อมูลประกาศ"), count: pd.counts.identity },
     { key: "deal" as const, label: tr("Deal Terms", "เงื่อนไขดีล"), count: pd.counts.deal },
   ];
   const showPublic = !!popup?.row && pView === "public";
   const curPriv = ([...PRIVATE_TABS, "admin"].includes(pTab as PrivateTab) ? pTab : "images") as PrivateTab;
   const curPub = (PUBLIC_TABS.includes(normalizePublicTab(pTab) as PublicTab) ? normalizePublicTab(pTab) : "identity") as PublicTab;
-  const sectorLine = [sector, [city, headquarters].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
+  const sectorLine = [sector, [city, countryLabel(headquarters, textLang)].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
   const tabbedJsx = (
     <div role="tabpanel" id="sf-main-panel" aria-labelledby={`sf-main-${showPublic ? "public" : "private"}`}>
       {(popup || editCtx) && (
@@ -2009,7 +2009,7 @@ export function StartupForm({
           disabled={!canSubmit || submitting}
           className="bg-accent text-accent-foreground hover:bg-accent/90"
         >
-          {submitting ? (isEdit ? "Saving…" : "Creating…") : isEdit ? "Save Changes" : "Create startup"}
+          {submitting ? (isEdit ? tr("Saving…", "กำลังบันทึก…") : "Creating…") : isEdit ? tr("Save Changes", "บันทึกการเปลี่ยนแปลง") : "Create startup"}
         </Button>
       </div>
       )}
