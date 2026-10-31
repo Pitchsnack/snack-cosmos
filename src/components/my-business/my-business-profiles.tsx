@@ -30,6 +30,7 @@ import { useAdminReview } from "@/components/my-business/admin-review-context";
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { CompanyMenu, DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company-menu";
+import { DeleteDraftDialog, DeleteDraftMenuItem, useDraftDeleteState } from "@/components/common/delete-draft";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { useManagedIds } from "@/hooks/use-managed-ids";
 import { SellerSetupBanner, useSellerSetup } from "@/components/my-business/signup-welcome";
@@ -337,7 +338,7 @@ function KindLabel({ kind }: { kind: View }) {
   );
 }
 
-function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode }) {
+function PublicPanel({ s, pill, onDeleted }: { s: StartupListItem; pill: React.ReactNode; onDeleted?: () => void }) {
   const { row } = useHiddenProfile(s.id);
   const { data: facts } = useEntryFacts(s.id);
   const { missingRequired } = useCompleteness(s);
@@ -347,10 +348,13 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
   const adminReview = useAdminReview();
   const navigate = useNavigate();
   const openEdit = useOpenSellerEdit();
+  const [delOpen, setDelOpen] = useState(false);
+  const delState = useDraftDeleteState("startup", s.id);
   void navigate;
 
   // Create public view and Edit public view open Edit my startup › Listing view › Listing Identity.
   const create = async () => { openEdit(s.id, "public", "identity"); };
+  const deleteDraft = { kind: "startup" as const, id: s.id, invalidate: [["startups"]] as const, onDeleted };
 
   return (
     <div>
@@ -383,14 +387,22 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
           {adminReview && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-9 w-9" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="max-w-[280px]">
                 <DropdownMenuItem asChild><Link to="/marketplace">View Marketplace</Link></DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DeleteDraftMenuItem state={delState.data} onPick={() => setDelOpen(true)} />
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+          {adminReview && (
+            <DeleteDraftDialog
+              target={delOpen ? { ...deleteDraft, name: row?.code_name || s.startup_name || "" } : null}
+              onClose={() => setDelOpen(false)}
+            />
+          )}
           {pill}
           {!adminReview && (
-            <CompanyMenu name={row?.code_name || s.startup_name || tr("New business")} onEdit={() => void create()}>
+            <CompanyMenu name={row?.code_name || s.startup_name || tr("New business")} onEdit={() => void create()} deleteDraft={deleteDraft}>
               <DropdownMenuItem asChild><Link to="/marketplace">View Marketplace</Link></DropdownMenuItem>
             </CompanyMenu>
           )}
@@ -475,11 +487,12 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
   const right = current && draftSetup ? (
     <DraftCompanyPanel role="seller" name={current.startup_name || tr("New business")} banner={<SellerSetupBanner setup={draftSetup} />}
       onEdit={() => openEdit(current.id, "private", "images")}
-      onFinish={() => void navigate({ to: "/my-startups/setup/$id", params: { id: current.id } })} />
+      onFinish={() => void navigate({ to: "/my-startups/setup/$id", params: { id: current.id } })}
+      deleteDraft={{ kind: "startup", id: current.id, invalidate: [["startups"]], onDeleted: () => closeDeleted(current.id) }} />
   ) : current && sel ? (
     <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm" style={{ overflow: "visible" }}>
       {sel.view === "public" ? (
-        <PublicPanel key={current.id} s={current} pill={pill} />
+        <PublicPanel key={current.id} s={current} pill={pill} onDeleted={() => closeDeleted(current.id)} />
       ) : (
         <>
           <div className="mb-2 flex items-center justify-between gap-3">
@@ -493,6 +506,7 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
             workspace="my-startups"
             headerPill={adminReview ? undefined : pill}
             companyMenuEdit={adminReview ? undefined : () => openEdit(current.id, "private", "images")}
+            companyMenuDeleteDraft={adminReview ? undefined : { kind: "startup", id: current.id, invalidate: [["startups"]], onDeleted: () => closeDeleted(current.id) }}
             ownerMedia={adminReview ? undefined : () => openEdit(current.id, "private", "images", "media")}
              afterFounders={!adminReview && <ReportOffers id={current.id} />}
              sectionEdit={adminReview ? undefined : (k) => (

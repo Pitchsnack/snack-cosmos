@@ -131,7 +131,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
         ) : (
           <div className="grid items-start gap-5 lg:grid-cols-[320px_1fr]">
             <div className="space-y-4">{firms.map((f) => <FirmCard key={f.id} f={f} selected={sel?.id === f.id} onClick={() => setOpenId(f.id)} />)}</div>
-            {sel && <FirmPanel f={sel} views={views?.[sel.id] ?? 0} />}
+            {sel && <FirmPanel f={sel} views={views?.[sel.id] ?? 0} onDeletedDraft={() => setOpenId(null)} />}
           </div>
         )}
       </div>
@@ -203,7 +203,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
           <div className="space-y-4">
             {list.map((f) => <FirmCard key={f.id} f={f} selected={open?.id === f.id} onClick={() => setOpenId(f.id)} />)}
           </div>
-          {open && <FirmPanel f={open} views={views?.[open.id] ?? 0} />}
+          {open && <FirmPanel f={open} views={views?.[open.id] ?? 0} onDeletedDraft={() => setOpenId(null)} />}
         </div>
       ) : mode === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -330,7 +330,7 @@ function RowTile({ icon, title, sub, right }: { icon: React.ReactNode; title: st
 /** A seller's or buyer's view of the panel (Browse advisors): no owner parts. */
 export type ClientView = { headerRight: React.ReactNode; top?: React.ReactNode; tileAction: (service: string) => React.ReactNode };
 
-export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: ClientView; views?: number }) {
+export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm; client?: ClientView; views?: number; onDeletedDraft?: () => void }) {
   const qc = useQueryClient();
   const openEdit = useOpenEdit();
   const setStatusFn = useServerFn(setAdvisorFirmStatus);
@@ -408,7 +408,8 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
         </div>
         {client ? <div className="flex items-center">{client.headerRight}</div> : <div className="flex items-center">
           {!inSetup && <ChecklistPill f={f} onItem={edit} />}
-          <CompanyMenu name={f.name || "New firm profile"} onEdit={() => edit("firm")}>
+          <CompanyMenu name={f.name || "New firm profile"} onEdit={() => edit("firm")}
+            deleteDraft={{ kind: "advisor_firm", id: f.id, invalidate: [ADVISOR_FIRMS_KEY], onDeleted: onDeletedDraft }}>
             {!inSetup && (f.status === "live"
               ? <DropdownMenuItem onClick={() => changeStatus("paused")}>Pause listing</DropdownMenuItem>
               : <DropdownMenuItem disabled={!complete || declined || busy} title={declined ? DECLINED_TIP : undefined} onClick={() => changeStatus("live")}>Publish</DropdownMenuItem>)}

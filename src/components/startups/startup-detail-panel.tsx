@@ -1,6 +1,7 @@
 import { bizName } from "@/lib/biz-name";
 import {AdminReportsControls,ReportsHubWindow} from '@/components/reports/reports-hub';
 import { OwnershipPanelSlot, OwnershipMenuItem } from "@/components/handover/ownership";
+import { DeleteDraftDialog, DeleteDraftMenuItem, useDraftDeleteState, type DeleteDraftTarget } from "@/components/common/delete-draft";
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
@@ -348,6 +349,7 @@ export function StartupDetailPanel({
   extraMenuItems,
   headerPill,
   companyMenuEdit,
+  companyMenuDeleteDraft,
   ownerMedia,
 }: {
   id: string;
@@ -357,6 +359,8 @@ export function StartupDetailPanel({
   headerPill?: ReactNode;
   /** My Company only: turns ⋮ into the company menu with Edit information first. */
   companyMenuEdit?: () => void;
+  /** My Company only: adds Delete draft under Edit information in the ⋮ menu. */
+  companyMenuDeleteDraft?: Omit<DeleteDraftTarget, "name">;
   /** Rendered right under the header (profile tabs). */
   belowHeader?: ReactNode;
   /** Seller-only reports, placed after the canonical founder section. */
@@ -419,6 +423,8 @@ export function StartupDetailPanel({
   const [confirm, setConfirm] = useState<null | "archive" | "delete">(null);
   const deleteStartup = useDeleteControlRecords();
   const qc = useQueryClient();
+  const [draftDelOpen, setDraftDelOpen] = useState(false);
+  const draftDelState = useDraftDeleteState("startup", id, !!companyMenuDeleteDraft);
   const [shareOpen, setShareOpen] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [reportsOpen,setReportsOpen]=useState(false);
@@ -567,6 +573,7 @@ export function StartupDetailPanel({
                     <>
                       <DropdownMenuItem onSelect={companyMenuEdit}><Pencil className="mr-2.5 h-4 w-4 text-[#5B6576]" /> Edit information</DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-[#EEF0F3] dark:bg-border" />
+                      {companyMenuDeleteDraft && <DeleteDraftMenuItem state={draftDelState.data} onPick={() => setDraftDelOpen(true)} />}
                     </>
                   )}
                   <DropdownMenuItem onSelect={handleCopyLink}>
@@ -677,6 +684,12 @@ export function StartupDetailPanel({
 
 
 
+      {companyMenuDeleteDraft && (
+        <DeleteDraftDialog
+          target={draftDelOpen ? { ...companyMenuDeleteDraft, name: s.startup_name || "" } : null}
+          onClose={() => setDraftDelOpen(false)}
+        />
+      )}
       <AlertDialog open={confirm === "archive"} onOpenChange={(o) => !o && setConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
