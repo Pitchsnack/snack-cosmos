@@ -102,7 +102,7 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
         event.preventDefault(); setFly(false); trigger.current?.focus();
       }
     }}>
-    {items.map(item => <Link key={item.to} to={item.to} className="pipeline-sub-link"
+    {items.map(item => <Link key={item.to} to={item.to} activeOptions={{ exact: true }} className="pipeline-sub-link"
       data-flight-target={id === 'pipeline' && item.to.endsWith('/invitations') ? 'invitations' : undefined}
       aria-current={item.current ? 'page' : undefined}
       onClick={() => { setFly(false); focusPage(item.to); }}><span>{item.label}</span>{item.suffix}</Link>)}
