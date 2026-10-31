@@ -17,7 +17,7 @@ let currentLanguage: Language = "en";
 
 /** Translate outside hooks. Components using it must re-render on language change (call useTranslation() in the root). */
 export function tr(text: string): string {
-  return currentLanguage === "th" ? TH[text] ?? text : text;
+  return currentLanguage === "th" ? TH[text] ?? EDIT_INFO_TH[text] ?? text : text;
 }
 
 type Ctx = {
@@ -64,7 +64,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
           /* noop */
         }
       },
-      t: (text: string) => (language === "th" ? TH[text] ?? text : text),
+      t: (text: string) => (language === "th" ? TH[text] ?? EDIT_INFO_TH[text] ?? text : text),
     }),
     [language],
   );
