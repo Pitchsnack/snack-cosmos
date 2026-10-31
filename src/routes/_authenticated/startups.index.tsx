@@ -91,6 +91,7 @@ function StartupsPage() {
 }
 
 function StartupsPageInner() {
+  useTranslation(); // cards switch language at once
   const { has, isControl } = usePermissions();
   const [createdId,setCreatedId] = useState<string | null>(null);
   const [runBy, setRunBy] = useState<RunByFilter>("all");
