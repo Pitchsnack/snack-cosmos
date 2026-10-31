@@ -122,3 +122,6 @@ Brief: /mnt/user-uploads/lovable-one-step-approval_2.md. No tests, no test accou
 - [x] Labels renamed everywhere: Target company price range, Products and services (forms, card, View details, filter, Share pop-up, share email); Thai city names on card/details/filter
 - [x] 44 buy-order tests pass; verified on screen EN/TH, phone 390px, dark
 - [ ] Admin's check dialog on screen — blocked: no buy order waiting for Admin right now (shares the same form fields, verified there)
+- [x] Buyer EN/TH swap: My Company + wizard + card switch at once (useTranslation subscriptions), literal &nbsp; removed from star buttons, list values translated (types/stages/geography/deal types/sectors), short Bangkok กรุงเทพฯ on cards, Thai Buddhist-year footer dates, wizard role title/hint/placeholder fixed, New investor profile + Add Investor Profile localized
+- [ ] Control buyer My Company visual check — blocked: no test account with CONTROL role (admin.acme is TENANT_ADMIN only)
+- [ ] Buyer wizard full-screen route /buyer/company/$id/setup returns 500 in preview — not caused by these edits (ssr:false shell), needs separate diagnosis
