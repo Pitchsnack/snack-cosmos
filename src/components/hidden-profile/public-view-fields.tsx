@@ -206,7 +206,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
     const fill = (
       <TooltipProvider><Tooltip><TooltipTrigger asChild>
         <button type="button" onClick={pd.fillAll} className="inline-flex h-9 items-center gap-2 rounded-[9px] border border-[#DCDFE5] bg-background px-[13px] text-[13.5px] font-medium hover:bg-muted dark:border-border">
-          <Sparkles className="h-[15px] w-[15px]" />{tr("Auto-fill this tab", "กรอกแท็บนี้อัตโนมัติ")}
+          <Sparkles className="h-[15px] w-[15px]" />{tr("Auto-fill this tab", "เติมข้อมูลแท็บนี้อัตโนมัติ")}
         </button>
       </TooltipTrigger><TooltipContent>{tr("Fills in every field on this tab for you. You can change anything afterwards.", "กรอกทุกช่องในแท็บนี้ให้ท่าน ท่านแก้ไขได้ภายหลัง")}</TooltipContent></Tooltip></TooltipProvider>
     );
@@ -222,7 +222,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
               {pd.canName ? <ListingNameField pd={pd} refNo={refNo} /> : <SuggestedNameField pd={pd} refNo={refNo} />}
             </EditSec>
             <EditSec id="headline" tone="seller" active={section === "headline"}>
-              <FieldRow label={tr("Headline", "พาดหัว")} after={<LangTag />} htmlFor="hp-headline" missing={!both("headline")} right={`${tv("headline").length}/120`} suggest={ideas.headlineIdea ? () => tset("headline", ideas.headlineIdea) : undefined}>
+              <FieldRow label={tr("Headline", "หัวข้อ")} after={<LangTag />} htmlFor="hp-headline" missing={!both("headline")} right={`${tv("headline").length}/120`} suggest={ideas.headlineIdea ? () => tset("headline", ideas.headlineIdea) : undefined}>
                 <Input id="hp-headline" lang={lang} maxLength={120} value={tv("headline")} placeholder={tph("headline", ideas.headlineIdea)} onChange={(e) => tset("headline", e.target.value)} className={cn(BOX, !both("headline") && MISS_BOX, flag("headline"))} />
               </FieldRow>
               <FlagMsg pd={pd} k="headline" />
@@ -241,7 +241,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
                     const filled = !!h.trim();
                     const ring = !hlEn[i]?.trim() && !hlTh[i]?.trim();
                     const req = i < 3;
-                    const name = req ? tr(`Highlight ${i + 1}`, `จุดเด่นข้อที่ ${i + 1}`) : tr("Highlight 4 (optional)", "จุดเด่นข้อที่ 4 (ไม่บังคับ)");
+                    const name = req ? tr(`Highlight ${i + 1}`, `จุดเด่นที่ ${i + 1}`) : tr("Highlight 4 (optional)", "จุดเด่นที่ 4 (ไม่บังคับ)");
                     return (
                       <div key={i} className="flex min-h-12 items-center gap-3 border-t border-[#EEF0F3] px-[14px] first:border-t-0 focus-within:bg-[#FAFBFC] dark:border-border dark:focus-within:bg-muted/40">
                         {filled ? (
@@ -461,7 +461,7 @@ function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string 
   
       </div>
       <div className="relative">
-        <Input id="hp-code_name" ref={input} value={d.code_name} placeholder={tr("Type a name or pick a suggestion", "พิมพ์ชื่อ หรือเลือกจากชื่อที่แนะนำ")}
+        <Input id="hp-code_name" ref={input} value={d.code_name} placeholder={tr("Type a name or pick a suggestion", "พิมพ์ชื่อหรือเลือกจากชื่อที่แนะนำ")}
           aria-describedby={cn(tipId, taken && errId)} aria-invalid={taken || undefined} aria-expanded={open} aria-haspopup="listbox"
           onMouseDown={() => setOpen(true)}
           onKeyDown={(e) => { if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); requestAnimationFrame(() => wrap.current?.querySelector<HTMLElement>("[data-name-opt]")?.focus()); } if (e.key === "Escape") setOpen(false); }}
