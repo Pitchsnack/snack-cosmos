@@ -13,7 +13,7 @@ export function CompanyMenu({ name, onEdit, deleteDraft, children }: {
   const id = useId();
   const label = name?.trim() || "Company";
   const [delOpen, setDelOpen] = useState(false);
-  const delState = useDraftDeleteState(deleteDraft?.kind ?? "startup", deleteDraft?.id ?? "00000000-0000-0000-0000-000000000000");
+  const delState = useDraftDeleteState(deleteDraft?.kind ?? "startup", deleteDraft?.id ?? "00000000-0000-0000-0000-000000000000", !!deleteDraft);
   const state = deleteDraft ? delState.data : undefined;
   return (
     <>

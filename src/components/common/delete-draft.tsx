@@ -25,11 +25,12 @@ export type DeleteDraftTarget = {
   onDeleted?: () => void;
 };
 
-export function useDraftDeleteState(kind: DraftKind, id: string) {
+export function useDraftDeleteState(kind: DraftKind, id: string, enabled = true) {
   return useQuery({
     queryKey: ["draft-delete-state", kind, id],
     queryFn: () => deleteDraftState({ data: { kind, id } }),
     staleTime: 15_000,
+    enabled,
   });
 }
 
