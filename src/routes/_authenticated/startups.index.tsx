@@ -1,3 +1,4 @@
+import { useTranslation } from "@/i18n/language";
 import {CreatedDirectoryRow} from "@/components/common/created-directory-row";
 import {REPORT_KEYS} from '@/lib/reports-hub';
 import { useEffect, useMemo, useRef, useState } from "react";
