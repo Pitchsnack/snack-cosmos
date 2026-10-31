@@ -48,6 +48,8 @@ interface CountryComboboxProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  /** Display language for country names; the saved value stays English. */
+  lang?: "en" | "th";
 }
 
 export function CountryCombobox({
@@ -56,6 +58,7 @@ export function CountryCombobox({
   placeholder = "Select country...",
   disabled = false,
   className,
+  lang = "en",
 }: CountryComboboxProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -73,7 +76,7 @@ export function CountryCombobox({
             className,
           )}
         >
-          <span className="truncate">{value || placeholder}</span>
+          <span className="truncate">{value ? countryLabel(value, lang) : placeholder}</span>
           <span className="ml-1 flex items-center gap-1 shrink-0">
             {value && !disabled && (
               <span
