@@ -337,7 +337,7 @@ function KindLabel({ kind }: { kind: View }) {
   );
 }
 
-function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode }) {
+function PublicPanel({ s, pill, onDeleted }: { s: StartupListItem; pill: React.ReactNode; onDeleted?: () => void }) {
   const { row } = useHiddenProfile(s.id);
   const { data: facts } = useEntryFacts(s.id);
   const { missingRequired } = useCompleteness(s);
@@ -347,10 +347,13 @@ function PublicPanel({ s, pill }: { s: StartupListItem; pill: React.ReactNode })
   const adminReview = useAdminReview();
   const navigate = useNavigate();
   const openEdit = useOpenSellerEdit();
+  const [delOpen, setDelOpen] = useState(false);
+  const delState = useDraftDeleteState("startup", s.id);
   void navigate;
 
   // Create public view and Edit public view open Edit my startup › Listing view › Listing Identity.
   const create = async () => { openEdit(s.id, "public", "identity"); };
+  const deleteDraft = { kind: "startup" as const, id: s.id, invalidate: [["startups"]] as const, onDeleted };
 
   return (
     <div>
