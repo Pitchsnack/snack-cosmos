@@ -3,6 +3,8 @@ import { Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useTr } from "@/components/common/edit-info-popup";
+import { useTextLang } from "@/components/common/text-lang";
+import { isoLabel, licenceLabel } from "@/i18n/th-edit-info";
 import { WIZARD_ISO, WIZARD_LICENCES } from "@/lib/seller-wizard";
 import type { RegulatoryLicence } from "@/lib/compliance";
 import { cn } from "@/lib/utils";
