@@ -427,6 +427,7 @@ function SidebarBody({
           );
           const soonItems = take(COMING_SOON_LABELS);
           const placed = new Set([
+            'Reports',
             ...CONTROL_SUBMENUS.flatMap((s) => s.items),
             ...CONTROL_SECTIONS.flatMap((s) => s.labels),
             ...COMING_SOON_LABELS,
