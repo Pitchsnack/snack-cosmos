@@ -684,6 +684,12 @@ export function StartupDetailPanel({
 
 
 
+      {companyMenuDeleteDraft && (
+        <DeleteDraftDialog
+          target={draftDelOpen ? { ...companyMenuDeleteDraft, name: s.startup_name || "" } : null}
+          onClose={() => setDraftDelOpen(false)}
+        />
+      )}
       <AlertDialog open={confirm === "archive"} onOpenChange={(o) => !o && setConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
