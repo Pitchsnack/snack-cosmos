@@ -7,6 +7,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useTr } from "@/components/common/edit-info-popup";
 
 export interface UnsavedChangesDialogProps {
   open: boolean;
@@ -42,13 +43,13 @@ export function UnsavedChangesDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <Button variant="outline" onClick={onContinueEditing} disabled={saving}>
-            Continue Editing
+            {tr("Continue Editing", "แก้ไขต่อ")}
           </Button>
           <Button variant="destructive" onClick={onDiscard} disabled={saving}>
-            Discard Changes
+            {tr("Discard Changes", "ทิ้งการเปลี่ยนแปลง")}
           </Button>
           <Button onClick={onSave} disabled={saving || !canSave}>
-            {saving ? "Saving…" : "Save Changes"}
+            {saving ? tr("Saving…", "กำลังบันทึก…") : tr("Save Changes", "บันทึกการเปลี่ยนแปลง")}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
