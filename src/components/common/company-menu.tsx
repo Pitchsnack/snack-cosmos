@@ -1,12 +1,22 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import { EllipsisVertical, Pencil } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DeleteDraftDialog, DeleteDraftMenuItem, useDraftDeleteState, type DeleteDraftTarget } from "@/components/common/delete-draft";
 
 /** My Company panel ⋮ menu: Edit information first, then the panel's own items. */
-export function CompanyMenu({ name, onEdit, children }: { name: string; onEdit: () => void; children?: React.ReactNode }) {
+export function CompanyMenu({ name, onEdit, deleteDraft, children }: {
+  name: string; onEdit: () => void;
+  /** Adds "Delete draft" under Edit information; the confirm dialog lives outside the menu. */
+  deleteDraft?: Omit<DeleteDraftTarget, "name">;
+  children?: React.ReactNode;
+}) {
   const id = useId();
   const label = name?.trim() || "Company";
+  const [delOpen, setDelOpen] = useState(false);
+  const delState = useDraftDeleteState(deleteDraft?.kind ?? "startup", deleteDraft?.id ?? "00000000-0000-0000-0000-000000000000");
+  const state = deleteDraft ? delState.data : undefined;
   return (
+    <>
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <button type="button" aria-label={`${label} menu`} aria-haspopup="menu" aria-controls={id}
@@ -15,11 +25,20 @@ export function CompanyMenu({ name, onEdit, children }: { name: string; onEdit: 
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent id={id} aria-label={label} align="end" sideOffset={6} collisionPadding={8}
-        className="z-50 min-w-[220px] rounded-[12px] border-[#E5E7EB] p-1.5 shadow-[0_12px_32px_rgba(16,24,40,.14),0_2px_6px_rgba(16,24,40,.06)] dark:border-border [&_[role=menuitem]]:h-10 [&_[role=menuitem]]:gap-2.5 [&_[role=menuitem]]:rounded-[8px] [&_[role=menuitem]]:px-3 [&_[role=menuitem]]:text-[14px] [&_[role=menuitem]]:font-medium [&_[role=menuitem]]:whitespace-nowrap">
+        className="z-50 min-w-[220px] max-w-[280px] rounded-[12px] border-[#E5E7EB] p-1.5 shadow-[0_12px_32px_rgba(16,24,40,.14),0_2px_6px_rgba(16,24,40,.06)] dark:border-border [&_[role=menuitem]]:h-10 [&_[role=menuitem]]:gap-2.5 [&_[role=menuitem]]:rounded-[8px] [&_[role=menuitem]]:px-3 [&_[role=menuitem]]:text-[14px] [&_[role=menuitem]]:font-medium [&_[role=menuitem]]:whitespace-nowrap">
         <DropdownMenuItem onSelect={onEdit}><Pencil className="h-4 w-4 text-[#5B6576] dark:text-muted-foreground" />Edit information</DropdownMenuItem>
-        {children && <><DropdownMenuSeparator className="bg-[#EEF0F3] dark:bg-border" />{children}</>}
+        {(children || deleteDraft) && <DropdownMenuSeparator className="bg-[#EEF0F3] dark:bg-border" />}
+        {deleteDraft && <DeleteDraftMenuItem state={state} onPick={() => setDelOpen(true)} />}
+        {children}
       </DropdownMenuContent>
     </DropdownMenu>
+    {deleteDraft && (
+      <DeleteDraftDialog
+        target={delOpen ? { ...deleteDraft, name } : null}
+        onClose={() => setDelOpen(false)}
+      />
+    )}
+    </>
   );
 }
 
