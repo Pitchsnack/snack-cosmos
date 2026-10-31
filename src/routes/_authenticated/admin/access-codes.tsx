@@ -183,7 +183,7 @@ function AccessCodesPage() {
                 <p className="mt-1 text-[12.5px] leading-[1.55] text-[#4B5563]">{c.invite_sent_at ? <>Emailed to <b>{c.invite_email}</b> on {dateEn(c.invite_sent_at)} by {personName(admins.get(c.invite_sent_by!))}.</> : 'Not emailed. Copy the invitation to send it yourself, for example on LINE.'}</p>
                 <FreeBox role={c.role} pn={pn} months={c.free_months} plans={plans} usual={usual} />
                 <div className="mt-2.5 flex gap-1.5"><Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(inviteCopy(invite(c))); toast.success('Invitation copied, in Thai and English.'); }}>Copy invitation</Button>
-                  {c.invite_email && <Button size="sm" variant="outline" onClick={async () => { try { await sendInvFn({ data: { id: c.id } }); toast.success(`Invitation emailed to ${c.invite_email}.`); reload(); } catch (e: any) { toast.error(e.message); } }}>{c.invite_sent_at ? 'Send again' : 'Email invitation'}</Button>}</div>
+                  {c.invite_email && <Button size="sm" variant="outline" className={c.invite_sent_at ? '' : 'border-[#D97706] bg-[#D97706] text-white hover:bg-[#B45309] hover:text-white'} onClick={async () => { try { await sendInvFn({ data: { id: c.id } }); toast.success(`Invitation emailed to ${c.invite_email}.`); reload(); } catch (e: any) { toast.error(e.message); } }}>{c.invite_sent_at ? 'Send again' : 'Email invitation'}</Button>}</div>
               </div>
               <div className="px-4 py-[14px]">
                 <Cap>Accounts · {used.length} of {c.max_accounts}</Cap>
