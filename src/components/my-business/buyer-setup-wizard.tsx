@@ -687,7 +687,7 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
       {header(tr("Auto Enrich"), tr("Almost done"), 100)}
       <div className={card}>
         <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{state === "done" ? tr("Your profile is filled in") : tr("Filling in your profile")}</h1>
-        <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{state === "done" ? tr(`We found ${n} details. Check them in the next step.`) : `We're reading ${domain} and public records. This takes a few seconds.`}</p>
+        <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{state === "done" ? tr("We found {n} details. Check them in the next step.").replace("{n}", String(n)) : `We're reading ${domain} and public records. This takes a few seconds.`}</p>
         <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
           {sources.filter((s) => s[3]).map(([t, sub, what]) => (
             <div key={t} className="flex items-center gap-3 border-b border-[#F0F1F4] px-4 py-3 last:border-0 dark:border-border">
@@ -701,7 +701,7 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
           <button type="button" className={btnO} onClick={onBack}>{tr("Back to answers")}</button>
           <div className="flex w-full gap-2.5 sm:ml-auto sm:w-auto">
             <button type="button" className={`${btnO} flex-1 sm:flex-none`} onClick={onExit}>{tr("Save & exit")}</button>
-            <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={state !== "done"} onClick={() => onDone(res)}>{tr("Review & complete")}</button>
+            <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={state !== "done"} onClick={() => onDone(res)}>{tr("Continue")}</button>
           </div>
         </div>
       </div>
