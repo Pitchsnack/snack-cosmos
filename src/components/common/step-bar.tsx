@@ -43,7 +43,7 @@ export function StepBar({ steps, lineTo, onPick, variant = "wizard", label, step
                     s.state === "todo" && "border-[1.5px] border-[#C9CED8] bg-white font-semibold text-[#6B7280] shadow-[0_0_0_4px_var(--sb-ring)] dark:border-border dark:bg-card dark:text-muted-foreground")}>
                   {s.state === "done" ? <Check className={b ? "h-3.5 w-3.5" : "h-4 w-4"} strokeWidth={3} /> : s.state === "missed" && missedIcon ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" className="h-4 w-4 max-[599px]:h-3 max-[599px]:w-3"><path d="M12 5v9M12 19h.01" /></svg> : i + 1}
                 </span>
-                <span aria-hidden="true" className={cn("mt-2 w-[calc(100%-4px)] min-w-0 whitespace-normal text-center [word-break:keep-all] [overflow-wrap:anywhere] group-hover:underline max-[599px]:hidden", lots ? "text-[11.5px] leading-[1.3]" : b ? "mt-1.5 text-[12px] leading-[1.35]" : "text-[12.5px] leading-[1.35]",
+                <span aria-hidden="true" lang={/[\u0E00-\u0E7F]/.test(s.label) ? "th" : "en"} className={cn("mt-2 w-[calc(100%-4px)] min-w-0 whitespace-normal hyphens-auto text-center [word-break:keep-all] [overflow-wrap:anywhere] group-hover:underline max-[599px]:hidden", lots ? "text-[11.5px] leading-[1.3]" : b ? "mt-1.5 text-[12px] leading-[1.35]" : "text-[12.5px] leading-[1.35]",
                   s.state === "done" && "font-medium text-[#374151] dark:text-foreground",
                   s.state === "here" && "font-bold text-[#151A28] dark:text-foreground",
                   s.state === "missed" && "font-semibold text-[#B91C1C] dark:text-red-400",
