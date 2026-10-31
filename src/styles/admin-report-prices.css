@@ -1,0 +1,46 @@
+.admin-report-prices {--report-picked:var(--muted);--report-draft-bg:var(--plan-draft-bg);max-width:1600px;margin:auto;padding:24px;}
+.report-price-layout {display:grid;grid-template-columns:320px minmax(0,1fr);gap:20px;align-items:start;margin-top:18px;}
+.report-price-list {border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--card);}
+.report-price-list .report-price-row {display:block;width:100%;height:auto;white-space:normal;text-align:left;border-radius:0;border-bottom:1px solid var(--border);padding:12px 16px;}
+.report-price-row[aria-current=true] {background:var(--report-picked);box-shadow:inset 3px 0 var(--primary);}
+.report-price-row:last-child {border-bottom:0;}
+.report-price-line {display:flex;gap:10px;align-items:start;justify-content:space-between;}
+.report-price-line b {font-size:14.5px;}
+.report-price-line strong {text-align:right;font-size:14px;flex-shrink:0;}
+.report-price-line s {display:block;font-weight:400;font-size:11.5px;color:var(--muted-foreground);}
+.report-price-meta {display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px;font-size:12.5px;font-weight:400;color:var(--muted-foreground);}
+.report-price-draft {display:block;margin-top:5px;font-size:12px;color:var(--plan-draft-fg);}
+.report-price-editor {min-width:0;container-type:inline-size;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.report-price-editor header {padding:18px 22px;border-bottom:1px solid var(--border);}
+.report-price-editor h2 {font-size:22px;font-weight:700;margin:5px 0;}
+.report-price-editor h3 {font-size:12px;font-weight:700;text-transform:uppercase;color:var(--muted-foreground);margin-bottom:14px;}
+.report-price-editor small,.report-price-help {font-size:12.5px;color:var(--muted-foreground);}
+.report-price-sections {display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);}
+.report-price-section {min-width:0;padding:18px 22px;border-bottom:1px solid var(--border);}
+.report-price-section:first-child {border-right:1px solid var(--border);}
+.report-price-section.full {grid-column:1/-1;}
+.report-price-field {display:grid;gap:6px;margin-top:16px;}
+.report-price-field>label {font-size:13px;font-weight:600;}
+.report-price-check {display:flex;align-items:start;gap:8px;margin-top:10px;font-size:14px;}
+.report-price-check small {display:block;}
+.report-price-summary {margin-top:16px;padding:12px;background:var(--plan-live-bg);color:var(--plan-live-fg);border-radius:6px;font-size:13.5px;}
+.report-plan-tables {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;margin-top:16px;}
+.report-plan-tables table {width:100%;font-size:13.5px;}
+.report-plan-tables td {padding:9px 0;border-bottom:1px solid var(--border);}
+.report-plan-tables td:last-child {text-align:right;}
+.report-stepper {display:inline-flex;align-items:center;border:1px solid var(--input);border-radius:6px;overflow:hidden;}
+.report-stepper button {width:32px;height:32px;border-radius:0;}
+.report-stepper output {width:36px;text-align:center;font-weight:700;border-inline:1px solid var(--border);}
+.report-preview-row {display:flex;flex-wrap:wrap;gap:10px;align-items:center;border:1px solid var(--border);border-radius:6px;padding:14px;margin-top:10px;}
+.report-preview-row>div {flex:1;min-width:100px;}
+.report-preview-row small {display:block;margin-top:4px;}
+.report-price-chips {display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.report-price-chips span {border:1px solid var(--border);border-radius:20px;font-size:12px;padding:4px 9px;}
+.report-price-history {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px;font-size:13px;}
+.report-price-history li {overflow-wrap:anywhere;list-style:none;}
+.report-price-note {display:flex;gap:8px;align-items:start;border:1px solid var(--border);background:var(--card);border-radius:6px;padding:10px 12px;font-size:13px;color:var(--muted-foreground);margin-top:12px;}
+@container (max-width:680px){.report-price-sections {grid-template-columns:minmax(0,1fr)}.report-price-section:first-child {border-right:0}}
+@container (max-width:560px){.report-plan-tables,.report-price-history {grid-template-columns:minmax(0,1fr)}}
+@media(max-width:1180px){.report-price-layout {grid-template-columns:minmax(0,1fr)}.report-price-list {display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}.report-price-row {border-right:1px solid var(--border)}}
+@media(max-width:640px){.admin-report-prices {padding:18px 14px}.report-price-section,.report-price-editor header {padding:16px}.report-price-list {grid-template-columns:minmax(0,1fr)}}
+.dark .admin-plans {--plan-draft-bg:color-mix(in srgb,var(--info) 15%,var(--card));--plan-draft-fg:var(--info);--plan-live-bg:color-mix(in srgb,var(--success) 15%,var(--card));--plan-live-fg:var(--success);--plan-scheduled-bg:color-mix(in srgb,var(--warning) 15%,var(--card));--plan-scheduled-fg:var(--warning);}
