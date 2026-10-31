@@ -86,8 +86,9 @@ export function DraftCompanyCard({ role, name, typeLine, typeClass, founded, siz
 }
 
 /** Draft panel: header with tile + name + Draft line + ⋮, the setup banner, and the footer. */
-export function DraftCompanyPanel({ role, name, banner, onEdit, onFinish }: {
+export function DraftCompanyPanel({ role, name, banner, onEdit, onFinish, deleteDraft }: {
   role: "seller" | "buyer"; name: string; banner: React.ReactNode; onEdit: () => void; onFinish: () => void;
+  deleteDraft?: Omit<DeleteDraftTarget, "name">;
 }) {
   const t = TINT[role];
   const line = role === "seller" ? "Draft · buyers can't see this business yet" : "Draft · sellers can't see this profile yet";
@@ -99,7 +100,7 @@ export function DraftCompanyPanel({ role, name, banner, onEdit, onFinish }: {
           <h2 className="truncate text-[21px] font-bold leading-tight">{name || "Untitled"}</h2>
           <div className="text-[13px] font-medium text-[#92400E] dark:text-amber-400">{line}</div>
         </div>
-        <CompanyMenu name={name} onEdit={onEdit} />
+        <CompanyMenu name={name} onEdit={onEdit} deleteDraft={deleteDraft} />
       </div>
       <div className="p-5 [&>*]:mb-0">{banner}</div>
       {/* Seller: the banner's button is the way into setup, so no footer until it's done. */}
