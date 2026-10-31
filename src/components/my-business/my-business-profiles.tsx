@@ -30,6 +30,7 @@ import { useAdminReview } from "@/components/my-business/admin-review-context";
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { CompanyMenu, DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company-menu";
+import { DeleteDraftDialog, DeleteDraftMenuItem, useDraftDeleteState } from "@/components/common/delete-draft";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { useManagedIds } from "@/hooks/use-managed-ids";
 import { SellerSetupBanner, useSellerSetup } from "@/components/my-business/signup-welcome";
