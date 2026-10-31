@@ -225,7 +225,8 @@ export function BuyerMyCompany() {
           <DraftCompanyCard role="buyer" name={nm} typeLine={org.type ? typeName(org.type) : null} typeClass={tone.fg}
             founded={individual ? null : (iv as any).year_founded} size={individual ? null : (iv as any).company_size_band} website={iv.website_url} />
           <DraftCompanyPanel role="buyer" name={nm} banner={<SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
-            onEdit={() => openProfileEdit({ from: "public" })} onFinish={() => openWizard()} />
+            onEdit={() => openProfileEdit({ from: "public" })} onFinish={() => openWizard()}
+            deleteDraft={{ kind: "investor", id: iv.id, invalidate: [KEY, ["buyer-investor"]] }} />
         </div>
       </div>
     );
@@ -525,7 +526,8 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
       <div className="px-5 pt-5">
         <PanelHead kind="public" title={title} meta={[p.ref_no, p.country].filter(Boolean).join(" · ")}
           thumb={<div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-[10px]", tone.bg, tone.fg)}><TypeIcon type={org.type} className="h-6 w-6" /></div>}
-          editLabel="Edit information" onEdit={() => openProfileEdit({ section: "description", from: "public" })} pill={pill} />
+          editLabel="Edit information" onEdit={() => openProfileEdit({ section: "description", from: "public" })} pill={pill}
+          deleteDraft={iv ? { kind: "investor", id: iv.id, invalidate: [KEY, ["buyer-investor"]] } : undefined} />
         {iv && <div className="mt-4"><OwnerHandoverBox kind="investor" id={iv.id} onEdit={(x) => openProfileEdit({ section: x.edit.section as never, from: (x.edit.view ?? "public") as never })} /></div>}
         {iv && p.status !== "live" && !setupDone && <SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
         <div className="flex flex-col gap-3 rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
