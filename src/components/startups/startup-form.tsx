@@ -1336,7 +1336,7 @@ export function StartupForm({
       </div>
       </div>
 <CompactFields>        <div className="space-y-1.5">
-          <Label>{tr("Company Type", "ประเภทบริษัท")}</Label>
+          <div className="flex h-6 items-center"><Label>{tr("Company Type", "ประเภทบริษัท")}</Label></div>
           {(() => {
             const fromAdmin = companyTypeSource === "admin" && !companyTypeReset;
             const label = (v: string) => (th && v === "Individual" ? "บุคคลธรรมดา" : v);
@@ -1360,7 +1360,7 @@ export function StartupForm({
           })()}
         </div>
         <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="size">{secOn("size") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
-          <Label>{tr("Company Size", "ขนาดบริษัท")}</Label>
+          <div className="flex h-6 items-center"><Label>{tr("Company Size", "ขนาดบริษัท")}</Label></div>
           <Select value={companySize || "none"} onValueChange={(v) => setCompanySize(v === "none" ? "" : v)}>
             <SelectTrigger><SelectValue placeholder={tr("Select company size", "เลือกขนาดบริษัท")} /></SelectTrigger>
             <SelectContent>
