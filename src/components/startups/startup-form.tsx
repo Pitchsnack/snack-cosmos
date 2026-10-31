@@ -1521,13 +1521,13 @@ export function StartupForm({
 
       {/* Descriptions */}
       <EditSec id="description" tone="seller" active={secOn("description")} className="space-y-1.5">
-        <Label className={miss(!shortBi.filled) ? MISSING_LABEL : undefined}>Short Description<LangTag /></Label>
+        <Label className={miss(!shortBi.filled) ? MISSING_LABEL : undefined}>{tr("Short Description", "คำอธิบายสั้น")}<LangTag /></Label>
         <Textarea rows={2} maxLength={500} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} lang={shortBi.lang}
           placeholder={miss(!shortBi.filled) ? missingPh("Short Description") : shortBi.placeholder()}
           className={miss(!shortBi.filled) ? MISSING_INPUT : undefined} />
       </EditSec>
       <EditSec id="product" tone="seller" active={secOn("product")} className="space-y-1.5">
-        <Label className={miss(!longBi.filled) ? MISSING_LABEL : undefined}>Long Description<LangTag /></Label>
+        <Label className={miss(!longBi.filled) ? MISSING_LABEL : undefined}>{tr("Long Description", "คำอธิบายแบบละเอียด")}<LangTag /></Label>
         <Textarea rows={4} maxLength={5000} value={longDescription} onChange={(e) => setLongDescription(e.target.value)} lang={longBi.lang}
           placeholder={miss(!longBi.filled) ? missingPh("Long Description") : longBi.placeholder()}
           className={`startup-long-description ${miss(!longBi.filled) ? MISSING_INPUT : ""}`} />
