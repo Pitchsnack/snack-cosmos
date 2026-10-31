@@ -450,7 +450,7 @@ export function SellerWizard({
               className={cur.id === "web" ? "seller-action seller-action-back" : "rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"}>{pos === 0 && full == null ? "ยกเลิก" : tr("Back")}</Button>
             {canSkip && cur.id !== "web" && (
               <button type="button" className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"
-                ref={skipRef} onClick={() => { if (cur.id === "web") setSkipAsk(true); else advance(); }}>{tr("Skip")}</button>
+                ref={skipRef} onClick={() => advance()}>{tr("Skip")}</button>
             )}
             {cur.id === "web" && <>
               <span className="seller-actions-spacer" />
