@@ -1,5 +1,6 @@
 // Setup wizard Thai wording (from the translation sheet). Merged into TH.
 export const TH_WIZARDS: Record<string, string> = {
+  "Answer {names} before you continue.": "กรุณาตอบ {names} ก่อนไปต่อ",
   "Below ฿50M": "ต่ำกว่า ฿50M",
   "About you": "เกี่ยวกับท่าน",
   "About the company": "เกี่ยวกับบริษัท",

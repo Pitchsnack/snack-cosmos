@@ -646,7 +646,7 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, mi
               const red = kind === "req" && (empty || !!err);
               const status = red ? <b className="flex items-center gap-2 font-semibold text-destructive"><span className="h-2 w-2 shrink-0 rounded-full bg-destructive" />{tr("Not answered")}</b>
                 : id === "desc" && err ? <b className="font-semibold text-destructive">{tr("Needs a fix")}</b>
-                : empty ? <span className="text-muted-foreground">{tr("Not given") === "Not given" ? setupText("Not given") : tr("Not given")}</span> : null;
+                : empty ? <span className="text-muted-foreground">{tr("Not given")}</span> : null;
               return (
                 <div key={k + i} className={`flex items-start gap-3 border-b border-border px-4 py-3 text-[14px] last:border-0 ${red ? "bg-destructive/10" : ""}`}>
                   <span className="w-[150px] max-sm:w-[100px] flex-none text-muted-foreground">{k}</span>
@@ -661,12 +661,10 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, mi
           </div>
         </div>
       ))}
-      {missingNames.length > 0 && <p className="text-sm text-destructive">{useReviewWarning(missingNames)}</p>}
+      {missingNames.length > 0 && <p className="text-sm text-destructive">{tr("Answer {names} before you continue.").replace("{names}", missingNames.join(", "))}</p>}
     </div>
   );
 }
-
-function useReviewWarning(names: string[]) { return tr("Answer {names} before you continue.").replace("{names}", names.join(", ")); }
 
 type HeaderFn = (sec: string, right: string, pct: number) => React.ReactNode;
 
