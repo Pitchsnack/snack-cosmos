@@ -1,0 +1,2 @@
+-- Applied directly: report_quote treats admin accounts (testing seller companies) as sellers for free periods.
+DO $$ DECLARE d text; BEGIN SELECT pg_get_functiondef('public.report_quote(uuid,text)'::regprocedure) INTO d; IF position('WHEN ''admin'' THEN p.free_for_sellers' in d)=0 THEN d:=replace(d,'WHEN ''seller'' THEN p.free_for_sellers','WHEN ''seller'' THEN p.free_for_sellers WHEN ''admin'' THEN p.free_for_sellers'); EXECUTE d; END IF; END $$;

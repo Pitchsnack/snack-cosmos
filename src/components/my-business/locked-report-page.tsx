@@ -171,7 +171,7 @@ export function LockedReportPage({ kind, companyId, embedded = false, onGoFinanc
             <div className="flex flex-wrap items-center gap-2">
               <span title={needsFinancials ? "Your verified financial report must be delivered first" : order ? `Order ${order.ref} is being prepared` : "Pay for your report"}>
                 <Button disabled={!company || needsFinancials || !!order || pay.isPending} onClick={handlePay} className="bg-sidebar text-sidebar-foreground">
-                  {order ? `Ordered · ${order.ref}` : `Pay · ${reportPrice(kind)}`}
+                  {order ? `Ordered · ${order.ref}` : reportPrice(kind) === "Free" ? "Order free" : `Pay · ${reportPrice(kind)}`}
                 </Button>
               </span>
               <Button variant="outline" onClick={() => { setSampleData(makeSampleReport()); setSample(kind); }}>View sample</Button>
