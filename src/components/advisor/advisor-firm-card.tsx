@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { sectorChips } from "@/lib/business-types";
 import type React from "react";
@@ -25,7 +26,7 @@ export function FirmLogo({ f, size = 52, radius = 13, ring = true }: { f: Pick<A
 export function VerifiedAdvisorChip({ small }: { small?: boolean }) {
   return (
     <span className={cn("inline-flex items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 font-semibold text-[#15803D]", small ? "h-5 text-[11px]" : "h-[22px] text-[11px]")}>
-      <BadgeCheck className="h-3 w-3" /> Verified advisor
+      <BadgeCheck className="h-3 w-3" />{setupText("Verified advisor")}
     </span>
   );
 }
@@ -144,7 +145,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, foot,
             <div className="mt-1.5 flex items-center gap-1.5 text-[13px]">
               <Stars value={avg} />
               <span className="font-bold text-[#151A28] dark:text-foreground">{avg.toFixed(1)}</span>
-              <span className="text-[#6A7181]">({n} review{n === 1 ? "" : "s"})</span>
+              <span className="text-[#6A7181]">({n}{setupText("review")}{n === 1 ? "" : "s"})</span>
             </div>
           )}
         </div>
@@ -179,7 +180,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, foot,
           onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
           className="flex w-full items-center justify-center gap-1 border-t border-border py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-muted/40 hover:text-foreground"
         >
-          {open ? <>Show less <ChevronUp className="h-4 w-4" /></> : <>Show more <ChevronDown className="h-4 w-4" /></>}
+          {open ? <>{setupText("Show less")} <ChevronUp className="h-4 w-4" /></> : <>{setupText("Show more")} <ChevronDown className="h-4 w-4" /></>}
         </button>
       )}
     </div>

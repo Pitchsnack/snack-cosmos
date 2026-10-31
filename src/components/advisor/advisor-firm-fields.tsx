@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { tr } from "@/i18n/language";
 import { LangTag, useTextLang } from "@/components/common/text-lang";
 import { useRef, useState } from "react";
@@ -162,15 +163,15 @@ export function LogoDrop({ logo, onFile, onRemove, error, busy }: {
               <div className="truncate text-[15px] font-semibold">{logo.source === "enrich" ? "Found on your website" : logo.name ?? tr("Your logo")}</div>
               <div className="text-[13px] text-[#6B7280]">{logo.source === "enrich" ? "Replace it with your own file if you like." : `${logo.sizeKb != null ? `${logo.sizeKb} KB · ` : ""}sellers and buyers see it on your card`}</div>
               <div className="mt-2.5 flex items-center gap-3">
-                <button type="button" className={btn} disabled={busy} onClick={() => input.current?.click()}><Upload className="h-4 w-4" /> Replace</button>
-                <button type="button" className="text-[14px] font-medium text-[#434A5C] hover:underline dark:text-muted-foreground" onClick={onRemove}>Remove</button>
+                <button type="button" className={btn} disabled={busy} onClick={() => input.current?.click()}><Upload className="h-4 w-4" />{setupText("Replace")}</button>
+                <button type="button" className="text-[14px] font-medium text-[#434A5C] hover:underline dark:text-muted-foreground" onClick={onRemove}>{setupText("Remove")}</button>
               </div>
             </>
           ) : (
             <>
-              <div className="text-[15px] font-semibold">Drag your logo here, or choose a file</div>
-              <div className="text-[13px] text-[#6B7280]">PNG, JPG or SVG, up to 2 MB</div>
-              <button type="button" className={cn(btn, "mt-2.5")} disabled={busy} onClick={() => input.current?.click()}><Upload className="h-4 w-4" /> Choose a file</button>
+              <div className="text-[15px] font-semibold">{setupText("Drag your logo here, or choose a file")}</div>
+              <div className="text-[13px] text-[#6B7280]">{setupText("PNG, JPG or SVG, up to 2 MB")}</div>
+              <button type="button" className={cn(btn, "mt-2.5")} disabled={busy} onClick={() => input.current?.click()}><Upload className="h-4 w-4" />{setupText("Choose a file")}</button>
             </>
           )}
         </div>
@@ -202,11 +203,11 @@ export function LogoRow({ logo, onFile, onRemove, error, busy }: { logo: LogoSta
           <div className="mt-0.5 flex gap-2">
             {has ? (
               <>
-                <button type="button" className={link} disabled={busy} onClick={() => input.current?.click()}>Replace logo</button>
+                <button type="button" className={link} disabled={busy} onClick={() => input.current?.click()}>{setupText("Replace logo")}</button>
                 <span className="text-[#9CA3AF]">·</span>
-                <button type="button" className={link} onClick={onRemove}>Remove</button>
+                <button type="button" className={link} onClick={onRemove}>{setupText("Remove")}</button>
               </>
-            ) : <button type="button" className={link} disabled={busy} onClick={() => input.current?.click()}>Upload logo</button>}
+            ) : <button type="button" className={link} disabled={busy} onClick={() => input.current?.click()}>{setupText("Upload logo")}</button>}
           </div>
         </div>
       </div>

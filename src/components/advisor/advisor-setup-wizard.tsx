@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ManyTypeQuestion, advisorWords, manyError, useL } from "@/components/common/business-type-question";
@@ -349,11 +350,11 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           {FIRM_TYPE_OPTIONS.map((t, i) => {
             const on = a.type === t.value;
             return (
-              <button key={t.value} type="button" role="radio" aria-checked={on} data-v={t.value} tabIndex={on || (!a.type && i === 0) ? 0 : -1}
+              <button key={setupText(t.value)} type="button" role="radio" aria-checked={on} data-v={setupText(t.value)} tabIndex={on || (!a.type && i === 0) ? 0 : -1}
                 onClick={() => pickType(t.value)} onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); e.stopPropagation(); pickType(t.value); } }}
                 className={cn(tile(on), "flex items-center gap-3 p-3.5")}>
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-[#E0F5F2] text-[#0F766E]"><t.icon className="h-5 w-5" /></span>
-                <span className="min-w-0"><b className="block text-[15px] font-semibold">{t.value}</b><span className="block text-[13px] text-[#6B7280]">{t.line}</span></span>
+                <span className="min-w-0"><b className="block text-[15px] font-semibold">{setupText(t.value)}</b><span className="block text-[13px] text-[#6B7280]">{setupText(t.line)}</span></span>
               </button>
             );
           })}
@@ -373,7 +374,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
             </div>
             {!hid("year", "name") && <div>
               <label className={lbl} htmlFor="w-year">{tr("Year founded")}<Req /></label>
-              <input id="w-year" data-f="year" aria-required inputMode="numeric" maxLength={4} placeholder="e.g. 2014" className={cn(inp, yearShown && errCls)} value={a.year} onBlur={blur("year")}
+              <input id="w-year" data-f="year" aria-required inputMode="numeric" maxLength={4} placeholder={setupText("e.g. 2014")} className={cn(inp, yearShown && errCls)} value={a.year} onBlur={blur("year")}
                 onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 4); set({ year: v }, { year_founded: /^\d{4}$/.test(v) && !yearError(v) ? Number(v) : null }); }} />
             </div>}
           </div>
@@ -421,8 +422,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
         <div>
           {feeNote && feeNote.length > 0 && (
             <p className="mb-3 flex gap-2 rounded-[10px] bg-[#F3F4F6] px-3.5 py-2.5 text-[13px] text-[#434A5C] dark:bg-muted dark:text-muted-foreground">
-              <Info className="mt-[1px] h-4 w-4 shrink-0" />
-              We've ticked the usual service{feeNote.length > 1 ? "s" : ""} for {article(a.type)} {a.type.toLowerCase()}: {feeNote.join(" and ")}. Add the others you offer.
+              <Info className="mt-[1px] h-4 w-4 shrink-0" />{setupText("We've ticked the usual service")}{feeNote.length > 1 ? "s" : ""}{setupText("for")} {article(a.type)} {a.type.toLowerCase()}: {feeNote.join(" and ")}{setupText(". Add the others you offer.")}
             </p>
           )}
           <div className="grid items-start gap-2.5 sm:grid-cols-2">
@@ -540,7 +540,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
         <div>
           <label className={lbl} htmlFor="w-desc">{tr("Description")}<Req /><span className="ml-1.5 font-normal text-[#9CA3AF]">{tr("30 to 300 characters")}</span></label>
           <textarea id="w-desc" aria-required rows={4} maxLength={300} placeholder={tr("e.g. Corporate law firm helping Thai founders sell their companies, from due diligence to signing.")}
-            className={cn(inp, "h-auto py-3", forced.desc && errors.desc && errCls)} value={tr(a.desc)}
+            className={cn(inp, "h-auto py-3", forced.desc && errors.desc && errCls)} value={a.desc}
             onChange={(e) => set({ desc: e.target.value }, { description: e.target.value || null })} />
           <div className="mt-1 flex justify-between text-[12.5px]">
             <span className="text-[#B42318]">{(forced.desc || (touched.desc && a.desc.trim())) && errors.desc}</span>
@@ -699,7 +699,7 @@ function Review({ a, errors, onEdit }: { a: A; errors: Record<string, string | n
     [tr("Contact"), [[tr("Email"), errors.email ? miss : a.email, "contact"], [tr("Phone"), errors.phone ? miss : a.phone, "contact"]]],
     [tr("Your card"), [
       [tr("Logo and photos"), a.logo.path && a.photos ? (a.photos === 1 ? tr("Logo and 1 photo") : tr("Logo and {n} photos").replace("{n}", String(a.photos))) : null, "logo", !(a.logo.path && a.photos)],
-      [tr("Description"), !a.desc.trim() ? miss : errors.desc ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b> : <span className="line-clamp-3">{tr(a.desc)}</span>, "desc"],
+      [tr("Description"), !a.desc.trim() ? miss : errors.desc ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b> : <span className="line-clamp-3">{a.desc}</span>, "desc"],
     ]],
   ];
   return (
@@ -760,9 +760,9 @@ function Enrich({ firm, a, header, card, btnO, btnP, onBack, onExit, onDone }: {
     <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
       {header(tr("Auto Enrich"), tr("Almost done"), 100)}
       <div className={card}>
-        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{done ? "Your profile is filled in" : tr("Filling in your profile")}</h1>
+        <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{setupText(done ? "Your profile is filled in" : tr("Filling in your profile"))}</h1>
         <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">
-          {!done ? `We're reading ${domain} and public records. This takes a few seconds.` : n ? `We found ${n} detail${n === 1 ? "" : "s"}. Check them in the next step.` : tr("Nothing new to add. Check your profile in the next step.")}
+          {setupText(!done ? `We're reading ${domain} and public records. This takes a few seconds.` : n ? `We found ${n} detail${n === 1 ? "" : "s"}. Check them in the next step.` : tr("Nothing new to add. Check your profile in the next step."))}
         </p>
         <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
           {rows.map((r, i) => (

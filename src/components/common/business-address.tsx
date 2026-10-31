@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { tr } from "@/i18n/language";
 import { COUNTRIES as COUNTRY_LIST, THAI_PROVINCES_77 } from "@/lib/investor-bands";
 import { cn } from "@/lib/utils";
@@ -54,7 +55,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
         <input id="addr-district" aria-required autoComplete="address-level2" maxLength={80} placeholder={tr("e.g. Watthana")}
           className={cn(inp, nc("district"), show("district") && bad)} {...nd("district")} value={a.district} onBlur={() => onBlur("district")} onChange={(e) => onChange({ district: e.target.value })} />
       ) : (
-        <input id="addr-district" aria-required autoComplete="address-level2" maxLength={80} placeholder="e.g. Singapore"
+        <input id="addr-district" aria-required autoComplete="address-level2" maxLength={80} placeholder={setupText("e.g. Singapore")}
           className={cn(inp, nc("district"), show("district") && bad)} {...nd("district")} value={city} onBlur={() => onBlur("district")} onChange={(e) => onCity?.(e.target.value)} />
       )}
       <Err m={show("district")} />

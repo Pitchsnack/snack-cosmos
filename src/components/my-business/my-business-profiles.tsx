@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { tr } from "@/i18n/language";
 import { OwnerHandoverBox } from "@/components/handover/owner-check";
 import { useStartup } from "@/hooks/use-startup";
@@ -129,30 +130,30 @@ function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) 
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-[360px] max-w-[calc(100vw-2rem)] rounded-[14px] border border-border bg-card p-4 text-left shadow-xl">
-          <div className="flex items-center justify-between text-[14px] font-bold"><span>Profile setup</span><span className="text-profile">{pct}%</span></div>
+          <div className="flex items-center justify-between text-[14px] font-bold"><span>{setupText("Profile setup")}</span><span className="text-profile">{pct}%</span></div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className={cn("h-full rounded-full", full ? "bg-emerald-600" : "bg-profile")} style={{ width: `${pct}%` }} /></div>
-          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{missingRequired} required item{missingRequired === 1 ? "" : "s"} before you can submit</p>}
+          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{missingRequired}{setupText("required item")}{missingRequired === 1 ? "" : "s"}{setupText("before you can submit")}</p>}
 
           {!full && next && (
             <div className="mt-3 rounded-[10px] border border-profile-line bg-profile-soft p-3">
-              <div className="text-[10.5px] font-bold uppercase tracking-wider text-profile">Next step</div>
-              <div className="mt-1 text-[13.5px] font-bold">{HELP[next.key].cta}</div>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">{HELP[next.key].help}</p>
-              <button type="button" onClick={() => go(next.key)} className="mt-2 inline-flex h-8 items-center rounded-lg bg-profile px-3 text-[12.5px] font-semibold text-primary-foreground hover:opacity-90">{HELP[next.key].cta}</button>
+              <div className="text-[10.5px] font-bold uppercase tracking-wider text-profile">{setupText("Next step")}</div>
+              <div className="mt-1 text-[13.5px] font-bold">{setupText(HELP[next.key].cta)}</div>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">{setupText(HELP[next.key].help)}</p>
+              <button type="button" onClick={() => go(next.key)} className="mt-2 inline-flex h-8 items-center rounded-lg bg-profile px-3 text-[12.5px] font-semibold text-primary-foreground hover:opacity-90">{setupText(HELP[next.key].cta)}</button>
             </div>
           )}
 
           {!full && restReq.length > 0 && (
-            <Group title="Required">
+            <Group title={setupText("Required")}>
               {restReq.map((i) => <Row key={i.key} label={i.label} link={HELP[i.key].link} onClick={() => go(i.key)} circle="solid" />)}
             </Group>
           )}
-          <Group title="Recommended">
+          <Group title={setupText("Recommended")}>
             {recommended.map((i) => <Row key={i.key} label={i.label} link="View →" onClick={() => go(i.key)} circle="dashed" />)}
           </Group>
-          {hasData && <p className="mt-1 text-[11px] text-muted-foreground">Your own figures: Provided by seller, not verified.</p>}
+          {hasData && <p className="mt-1 text-[11px] text-muted-foreground">{setupText("Your own figures: Provided by seller, not verified.")}</p>}
           {!full && opt.length > 0 && (
-            <Group title="Optional">
+            <Group title={setupText("Optional")}>
               {opt.map((i) => <Row key={i.key} label={i.label} link={HELP[i.key].link} onClick={() => go(i.key)} circle="dashed" />)}
             </Group>
           )}
@@ -160,7 +161,7 @@ function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) 
             <div className="mt-3">
               {!full && (
                 <button type="button" onClick={() => setShowDone((v) => !v)} className="inline-flex items-center gap-1 text-[12px] font-semibold text-muted-foreground">
-                  {done.length} completed <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showDone && "rotate-180")} />
+                  {done.length}{setupText("completed")} <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showDone && "rotate-180")} />
                 </button>
               )}
               {(showDone || full) && (
@@ -174,7 +175,7 @@ function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) 
               )}
             </div>
           )}
-          <p className="mt-3 border-t border-border pt-2 text-[11.5px] text-muted-foreground">Complete profiles get more NDA requests.</p>
+          <p className="mt-3 border-t border-border pt-2 text-[11.5px] text-muted-foreground">{setupText("Complete profiles get more NDA requests.")}</p>
         </div>
       )}
     </div>
@@ -184,7 +185,7 @@ function ProgressPill({ s, onItem }: { s: StartupListItem; onItem: (k: ItemKey) 
 export function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mt-3">
-      <div className="mb-1 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{title}</div>
+      <div className="mb-1 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">{setupText(title)}</div>
       {children}
     </div>
   );
@@ -194,8 +195,8 @@ export function Row({ label, link, onClick, circle }: { label: string; link: str
   return (
     <button type="button" onClick={onClick} className="flex w-full items-center gap-2 py-1.5 text-left text-[13px]">
       <span className={cn("h-4 w-4 shrink-0 rounded-full border-2 border-muted-foreground/40", circle === "dashed" && "border-dashed")} />
-      <span className="flex-1">{label}</span>
-      <span className="text-[12.5px] font-semibold text-profile">{link}</span>
+      <span className="flex-1">{setupText(label)}</span>
+      <span className="text-[12.5px] font-semibold text-profile">{setupText(link)}</span>
     </button>
   );
 }
@@ -232,7 +233,7 @@ export function FolderTab({ active, open, side, icon, title, sub, tone, onClick,
     >
       {icon}
       <span className="min-w-0">
-        <span className={cn("block truncate whitespace-nowrap text-[14px] leading-tight", active ? "font-bold" : "font-semibold")}>{title}</span>
+        <span className={cn("block truncate whitespace-nowrap text-[14px] leading-tight", active ? "font-bold" : "font-semibold")}>{setupText(title)}</span>
         {active && (
           <span className={cn("mt-px block truncate whitespace-nowrap text-[11.5px] leading-snug",
             tone === "indigo" ? "text-indigo-700 dark:text-indigo-300" : "text-green-800 dark:text-green-400")}>{sub}</span>
@@ -245,7 +246,7 @@ export function FolderTab({ active, open, side, icon, title, sub, tone, onClick,
 export function RowLine({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-2 border-t border-border py-1.5 text-[12.5px]">
-      <span className="text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground">{setupText(label)}</span>
       <span className="min-w-0 truncate text-right font-medium">{children}</span>
     </div>
   );
@@ -277,13 +278,13 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
           <div className="truncate text-[14px] font-bold">{d?.code_name || row?.ref_no || listing.headline || "Listing view"}</div>
         </div>
         <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{[row?.ref_no, industry, provinceOnly(s.city, s.headquarters)].filter(Boolean).join(" · ")}</div>
-        <p className="mb-2 mt-1.5 line-clamp-2 text-[12.5px] text-muted-foreground">{listing.headline || listing.description || <em>No description yet</em>}</p>
-        <RowLine label="Revenue">
-          {listing.revenueBand ? <>{listing.revenueBand} <span className="ml-1 rounded bg-[#EEF0FF] px-1 py-0.5 text-[9.5px] font-semibold text-[#4338CA]">Range</span></> : "—"}
+        <p className="mb-2 mt-1.5 line-clamp-2 text-[12.5px] text-muted-foreground">{listing.headline || listing.description || <em>{setupText("No description yet")}</em>}</p>
+        <RowLine label={setupText("Revenue")}>
+          {listing.revenueBand ? <>{listing.revenueBand} <span className="ml-1 rounded bg-[#EEF0FF] px-1 py-0.5 text-[9.5px] font-semibold text-[#4338CA]">{setupText("Range")}</span></> : "—"}
         </RowLine>
         <div className="space-y-1.5 border-t border-border pt-2">
-          <div><div className="mb-0.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">Products & services</div><TagChips tags={listing.productTags.slice(0, 4)} /></div>
-          <div><div className="mb-0.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">Markets</div><TagChips tags={listing.marketTags.slice(0, 4)} green /></div>
+          <div><div className="mb-0.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">{setupText("Products & services")}</div><TagChips tags={listing.productTags.slice(0, 4)} /></div>
+          <div><div className="mb-0.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">{setupText("Markets")}</div><TagChips tags={listing.marketTags.slice(0, 4)} green /></div>
         </div>
       </div>
     </>
@@ -369,26 +370,26 @@ function PublicPanel({ s, pill, onDeleted }: { s: StartupListItem; pill: React.R
           {adminReview ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline"><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit as Admin<ChevronDown className="ml-1 h-3.5 w-3.5" /></Button>
+                <Button size="sm" variant="outline"><Pencil className="mr-1.5 h-3.5 w-3.5" />{setupText("Edit as Admin")}<ChevronDown className="ml-1 h-3.5 w-3.5" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-72">
-                <DropdownMenuItem onClick={() => void create()}>Edit public view <span className="ml-auto text-[11px] text-muted-foreground">headline, description, chips</span></DropdownMenuItem>
-                <DropdownMenuItem onClick={adminReview.onEditPrivate}>Edit private view <span className="ml-auto text-[11px] text-muted-foreground">NDA details</span></DropdownMenuItem>
-                <DropdownMenuItem onClick={adminReview.onSetImage}>Set public image <span className="ml-auto text-[11px] text-muted-foreground">admin only</span></DropdownMenuItem>
-                <DropdownMenuItem onClick={adminReview.onEditMedia}>Change logo & private photos</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void create()}>{setupText("Edit public view")} <span className="ml-auto text-[11px] text-muted-foreground">{setupText("headline, description, chips")}</span></DropdownMenuItem>
+                <DropdownMenuItem onClick={adminReview.onEditPrivate}>{setupText("Edit private view")} <span className="ml-auto text-[11px] text-muted-foreground">{setupText("NDA details")}</span></DropdownMenuItem>
+                <DropdownMenuItem onClick={adminReview.onSetImage}>{setupText("Set public image")} <span className="ml-auto text-[11px] text-muted-foreground">{setupText("admin only")}</span></DropdownMenuItem>
+                <DropdownMenuItem onClick={adminReview.onEditMedia}>{setupText("Change logo & private photos")}</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem checked={adminReview.notify} onCheckedChange={(v) => adminReview.onToggleNotify(!!v)} onSelect={(e) => e.preventDefault()}>Notify seller of admin changes</DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem checked={adminReview.notify} onCheckedChange={(v) => adminReview.onToggleNotify(!!v)} onSelect={(e) => e.preventDefault()}>{setupText("Notify seller of admin changes")}</DropdownMenuCheckboxItem>
                 <DropdownMenuLabel className="cursor-pointer text-[12px] font-medium text-muted-foreground" onClick={adminReview.onShowEdits}>
-                  {adminReview.editsCount} admin edit{adminReview.editsCount === 1 ? "" : "s"} on this version · view / undo
+                  {adminReview.editsCount}{setupText("admin edit")}{adminReview.editsCount === 1 ? "" : "s"}{setupText("on this version · view / undo")}
                 </DropdownMenuLabel>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}
           {adminReview && (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-9 w-9" aria-label="More"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
+              <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="h-9 w-9" aria-label={setupText("More")}><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="max-w-[280px]">
-                <DropdownMenuItem asChild><Link to="/marketplace">View Marketplace</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/marketplace">{setupText("View Marketplace")}</Link></DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DeleteDraftMenuItem state={delState.data} onPick={() => setDelOpen(true)} />
               </DropdownMenuContent>
@@ -403,7 +404,7 @@ function PublicPanel({ s, pill, onDeleted }: { s: StartupListItem; pill: React.R
           {pill}
           {!adminReview && (
             <CompanyMenu name={row?.code_name || s.startup_name || tr("New business")} onEdit={() => void create()} deleteDraft={deleteDraft}>
-              <DropdownMenuItem asChild><Link to="/marketplace">View Marketplace</Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link to="/marketplace">{setupText("View Marketplace")}</Link></DropdownMenuItem>
             </CompanyMenu>
           )}
         </div>
@@ -517,7 +518,7 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
             onClose={() => closeDeleted(current.id)}
             belowHeader={
               <div className="mt-3">
-                <Intro icon={<Lock className="h-4 w-4" />}>Your full company details. Only buyers whose NDA you approve can see this.</Intro>
+                <Intro icon={<Lock className="h-4 w-4" />}>{setupText("Your full company details. Only buyers whose NDA you approve can see this.")}</Intro>
               </div>
             }
           />
@@ -533,7 +534,7 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
     return (
       <div className="space-y-3">
         {popup}
-        <Button variant="ghost" size="sm" onClick={() => setMobileOpen(false)} className="gap-1.5"><ArrowLeft className="h-4 w-4" />Back to My Business</Button>
+        <Button variant="ghost" size="sm" onClick={() => setMobileOpen(false)} className="gap-1.5"><ArrowLeft className="h-4 w-4" />{setupText("Back to My Business")}</Button>
         {right}
       </div>
     );

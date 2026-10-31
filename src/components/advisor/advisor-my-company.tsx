@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
 import { sectorChips } from "@/lib/business-types";
 import { OwnerHandoverBox } from "@/components/handover/owner-check";
@@ -121,12 +122,12 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
     const sel = firms.find((f) => f.id === openId) ?? firms[0] ?? null;
     return (
       <div className="space-y-5">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">My Company</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">{setupText("My Company")}</h1>
         {isLoading ? (
           <div className="grid gap-5 lg:grid-cols-[320px_1fr]"><Skeleton className="h-[420px]" /><Skeleton className="h-[620px]" /></div>
         ) : firms.length === 0 ? (
           <Button onClick={add} disabled={adding} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            {adding ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Plus className="mr-1.5 h-4 w-4" />} Add Firm Profile
+            {adding ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Plus className="mr-1.5 h-4 w-4" />}{setupText("Add Firm Profile")}
           </Button>
         ) : (
           <div className="grid items-start gap-5 lg:grid-cols-[320px_1fr]">
@@ -143,11 +144,11 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
       <SignupWelcome role="advisor" setupDone={!!open?.setupDoneAt} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">My Company</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{firms.length} firm profile{firms.length === 1 ? "" : "s"} you own or manage</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">{setupText("My Company")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{firms.length}{setupText("firm profile")}{firms.length === 1 ? "" : "s"}{setupText("you own or manage")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" className={cn("h-9 gap-1.5", savedOnly && "border-accent text-accent")} onClick={() => setSavedOnly((v) => !v)} aria-pressed={savedOnly} title="Saved">
+          <Button variant="outline" size="sm" className={cn("h-9 gap-1.5", savedOnly && "border-accent text-accent")} onClick={() => setSavedOnly((v) => !v)} aria-pressed={savedOnly} title={setupText("Saved")}>
             <Star className="h-4 w-4" /> 0
           </Button>
           <button
@@ -157,11 +158,11 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
             className={cn("inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold",
               mode === "profiles" ? "border-[#1E2A4A] bg-[#1E2A4A] text-white" : "border-input bg-background text-muted-foreground hover:text-foreground")}
           >
-            <LayoutList className="h-3.5 w-3.5" /> Profiles
+            <LayoutList className="h-3.5 w-3.5" />{setupText("Profiles")}
           </button>
           <ViewToggle value={mode === "profiles" ? ("none" as ViewMode) : mode} onChange={(v) => setMode(v)} />
           <Button onClick={add} disabled={adding} className="h-9 bg-accent text-accent-foreground hover:bg-accent/90">
-            {adding ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Plus className="mr-1.5 h-4 w-4" />} Add Firm Profile
+            {adding ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Plus className="mr-1.5 h-4 w-4" />}{setupText("Add Firm Profile")}
           </Button>
         </div>
       </div>
@@ -169,21 +170,21 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[16rem] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search my firm profiles by name, service, city…" className="h-9 pl-9" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={setupText("Search my firm profiles by name, service, city…")} className="h-9 pl-9" />
         </div>
-        <FilterSelect value={svc} onChange={setSvc} all="All services" options={ADVISOR_SERVICES.map((s) => s.name)} />
-        <FilterSelect value={status} onChange={setStatus} all="All statuses" options={["draft", "live", "paused"]} labels={{ draft: "Draft", live: "Live", paused: "Paused" }} />
-        <FilterSelect value={sector} onChange={setSector} all="Sector" options={sectors} />
-        <FilterSelect value={hq} onChange={setHq} all="HQ" options={hqs} />
+        <FilterSelect value={svc} onChange={setSvc} all={setupText("All services")} options={ADVISOR_SERVICES.map((s) => s.name)} />
+        <FilterSelect value={status} onChange={setStatus} all={setupText("All statuses")} options={["draft", "live", "paused"]} labels={{ draft: "Draft", live: "Live", paused: "Paused" }} />
+        <FilterSelect value={sector} onChange={setSector} all={setupText("Sector")} options={sectors} />
+        <FilterSelect value={hq} onChange={setHq} all={setupText("HQ")} options={hqs} />
         <Select value={sort} onValueChange={(v) => setSort(v as "updated" | "name")}>
           <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="updated">Recently updated</SelectItem>
-            <SelectItem value="name">Name A–Z</SelectItem>
+            <SelectItem value="updated">{setupText("Recently updated")}</SelectItem>
+            <SelectItem value="name">{setupText("Name A–Z")}</SelectItem>
           </SelectContent>
         </Select>
         <Button variant="outline" size="sm" className="h-9 gap-2" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} /> Refresh
+          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />{setupText("Refresh")}
         </Button>
       </div>
 
@@ -192,12 +193,12 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
       ) : firms.length === 0 ? (
         <div className="rounded-[14px] border-2 border-dashed border-border p-10 text-center">
           <Building2 className="mx-auto h-8 w-8 text-muted-foreground" />
-          <div className="mt-3 text-[16px] font-semibold">No firm profile yet</div>
-          <p className="mt-1 text-sm text-muted-foreground">Add your firm so sellers and buyers can see your services, fees and team.</p>
-          <Button onClick={add} disabled={adding} className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90"><Plus className="mr-1.5 h-4 w-4" /> Add Firm Profile</Button>
+          <div className="mt-3 text-[16px] font-semibold">{setupText("No firm profile yet")}</div>
+          <p className="mt-1 text-sm text-muted-foreground">{setupText("Add your firm so sellers and buyers can see your services, fees and team.")}</p>
+          <Button onClick={add} disabled={adding} className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90"><Plus className="mr-1.5 h-4 w-4" />{setupText("Add Firm Profile")}</Button>
         </div>
       ) : list.length === 0 ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">No firm profiles match these filters.</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">{setupText("No firm profiles match these filters.")}</p>
       ) : mode === "profiles" || mode === "split" ? (
         <div className={cn("grid items-start gap-5", mode === "profiles" ? "lg:grid-cols-[320px_1fr]" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]")}>
           <div className="space-y-4">
@@ -233,8 +234,8 @@ function FilterSelect({ value, onChange, all, options, labels }: { value: string
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="h-9 w-auto min-w-[8rem]"><SelectValue /></SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">{all}</SelectItem>
-        {options.map((o) => <SelectItem key={o} value={o}>{labels?.[o] ?? o}</SelectItem>)}
+        <SelectItem value="all">{setupText(all)}</SelectItem>
+        {options.map((o) => <SelectItem key={o} value={o}>{setupText(labels?.[o] ?? o)}</SelectItem>)}
       </SelectContent>
     </Select>
   );
@@ -268,16 +269,16 @@ function ChecklistPill({ f, onItem }: { f: AdvisorFirm; onItem: (s: EditSection)
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-[340px] max-w-[calc(100vw-2rem)] rounded-[14px] border border-border bg-card p-4 text-left shadow-xl">
-          <div className="flex items-center justify-between text-[14px] font-bold"><span>Profile setup</span><span className="text-profile">{pct}%</span></div>
+          <div className="flex items-center justify-between text-[14px] font-bold"><span>{setupText("Profile setup")}</span><span className="text-profile">{pct}%</span></div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className={cn("h-full rounded-full", full ? "bg-emerald-600" : "bg-profile")} style={{ width: `${pct}%` }} /></div>
-          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{todo.length} item{todo.length === 1 ? "" : "s"} left before you can publish</p>}
+          {!full && <p className="mt-1.5 text-[12px] text-muted-foreground">{todo.length}{setupText("item")}{todo.length === 1 ? "" : "s"}{setupText("left before you can publish")}</p>}
           {todo.length > 0 && (
-            <Group title="To do">
+            <Group title={setupText("To do")}>
               {todo.map((i) => <Row key={i.key} label={i.label} link="Add →" circle="solid" onClick={() => { setOpen(false); onItem(i.section); }} />)}
             </Group>
           )}
           {done.length > 0 && (
-            <Group title="Done">
+            <Group title={setupText("Done")}>
               {done.map((i) => (
                 <button key={i.key} type="button" onClick={() => { setOpen(false); onItem(i.section); }} className="flex w-full items-center gap-2 py-1 text-left text-[12.5px] text-muted-foreground">
                   <Check className="h-4 w-4 text-emerald-600" />{i.label}
@@ -297,8 +298,8 @@ function Box({ title, action, onAction, children }: { title: string; action?: st
   return (
     <div className="rounded-[12px] border border-[#E5E7EB] bg-card p-4 dark:border-border">
       <div className="mb-2 flex items-center justify-between">
-        <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{title}</div>
-        {action && <button type="button" onClick={onAction} className="text-[13px] font-semibold text-[#0F766E] hover:underline">{action}</button>}
+        <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{setupText(title)}</div>
+        {action && <button type="button" onClick={onAction} className="text-[13px] font-semibold text-[#0F766E] hover:underline">{setupText(action)}</button>}
       </div>
       {children}
     </div>
@@ -308,8 +309,8 @@ function Box({ title, action, onAction, children }: { title: string; action?: st
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-[#F0F1F3] py-2 text-[13.5px] last:border-0 dark:border-border">
-      <span className="shrink-0 text-[#6A7181]">{label}</span>
-      <span className="min-w-0 text-right font-semibold text-[#111827] dark:text-foreground">{children || <span className="font-normal text-[#6F7B88]">Not set</span>}</span>
+      <span className="shrink-0 text-[#6A7181]">{setupText(label)}</span>
+      <span className="min-w-0 text-right font-semibold text-[#111827] dark:text-foreground">{children || <span className="font-normal text-[#6F7B88]">{setupText("Not set")}</span>}</span>
     </div>
   );
 }
@@ -319,7 +320,7 @@ function RowTile({ icon, title, sub, right }: { icon: React.ReactNode; title: st
     <div className="flex items-center gap-3 border-b border-[#F0F1F3] py-2.5 last:border-0 dark:border-border">
       {icon}
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[14px] font-semibold">{title}</div>
+        <div className="truncate text-[14px] font-semibold">{setupText(title)}</div>
         {sub && <div className="truncate text-[12.5px] text-[#6A7181]">{sub}</div>}
       </div>
       {right}
@@ -400,7 +401,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
         <FirmLogo f={f} ring={false} />
         <div className="min-w-0 flex-1 max-sm:min-w-[180px]">
           <div className="flex flex-wrap items-center gap-2">
-            {!client && <span className="inline-flex min-h-5 items-center rounded-[6px] bg-[#E0F5F2] px-2 py-0.5 text-[10.5px] font-bold uppercase leading-normal tracking-[.06em] text-[#0F766E]">Open to sellers and buyers</span>}
+            {!client && <span className="inline-flex min-h-5 items-center rounded-[6px] bg-[#E0F5F2] px-2 py-0.5 text-[10.5px] font-bold uppercase leading-normal tracking-[.06em] text-[#0F766E]">{setupText("Open to sellers and buyers")}</span>}
             {f.verifiedAt ? <VerifiedAdvisorChip small /> : client && <span className="inline-flex h-5 items-center rounded-full border border-border bg-muted px-2 text-[11px] font-semibold text-muted-foreground">{tr("Not verified yet")}</span>}{client && f.managed && <ManagedBadge size="sm" shadow align="left" />}
           </div>
           <h2 className="mt-1 text-[21px] font-bold leading-tight">{f.name || "New firm profile"}</h2>
@@ -411,8 +412,8 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
           <CompanyMenu name={f.name || "New firm profile"} onEdit={() => edit("firm")}
             deleteDraft={{ kind: "advisor_firm", id: f.id, invalidate: [ADVISOR_FIRMS_KEY], onDeleted: onDeletedDraft }}>
             {!inSetup && (f.status === "live"
-              ? <DropdownMenuItem onClick={() => changeStatus("paused")}>Pause listing</DropdownMenuItem>
-              : <DropdownMenuItem disabled={!complete || declined || busy} title={declined ? DECLINED_TIP : undefined} onClick={() => changeStatus("live")}>Publish</DropdownMenuItem>)}
+              ? <DropdownMenuItem onClick={() => changeStatus("paused")}>{setupText("Pause listing")}</DropdownMenuItem>
+              : <DropdownMenuItem disabled={!complete || declined || busy} title={declined ? DECLINED_TIP : undefined} onClick={() => changeStatus("live")}>{setupText("Publish")}</DropdownMenuItem>)}
           </CompanyMenu>
         </div>}
       </div>
@@ -422,8 +423,8 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
           <SetupBanner f={f} onOpen={openSetup} />
           <div className="rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted/50">
             <div className="mb-3 flex items-center justify-between gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">Your card in Browse advisors</span>
-              <StatusPill status="draft">Draft · not published</StatusPill>
+              <span className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{setupText("Your card in Browse advisors")}</span>
+              <StatusPill status="draft">{setupText("Draft · not published")}</StatusPill>
             </div>
             <FirmCard f={f} wide />
           </div>
@@ -439,13 +440,13 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
         {f.verification?.state === "declined" && <FirmNotice state="declined" note={f.verification.declineNote} fields={[]} reason={f.verification.reason} />}
         <div className="flex gap-2.5 rounded-[12px] bg-[#F3F4F6] p-3.5 text-[13.5px] dark:bg-muted">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-          <p>Everything on your profile is <strong>open to sellers and buyers</strong> in Browse advisors, so they can compare firms and choose one: your services and fees, team and contacts, licences and documents.</p>
+          <p>{setupText("Everything on your profile is")} <strong>{setupText("open to sellers and buyers")}</strong>{setupText("in Browse advisors, so they can compare firms and choose one: your services and fees, team and contacts, licences and documents.")}</p>
         </div>
 
         <div className="rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted/50">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">Your card in Browse advisors</span>
-            <StatusPill status={f.status}>{statusLine}</StatusPill>
+            <span className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{setupText("Your card in Browse advisors")}</span>
+            <StatusPill status={f.status}>{setupText(statusLine)}</StatusPill>
           </div>
           <FirmCard f={f} wide />
         </div>
@@ -453,9 +454,8 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
         <p className="text-[13px] text-[#4B5563] dark:text-muted-foreground">
           {f.verifiedAt ? (
             <>
-              <strong className="text-[#15803D]">✓ Verified by PitchSnack on {fmtDate(f.verifiedAt)}.</strong>{" "}
-              {pending.length > 0 && <>{pending.map((c) => c.name).join(", ")} {pending.length > 1 ? "are" : "is"} still waiting for a check. </>}
-              A change to your legal name, registration number, licences or documents goes back to PitchSnack for a check.
+              <strong className="text-[#15803D]">{setupText("✓ Verified by PitchSnack on")} {fmtDate(f.verifiedAt)}.</strong>{" "}
+              {pending.length > 0 && <>{pending.map((c) => c.name).join(", ")} {pending.length > 1 ? "are" : "is"}{setupText("still waiting for a check.")} </>}{setupText("A change to your legal name, registration number, licences or documents goes back to PitchSnack for a check.")}
             </>
           ) : "PitchSnack hasn't verified your firm yet. Admin checks your licences and documents."}
         </p>
@@ -466,11 +466,11 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
         {/* Services and fees */}
         <section>
           <div className="mb-2.5 flex items-center justify-between">
-            <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">Services and fees · {f.services.length}</div>
-            {!client && <Button ref={svcBtn} variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => setSvcOpen(true)}><Pencil className="h-3.5 w-3.5" /> Edit services</Button>}
+            <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{setupText("Services and fees ·")} {f.services.length}</div>
+            {!client && <Button ref={svcBtn} variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => setSvcOpen(true)}><Pencil className="h-3.5 w-3.5" />{setupText("Edit services")}</Button>}
           </div>
           {f.services.length === 0 ? (
-            <p className="text-[13px] text-muted-foreground">No services yet.</p>
+            <p className="text-[13px] text-muted-foreground">{setupText("No services yet.")}</p>
           ) : (
             <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
               {f.services.map((s) => {
@@ -480,12 +480,12 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
                   <div key={s} className="flex flex-col rounded-[12px] border border-[#CFEAE5] bg-[#F2FAF8] px-3.5 py-3 dark:bg-muted/40">
                     <div className="grid h-[34px] w-[34px] place-items-center rounded-[9px] border border-[#CFEAE5] bg-white text-[#0F766E]"><def.icon className="h-4 w-4" /></div>
                     <div className="mt-2 text-[14px] font-semibold">{s}</div>
-                    <div className="text-[12.5px] text-[#6A7181]">{def.line}</div>
+                    <div className="text-[12.5px] text-[#6A7181]">{setupText(def.line)}</div>
                     <div className="mt-auto pt-2.5">
                       <div className="border-t border-[#D3ECE7] pt-2">
-                        <div className="text-[10.5px] font-bold uppercase text-[#6A7181]">Fee</div>
+                        <div className="text-[10.5px] font-bold uppercase text-[#6A7181]">{setupText("Fee")}</div>
                         {fee ? <div className="text-[13px] font-semibold text-[#111827] dark:text-foreground">{fee}</div> : client ? <div className="text-[13px] text-[#6F7B88]">{tr("Request a Price Quote")}</div> : (
-                          <div className="text-[13px]"><span className="text-[#6F7B88]">Not set yet</span> · <button type="button" onClick={() => edit("services")} className="font-semibold text-[#0F766E] hover:underline">Add a fee</button></div>
+                          <div className="text-[13px]"><span className="text-[#6F7B88]">{setupText("Not set yet")}</span> · <button type="button" onClick={() => edit("services")} className="font-semibold text-[#0F766E] hover:underline">{setupText("Add a fee")}</button></div>
                         )}
                         {client && <div className="mt-1.5 text-[12.5px]">{client.tileAction(s)}</div>}
                       </div>
@@ -498,42 +498,42 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
         </section>
 
         <div className="grid gap-3.5 md:grid-cols-2">
-          <Box title="Company" action={client ? undefined : "Edit"} onAction={() => edit("company")}>
-            <Fact label="Founded">{f.yearFounded ? String(f.yearFounded) : null}</Fact>
-            <Fact label="Legal name">{f.legalName}</Fact>
-            <Fact label="Thai name">{f.thaiName}</Fact>
-            <Fact label="Registration no.">{f.registrationNo}</Fact>
-            <Fact label="Address">
+          <Box title={setupText("Company")} action={client ? undefined : "Edit"} onAction={() => edit("company")}>
+            <Fact label={setupText("Founded")}>{f.yearFounded ? String(f.yearFounded) : null}</Fact>
+            <Fact label={setupText("Legal name")}>{f.legalName}</Fact>
+            <Fact label={setupText("Thai name")}>{f.thaiName}</Fact>
+            <Fact label={setupText("Registration no.")}>{f.registrationNo}</Fact>
+            <Fact label={setupText("Address")}>
               {addr ? (
                 <button ref={addrBtn} type="button" onClick={() => setAddrOpen(true)} className="inline text-left font-semibold text-[#0F766E] underline decoration-[#9ED8CF] underline-offset-2 hover:decoration-[#0F766E]">
                   <MapPin className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />{addr}
                 </button>
               ) : null}
             </Fact>
-            <Fact label="Website">{f.website}</Fact>
-            <Fact label="Email">{f.email}</Fact>
-            <Fact label="Phone">{f.phone}</Fact>
+            <Fact label={setupText("Website")}>{f.website}</Fact>
+            <Fact label={setupText("Email")}>{f.email}</Fact>
+            <Fact label={setupText("Phone")}>{f.phone}</Fact>
           </Box>
           <Box title={`Team · ${f.team.length}`} action={client ? undefined : "Edit"} onAction={() => edit("team")}>
-            {f.team.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">No one added yet.</p> : f.team.map((t, i) => (
+            {f.team.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">{setupText("No one added yet.")}</p> : f.team.map((t, i) => (
               <RowTile key={t.id ?? i}
                 icon={<span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#E0F5F2] text-[12px] font-bold text-[#0F766E]">{t.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>}
                 title={t.name} sub={[t.role, t.email].filter(Boolean).join(" · ")} />
             ))}
           </Box>
-          <Box title="Licences and credentials" action={client ? undefined : "Edit"} onAction={() => edit("credentials")}>
-            {f.credentials.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">No licences or credentials yet. Admin checks each one you add.</p> : f.credentials.map((c, i) => (
+          <Box title={setupText("Licences and credentials")} action={client ? undefined : "Edit"} onAction={() => edit("credentials")}>
+            {f.credentials.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">{setupText("No licences or credentials yet. Admin checks each one you add.")}</p> : f.credentials.map((c, i) => (
               <RowTile key={c.id ?? i}
                 icon={<span className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] bg-[#F3F4F6] text-muted-foreground"><ShieldCheck className="h-4 w-4" /></span>}
                 title={c.name} sub={c.note || (c.status === "pending" ? "Waiting for a check by PitchSnack" : null)}
                 right={c.status === "verified"
-                  ? <span className="shrink-0 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">✓ Verified</span>
-                  : c.status === "rejected" ? <span className="shrink-0 rounded-full border border-[#FECACA] bg-[#FEF2F2] px-2 py-0.5 text-[11.5px] font-semibold text-[#B91C1C]">Can't verify</span>
-                  : <span className="shrink-0 rounded-full border border-[#F3D9A6] bg-[#FFF4E0] px-2 py-0.5 text-[11.5px] font-semibold text-[#8A5A06]">Pending check</span>} />
+                  ? <span className="shrink-0 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">{setupText("✓ Verified")}</span>
+                  : c.status === "rejected" ? <span className="shrink-0 rounded-full border border-[#FECACA] bg-[#FEF2F2] px-2 py-0.5 text-[11.5px] font-semibold text-[#B91C1C]">{setupText("Can't verify")}</span>
+                  : <span className="shrink-0 rounded-full border border-[#F3D9A6] bg-[#FFF4E0] px-2 py-0.5 text-[11.5px] font-semibold text-[#8A5A06]">{setupText("Pending check")}</span>} />
             ))}
           </Box>
-          <Box title="Documents" action={client ? undefined : "Upload"} onAction={() => edit("documents")}>
-            {f.documents.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">No documents yet. Upload your company certificate and licences.</p> : f.documents.map((d, i) => (
+          <Box title={setupText("Documents")} action={client ? undefined : "Upload"} onAction={() => edit("documents")}>
+            {f.documents.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">{setupText("No documents yet. Upload your company certificate and licences.")}</p> : f.documents.map((d, i) => (
               <RowTile key={d.id ?? i}
                 icon={<span className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] bg-[#F3F4F6] text-muted-foreground"><FileText className="h-4 w-4" /></span>}
                 title={d.name}
@@ -543,7 +543,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
                     {d.checkedAt ? <span className="rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">✓ {tr("Checked")}</span> : <span className="text-[11.5px] text-muted-foreground">{tr("Not checked yet")}</span>}
                     {d.url && <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-[12.5px] font-semibold text-[#2563EB] hover:underline">{tr("View")}</a>}
                   </span>
-                ) : d.checkedAt ? <span className="shrink-0 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">✓ Checked</span> : undefined} />
+                ) : d.checkedAt ? <span className="shrink-0 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">{setupText("✓ Checked")}</span> : undefined} />
             ))}
           </Box>
         </div>
@@ -562,35 +562,35 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
           </>
         ) : inSetup ? (
           <>
-            <span>Draft · not visible in Browse advisors</span>
-            <Button size="sm" onClick={openSetup} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90">Finish setup to publish</Button>
+            <span>{setupText("Draft · not visible in Browse advisors")}</span>
+            <Button size="sm" onClick={openSetup} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90">{setupText("Finish setup to publish")}</Button>
           </>
         ) : f.status === "live" ? (
           <>
-            <span>Live in Browse advisors since {fmtDate(f.liveSince)}{views != null && ` · ${views} profile ${views === 1 ? "view" : "views"} this week`}</span>
+            <span>{setupText("Live in Browse advisors since")} {fmtDate(f.liveSince)}{views != null && ` · ${views} profile ${views === 1 ? "view" : "views"} this week`}</span>
             <span className="flex flex-col items-end gap-1">
-              <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)}>Remove your company profile from listing</Button>
+              <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)}>{setupText("Remove your company profile from listing")}</Button>
             </span>
           </>
         ) : f.verification?.state === "pending" ? (
           <>
-            <span>Submitted · sellers and buyers can't find you yet</span>
-            <span className="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3.5 text-[13.5px] font-semibold text-[#1D4ED8]"><Clock className="h-4 w-4" />Pending approval</span>
+            <span>{setupText("Submitted · sellers and buyers can't find you yet")}</span>
+            <span className="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3.5 text-[13.5px] font-semibold text-[#1D4ED8]"><Clock className="h-4 w-4" />{setupText("Pending approval")}</span>
           </>
         ) : f.verification?.state === "more_info" || f.verification?.state === "declined" ? (
           <>
-            <span>Fix what PitchSnack asked with Edit information, then register again.</span>
-            <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />Register your company</Button>
+            <span>{setupText("Fix what PitchSnack asked with Edit information, then register again.")}</span>
+            <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />{setupText("Register your company")}</Button>
           </>
         ) : f.status === "paused" ? (
           <>
-            <span>Hidden from Browse advisors since {fmtDate(f.updatedAt)}.</span>
-            <Button size="sm" className="whitespace-normal bg-[#1E2A4A] text-center text-white hover:bg-[#1E2A4A]/90" disabled={busy} onClick={() => changeStatus("live")}>List my company so that sellers and buyers can contact me</Button>
+            <span>{setupText("Hidden from Browse advisors since")} {fmtDate(f.updatedAt)}.</span>
+            <Button size="sm" className="whitespace-normal bg-[#1E2A4A] text-center text-white hover:bg-[#1E2A4A]/90" disabled={busy} onClick={() => changeStatus("live")}>{setupText("List my company so that sellers and buyers can contact me")}</Button>
           </>
         ) : (
           <>
-            <span><b className="font-semibold text-foreground">Draft</b> · not live yet. Register once: PitchSnack checks your firm and publishes your profile together.{!complete && <> <span className="text-muted-foreground">Finish the checklist first.</span></>}</span>
-            <Button size="sm" disabled={!complete} title={complete ? undefined : "Complete the checklist first"} onClick={() => { setFailures([]); setReviewOpen(true); }} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90"><Send className="mr-1.5 h-4 w-4" />Register your company</Button>
+            <span><b className="font-semibold text-foreground">{setupText("Draft")}</b>{setupText("· not live yet. Register once: PitchSnack checks your firm and publishes your profile together.")}{!complete && <> <span className="text-muted-foreground">{setupText("Finish the checklist first.")}</span></>}</span>
+            <Button size="sm" disabled={!complete} title={complete ? undefined : "Complete the checklist first"} onClick={() => { setFailures([]); setReviewOpen(true); }} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90"><Send className="mr-1.5 h-4 w-4" />{setupText("Register your company")}</Button>
           </>
         )}
       </div>
@@ -614,16 +614,16 @@ function SetupBanner({ f, onOpen }: { f: AdvisorFirm; onOpen: () => void }) {
     <div data-tour-banner data-tour-n={N} data-tour-m={4} className="flex flex-wrap items-center gap-4 rounded-[14px] border border-[#B9E6DF] bg-[#EFFAF8] px-[18px] py-4 dark:border-[#1F5A52] dark:bg-[#10302C]">
       <span className="hidden h-10 w-10 shrink-0 place-items-center rounded-[11px] bg-white text-[#0F766E] min-[860px]:grid dark:bg-background dark:text-[#5EEAD4]"><Flag className="h-5 w-5" /></span>
       <div className="min-w-0 flex-1">
-        <div className="text-[14.5px] font-bold text-[#151A28] dark:text-foreground">{n === 0 ? "Set up your firm profile" : "Finish setting up your firm profile"}</div>
+        <div className="text-[14.5px] font-bold text-[#151A28] dark:text-foreground">{setupText(n === 0 ? "Set up your firm profile" : "Finish setting up your firm profile")}</div>
         <p className="mt-0.5 text-[13px] text-[#434A5C] dark:text-muted-foreground">
-          {n >= N ? `All ${N} questions are answered. Check your profile and save it, then publish it to Browse advisors.` : `Sellers and buyers can't find this firm yet. Answer ${N} short questions. It takes about 4 minutes and saves as you go.`}
+          {setupText(n >= N ? `All ${N} questions are answered. Check your profile and save it, then publish it to Browse advisors.` : `Sellers and buyers can't find this firm yet. Answer ${N} short questions. It takes about 4 minutes and saves as you go.`)}
         </p>
         <div className="mt-2 flex items-center gap-2.5">
           <div className="h-1.5 w-[180px] overflow-hidden rounded-full border border-[#B9E6DF] bg-white dark:border-[#1F5A52] dark:bg-background"><div className="h-full bg-[#0F766E] dark:bg-[#5EEAD4]" style={{ width: `${(n / Math.max(1, N)) * 100}%` }} /></div>
-          <span className="text-[12px] font-semibold text-[#0F766E] dark:text-[#5EEAD4]">{n} of {N} answered</span>
+          <span className="text-[12px] font-semibold text-[#0F766E] dark:text-[#5EEAD4]">{n}{setupText("of")} {N}{setupText("answered")}</span>
         </div>
       </div>
-      <Button data-tour-btn onClick={onOpen} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90 max-[860px]:w-full">{n === 0 ? "Start setup →" : "Continue setup →"}</Button>
+      <Button data-tour-btn onClick={onOpen} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90 max-[860px]:w-full">{setupText(n === 0 ? "Start setup →" : "Continue setup →")}</Button>
     </div>
   );
 }
@@ -642,7 +642,7 @@ export function ServiceTiles({ picked, onToggle }: { picked: string[]; onToggle:
             <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] bg-[#E0F5F2] text-[#0F766E]"><s.icon className="h-4 w-4" /></span>
             <span className="min-w-0">
               <span className="block text-[14px] font-semibold">{s.name}</span>
-              <span className="block text-[12.5px] text-[#6A7181]">{s.line}</span>
+              <span className="block text-[12.5px] text-[#6A7181]">{setupText(s.line)}</span>
             </span>
           </label>
         );
@@ -674,15 +674,15 @@ function ServicesDialog({ f, open, onOpenChange }: { f: AdvisorFirm; open: boole
         onOpenAutoFocus={(e) => { e.preventDefault(); (document.querySelector("[data-first]") as HTMLElement | null)?.focus(); }}
       >
         <div className="border-b border-border p-5 pr-12">
-          <DialogTitle className="text-[18px]">Your services</DialogTitle>
-          <DialogDescription className="mt-1 text-[13.5px]">Pick what {f.name} offers. Sellers and buyers filter Browse advisors by these, and see each one with its fee on your profile.</DialogDescription>
+          <DialogTitle className="text-[18px]">{setupText("Your services")}</DialogTitle>
+          <DialogDescription className="mt-1 text-[13.5px]">{setupText("Pick what")} {f.name}{setupText("offers. Sellers and buyers filter Browse advisors by these, and see each one with its fee on your profile.")}</DialogDescription>
         </div>
         <div className="max-h-[56vh] overflow-y-auto p-5"><ServiceTiles picked={picked} onToggle={toggle} /></div>
         <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-3.5">
-          {picked.length ? <span className="text-[13.5px] font-semibold text-[#0F766E]">{picked.length} selected</span> : <span className="text-[13.5px] font-semibold text-[#B45309]">Pick at least one service.</span>}
+          {picked.length ? <span className="text-[13.5px] font-semibold text-[#0F766E]">{picked.length}{setupText("selected")}</span> : <span className="text-[13.5px] font-semibold text-[#B45309]">{setupText("Pick at least one service.")}</span>}
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button disabled={!picked.length || busy} onClick={submit} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90">Save services</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>{setupText("Cancel")}</Button>
+            <Button disabled={!picked.length || busy} onClick={submit} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90">{setupText("Save services")}</Button>
           </div>
         </div>
       </DialogContent>
@@ -705,16 +705,16 @@ function AddressDialog({ f, open, onOpenChange }: { f: AdvisorFirm; open: boolea
           <FirmLogo f={f} size={40} radius={10} ring={false} />
           <div className="min-w-0 flex-1">
             <DialogTitle className="text-[17px]">{f.name}</DialogTitle>
-            <DialogDescription className="text-[13px]">Address and contact</DialogDescription>
+            <DialogDescription className="text-[13px]">{setupText("Address and contact")}</DialogDescription>
           </div>
-          <button ref={closeRef} type="button" onClick={() => onOpenChange(false)} aria-label="Close" className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"><X className="h-4 w-4" /></button>
+          <button ref={closeRef} type="button" onClick={() => onOpenChange(false)} aria-label={setupText("Close")} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"><X className="h-4 w-4" /></button>
         </div>
         <div className="space-y-4 p-5">
           <div className="rounded-[12px] border border-border px-4 py-1">
-            <Fact label="Company name">{f.legalName}</Fact>
-            <Fact label="Address">{fullAddress(f)}</Fact>
-            <Fact label="Website">{site ? <a href={site} target="_blank" rel="noopener noreferrer" className="text-[#0F766E] hover:underline">{f.website}</a> : null}</Fact>
-            <Fact label="Phone">{f.phone ? <a href={`tel:${f.phone.replace(/\s+/g, "")}`} className="hover:underline">{f.phone}</a> : null}</Fact>
+            <Fact label={setupText("Company name")}>{f.legalName}</Fact>
+            <Fact label={setupText("Address")}>{fullAddress(f)}</Fact>
+            <Fact label={setupText("Website")}>{site ? <a href={site} target="_blank" rel="noopener noreferrer" className="text-[#0F766E] hover:underline">{f.website}</a> : null}</Fact>
+            <Fact label={setupText("Phone")}>{f.phone ? <a href={`tel:${f.phone.replace(/\s+/g, "")}`} className="hover:underline">{f.phone}</a> : null}</Fact>
           </div>
           {data?.key && (
             <iframe
@@ -725,8 +725,8 @@ function AddressDialog({ f, open, onOpenChange }: { f: AdvisorFirm; open: boolea
             />
           )}
           <div className="flex justify-end gap-2">
-            <Button variant="outline" asChild><a href={`https://www.google.com/maps/dir/?api=1&destination=${q}`} target="_blank" rel="noopener noreferrer"><Navigation className="mr-1.5 h-4 w-4" /> Directions</a></Button>
-            <Button asChild className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90"><a href={`https://www.google.com/maps/search/?api=1&query=${q}`} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-1.5 h-4 w-4" /> Open in Google Maps</a></Button>
+            <Button variant="outline" asChild><a href={`https://www.google.com/maps/dir/?api=1&destination=${q}`} target="_blank" rel="noopener noreferrer"><Navigation className="mr-1.5 h-4 w-4" />{setupText("Directions")}</a></Button>
+            <Button asChild className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90"><a href={`https://www.google.com/maps/search/?api=1&query=${q}`} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-1.5 h-4 w-4" />{setupText("Open in Google Maps")}</a></Button>
           </div>
         </div>
       </DialogContent>
@@ -762,7 +762,7 @@ function ClientFeedback({ f, client }: { f: AdvisorFirm; client?: boolean }) {
   return (
     <section>
       <div className="mb-2.5 flex items-center justify-between">
-        <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">Client feedback</div>
+        <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{setupText("Client feedback")}</div>
         {n > 3 && <button type="button" onClick={() => setAll((v) => !v)} className="text-[13px] font-semibold text-[#0F766E] hover:underline">{all ? "Show the latest 3" : `Show all ${n} reviews`}</button>}
       </div>
       {n === 0 ? (
@@ -771,9 +771,9 @@ function ClientFeedback({ f, client }: { f: AdvisorFirm; client?: boolean }) {
         <>
           <div className="grid gap-7 rounded-[12px] border border-[#F3E4C2] bg-[#FFFBF2] px-5 py-4 sm:grid-cols-[220px_1fr] dark:bg-muted/30">
             <div>
-              <div><span className="text-[34px] font-bold">{avg.toFixed(1)}</span> <span className="text-[14px] text-[#6A7181]">out of 5</span></div>
+              <div><span className="text-[34px] font-bold">{avg.toFixed(1)}</span> <span className="text-[14px] text-[#6A7181]">{setupText("out of 5")}</span></div>
               <Stars value={avg} size={20} gap={4} />
-              <div className="mt-1 text-[12.5px] text-[#6A7181]">{n} review{n === 1 ? "" : "s"} from PitchSnack clients</div>
+              <div className="mt-1 text-[12.5px] text-[#6A7181]">{n}{setupText("review")}{n === 1 ? "" : "s"}{setupText("from PitchSnack clients")}</div>
             </div>
             <div className="space-y-1.5">
               {[5, 4, 3, 2, 1].map((lvl) => (
@@ -795,12 +795,12 @@ function ClientFeedback({ f, client }: { f: AdvisorFirm; client?: boolean }) {
                 </div>
                 {r.comment && <p className="mt-1.5 text-[14px] text-[#1F2937] dark:text-foreground">“{r.comment}”</p>}
                 <div className="mt-1 text-[12.5px] text-[#6A7181]">
-                  {r.role === "seller" ? "Seller" : "Buyer"}{r.detail ? ` · ${r.detail}` : ""} <span className="ml-2 font-semibold text-[#15803D]">✓ PitchSnack client</span>
+                  {r.role === "seller" ? "Seller" : "Buyer"}{r.detail ? ` · ${r.detail}` : ""} <span className="ml-2 font-semibold text-[#15803D]">{setupText("✓ PitchSnack client")}</span>
                 </div>
               </div>
             ))}
           </div>
-          <p className="mt-2 text-[12.5px] text-[#6A7181]">Only sellers and buyers who engaged you through PitchSnack can rate you, once the work is done. Reviews show the client's role and sector, never their name, and you can't edit them.</p>
+          <p className="mt-2 text-[12.5px] text-[#6A7181]">{setupText("Only sellers and buyers who engaged you through PitchSnack can rate you, once the work is done. Reviews show the client's role and sector, never their name, and you can't edit them.")}</p>
         </>
       )}
     </section>

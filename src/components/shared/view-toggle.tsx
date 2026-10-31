@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { Grid3X3, Columns2, List } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,23 +16,23 @@ export function ViewToggle({
   return (
     <div
       role="tablist"
-      aria-label="View mode"
+      aria-label={setupText("View mode")}
       className={cn(
         "inline-flex h-9 items-center rounded-md border border-input bg-background p-0.5",
         className,
       )}
     >
-      <Btn active={value === "grid"} onClick={() => onChange("grid")} label="Grid view">
+      <Btn active={value === "grid"} onClick={() => onChange("grid")} label={setupText("Grid view")}>
         <Grid3X3 className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Grid</span>
+        <span className="hidden sm:inline">{setupText("Grid")}</span>
       </Btn>
-      <Btn active={value === "split"} onClick={() => onChange("split")} label="Split view">
+      <Btn active={value === "split"} onClick={() => onChange("split")} label={setupText("Split view")}>
         <Columns2 className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Split</span>
+        <span className="hidden sm:inline">{setupText("Split")}</span>
       </Btn>
-      <Btn active={value === "list"} onClick={() => onChange("list")} label="List view">
+      <Btn active={value === "list"} onClick={() => onChange("list")} label={setupText("List view")}>
         <List className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">List</span>
+        <span className="hidden sm:inline">{setupText("List")}</span>
       </Btn>
     </div>
   );

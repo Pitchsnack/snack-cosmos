@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { StepBar, type StepItem } from "@/components/common/step-bar";
@@ -90,8 +91,8 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
       {!mine.welcome_seen_at && (
         <div className="flex items-center gap-2 rounded-xl bg-[#ECFDF3] py-[9px] pl-3.5 pr-2 text-sm font-semibold text-[#15803D] dark:bg-[#183326] dark:text-[#6FD08C]">
           <Check className="h-[17px] w-[17px]" />
-          <span className="flex-1">Welcome, {mine.first_name || "there"}. Start your setup below, or look around first.</span>
-          <button aria-label="Close" className="grid h-8 w-8 place-items-center rounded-lg hover:bg-black/5"
+          <span className="flex-1">{setupText("Welcome,")} {mine.first_name || "there"}{setupText(". Start your setup below, or look around first.")}</span>
+          <button aria-label={setupText("Close")} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-black/5"
             onClick={async () => { qc.setQueryData(["signup-state"], { ...data, answers: { ...mine, welcome_seen_at: new Date().toISOString() } }); await dismiss(); }}>
             <X className="h-4 w-4" />
           </button>
@@ -101,7 +102,7 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
       {showBoxes && c && (
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-xl border border-[#E9EBF0] bg-card p-4 dark:border-border">
-            <p className="mb-3 text-[11px] font-bold uppercase tracking-wide text-[#6B7280]">Saved when you signed up</p>
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-wide text-[#6B7280]">{setupText("Saved when you signed up")}</p>
             <ul className="space-y-2">
               {[
                 [role === "seller" ? "You are" : role === "buyer" ? (mine.buyer_relation ? "You are" : "Investor type") : "Firm type", ansLabel],
@@ -118,8 +119,8 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
               <li className="flex items-center gap-2.5">
                 {hasWeb ? <span className="grid h-[22px] w-[22px] place-items-center rounded-full bg-[#E3F3EA] text-[#1E7A4C]"><Check className="h-3.5 w-3.5" /></span>
                   : <span className="grid h-[22px] w-[22px] place-items-center"><span className="h-2 w-2 rounded-full bg-muted-foreground/40" /></span>}
-                <span className="w-28 text-[12.5px] text-[#6B7280]">Website</span>
-                {hasWeb ? <span className="text-sm font-semibold">{c.website}</span> : <span className="text-sm text-muted-foreground">Not added yet. Setup will ask for it.</span>}
+                <span className="w-28 text-[12.5px] text-[#6B7280]">{setupText("Website")}</span>
+                {hasWeb ? <span className="text-sm font-semibold">{c.website}</span> : <span className="text-sm text-muted-foreground">{setupText("Not added yet. Setup will ask for it.")}</span>}
               </li>
               {data?.sector && (
                 <li className="flex items-center gap-2.5">
@@ -128,19 +129,19 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
                 </li>
               )}
             </ul>
-            <p className="mt-3 text-[12.5px] text-[#6B7280]">Setup won't ask for these again. You can change them when you review your answers.</p>
+            <p className="mt-3 text-[12.5px] text-[#6B7280]">{setupText("Setup won't ask for these again. You can change them when you review your answers.")}</p>
           </div>
           <div className="rounded-xl border border-[#E9EBF0] bg-card p-4 dark:border-border">
-            <p className="mb-3 text-[11px] font-bold uppercase tracking-wide text-[#6B7280]">What setup will ask</p>
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-wide text-[#6B7280]">{setupText("What setup will ask")}</p>
             <ul className="space-y-2">
               {sections.map(([s, n], i) => (
                 <li key={s} className="flex items-center gap-2.5 text-sm">
                   <span className="grid h-[22px] w-[22px] place-items-center rounded-full bg-[#EFF6FF] text-xs font-semibold text-[#2563EB]">{i + 1}</span>
-                  <span className="flex-1">{s}</span><span className="text-muted-foreground">{n === 1 ? "1 question" : `${n} questions`}</span>
+                  <span className="flex-1">{s}</span><span className="text-muted-foreground">{setupText(n === 1 ? "1 question" : `${n} questions`)}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-3 border-t pt-3 text-sm font-semibold">{N} questions · about {mins} minutes</p>
+            <p className="mt-3 border-t pt-3 text-sm font-semibold">{N}{setupText("questions · about")} {mins}{setupText("minutes")}</p>
           </div>
         </div>
       )}
@@ -179,9 +180,9 @@ export function SellerSetupBanner({ setup }: { setup: Awaited<ReturnType<typeof 
     <div data-tour-banner data-tour-n={sellerN} data-tour-m={3} className="flex flex-wrap items-start gap-4 rounded-[14px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4 dark:border-[#2B4763] dark:bg-[#16283A]">
       <span className="hidden h-10 w-10 place-items-center rounded-lg bg-white md:grid"><Flag className="h-5 w-5 text-[#2563EB]" /></span>
       <div className="min-w-[240px] flex-1">
-        <p className="text-[14.5px] font-bold">{sellerDone ? "Finish setting up your business profile" : "Set up your business profile"}</p>
+        <p className="text-[14.5px] font-bold">{setupText(sellerDone ? "Finish setting up your business profile" : "Set up your business profile")}</p>
         <p className="text-[13px] text-muted-foreground">
-          {sellerDone >= sellerN ? `All ${sellerN} questions are answered. Check your profile and save it.` : `Buyers can't find your business yet. Answer ${sellerN} short questions. It takes about 3 minutes and saves as you go.`}
+          {setupText(sellerDone >= sellerN ? `All ${sellerN} questions are answered. Check your profile and save it.` : `Buyers can't find your business yet. Answer ${sellerN} short questions. It takes about 3 minutes and saves as you go.`)}
         </p>
         <div className="mt-4 max-w-[470px]">
           <StepBar missedIcon variant="banner" steps={items} lineTo={lineTo} onPick={open} label={L("Setup questions", "คำถามตั้งค่า")}
@@ -194,7 +195,7 @@ export function SellerSetupBanner({ setup }: { setup: Awaited<ReturnType<typeof 
       </div>
       <div className="flex flex-col items-end gap-1.5 max-[599px]:w-full">
         <button type="button" data-tour-btn onClick={() => open(next)} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3E56] px-4 text-sm font-semibold text-white hover:opacity-90 max-[599px]:w-full">
-          {sellerDone ? "Continue setup" : "Start setup"} <ArrowRight className="h-4 w-4" />
+          {setupText(sellerDone ? "Continue setup" : "Start setup")} <ArrowRight className="h-4 w-4" />
         </button>
       </div>
     </div>
