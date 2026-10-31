@@ -2,6 +2,8 @@ import { tr, useTranslation } from "@/i18n/language";
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Lock, AlertTriangle, Check as CheckIcon, Sparkles, Globe } from "lucide-react";
 import { StepBar, MissedNote, type StepItem } from "@/components/common/step-bar";
+import { Button } from "@/components/ui/button";
+import { WebsiteCheckLink } from "@/components/startups/website-check-link";
 import { useServerFn } from "@tanstack/react-start";
 import { checkWebsiteReachable } from "@/lib/website-check.functions";
 import { ConfirmWebsiteDialog } from "@/components/startups/confirm-website-dialog";
@@ -15,7 +17,7 @@ import { addressLine, needCls, useFocusNeeded } from "@/components/common/need-f
 import {
   SELLER_RELATIONS, THB_REVENUE_BANDS, normRevBand, addrComplete, type SellerAddr, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
   isValidUrl, normalizeUrl, sellerShown, sellerProgress, type SellerDraft,
-  sellerValid, STEP_SHORT, STEP_FULL, stepIdx, laterKey, isMissed, joinNames, type StepKey,
+  sellerValid, sellerAnswered, STEP_SHORT, STEP_FULL, stepIdx, laterKey, isMissed, joinNames, type StepKey,
 } from "@/lib/seller-wizard";
 
 const SECTIONS = ["About you", "About the company", "Financial & business profile", "Intangible assets", "Review", "Company images", "Your listing"];
@@ -175,11 +177,12 @@ export function SellerWizard({
   };
 
   const ok = sellerValid(d);
+  const answered = sellerAnswered(d);
   // Review moves on once Company, Revenue and Sector are answered.
   const barNow = shownOf(d, null).map((i) => STEPS[i]!.id as StepKey);
   const blockers = (["name", "rev", "sector", ...LISTING_KEYS.filter((k) => barNow.includes(k))] as StepKey[]).filter((k) => !ok[k]);
   const valid: Record<string, boolean> = { ...ok, review: blockers.length === 0 };
-  const canSkip = (cur.id === "web" && !ok.web) || (cur.id === "lic" && !ok.lic);
+  const canSkip = (cur.id === "web" && !isValidUrl(d.web)) || (cur.id === "lic" && d.licences.length + d.iso.length === 0);
 
   // The step bar: questions that show, plus Review.
   const bar = shownOf(d, null);
@@ -201,7 +204,7 @@ export function SellerWizard({
       : st === "missed" ? L("Not answered · click to answer", "ยังไม่ได้ตอบ · กดเพื่อตอบ")
       : L("Not reached yet · click to go there", "ยังไม่ถึงขั้นนี้ · กดเพื่อไปที่ขั้นนี้");
   const items: StepItem[] = barKeys.map((k, i) => {
-    const state: StepItem["state"] = inBar && bar[i] === step ? "here" : k !== "review" && ok[k] ? "done" : k !== "review" && isMissed(k, d) ? "missed" : "todo";
+    const state: StepItem["state"] = inBar && bar[i] === step ? "here" : k !== "review" && answered[k] ? "done" : k !== "review" && isMissed(k, d) ? "missed" : "todo";
     return { key: k, label: L(...STEP_SHORT[k]), full: L(...STEP_FULL[k]), state, tip: tipOf(k, state) };
   });
   const farIdx = stepIdx(laterKey(reached, inBar ? cur.id : null));
@@ -247,20 +250,12 @@ export function SellerWizard({
       body: (
         <div>
           <label htmlFor="sw-web" className={fieldLbl}>{L("Company website", "เว็บไซต์บริษัท")}</label>
-          <div className="flex gap-2">
+          <div className="seller-web-field flex gap-2">
             <input id="sw-web" ref={webRef} className={inp} value={d.web} autoFocus maxLength={2048} onChange={(e) => set({ web: e.target.value })}
               onKeyDown={(e) => { if (e.key === "Enter" && ok.web) { e.preventDefault(); fwdRef.current?.click(); } }}
               onBlur={() => set({ web: d.web.trim() })} placeholder="www.yourcompany.com" />
-            {valid.web ? (
-              <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer"
-                className="inline-flex flex-none items-center gap-1.5 rounded-[10px] border border-[#d1d5db] bg-white px-3.5 text-[13.5px] font-semibold text-[#1e2a4a] hover:border-[#1e2a4a]">
-                <ExternalLink className="h-4 w-4" />Check website
-              </a>
-            ) : (
-              <span aria-disabled="true" className="inline-flex flex-none cursor-not-allowed items-center gap-1.5 rounded-[10px] border border-[#eef0f3] bg-white px-3.5 text-[13.5px] font-semibold text-[#c0c4cc]">
-                <ExternalLink className="h-4 w-4" />Check website
-              </span>
-            )}
+            <WebsiteCheckLink valid={isValidUrl(d.web)} url={normalizeUrl(d.web)} label={L("Check website", "ตรวจสอบเว็บไซต์")}
+              hint={L("Checks whether the website link you entered opens correctly.", "ใช้เพื่อตรวจสอบว่าลิงก์เว็บไซต์ที่กรอกถูกต้องและเปิดใช้งานได้")} />
           </div>
           {d.web.trim() && !valid.web ? (
             <p className="mt-1.5 text-[13px] text-destructive">{tr("Enter a valid website address, e.g. www.yourcompany.com")}</p>
@@ -349,16 +344,16 @@ export function SellerWizard({
             [tr("Company name"), d.name, 1],
             [tr("Registration no."), d.reg, 1],
             [tr("Business address"), addressLine(d.addr), 1],
-            [tr("Website"), d.web && valid.web ? <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer" className="text-[#1e2a4a] underline underline-offset-2">{d.web} ↗</a> : "", 2],
+            [L("Company website", "เว็บไซต์บริษัท"), isValidUrl(d.web) ? <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer" className="text-[#1e2a4a] underline underline-offset-2">{d.web} ↗</a> : L("No company website", "ไม่มีเว็บไซต์บริษัท"), 2],
             [tr("Year founded"), d.year, 3],
             [tr("Revenue last year"), d.rev ? tr(normRevBand(d.rev)) : d.rev, 4],
             [tr("Company size"), WIZARD_SIZES.find((s) => s.value === d.size)?.label, 5],
             [tr("Sector"), d.sector, 6],
-            [tr("Licences & standards"), [...d.licences.map((l) => l.name), ...d.iso].join(", "), 7],
+            [tr("Licences & standards"), [...d.licences.map((l) => l.name), ...d.iso].join(", ") || L("None", "ไม่มี"), 7],
           ] as [string, React.ReactNode, number][]).map(([k, v, n], ri) => {
             const key = STEPS[n]!.id as StepKey;
             const rowOk = [!!d.role, !!d.name.trim(), /^\d{13}$/.test(d.reg), addrComplete(d.addr), ok.web, ok.year, ok.rev, ok.size, ok.sector, ok.lic][ri];
-            const red = !rowOk && barKeys.includes(key);
+            const red = key !== "web" && key !== "lic" && !rowOk && barKeys.includes(key);
             return (
               <div key={k} className={`flex gap-3 border-b border-[#f0f1f3] px-4 py-3 text-sm last:border-0 ${red ? "bg-[#FEF2F2]" : ""}`}>
                 <span className="w-[170px] flex-none text-[#6b7280] max-[599px]:w-[110px]">{k}</span>
@@ -438,7 +433,7 @@ export function SellerWizard({
           <span>Step {pos + 1} of {shown.length}</span>
         </div>
         <div className="mb-6 mt-5">
-          <StepBar steps={items} lineTo={lineTo} onPick={openStep} label={L("Setup steps", "ขั้นตอนการตั้งค่า")} stepWord={stepWord} missedWord={L("Not answered", "ยังไม่ได้ตอบ")} />
+          <StepBar missedIcon steps={items} lineTo={lineTo} onPick={openStep} label={L("Setup steps", "ขั้นตอนการตั้งค่า")} stepWord={stepWord} missedWord={L("Not answered", "ยังไม่ได้ตอบ")} />
           <MissedNote missed={missed} onPick={openStep} answerNow={L("Answer now", "ตอบเลย")}
             desktop={th ? `มี ${missed.length} คำถามที่ยังไม่ได้ตอบ กดวงกลมสีแดงเพื่อตอบ` : missed.length === 1 ? "1 question not answered. Click the red step to answer it." : `${missed.length} questions not answered. Click a red step to answer it.`}
             row={(n, f) => L(`Step ${n} · ${f} isn't answered yet`, `ขั้นที่ ${n} · ${f} ยังไม่ได้ตอบ`)} />
@@ -450,19 +445,23 @@ export function SellerWizard({
             {!q.h && <div className="mb-6" />}
             {q.body}
           </div>
-          <div className="mt-8 flex items-center gap-2.5">
-            <button type="button" onClick={back}
-              className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{pos === 0 && full == null ? "ยกเลิก" : tr("Back")}</button>
-            {canSkip && (
+          <div className={cur.id === "web" ? `seller-website-actions ${canSkip ? "has-no-website" : ""}` : "mt-8 flex items-center gap-2.5"}>
+            <Button variant="unstyled" size="unstyled" type="button" onClick={back}
+              className={cur.id === "web" ? "seller-action seller-action-back" : "rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"}>{pos === 0 && full == null ? "ยกเลิก" : tr("Back")}</Button>
+            {canSkip && cur.id !== "web" && (
               <button type="button" className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"
                 ref={skipRef} onClick={() => { if (cur.id === "web") setSkipAsk(true); else advance(); }}>{tr("Skip")}</button>
             )}
-            <div className="ml-auto flex items-center gap-2.5">
+            {cur.id === "web" && <>
+              <span className="seller-actions-spacer" />
+              {canSkip && <Button variant="unstyled" size="unstyled" className="seller-action seller-action-no-website" ref={skipRef} onClick={() => setSkipAsk(true)}>{L("No company website", "ไม่มีเว็บไซต์บริษัท")}</Button>}
+            </>}
+            <div className={cur.id === "web" ? "contents" : "ml-auto flex items-center gap-2.5"}>
               {pos > 0 && (
-                <button type="button" onClick={() => setConfirmExit(true)}
-                  className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{tr("Save & exit")}</button>
+                <Button variant="unstyled" size="unstyled" type="button" onClick={() => setConfirmExit(true)}
+                  className={cur.id === "web" ? "seller-action" : "rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"}>{tr("Save & exit")}</Button>
               )}
-              <button type="button" ref={fwdRef} disabled={!valid[cur.id] || (cur.id === "web" && webState === "checking")}
+              <Button variant="unstyled" size="unstyled" type="button" ref={fwdRef} disabled={!valid[cur.id] || (cur.id === "web" && webState === "checking")}
                 onClick={async () => {
                   if (cur.id === "review") {
                     // A valid website typed in Review's box is saved first; an invalid one shows its error.
@@ -481,10 +480,10 @@ export function SellerWizard({
                   }
                   advance();
                 }}
-                className="rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]">
+                className={cur.id === "web" ? "seller-action seller-action-primary" : "rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]"}>
                 {cur.id === "review" ? tr("Continue to auto-fill") : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? tr("Back to review") : tr("Continue")}
 
-              </button>
+              </Button>
             </div>
           </div>
         </div>
