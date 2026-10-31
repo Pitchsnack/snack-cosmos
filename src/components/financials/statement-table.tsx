@@ -25,12 +25,12 @@ export function StatementTable({
 
   return (
     <div className="overflow-x-auto rounded-lg border border-border/60">
-      <table className="w-full min-w-[900px] border-collapse text-sm">
+      <table className="w-max min-w-full border-collapse text-[13px]">
         <thead>
           <tr>
             <th
               rowSpan={2}
-              className={cn("sticky left-0 z-10 w-[300px] px-4 py-3 text-left font-semibold", HEAD)}
+              className={cn("sticky left-0 z-10 min-w-[240px] p-[10px] text-left font-semibold", HEAD)}
             >
               Unit : Baht
             </th>
@@ -38,7 +38,7 @@ export function StatementTable({
               <th
                 key={y}
                 colSpan={2}
-                className={cn("border-l border-white/15 px-4 py-2 text-center font-semibold", HEAD)}
+                className={cn("border-l border-white/15 p-[10px] text-center text-[13px] font-bold", HEAD)}
               >
                 {y}
               </th>
@@ -47,10 +47,10 @@ export function StatementTable({
           <tr>
             {years.map((y) => (
               <Fragment key={y}>
-                <th className={cn("border-l border-white/15 px-4 py-2 text-center text-xs font-medium", HEAD)}>
+                <th className={cn("whitespace-nowrap border-l border-white/15 p-[10px] text-right text-[12px] font-medium", HEAD)}>
                   Amount
                 </th>
-                <th className={cn("border-l border-white/15 px-4 py-2 text-center text-xs font-medium", HEAD)}>
+                <th className={cn("whitespace-nowrap border-l border-white/15 p-[10px] text-right text-[12px] font-medium", HEAD)}>
                   %Change
                 </th>
               </Fragment>
@@ -75,7 +75,7 @@ export function StatementTable({
                   <th
                     scope="row"
                     className={cn(
-                      "sticky left-0 z-10 px-4 py-2.5 text-left font-normal",
+                      "sticky left-0 z-10 p-[10px] text-left font-normal",
                       HEAD,
                       row.isTotal && "font-semibold",
                     )}
@@ -88,13 +88,13 @@ export function StatementTable({
                       <Fragment key={y}>
                         <td
                           className={cn(
-                            "px-4 py-2.5 text-right tabular-nums",
-                            row.isTotal && "font-semibold",
+                            "h-10 whitespace-nowrap p-[10px] text-right text-[13px] tabular-nums",
+                            row.isTotal && "font-bold",
                           )}
                         >
                           {it ? fmtAmount(it.amount) : EMPTY}
                         </td>
-                        <td className="border-l border-border/40 px-4 py-2.5 text-right tabular-nums text-muted-foreground">
+                        <td className="whitespace-nowrap border-l border-border/40 p-[10px] text-right text-[12px] tabular-nums text-muted-foreground">
                           {it && it.percent_change !== null ? fmtNumber(it.percent_change) : EMPTY}
                         </td>
                       </Fragment>
