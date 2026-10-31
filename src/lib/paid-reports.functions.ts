@@ -21,7 +21,7 @@ async function control(ctx: Ctx) {
   return supabaseAdmin as any;
 }
 const norm = (s: unknown) => { const d = String(s ?? "").replace(/\D/g, ""); return /^\d{13}$/.test(d) ? d : null; };
-const PRICES = catalog.prices as Record<string, number>;
+
 const one = (x: any) => (Array.isArray(x) ? x[0] : x);
 
 /** Read through the Data API row cap; the UI still returns only 25 companies. */
@@ -131,9 +131,8 @@ export const listPaidReports = createServerFn({ method: "GET" })
     const total = list.length;
     const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
     const page = Math.min(data.page, pages);
-    const { data: plan } = await sb.from("plans").select("verification_price_thb").eq("role", "seller").eq("status", "live").eq("verification_mode", "paid").order("sort").limit(1);
-    const vp = Number(plan?.[0]?.verification_price_thb);
-    const prices: Record<string, number | null> = { verification: vp > 0 ? vp : null, shareholders: PRICES.shareholders ?? null, statements: PRICES.financials ?? null, valuation: PRICES.valuation ?? null, pnl: PRICES.financials ?? null, risk: PRICES.risk ?? null, credit: null };
+    const {data:rateRows,error:rateError}=await sb.from('report_prices').select('report_key,price_type,price_thb');if(rateError)throw new Error('Report prices unavailable');
+    const prices:Record<string,number|null>=Object.fromEntries(rateRows.map((r:any)=>[r.report_key,r.price_type==='on_request'?null:Number(r.price_thb)]));
     return { rows: list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), total, page, pages, counts, prices };
   });
 
