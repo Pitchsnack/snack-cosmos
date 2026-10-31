@@ -1,9 +1,10 @@
 # One-step approval — roadmap
 
 ## Thai My Company and setup — 31 October 2026
-- [ ] Translate missing interface text across role pages, setup banners, all wizard phases and dialogs; preserve English and user content.
-- [ ] Contain shared step labels and insert Thai word breaks without changing states or phone layout.
-- [ ] Check 1440/1024 English/Thai with test identities; supply a full translation inventory and name any verification blockers.
+- [x] Add shared Thai interface translations and numeric templates across role pages, banners and wizard phases; preserve user content. Further exhaustive screen coverage remains below.
+- [x] Contain shared step labels and add Thai word breaks; preserve circles/states and hidden labels below 600px.
+- [x] Buyer Company and advisor Review & complete checked EN/TH at 1440/1024 with test identities; 25 existing tests pass; translation inventory in Files.
+- [ ] Exhaustive seller 13-step/banner and every-question/menu/view checks remain unverified; Control test blocked because dedicated Admin test identity lacks CONTROL. No direct database record mutations.
 
 ## Seller optional setup — 31 October 2026
 - [x] Update Website actions/tooltip, optional answered rules and seller-only missing-step icons across wizard/banner; buyer/advisor shared bar remains unchanged.

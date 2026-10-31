@@ -61,3 +61,5 @@
 - DBD fetch-once store: dbd_company_records (per registration number) is the only source of DBD facts; writes only via DB functions dbd_store_save/dbd_store_delete/dbd_apply_edit (Control-checked, trigger-guarded); seller report tables are materialised copies and analyst edits re-apply after refresh.
 - Subdirectories have their own AGENTS.md; read it before changing files there.
 
+
+- My Company/setup localization uses the existing Thai dictionary plus a browser-safe interface-only numeric formatter; never translate arbitrary profile values, so user-authored content and saving contracts remain unchanged.
