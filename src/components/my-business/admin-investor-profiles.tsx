@@ -78,7 +78,8 @@ function ExtraProfile({ id, open }: { id: string; open: boolean }) {
         founded={individual ? null : iv.year_founded} size={individual ? null : iv.company_size_band} website={iv.website_url} />
       {!iv.setup_done_at ? (
         <DraftCompanyPanel role="buyer" name={nm} banner={<SetupBanner n={prog.n} N={prog.N} onOpen={openWizard} />}
-          onEdit={() => setEditing(true)} onFinish={openWizard} />
+          onEdit={() => setEditing(true)} onFinish={openWizard}
+          deleteDraft={{ kind: "investor", id, invalidate: [INVESTOR_IDS_KEY, buyerInvestorKey(id)] }} />
       ) : (
         <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm">
           <p className="text-[15px] font-semibold">{nm}</p>
