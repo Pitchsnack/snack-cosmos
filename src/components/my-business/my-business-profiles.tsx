@@ -506,6 +506,7 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
             workspace="my-startups"
             headerPill={adminReview ? undefined : pill}
             companyMenuEdit={adminReview ? undefined : () => openEdit(current.id, "private", "images")}
+            companyMenuDeleteDraft={adminReview ? undefined : { kind: "startup", id: current.id, invalidate: [["startups"]], onDeleted: () => closeDeleted(current.id) }}
             ownerMedia={adminReview ? undefined : () => openEdit(current.id, "private", "images", "media")}
              afterFounders={!adminReview && <ReportOffers id={current.id} />}
              sectionEdit={adminReview ? undefined : (k) => (
