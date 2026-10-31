@@ -452,7 +452,7 @@ export function SellerWizard({
           </div>
           <div className="mt-8 flex items-center gap-2.5">
             <button type="button" onClick={back}
-              className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{pos === 0 && full == null ? "Cancel" : tr("Back")}</button>
+              className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]">{pos === 0 && full == null ? "ยกเลิก" : tr("Back")}</button>
             {canSkip && (
               <button type="button" className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"
                 ref={skipRef} onClick={() => { if (cur.id === "web") setSkipAsk(true); else advance(); }}>{tr("Skip")}</button>
