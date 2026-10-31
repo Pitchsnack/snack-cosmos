@@ -26,6 +26,7 @@ export function UnsavedChangesDialog({
   saving,
   canSave = true,
 }: UnsavedChangesDialogProps) {
+  const tr = useTr();
   return (
     <AlertDialog
       open={open}
@@ -36,9 +37,9 @@ export function UnsavedChangesDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+          <AlertDialogTitle>{tr("Unsaved Changes", "มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก")}</AlertDialogTitle>
           <AlertDialogDescription>
-            You have unsaved changes. Do you want to save before leaving?
+            {tr("You have unsaved changes. Do you want to save before leaving?", "ท่านมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก ต้องการบันทึกก่อนออกหรือไม่")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
