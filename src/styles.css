@@ -84,6 +84,13 @@
 }
 
 :root {
+  --seller-action-border: #DCDFE5;
+  --seller-action-ink: #1E2A4A;
+  --seller-action-hover: #EFF6FF;
+  --seller-action-hover-border: #93C5FD;
+  --seller-action-hover-ink: #1D4ED8;
+  --seller-tooltip-background: #111827;
+  --seller-tooltip-foreground: #FFFFFF;
   --owner-story-background: #FFFFFF;
   --owner-story-border: #DCDFE5;
   --owner-story-ink: #151A28;
@@ -432,6 +439,30 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .role-advisor { --r-acc: #0F766E; --r-soft: #E0F5F2; --r-ink: #0F766E; --r-ring: rgba(15,118,110,.22); }
 
 /* Setup wizards: gentle blue hover (scoped to .wiz; option cards use text-left and keep their own hover) */
+.seller-web-check { position: relative; display: inline-flex; flex: none; }
+.seller-check-button { display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border: 1px solid var(--seller-action-border); border-radius: 10px; background: var(--card); color: var(--seller-action-ink); font-size: 13.5px; font-weight: 600; }
+.seller-check-button:disabled { color: var(--muted-foreground); }
+.seller-check-tooltip { position: absolute; right: 0; bottom: calc(100% + 10px); z-index: 30; width: max-content; max-width: min(280px, calc(100vw - 48px)); padding: 8px 11px; border-radius: 8px; background: var(--seller-tooltip-background); color: var(--seller-tooltip-foreground); font-size: 13px; font-weight: 500; line-height: 1.45; pointer-events: none; visibility: hidden; }
+.seller-check-tooltip[data-open="true"] { visibility: visible; }
+.seller-check-tooltip::after { content: ""; position: absolute; top: 100%; right: 28px; border: 6px solid transparent; border-top-color: var(--seller-tooltip-background); }
+.seller-website-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 32px; }
+.seller-website-actions .seller-actions-spacer { flex: 1; }
+.seller-website-actions .seller-action { height: 50px; padding: 0 22px; border: 1px solid var(--seller-action-border); border-radius: 12px; background: var(--card); color: var(--seller-action-ink); font-size: 16px; font-weight: 600; white-space: nowrap; }
+.seller-website-actions .seller-action-primary { background: var(--seller-action-ink); color: var(--seller-tooltip-foreground); border-color: var(--seller-action-ink); }
+.dark { --seller-action-border: var(--border); --seller-action-ink: var(--foreground); --seller-action-hover: #13243F; --seller-action-hover-border: #3B6BB0; --seller-action-hover-ink: #93C5FD; }
+@media (hover: hover) { .seller-website-actions .seller-action:not(.seller-action-primary):not(:disabled):hover, .seller-check-button:not(:disabled):hover { background: var(--seller-action-hover); border-color: var(--seller-action-hover-border); color: var(--seller-action-hover-ink); } }
+@media (max-width: 599px) {
+  .seller-website-actions .seller-actions-spacer { display: none; }
+  .seller-website-actions .seller-action { flex: 1 1 auto; padding-inline: 16px; }
+  .seller-website-actions:not(.has-no-website) .seller-action-primary { flex-basis: 100%; }
+  .seller-web-field { flex-wrap: wrap; }
+  .seller-web-field input { min-width: 0; flex: 1 1 120px; }
+  .seller-check-button { min-height: 44px; }
+}
+@media (max-width: 374px) {
+  .seller-website-actions.has-no-website .seller-action-back,
+  .seller-website-actions.has-no-website .seller-action-no-website { flex-basis: 100%; }
+}
 .wiz button:not(:disabled) { transition: background-color 150ms, border-color 150ms, color 150ms; }
 @media (prefers-reduced-motion: reduce) { .wiz button { transition: none; } }
 @media (hover: hover) {
