@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { countryLabel } from "@/i18n/th-edit-info";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -48,6 +49,8 @@ interface CountryComboboxProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  /** Display language for country names; the saved value stays English. */
+  lang?: "en" | "th";
 }
 
 export function CountryCombobox({
@@ -56,6 +59,7 @@ export function CountryCombobox({
   placeholder = "Select country...",
   disabled = false,
   className,
+  lang = "en",
 }: CountryComboboxProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -73,7 +77,7 @@ export function CountryCombobox({
             className,
           )}
         >
-          <span className="truncate">{value || placeholder}</span>
+          <span className="truncate">{value ? countryLabel(value, lang) : placeholder}</span>
           <span className="ml-1 flex items-center gap-1 shrink-0">
             {value && !disabled && (
               <span
@@ -124,6 +128,7 @@ export function CountryCombobox({
                 <CommandItem
                   key={country}
                   value={country}
+                  keywords={[countryLabel(country, lang)]}
                   onSelect={(currentValue) => {
                     onChange(
                       currentValue.toLowerCase() === value.toLowerCase() ? "" : country,
@@ -140,7 +145,7 @@ export function CountryCombobox({
                         : "opacity-0",
                     )}
                   />
-                  {country}
+                  {countryLabel(country, lang)}
                 </CommandItem>
               ))}
             </CommandGroup>

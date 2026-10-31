@@ -1,5 +1,14 @@
 # One-step approval — roadmap
 
+## Seller Edit information grid + Thai (brief: Edit_information_seller_About_Company_s_boxes_pasted.md) — 31 October 2026
+- [ ] 1. About Company one grid: Year Founded aligned with Company Name/Registered Number; Investment Stage·Revenue and Headquarters·City on the three-column grid (1+2 cols); stacks ≤640px.
+- [ ] 2. App-in-Thai: every label/hint/Missing/placeholder/button of section 2 Thai (header, Listing Identity, About Company, Address, Industry & Market, About Owner); view buttons Thai on Listing view.
+- [ ] 3. Data follows Texts in: list options/chips/country line Thai on ไทย (industry, licence, ISO chips; size/region/revenue/headquarters/province/sector/business model).
+- [ ] 4. Buyer preview card labels follow Texts in (ธุรกิจ/หัวข้อของท่าน/รายได้/สินค้าและบริการ/ตลาด/ประเทศไทย).
+- [ ] 5. Images & Logo Thai Why-add-them: new intro line + three points, English unchanged.
+- [ ] 6. Shared translation entries for sections 2–4; other pages (buyer/advisor edit, wizards, My Company, Browse, Admin) use them.
+- [ ] Done-when: screenshots 1440px Thai/ไทย of all tabs; reply lists Year Founded cause, kept Thai, untranslated options, pages using shared words, old→new Thai changes, remaining English.
+
 ## Thai My Company and setup — 31 October 2026
 - [x] Add shared Thai interface translations and numeric templates across role pages, banners and wizard phases; preserve user content. Further exhaustive screen coverage remains below.
 - [x] Contain shared step labels and add Thai word breaks; preserve circles/states and hidden labels below 600px.

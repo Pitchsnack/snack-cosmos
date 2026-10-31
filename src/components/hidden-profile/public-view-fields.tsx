@@ -20,6 +20,8 @@ import { checkListingName } from "@/lib/hidden-profiles.functions";
 import { cn } from "@/lib/utils";
 import { LangTag, missingLangHint, useTextLang } from "@/components/common/text-lang";
 import { usePermissions } from "@/hooks/use-session-context";
+import { founderRevenueLabel } from "@/lib/founder-story";
+import { countryLabel } from "@/i18n/th-edit-info";
 
 /**
  * Edit information › Listing view: Listing Identity and Deal Terms, as two tabs
@@ -204,7 +206,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
     const fill = (
       <TooltipProvider><Tooltip><TooltipTrigger asChild>
         <button type="button" onClick={pd.fillAll} className="inline-flex h-9 items-center gap-2 rounded-[9px] border border-[#DCDFE5] bg-background px-[13px] text-[13.5px] font-medium hover:bg-muted dark:border-border">
-          <Sparkles className="h-[15px] w-[15px]" />{tr("Auto-fill this tab", "กรอกแท็บนี้อัตโนมัติ")}
+          <Sparkles className="h-[15px] w-[15px]" />{tr("Auto-fill this tab", "เติมข้อมูลแท็บนี้อัตโนมัติ")}
         </button>
       </TooltipTrigger><TooltipContent>{tr("Fills in every field on this tab for you. You can change anything afterwards.", "กรอกทุกช่องในแท็บนี้ให้ท่าน ท่านแก้ไขได้ภายหลัง")}</TooltipContent></Tooltip></TooltipProvider>
     );
@@ -220,7 +222,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
               {pd.canName ? <ListingNameField pd={pd} refNo={refNo} /> : <SuggestedNameField pd={pd} refNo={refNo} />}
             </EditSec>
             <EditSec id="headline" tone="seller" active={section === "headline"}>
-              <FieldRow label={tr("Headline", "พาดหัว")} after={<LangTag />} htmlFor="hp-headline" missing={!both("headline")} right={`${tv("headline").length}/120`} suggest={ideas.headlineIdea ? () => tset("headline", ideas.headlineIdea) : undefined}>
+              <FieldRow label={tr("Headline", "หัวข้อ")} after={<LangTag />} htmlFor="hp-headline" missing={!both("headline")} right={`${tv("headline").length}/120`} suggest={ideas.headlineIdea ? () => tset("headline", ideas.headlineIdea) : undefined}>
                 <Input id="hp-headline" lang={lang} maxLength={120} value={tv("headline")} placeholder={tph("headline", ideas.headlineIdea)} onChange={(e) => tset("headline", e.target.value)} className={cn(BOX, !both("headline") && MISS_BOX, flag("headline"))} />
               </FieldRow>
               <FlagMsg pd={pd} k="headline" />
@@ -239,7 +241,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
                     const filled = !!h.trim();
                     const ring = !hlEn[i]?.trim() && !hlTh[i]?.trim();
                     const req = i < 3;
-                    const name = req ? tr(`Highlight ${i + 1}`, `จุดเด่นข้อที่ ${i + 1}`) : tr("Highlight 4 (optional)", "จุดเด่นข้อที่ 4 (ไม่บังคับ)");
+                    const name = req ? tr(`Highlight ${i + 1}`, `จุดเด่นที่ ${i + 1}`) : tr("Highlight 4 (optional)", "จุดเด่นที่ 4 (ไม่บังคับ)");
                     return (
                       <div key={i} className="flex min-h-12 items-center gap-3 border-t border-[#EEF0F3] px-[14px] first:border-t-0 focus-within:bg-[#FAFBFC] dark:border-border dark:focus-within:bg-muted/40">
                         {filled ? (
@@ -410,7 +412,7 @@ function SuggestedNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: strin
       <FieldRow label={tr("Listing name", "ชื่อประกาศ")} htmlFor="hp-suggested-name" right={`${val.length}/120`}>
         <Input id="hp-suggested-name" maxLength={120} value={val} placeholder={refNo || ""}
           onChange={(e) => setD((p) => ({ ...p, suggested_listing_name: e.target.value }))} className={BOX} />
-        <p className="mt-1 flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.", "ข้อเสนอของท่าน เราได้ปรับชื่อประกาศและพาดหัวของท่าน เพื่อลดความซ้ำซ้อนและให้ประกาศของท่านแยกแยะได้ง่ายขึ้น")}</p>
+        <p className="mt-1 flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.", "ข้อเสนอของท่าน เราได้ปรับชื่อประกาศและหัวข้อของท่าน เพื่อลดความซ้ำซ้อนและให้ประกาศของท่านแยกแยะได้ง่ายขึ้น")}</p>
       </FieldRow>
     </div>
   );
@@ -459,7 +461,7 @@ function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string 
   
       </div>
       <div className="relative">
-        <Input id="hp-code_name" ref={input} value={d.code_name} placeholder={tr("Type a name or pick a suggestion", "พิมพ์ชื่อ หรือเลือกจากชื่อที่แนะนำ")}
+        <Input id="hp-code_name" ref={input} value={d.code_name} placeholder={tr("Type a name or pick a suggestion", "พิมพ์ชื่อหรือเลือกจากชื่อที่แนะนำ")}
           aria-describedby={cn(tipId, taken && errId)} aria-invalid={taken || undefined} aria-expanded={open} aria-haspopup="listbox"
           onMouseDown={() => setOpen(true)}
           onKeyDown={(e) => { if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); requestAnimationFrame(() => wrap.current?.querySelector<HTMLElement>("[data-name-opt]")?.focus()); } if (e.key === "Escape") setOpen(false); }}
@@ -522,10 +524,10 @@ function BuyerPreview({ d, sector, pickedImage, source, refNo }: { d: HiddenDraf
   const city = source?.city || source?.headquarters || "";
   const products = (d.product_tags ?? source?.product_tags ?? []).slice(0, 3).join(", ");
   const markets = (d.market_tags ?? source?.market_tags ?? []).slice(0, 3).join(", ");
-  const rev = revenueBand(source?.last_year_revenue) ?? "—";
+  const rev = (source?.last_year_revenue ? founderRevenueLabel(source.last_year_revenue, lang) : null) ?? revenueBand(source?.last_year_revenue) ?? "—";
   const caption = <div className="mb-2 flex items-center gap-[6px] text-[12.5px] font-semibold text-[#4338CA]"><Eye className="h-[14px] w-[14px]" strokeWidth={2} />{appTr("Buyer preview", "ตัวอย่างที่ผู้ซื้อเห็น")}{lang !== appLang && <span className={cn("lang-tag", lang === "th" ? "lang-tag-th" : "lang-tag-en")}>{lang === "th" ? "ไทย" : "English"}</span>}</div>;
   const nameEl = <div className={cn("text-[14px] font-bold text-[#151A28] dark:text-foreground", !name && "font-semibold text-[#8A90A0]")}>{name || refNo || tr("Your listing name", "ชื่อประกาศของท่าน")}</div>;
-  const headEl = (cls: string) => <div className={cn("text-[12px] text-[#4B5563] dark:text-muted-foreground", cls, !head && "font-semibold text-[#8A90A0]")}>{head || tr("Your headline", "หัวข้อประกาศของท่าน")}</div>;
+  const headEl = (cls: string) => <div className={cn("text-[12px] text-[#4B5563] dark:text-muted-foreground", cls, !head && "font-semibold text-[#8A90A0]")}>{head || tr("Your headline", "หัวข้อของท่าน")}</div>;
   return (
     <div aria-hidden className="pointer-events-none sm:sticky sm:top-4">
       {caption}
@@ -533,7 +535,7 @@ function BuyerPreview({ d, sector, pickedImage, source, refNo }: { d: HiddenDraf
         <SectorArt sector={sector} imageId={pickedImage ?? null} className="h-[140px] w-full [&_img]:object-cover" />
         <div className="px-3 pb-[14px] pt-3">
           {nameEl}
-          <div className="mt-1 truncate text-[11.5px] text-[#6A7181]">{[refNo, sector, city].filter(Boolean).join(" · ")}</div>
+          <div className="mt-1 truncate text-[11.5px] text-[#6A7181]">{[refNo, sector, countryLabel(city, lang)].filter(Boolean).join(" · ")}</div>
           {headEl("mt-2")}
           <div className="mt-3 space-y-2 text-[11.5px]">
             <div className="flex justify-between"><span className="text-[#6A7181]">{tr("Revenue", "รายได้")}</span><span className="font-medium">{rev}</span></div>

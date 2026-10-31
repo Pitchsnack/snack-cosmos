@@ -18,6 +18,9 @@ import {
 import { cn } from "@/lib/utils";
 import { usePeerAvailability } from "@/hooks/use-peer-availability";
 import { modelAvailability, type AvailabilityBadge } from "@/lib/peer-comparables";
+import { useTr } from "@/components/common/edit-info-popup";
+import { useTextLang } from "@/components/common/text-lang";
+import { businessModelLabel } from "@/i18n/th-edit-info";
 
 function norm(s: string) {
   return s.toLowerCase().replace(/[\s\-—–._&/]/g, "");
@@ -307,6 +310,7 @@ export function BusinessModelPicker({
   const [activeIndex, setActiveIndex] = useState(0);
   const optionListRef = useRef<HTMLDivElement>(null);
   const selected = BUSINESS_MODELS.find((b) => b.value === value) ?? null;
+  const { lang } = useTextLang();
   const { data: availability } = usePeerAvailability(!!sector);
   const options = [null, ...BUSINESS_MODELS.map((model) => model.value)] as const;
 
@@ -367,7 +371,7 @@ export function BusinessModelPicker({
             )}
           >
             <span className={cn("truncate", !selected && !compact && "text-muted-foreground")}>
-              {selected?.label ?? (compact ? "Not set" : "Choose a business model…")}
+              {selected ? businessModelLabel(selected.label, lang) : (compact ? "Not set" : "Choose a business model…")}
             </span>
             {selected && !compact && (
               <span className="truncate text-[11.5px] text-[#9AA3AF]">{selected.hint}</span>
@@ -438,7 +442,7 @@ export function BusinessModelPicker({
                     activeIndex === index + 1 && b.value !== value && "bg-[#F8FAFD]",
                   )}
                 >
-                  <span className="shrink-0">{b.label}</span>
+                  <span className="shrink-0">{businessModelLabel(b.label, lang)}</span>
                   <span className="truncate text-[11.5px] text-[#9AA3AF]">{b.hint}</span>
                   {badge ? (
                     <AvailabilityBadgePill badge={badge} />
@@ -473,6 +477,7 @@ export function SectorBusinessModelFields({
   businessModel: string | null;
   onBusinessModelChange: (v: string | null) => void;
 }) {
+  const tr = useTr();
   const boxRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
 
@@ -499,16 +504,16 @@ export function SectorBusinessModelFields({
     >
       <div className="space-y-1.5">
         <div className="text-[13px] font-medium text-foreground">
-          Sector <span className="text-muted-foreground">(optional)</span>
+          {tr("Sector", "กลุ่มอุตสาหกรรม")} <span className="text-muted-foreground">{tr("(optional)", "(ไม่บังคับ)")}</span>
         </div>
         <p className="text-[11.5px] text-muted-foreground">
-          SET classification, used for financial benchmarking
+          {tr("SET classification, used for financial benchmarking", "การจัดกลุ่มของ SET ใช้เทียบเคียงตัวเลขทางการเงิน")}
         </p>
         <SectorPicker value={sector} onChange={onSectorChange} />
       </div>
       <div className="space-y-1.5">
         <div className="text-[13px] font-medium text-foreground">
-          Business model <span className="text-muted-foreground">(optional)</span>
+          {tr("Business model", "รูปแบบธุรกิจ")} <span className="text-muted-foreground">{tr("(optional)", "(ไม่บังคับ)")}</span>
         </div>
         <BusinessModelPicker
           value={businessModel}

@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { X, RefreshCw, Sparkles, Upload, Scissors, Loader2, Lock } from "lucide-react";
-import { useTranslation } from "@/i18n/language";
+import { setupText, useTranslation } from "@/i18n/language";
 import { AddressBox } from "@/components/common/business-address";
 import { SnippingCapture } from "@/components/media/snipping-capture";
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,8 @@ import {
 import { AutoEnrichButton } from "./auto-enrich-button";
 import { AttachmentCard, attachmentMissing } from "./attachment-card";
 import { LicenceLists } from "./licence-lists";
-import { LangTag, missingLangHint, useBiList, useBiText } from "@/components/common/text-lang";
+import { LangTag, missingLangHint, useBiList, useBiText, useTextLang } from "@/components/common/text-lang";
+import { countryLabel, industryLabel, missingLine, sizeLabel } from "@/i18n/th-edit-info";
 import { CompactFields, EditInfoFooter, EditInfoTabsSlot, MainTabs, TabHead, TabRow, useEditInfo, useTr } from "@/components/common/edit-info-popup";
 import { PublicViewTab, normalizePublicTab, usePublicDraft, type PublicTab } from "@/components/hidden-profile/public-view-fields";
 import { saveHiddenProfile } from "@/lib/hidden-profiles.functions";
@@ -283,6 +284,8 @@ export function StartupForm({
   const { data: session } = useSessionContext();
   const { language } = useTranslation();
   const th = language === "th";
+  /** Lists, options and chips follow "Texts in" (the app language outside Edit information). */
+  const { lang: textLang } = useTextLang();
   const ctAdmin = session?.user?.accountRole === "admin" && workspace === "startups";
   const [companyTypeReset, setCompanyTypeReset] = useState(false);
   const [companyTypeSource, setCompanyTypeSource] = useState<string>((startup as any)?.company_type_source ?? "account");
@@ -826,7 +829,7 @@ export function StartupForm({
   const MISSING_INPUT =
     "border-destructive focus-visible:ring-destructive placeholder:text-destructive text-destructive";
   const MISSING_LABEL = "text-destructive";
-  const missingPh = (field: string) => `⚠ Missing: ${field}`;
+  const missingPh = (field: string) => missingLine(setupText(field), th);
 
   /**
    * Empty-field-only merge of an Auto Enrich result. Never overwrites
@@ -1190,10 +1193,10 @@ export function StartupForm({
 
         <div className="rounded-lg border border-border bg-card p-6 shadow-card">
           <SectorBusinessModelFields
-            sector={sector}
-            onSectorChange={setSector}
-            businessModel={businessModel}
-            onBusinessModelChange={setBusinessModel}
+            sector={sector || null}
+            onSectorChange={(v) => setSector(v ?? "")}
+            businessModel={businessModel || null}
+            onBusinessModelChange={(v) => setBusinessModel(v ?? "")}
           />
         </div>
 
@@ -1304,34 +1307,36 @@ export function StartupForm({
       {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
       <div className="@container">
       <div className="grid gap-4 sm:grid-cols-3">
-        <EditSec id="facts" tone="seller" active={secOn("facts")} className="space-y-1.5">
-          <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>Year Founded</Label>
-          <Input type="number" min={1800} max={new Date().getFullYear()}
-            value={yearFounded} onChange={(e) => setYearFounded(e.target.value)}
-            placeholder={miss(isStrEmpty(yearFounded)) ? missingPh("Year Founded") : "e.g. 2020"}
-            className={miss(isStrEmpty(yearFounded)) ? MISSING_INPUT : undefined} />
+        <EditSec id="facts" tone="seller" active={secOn("facts")}>
+          <div className="space-y-1.5">
+            <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>{tr("Year Founded", "ปีที่ก่อตั้ง")}</Label>
+            <Input type="number" min={1800} max={new Date().getFullYear()}
+              value={yearFounded} onChange={(e) => setYearFounded(e.target.value)}
+              placeholder={miss(isStrEmpty(yearFounded)) ? missingPh("Year Founded") : tr("e.g. 2020", "เช่น 2020")}
+              className={miss(isStrEmpty(yearFounded)) ? MISSING_INPUT : undefined} />
+          </div>
         </EditSec>
         <div className="space-y-1.5">
-          <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>Company Name <span className="text-destructive">*</span></Label>
+          <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>{tr("Company Name", "ชื่อบริษัท")} <span className="text-destructive">*</span></Label>
           <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
-            placeholder={miss(isStrEmpty(startupName)) ? missingPh("Company Name") : "Acme Inc."}
+            placeholder={miss(isStrEmpty(startupName)) ? missingPh("Company Name") : tr("Acme Inc.", "เช่น บริษัท ตัวอย่าง จำกัด")}
             className={nameErr && !startupName.trim() ? "creation-invalid" : miss(isStrEmpty(startupName)) ? MISSING_INPUT : undefined}
             id="sf-company-name" required={!popup && !editCtx} maxLength={255} />
           {nameErr && isStrEmpty(startupName) && <p className="text-[12.5px] text-destructive">{tr(isEdit ? "Add the Company Name before you save." : "Needed to create the startup.", "กรุณากรอกชื่อบริษัทก่อนบันทึก")}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label>Registered Number</Label>
+          <Label>{tr("Registered Number", "เลขทะเบียนนิติบุคคล")}</Label>
           <Input
             value={registeredNumber}
             onChange={(e) => setRegisteredNumber(e.target.value)}
-            placeholder="e.g. 0105555078063"
+            placeholder={tr("e.g. 0105555078063", "เช่น 0105555078063")}
             maxLength={64}
           />
         </div>
       </div>
       </div>
 <CompactFields>        <div className="space-y-1.5">
-          <Label>Company Type</Label>
+          <div className="flex h-6 items-center"><Label>{tr("Company Type", "ประเภทบริษัท")}</Label></div>
           {(() => {
             const fromAdmin = companyTypeSource === "admin" && !companyTypeReset;
             const label = (v: string) => (th && v === "Individual" ? "บุคคลธรรมดา" : v);
@@ -1355,13 +1360,13 @@ export function StartupForm({
           })()}
         </div>
         <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="size">{secOn("size") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
-          <Label>Company Size</Label>
+          <div className="flex h-6 items-center"><Label>{tr("Company Size", "ขนาดบริษัท")}</Label></div>
           <Select value={companySize || "none"} onValueChange={(v) => setCompanySize(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Select company size" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={tr("Select company size", "เลือกขนาดบริษัท")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
+              <SelectItem value="none">{tr("— Select —", "— เลือก —")}</SelectItem>
               {sizeOptions.map((s) => (
-                <SelectItem key={s} value={s}>{s} employees</SelectItem>
+                <SelectItem key={s} value={s}>{sizeLabel(s, textLang)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -1369,7 +1374,7 @@ export function StartupForm({
 
         <div className="space-y-1.5">
           <div className="flex h-6 items-center gap-1.5">
-            <Label>Region</Label>
+            <Label>{tr("Region", "ภูมิภาค")}</Label>
             <TooltipProvider delayDuration={150}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -1402,12 +1407,12 @@ export function StartupForm({
               onValueChange={(v) => setRegion(v === "__clear__" ? "" : v)}
             >
               <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Select Region" />
+                <SelectValue placeholder={tr("Select Region", "เลือกภูมิภาค")} />
               </SelectTrigger>
               <SelectContent>
                 {region && (
                   <SelectItem value="__clear__" className="text-muted-foreground">
-                    Clear selection
+                    {tr("Clear selection", "ล้างการเลือก")}
                   </SelectItem>
                 )}
                 {REGION_OPTIONS.map((r) => (
@@ -1430,8 +1435,8 @@ export function StartupForm({
           </TooltipProvider>
         </div>
 </CompactFields>
-      {/* Row 2: Investment Stage | Company Size | Last Year's Revenue */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* Row 2: Investment Stage (1 col) | Last Year's Revenue (2 cols) */}
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="stage">{secOn("stage") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
           <Label className="text-[#9CA3AF]">{th ? "ระยะการลงทุน" : "Investment Stage"}</Label>
           <TooltipProvider><Tooltip><TooltipTrigger asChild>
@@ -1441,25 +1446,25 @@ export function StartupForm({
           </TooltipTrigger><TooltipContent>{th ? "ระยะการลงทุนใช้สำหรับสตาร์ทอัพ ส่วนนี้ของ PitchSnack ยังไม่เปิดใช้งาน" : "Investment stage is for startups. This part of PitchSnack isn't open yet."}</TooltipContent></Tooltip></TooltipProvider>
         </div>
 
-        <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="revenue">{secOn("revenue") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
-          <Label>Last Year&apos;s Revenue ({revenueCurrency})</Label>
+        <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative sm:col-span-2" data-edit-sec="revenue">{secOn("revenue") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
+          <Label>{tr(`Last Year's Revenue (${revenueCurrency})`, revenueCurrency === "THB" ? "รายได้ปีที่แล้ว (บาท)" : "รายได้ปีที่แล้ว (ดอลลาร์สหรัฐ)")}</Label>
           <Select value={lastYearRevenue || "none"} onValueChange={(v) => setLastYearRevenue(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Select revenue range" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={tr("Select revenue range", "เลือกช่วงรายได้")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">— Select —</SelectItem>
+              <SelectItem value="none">{tr("— Select —", "— เลือก —")}</SelectItem>
               {revenueOptions.map((s) => (
-                <SelectItem key={s} value={s}>{founderRevenueLabel(s, th ? "th" : "en")}</SelectItem>
+                <SelectItem key={s} value={s}>{founderRevenueLabel(s, textLang)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Row 3: Headquarters | Region | City */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* Row 3: Headquarters (1 col) | City (2 cols) */}
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
           <div className="flex h-6 items-center">
-            <Label className={miss(isStrEmpty(headquarters)) ? MISSING_LABEL : undefined}>Headquarters</Label>
+            <Label className={miss(isStrEmpty(headquarters)) ? MISSING_LABEL : undefined}>{tr("Headquarters", "สำนักงานใหญ่")}</Label>
           </div>
           <CountryCombobox
             value={headquarters}
@@ -1472,17 +1477,18 @@ export function StartupForm({
                 if (suggested) setRegion(suggested);
               }
             }}
-            placeholder={miss(isStrEmpty(headquarters)) ? missingPh("Headquarters") : "Select country..."}
+            placeholder={miss(isStrEmpty(headquarters)) ? missingPh("Headquarters") : tr("Select country...", "เลือกประเทศ…")}
             className={miss(isStrEmpty(headquarters)) ? MISSING_INPUT : undefined}
+            lang={textLang}
           />
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 sm:col-span-2">
           <div className="flex h-6 items-center">
-            <Label className={miss(isStrEmpty(city)) ? MISSING_LABEL : undefined}>City</Label>
+            <Label className={miss(isStrEmpty(city)) ? MISSING_LABEL : undefined}>{tr("City", "เมือง")}</Label>
           </div>
           <Input value={city} onChange={(e) => setCity(e.target.value)}
-            placeholder={miss(isStrEmpty(city)) ? missingPh("City") : "City"}
+            placeholder={miss(isStrEmpty(city)) ? missingPh("City") : tr("City", "เมือง")}
             className={miss(isStrEmpty(city)) ? MISSING_INPUT : undefined} />
         </div>
       </div>
@@ -1490,7 +1496,7 @@ export function StartupForm({
       {/* Row 3: Email | Website | LinkedIn URL */}
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label className={miss(isStrEmpty(email)) ? MISSING_LABEL : undefined}>Email</Label>
+          <Label className={miss(isStrEmpty(email)) ? MISSING_LABEL : undefined}>{tr("Email", "อีเมล")}</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255}
             placeholder={miss(isStrEmpty(email)) ? missingPh("Email") : undefined}
             className={miss(isStrEmpty(email)) ? MISSING_INPUT : undefined} />
@@ -1504,10 +1510,10 @@ export function StartupForm({
           required={!isEdit && !editCtx}
         />
         <EditableUrlField
-          label="LinkedIn URL"
+          label={tr("LinkedIn URL", "ลิงก์ LinkedIn")}
           value={linkedinUrl}
           onChange={setLinkedinUrl}
-          placeholder="https://www.linkedin.com/company/… (optional)"
+          placeholder={tr("https://www.linkedin.com/company/… (optional)", "https://www.linkedin.com/company/... (ไม่บังคับ)")}
         />
 
       </div>
@@ -1515,13 +1521,13 @@ export function StartupForm({
 
       {/* Descriptions */}
       <EditSec id="description" tone="seller" active={secOn("description")} className="space-y-1.5">
-        <Label className={miss(!shortBi.filled) ? MISSING_LABEL : undefined}>Short Description<LangTag /></Label>
+        <Label className={miss(!shortBi.filled) ? MISSING_LABEL : undefined}>{tr("Short Description", "คำอธิบายสั้น")}<LangTag /></Label>
         <Textarea rows={2} maxLength={500} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} lang={shortBi.lang}
           placeholder={miss(!shortBi.filled) ? missingPh("Short Description") : shortBi.placeholder()}
           className={miss(!shortBi.filled) ? MISSING_INPUT : undefined} />
       </EditSec>
       <EditSec id="product" tone="seller" active={secOn("product")} className="space-y-1.5">
-        <Label className={miss(!longBi.filled) ? MISSING_LABEL : undefined}>Long Description<LangTag /></Label>
+        <Label className={miss(!longBi.filled) ? MISSING_LABEL : undefined}>{tr("Long Description", "คำอธิบายแบบละเอียด")}<LangTag /></Label>
         <Textarea rows={4} maxLength={5000} value={longDescription} onChange={(e) => setLongDescription(e.target.value)} lang={longBi.lang}
           placeholder={miss(!longBi.filled) ? missingPh("Long Description") : longBi.placeholder()}
           className={`startup-long-description ${miss(!longBi.filled) ? MISSING_INPUT : ""}`} />
@@ -1529,16 +1535,16 @@ export function StartupForm({
 
   </>);
   const addressJsx = (<div className="space-y-4">        <EditSec id="address" tone="seller" active={secOn("address")} className="space-y-1.5">
-          <Label>Registered Name</Label>
+          <Label>{tr("Registered Name", "ชื่อที่จดทะเบียน")}</Label>
           <Input
             value={registeredName}
             onChange={(e) => setRegisteredName(e.target.value)}
-            placeholder="Official registered company name"
+            placeholder={tr("Official registered company name", "ชื่อบริษัทตามที่จดทะเบียนอย่างเป็นทางการ")}
             maxLength={255}
           />
         </EditSec>
         <div className="space-y-1.5">
-          <Label htmlFor="addr-street">Business Address</Label>
+          <Label htmlFor="addr-street">{tr("Business Address", "ที่อยู่ธุรกิจ")}</Label>
           <AddressBox noteOutside a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
             onCity={(v) => setAddr((x) => ({ ...x, district: v }))}
             onChange={(p) => setAddr((x) => ({ ...x, ...p }))} show={() => null} onBlur={() => {}}
@@ -1548,15 +1554,15 @@ export function StartupForm({
   const marketJsx = (<>
       {/* Industry pills */}
       <EditSec id="tags" tone="seller" active={secOn("tags")} className="space-y-1.5">
-        <Label className={miss(industries.length === 0) ? MISSING_LABEL : undefined}>Industry</Label>
-        <p className="text-xs text-muted-foreground">how the market describes this company</p>
+        <Label className={miss(industries.length === 0) ? MISSING_LABEL : undefined}>{tr("Industry", "อุตสาหกรรม")}</Label>
+        <p className="text-xs text-muted-foreground">{tr("how the market describes this company", "คำที่ตลาดใช้อธิบายบริษัทนี้")}</p>
         {miss(industries.length === 0) && (
-          <p className="text-xs text-destructive">⚠ Missing: pick at least one industry</p>
+          <p className="text-xs text-destructive">{tr("⚠ Missing: pick at least one industry", "⚠ ยังขาด: เลือกอุตสาหกรรมอย่างน้อยหนึ่งรายการ")}</p>
         )}
         <div className="flex flex-wrap gap-2">
           {INDUSTRIES.map((ind) => (
             <Pill key={ind} active={industries.includes(ind)} onClick={() => setIndustries(toggle(industries, ind))}>
-              {ind}
+              {industryLabel(ind, textLang)}
             </Pill>
           ))}
           {industries.filter((i) => !INDUSTRIES.includes(i)).map((c) => (
@@ -1568,26 +1574,26 @@ export function StartupForm({
         </div>
         <div className="flex gap-2 mt-2">
           <Input value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)}
-            placeholder="Add custom industry…" maxLength={50}
+            placeholder={tr("Add custom industry…", "เพิ่มอุตสาหกรรมเอง…")} maxLength={50}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); }}} />
-          <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>Add</Button>
+          <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>{tr("Add", "เพิ่ม")}</Button>
         </div>
       </EditSec>
 
       {/* Sector + business model — financial benchmarking pair */}
       <EditSec id="sector" tone="seller" active={secOn("sector")}><SectorBusinessModelFields
-        sector={sector}
-        onSectorChange={setSector}
-        businessModel={businessModel}
-        onBusinessModelChange={setBusinessModel}
+        sector={sector || null}
+        onSectorChange={(v) => setSector(v ?? "")}
+        businessModel={businessModel || null}
+        onBusinessModelChange={(v) => setBusinessModel(v ?? "")}
       /></EditSec>
 
 
       {/* Product tags */}
       <EditSec id="product-tags" tone="seller" active={secOn("product-tags")} className="space-y-1.5">
-        <Label className={miss(!productBi.en.length && !productBi.th.length) ? MISSING_LABEL : undefined}>Product & Service Tags ({productTags.length}/5)<LangTag /></Label>
+        <Label className={miss(!productBi.en.length && !productBi.th.length) ? MISSING_LABEL : undefined}>{tr(`Product & Service Tags (${productTags.length}/5)`, `แท็กสินค้าและบริการ (${productTags.length}/5)`)}<LangTag /></Label>
         {miss(!productBi.en.length && !productBi.th.length) && (
-          <p className="text-xs text-destructive">⚠ Missing: add at least one product tag</p>
+          <p className="text-xs text-destructive">{tr("⚠ Missing: add at least one product tag", "⚠ ยังขาด: เพิ่มแท็กสินค้าอย่างน้อยหนึ่งแท็ก")}</p>
         )}
         <div className="flex flex-wrap gap-2">
           {productTags.map((t) => (
@@ -1602,7 +1608,7 @@ export function StartupForm({
             placeholder={productBi.missing ? missingLangHint(productBi.lang, th, true) : undefined}
             disabled={productTags.length >= 5}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addProductTag(); }}} />
-          <Button type="button" variant="outline" size="sm" onClick={addProductTag} disabled={productTags.length >= 5}>Add</Button>
+          <Button type="button" variant="outline" size="sm" onClick={addProductTag} disabled={productTags.length >= 5}>{tr("Add", "เพิ่ม")}</Button>
         </div>
       </EditSec>
 
@@ -1623,7 +1629,7 @@ export function StartupForm({
             placeholder={marketBi.missing ? missingLangHint(marketBi.lang, th, true) : tr("e.g. Hotels and restaurants in Bangkok", "เช่น โรงแรมและร้านอาหารในกรุงเทพฯ")} lang={marketBi.lang}
             disabled={marketTags.length >= 5}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addMarketTag(); }}} />
-          <Button type="button" variant="outline" size="sm" onClick={addMarketTag} disabled={marketTags.length >= 5}>Add</Button>
+          <Button type="button" variant="outline" size="sm" onClick={addMarketTag} disabled={marketTags.length >= 5}>{tr("Add", "เพิ่ม")}</Button>
         </div>
       </EditSec>
   </>);
@@ -1640,7 +1646,7 @@ export function StartupForm({
   const peopleJsx = (<>
       {/* Founders */}
       {miss(founders.filter((f) => f.full_name.trim()).length === 0) && (
-        <p className="text-xs text-destructive">⚠ Missing: add at least one founder</p>
+        <p className="text-xs text-destructive">{tr("⚠ Missing: add at least one founder", "⚠ ยังขาด: เพิ่มผู้ก่อตั้งอย่างน้อยหนึ่งคน")}</p>
       )}
       <EditSec id="founders" tone="seller" active={secOn("founders")}>
         <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} year={yearFounded} sales={founderRevenueLabel(lastYearRevenue, th ? "th" : "en")} salesFor={(l) => founderRevenueLabel(lastYearRevenue, l)} addOnOpen={section === "founders-add"} />
@@ -1809,13 +1815,13 @@ export function StartupForm({
     ...(ctAdmin && workspace === "startups" ? [{key:"admin" as const,label:tr("Admin settings", "การตั้งค่าผู้ดูแล"),icon:<Shield className="h-3.5 w-3.5" />,error:createAttempted && (!tenantId || !owningAgentUserId || !owningAiAgentId)}]:[]),
   ];
   const pubTabs = [
-    { key: "identity" as const, label: tr("Listing Identity", "ตัวตนของประกาศ"), count: pd.counts.identity },
+    { key: "identity" as const, label: tr("Listing Identity", "ข้อมูลประกาศ"), count: pd.counts.identity },
     { key: "deal" as const, label: tr("Deal Terms", "เงื่อนไขดีล"), count: pd.counts.deal },
   ];
   const showPublic = !!popup?.row && pView === "public";
   const curPriv = ([...PRIVATE_TABS, "admin"].includes(pTab as PrivateTab) ? pTab : "images") as PrivateTab;
   const curPub = (PUBLIC_TABS.includes(normalizePublicTab(pTab) as PublicTab) ? normalizePublicTab(pTab) : "identity") as PublicTab;
-  const sectorLine = [sector, [city, headquarters].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
+  const sectorLine = [sector, [city, countryLabel(headquarters, textLang)].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
   const tabbedJsx = (
     <div role="tabpanel" id="sf-main-panel" aria-labelledby={`sf-main-${showPublic ? "public" : "private"}`}>
       {(popup || editCtx) && (
@@ -1967,9 +1973,9 @@ export function StartupForm({
       {editCtx ? (
         <EditInfoFooter>
           {createAttempted && !isEdit && !canSubmit && <p className="basis-full text-[13px] font-medium text-destructive">To create the startup, fill in: {!startupName.trim() && "Company Name (About Company), "}{!tenantId && "Tenant, "}{(!owningAgentUserId || !owningAiAgentId) && "required ownership (Admin settings)."}</p>}
-          <Button type="button" variant="outline" onClick={() => editCtx?.requestClose()}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={() => editCtx?.requestClose()}>{tr("Cancel", "ยกเลิก")}</Button>
           <Button type="submit" form="startup-edit-form" disabled={submitting} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            {submitting ? "Saving…" : isEdit ? "Save changes" : "Create startup"}
+            {submitting ? tr("Saving…", "กำลังบันทึก…") : isEdit ? tr("Save changes", "บันทึกการเปลี่ยนแปลง") : tr("Create startup", "สร้างบริษัท")}
           </Button>
         </EditInfoFooter>
       ) : (
@@ -1996,14 +2002,14 @@ export function StartupForm({
           }
 
         >
-          Cancel
+          {tr("Cancel", "ยกเลิก")}
         </Button>
         <Button
           type="submit"
           disabled={!canSubmit || submitting}
           className="bg-accent text-accent-foreground hover:bg-accent/90"
         >
-          {submitting ? (isEdit ? "Saving…" : "Creating…") : isEdit ? "Save Changes" : "Create startup"}
+          {submitting ? (isEdit ? tr("Saving…", "กำลังบันทึก…") : "Creating…") : isEdit ? tr("Save Changes", "บันทึกการเปลี่ยนแปลง") : "Create startup"}
         </Button>
       </div>
       )}

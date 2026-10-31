@@ -7,6 +7,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useTr } from "@/components/common/edit-info-popup";
 
 export interface UnsavedChangesDialogProps {
   open: boolean;
@@ -25,6 +26,7 @@ export function UnsavedChangesDialog({
   saving,
   canSave = true,
 }: UnsavedChangesDialogProps) {
+  const tr = useTr();
   return (
     <AlertDialog
       open={open}
@@ -35,20 +37,20 @@ export function UnsavedChangesDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+          <AlertDialogTitle>{tr("Unsaved Changes", "มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก")}</AlertDialogTitle>
           <AlertDialogDescription>
-            You have unsaved changes. Do you want to save before leaving?
+            {tr("You have unsaved changes. Do you want to save before leaving?", "ท่านมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก ต้องการบันทึกก่อนออกหรือไม่")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <Button variant="outline" onClick={onContinueEditing} disabled={saving}>
-            Continue Editing
+            {tr("Continue Editing", "แก้ไขต่อ")}
           </Button>
           <Button variant="destructive" onClick={onDiscard} disabled={saving}>
-            Discard Changes
+            {tr("Discard Changes", "ทิ้งการเปลี่ยนแปลง")}
           </Button>
           <Button onClick={onSave} disabled={saving || !canSave}>
-            {saving ? "Saving…" : "Save Changes"}
+            {saving ? tr("Saving…", "กำลังบันทึก…") : tr("Save Changes", "บันทึกการเปลี่ยนแปลง")}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

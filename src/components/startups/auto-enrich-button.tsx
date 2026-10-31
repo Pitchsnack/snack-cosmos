@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { autoEnrichAdapter, type EnrichStartupResult } from "@/lib/auto-enrich/auto-enrich-adapter";
 import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
+import { useTr } from "@/components/common/edit-info-popup";
 
 interface Props {
   websiteUrl: string;
@@ -17,6 +18,7 @@ interface Props {
  * selection lives in the adapter (lovable | api_gateway).
  */
 export function AutoEnrichButton({ websiteUrl, onEnriched, disabled }: Props) {
+  const tr = useTr();
   const [loading, setLoading] = useState(false);
 
   const run = async () => {
@@ -91,7 +93,7 @@ export function AutoEnrichButton({ websiteUrl, onEnriched, disabled }: Props) {
       title="Scrape the Website URL and back-fill empty fields"
     >
       {loading ? <ButtonSpinner invert={false} /> : <Sparkles className="h-3.5 w-3.5" />}
-      {loading ? "Enriching…" : "Auto Enrich"}
+      {loading ? tr("Enriching…", "กำลังเติมข้อมูล…") : tr("Auto Enrich", "เติมข้อมูลอัตโนมัติ")}
     </Button>
   );
 }

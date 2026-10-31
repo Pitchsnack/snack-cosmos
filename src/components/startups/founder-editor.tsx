@@ -242,6 +242,7 @@ function PositionMultiSelect({
 
 export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", salesFor, addOnOpen }: Props) {
   const {language} = useTranslation();
+  const tr = (en: string, th: string) => (language === "th" ? th : en);
   const { lang: textLang, switchable } = useTextLang();
   const root = useRef<HTMLDivElement>(null);
   const added = useRef(false);
@@ -314,7 +315,7 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
         size="sm"
         onClick={add}
       >
-        <Plus className="h-4 w-4 mr-1" /> Add founder
+        <Plus className="h-4 w-4 mr-1" /> {tr("Add founder", "เพิ่มผู้ก่อตั้ง")}
       </Button>
     </div>
   );

@@ -3,6 +3,8 @@ import { Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useTr } from "@/components/common/edit-info-popup";
+import { useTextLang } from "@/components/common/text-lang";
+import { isoLabel, licenceLabel } from "@/i18n/th-edit-info";
 import { WIZARD_ISO, WIZARD_LICENCES } from "@/lib/seller-wizard";
 import type { RegulatoryLicence } from "@/lib/compliance";
 import { cn } from "@/lib/utils";
@@ -16,12 +18,13 @@ export function LicenceLists({ licences, onLicences, iso, onIso }: {
   licences: RegulatoryLicence[]; onLicences: (v: RegulatoryLicence[]) => void; iso: string[]; onIso: (v: string[]) => void;
 }) {
   const tr = useTr();
+  const { lang } = useTextLang();
   const allLic = [...WIZARD_LICENCES, ...licences.filter((l) => !WIZARD_LICENCES.some((w) => w.name === l.name))];
   const allIso = [...WIZARD_ISO, ...iso.filter((x) => !WIZARD_ISO.includes(x))];
   return (
     <div className="space-y-[14px]">
       <Box title={tr("Regulatory Licenses", "ใบอนุญาตจากหน่วยงานกำกับดูแล")} other={tr("Other licence", "ใบอนุญาตอื่น")}
-        options={allLic.map((l) => l.name)} isOn={(n) => licences.some((x) => x.name === n)}
+        options={allLic.map((l) => l.name)} label={(n) => licenceLabel(n, lang)} isOn={(n) => licences.some((x) => x.name === n)}
         toggle={(n) => {
           const on = licences.some((x) => x.name === n);
           if (on) onLicences(licences.filter((x) => x.name !== n));
@@ -29,15 +32,15 @@ export function LicenceLists({ licences, onLicences, iso, onIso }: {
         }}
         add={(n) => { if (!licences.some((x) => x.name.toLowerCase() === n.toLowerCase())) onLicences([...licences, { category: "Business", name: n }]); }} />
       <Box title={tr("International Standards (ISO)", "มาตรฐานสากล (ISO)")} other={tr("Other standard", "มาตรฐานอื่น")}
-        options={allIso} isOn={(n) => iso.includes(n)}
+        options={allIso} label={(n) => isoLabel(n, lang)} isOn={(n) => iso.includes(n)}
         toggle={(n) => onIso(iso.includes(n) ? iso.filter((x) => x !== n) : [...iso, n])}
         add={(n) => { if (!iso.some((x) => x.toLowerCase() === n.toLowerCase())) onIso([...iso, n]); }} />
     </div>
   );
 }
 
-function Box({ title, other, options, isOn, toggle, add }: {
-  title: string; other: string; options: string[]; isOn: (n: string) => boolean; toggle: (n: string) => void; add: (n: string) => void;
+function Box({ title, other, options, label, isOn, toggle, add }: {
+  title: string; other: string; options: string[]; label?: (n: string) => string; isOn: (n: string) => boolean; toggle: (n: string) => void; add: (n: string) => void;
 }) {
   const tr = useTr();
   const [draft, setDraft] = useState("");
@@ -52,7 +55,7 @@ function Box({ title, other, options, isOn, toggle, add }: {
             <button key={n} type="button" aria-pressed={on} onClick={() => toggle(n)}
               className={cn("inline-flex h-7 items-center rounded-full border px-[11px] text-[12.5px]",
                 on ? "border-[#F6A823] bg-[#FEF3DE] font-semibold text-[#8A4B06]" : "border-[#E5E7EB] bg-[#F3F4F6] text-[#4B5563] dark:border-border dark:bg-muted dark:text-muted-foreground")}>
-              {on && <Check className="mr-[5px] h-[13px] w-[13px]" />}{n}
+              {on && <Check className="mr-[5px] h-[13px] w-[13px]" />}{label ? label(n) : n}
             </button>
           );
         })}
@@ -60,7 +63,7 @@ function Box({ title, other, options, isOn, toggle, add }: {
       <div className="mt-3 flex gap-2">
         <Input value={draft} placeholder={other} maxLength={160} onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit(); } }} />
-        <Button type="button" variant="outline" size="sm" className="h-9" onClick={commit}>Add</Button>
+        <Button type="button" variant="outline" size="sm" className="h-9" onClick={commit}>{tr("Add", "เพิ่ม")}</Button>
       </div>
     </div>
   );
