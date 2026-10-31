@@ -33,7 +33,8 @@ import { CompanyMenu, DraftCompanyCard, DraftCompanyPanel } from "@/components/c
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { useManagedIds } from "@/hooks/use-managed-ids";
 import { SellerSetupBanner, useSellerSetup } from "@/components/my-business/signup-welcome";
-import { ReportOffers, ReportHeaderAction, reportPrice } from "@/components/my-business/report-offers";
+import { ReportOffers, ReportHeaderAction } from "@/components/my-business/report-offers";
+import {useReportPrices} from '@/hooks/use-report-prices';
 
 type View = "public" | "private";
 
@@ -43,6 +44,7 @@ type ItemKey = "desc" | "logo" | "fin" | "valuation" | "terms" | "hidden" | "peo
 type Item = { key: ItemKey; label: string; weight: number; required: boolean; done: boolean };
 
 function useCompleteness(s: StartupListItem) {
+  const reportPrice=useReportPrices();
   const { row } = useHiddenProfile(s.id);
   const { data: facts } = useEntryFacts(s.id);
   const { hasData } = useHasFinancials(s.id);

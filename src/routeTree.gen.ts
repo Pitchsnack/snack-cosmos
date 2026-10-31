@@ -105,6 +105,7 @@ import { Route as AuthenticatedStartupsIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedStartupsNewRouteImport } from './routes/_authenticated/startups.new'
 import { Route as AuthenticatedStartupsSectorImagesRouteImport } from './routes/_authenticated/startups.sector-images'
 import { Route as ApiPublicFreePlanJobRouteImport } from './routes/api/public/free-plan-job'
+import { Route as AuthenticatedAdminPlansReportsRouteImport } from './routes/_authenticated/admin/plans_.reports'
 import { Route as AuthenticatedApprovalsBuyersIdRouteImport } from './routes/_authenticated/approvals.buyers.$id'
 import { Route as AuthenticatedApprovalsListingsIdRouteImport } from './routes/_authenticated/approvals.listings.$id'
 import { Route as AuthenticatedDealsIdIndexRouteImport } from './routes/_authenticated/deals.$id.index'
@@ -674,6 +675,12 @@ const ApiPublicFreePlanJobRoute = ApiPublicFreePlanJobRouteImport.update({
   path: '/api/public/free-plan-job',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminPlansReportsRoute =
+  AuthenticatedAdminPlansReportsRouteImport.update({
+    id: '/admin/plans_/reports',
+    path: '/admin/plans/reports',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedApprovalsBuyersIdRoute =
   AuthenticatedApprovalsBuyersIdRouteImport.update({
     id: '/approvals/buyers/$id',
@@ -953,6 +960,7 @@ export interface FileRoutesByFullPath {
   '/my-startups/': typeof AuthenticatedMyStartupsIndexRoute
   '/shared-deals/': typeof AuthenticatedSharedDealsIndexRoute
   '/startups/': typeof AuthenticatedStartupsIndexRoute
+  '/admin/plans/reports': typeof AuthenticatedAdminPlansReportsRoute
   '/approvals/buyers/$id': typeof AuthenticatedApprovalsBuyersIdRoute
   '/approvals/listings/$id': typeof AuthenticatedApprovalsListingsIdRoute
   '/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
@@ -1069,6 +1077,7 @@ export interface FileRoutesByTo {
   '/my-startups': typeof AuthenticatedMyStartupsIndexRoute
   '/shared-deals': typeof AuthenticatedSharedDealsIndexRoute
   '/startups': typeof AuthenticatedStartupsIndexRoute
+  '/admin/plans/reports': typeof AuthenticatedAdminPlansReportsRoute
   '/approvals/buyers/$id': typeof AuthenticatedApprovalsBuyersIdRoute
   '/approvals/listings/$id': typeof AuthenticatedApprovalsListingsIdRoute
   '/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
@@ -1199,6 +1208,7 @@ export interface FileRoutesById {
   '/_authenticated/my-startups/': typeof AuthenticatedMyStartupsIndexRoute
   '/_authenticated/shared-deals/': typeof AuthenticatedSharedDealsIndexRoute
   '/_authenticated/startups/': typeof AuthenticatedStartupsIndexRoute
+  '/_authenticated/admin/plans_/reports': typeof AuthenticatedAdminPlansReportsRoute
   '/_authenticated/approvals/buyers/$id': typeof AuthenticatedApprovalsBuyersIdRoute
   '/_authenticated/approvals/listings/$id': typeof AuthenticatedApprovalsListingsIdRoute
   '/_authenticated/investors/$id/edit': typeof AuthenticatedInvestorsIdEditRoute
@@ -1329,6 +1339,7 @@ export interface FileRouteTypes {
     | '/my-startups/'
     | '/shared-deals/'
     | '/startups/'
+    | '/admin/plans/reports'
     | '/approvals/buyers/$id'
     | '/approvals/listings/$id'
     | '/investors/$id/edit'
@@ -1445,6 +1456,7 @@ export interface FileRouteTypes {
     | '/my-startups'
     | '/shared-deals'
     | '/startups'
+    | '/admin/plans/reports'
     | '/approvals/buyers/$id'
     | '/approvals/listings/$id'
     | '/investors/$id/edit'
@@ -1574,6 +1586,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-startups/'
     | '/_authenticated/shared-deals/'
     | '/_authenticated/startups/'
+    | '/_authenticated/admin/plans_/reports'
     | '/_authenticated/approvals/buyers/$id'
     | '/_authenticated/approvals/listings/$id'
     | '/_authenticated/investors/$id/edit'
@@ -2308,6 +2321,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicFreePlanJobRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/plans_/reports': {
+      id: '/_authenticated/admin/plans_/reports'
+      path: '/admin/plans/reports'
+      fullPath: '/admin/plans/reports'
+      preLoaderRoute: typeof AuthenticatedAdminPlansReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/approvals/buyers/$id': {
       id: '/_authenticated/approvals/buyers/$id'
       path: '/approvals/buyers/$id'
@@ -2853,6 +2873,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedApprovalsIndexRoute: typeof AuthenticatedApprovalsIndexRoute
   AuthenticatedGlobalStartupsIndexRoute: typeof AuthenticatedGlobalStartupsIndexRoute
   AuthenticatedMyStartupsIndexRoute: typeof AuthenticatedMyStartupsIndexRoute
+  AuthenticatedAdminPlansReportsRoute: typeof AuthenticatedAdminPlansReportsRoute
   AuthenticatedApprovalsBuyersIdRoute: typeof AuthenticatedApprovalsBuyersIdRoute
   AuthenticatedApprovalsListingsIdRoute: typeof AuthenticatedApprovalsListingsIdRoute
   AuthenticatedMyStartupsSetupIdRoute: typeof AuthenticatedMyStartupsSetupIdRoute
@@ -2911,6 +2932,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedApprovalsIndexRoute: AuthenticatedApprovalsIndexRoute,
   AuthenticatedGlobalStartupsIndexRoute: AuthenticatedGlobalStartupsIndexRoute,
   AuthenticatedMyStartupsIndexRoute: AuthenticatedMyStartupsIndexRoute,
+  AuthenticatedAdminPlansReportsRoute: AuthenticatedAdminPlansReportsRoute,
   AuthenticatedApprovalsBuyersIdRoute: AuthenticatedApprovalsBuyersIdRoute,
   AuthenticatedApprovalsListingsIdRoute: AuthenticatedApprovalsListingsIdRoute,
   AuthenticatedMyStartupsSetupIdRoute: AuthenticatedMyStartupsSetupIdRoute,

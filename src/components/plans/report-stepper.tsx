@@ -1,0 +1,3 @@
+import {Minus,Plus} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+export function ReportStepper({value,onChange,label}:{value:number;onChange:(n:number)=>void;label:string}){return <span className="report-stepper"><Button variant="ghost" size="icon" aria-label={`Decrease ${label}`} title={`Decrease ${label}`} disabled={value<=0} onClick={()=>onChange(value-1)}><Minus size={14}/></Button><output aria-label={label}>{value}</output><Button variant="ghost" size="icon" aria-label={`Increase ${label}`} title={`Increase ${label}`} disabled={value>=20} onClick={()=>onChange(value+1)}><Plus size={14}/></Button></span>;}

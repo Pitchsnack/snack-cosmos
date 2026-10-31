@@ -5252,18 +5252,21 @@ export type Database = {
       }
       plan_reports: {
         Row: {
+          free_per_quarter: number
           mode: string
           per_term: number | null
           plan_id: string
           report_key: string
         }
         Insert: {
+          free_per_quarter?: number
           mode: string
           per_term?: number | null
           plan_id: string
           report_key: string
         }
         Update: {
+          free_per_quarter?: number
           mode?: string
           per_term?: number | null
           plan_id?: string
@@ -5788,6 +5791,112 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      report_price_changes: {
+        Row: {
+          created_at: string
+          created_by: string
+          effective_at: string
+          id: string
+          new_values: Json
+          report_key: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          effective_at: string
+          id?: string
+          new_values: Json
+          report_key: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          effective_at?: string
+          id?: string
+          new_values?: Json
+          report_key?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_price_changes_report_key_fkey"
+            columns: ["report_key"]
+            isOneToOne: false
+            referencedRelation: "report_prices"
+            referencedColumns: ["report_key"]
+          },
+        ]
+      }
+      report_price_history: {
+        Row: {
+          at: string
+          by_user: string | null
+          changes: Json
+          id: string
+          report_key: string
+          summary: string
+        }
+        Insert: {
+          at?: string
+          by_user?: string | null
+          changes?: Json
+          id?: string
+          report_key: string
+          summary: string
+        }
+        Update: {
+          at?: string
+          by_user?: string | null
+          changes?: Json
+          id?: string
+          report_key?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_price_history_report_key_fkey"
+            columns: ["report_key"]
+            isOneToOne: false
+            referencedRelation: "report_prices"
+            referencedColumns: ["report_key"]
+          },
+        ]
+      }
+      report_prices: {
+        Row: {
+          free_for_buyers: boolean
+          free_for_sellers: boolean
+          free_until: string | null
+          price_thb: number | null
+          price_type: string
+          report_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          free_for_buyers?: boolean
+          free_for_sellers?: boolean
+          free_until?: string | null
+          price_thb?: number | null
+          price_type?: string
+          report_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          free_for_buyers?: boolean
+          free_for_sellers?: boolean
+          free_until?: string | null
+          price_thb?: number | null
+          price_type?: string
+          report_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       report_share_events: {
         Row: {
@@ -7993,7 +8102,13 @@ export type Database = {
         Args: { _by: string; _keep?: string; _plan: string; _values: Json }
         Returns: undefined
       }
+      apply_report_price_edit: {
+        Args: { _by: string; _key: string; _values: Json }
+        Returns: undefined
+      }
       apply_scheduled_plan_changes: { Args: never; Returns: number }
+      apply_scheduled_pricing: { Args: never; Returns: undefined }
+      apply_scheduled_report_changes: { Args: never; Returns: number }
       asking_price_band: { Args: { _thb: number }; Returns: string }
       can_access_deal: {
         Args: { _deal_id: string; _user_id: string }
@@ -8036,6 +8151,10 @@ export type Database = {
         Args: { _key: string; _uid: string }
         Returns: boolean
       }
+      cancel_report_price_change: {
+        Args: { _by: string; _id: string }
+        Returns: undefined
+      }
       claim_access_seat: {
         Args: { _code_id: string; _role: string; _uid: string }
         Returns: string
@@ -8051,6 +8170,39 @@ export type Database = {
       }
       close_due_buy_orders: { Args: never; Returns: number }
       company_type_for_relation: { Args: { _rel: string }; Returns: string }
+      create_report_order: {
+        Args: { _company: string; _due: string; _kind: string; _uid: string }
+        Returns: {
+          amount: number
+          analyst_id: string | null
+          created_at: string
+          currency: string
+          delivered_at: string | null
+          delivered_by: string | null
+          due_at: string | null
+          generated_at: string | null
+          id: string
+          invoice_no: string | null
+          kind: string
+          method: string | null
+          ordered_by: string | null
+          paid_at: string
+          payment_ref: string | null
+          ref: string
+          startup_id: string
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "report_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_verification_report_order: {
+        Args: { _company: string; _uid: string }
+        Returns: Json
+      }
       current_term_start: { Args: { _uid: string }; Returns: string }
       dbd_apply_edit: {
         Args: {
@@ -8138,11 +8290,20 @@ export type Database = {
       next_inv_ref: { Args: never; Returns: string }
       normalize_url_key: { Args: { _url: string }; Returns: string }
       prune_sign_in_days: { Args: never; Returns: undefined }
+      publish_report_price_checked: {
+        Args: { _by: string; _expected: string; _key: string; _values: Json }
+        Returns: undefined
+      }
       record_report_open: {
         Args: { _ref: string; _report_key: string; _uid: string }
         Returns: boolean
       }
       record_sign_in_day: { Args: never; Returns: boolean }
+      report_quarter_start: {
+        Args: { _now?: string; _start: string }
+        Returns: string
+      }
+      report_quote: { Args: { _key: string; _uid: string }; Returns: Json }
       reports_open_plan: {
         Args: {
           _buyer: string
@@ -8157,6 +8318,16 @@ export type Database = {
         Returns: boolean
       }
       role_is: { Args: { _role: string; _uid: string }; Returns: boolean }
+      schedule_report_price_edit: {
+        Args: {
+          _at: string
+          _by: string
+          _expected: string
+          _key: string
+          _values: Json
+        }
+        Returns: undefined
+      }
       share_email_has_account: { Args: { _email: string }; Returns: boolean }
       user_in_tenant: {
         Args: { _tenant: string; _user_id: string }

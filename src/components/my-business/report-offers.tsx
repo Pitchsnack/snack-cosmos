@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useHasFinancials } from "@/hooks/use-has-financials";
 import catalog from "@/config/report-catalog.json";
+import {useReportPrices} from '@/hooks/use-report-prices';
 
-export const reportPrice = (type: keyof typeof catalog.prices) =>
-  new Intl.NumberFormat("th-TH", { style: "currency", currency: catalog.currency, maximumFractionDigits: 0 }).format(catalog.prices[type]);
 
 export function ReportHeaderAction({ id }: { id: string }) {
   const { hasData } = useHasFinancials(id);
@@ -30,6 +29,7 @@ const offers: Record<Kind, { title: string; tag: string; description: string; be
 };
 
 export function ReportOffers({ id }: { id: string }) {
+  const reportPrice=useReportPrices();
   const navigate = useNavigate();
   const { hasData } = useHasFinancials(id);
   const [sample, setSample] = useState<Kind | null>(null);

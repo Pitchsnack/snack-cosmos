@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useStartups } from "@/hooks/use-startups";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { selectMyStartups } from "@/lib/publication/my-startups-membership";
-import { reportPrice } from "@/components/my-business/report-offers";
+import {useReportPrices} from '@/hooks/use-report-prices';
 import { StartupFinancialsPage } from "@/components/financials/financials-page";
 import { CompanyRiskReport } from "@/components/financials/company-risk-report";
 import { useHasFinancials } from "@/hooks/use-has-financials";
@@ -54,6 +54,7 @@ function useMyBusinesses() {
 }
 
 export function LockedReportPage({ kind, companyId, embedded = false, onGoFinancials }: { kind: Kind; companyId?: string; embedded?: boolean; onGoFinancials?: () => void }) {
+  const reportPrice=useReportPrices();
   const mine = useMyBusinesses();
   const [pickedState, setPicked] = useState<string | null>(null);
   const picked = companyId ?? pickedState;

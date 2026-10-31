@@ -1,0 +1,3 @@
+import {createFileRoute} from '@tanstack/react-router';
+import {ReportPricesPage,adminReportPriceQuery} from '@/components/plans/report-prices-page';
+export const Route=createFileRoute('/_authenticated/admin/plans_/reports')({loader:({context})=>context.queryClient.ensureQueryData(adminReportPriceQuery()),head:()=>({meta:[{title:'Report prices — PitchSnack Admin'},{name:'description',content:'Manage PitchSnack report prices, free periods and quarterly plan allowances.'},{property:'og:title',content:'Report prices — PitchSnack Admin'},{property:'og:description',content:'Manage PitchSnack report prices, free periods and quarterly plan allowances.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary_large_image'}]}),component:ReportPricesPage});

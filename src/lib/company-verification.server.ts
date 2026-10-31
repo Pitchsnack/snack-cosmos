@@ -17,10 +17,7 @@ export async function verificationState(sb: any, userId: string, companyId: stri
   const plan = await planAccess(userId);
   const {data:me}=await sb.from('users').select('account_role').eq('id',userId).maybeSingle();
   const isAdmin=me?.account_role==='admin';
-  if (!buyer && !isAdmin && plan.plan?.verification_mode === 'included' && !plan.ended) {
-    const { error } = await sb.rpc('verification_start_included',{ _company:companyId });
-    if (error) throw new Error('The included check could not be started');
-  }
+  const {data:quote,error:quoteError}=await sb.rpc('report_quote',{_uid:userId,_key:'verification'});if(quoteError)throw new Error('Report price unavailable');
   const [{data:s,error:se},{data:v,error:ve},{data:hp},{data:u},{data:a},{data:orders},{data:rate},{data:report},{data:uses},{data:bp}] = await Promise.all([
     sb.from('startups').select('id,startup_name,registered_name,registered_number,logo_url').eq('id',companyId).single(),
     sb.from('company_verifications').select('*').eq('company_id',companyId).maybeSingle(),
@@ -28,9 +25,9 @@ export async function verificationState(sb: any, userId: string, companyId: stri
     sb.from('users').select('first_name,last_name,email').eq('id',userId).maybeSingle(),
     sb.from('verification_access').select('*').eq('company_id',companyId).eq('buyer_account_id',userId).maybeSingle(),
     sb.from('verification_orders').select('id,status,total,ref,paid_at,created_at').eq('company_id',companyId).eq('ordered_by',userId).order('created_at',{ascending:false}).limit(1),
-    sb.from('plans').select('verification_price_thb,verification_vat_pct,verification_business_days,verification_recheck_business_days').eq('status','live').eq('role','seller').eq('verification_mode','paid').order('sort').limit(1).maybeSingle(),
-    plan.plan ? sb.from('plan_reports').select('mode,per_term').eq('plan_id',plan.plan.id).eq('report_key','verification').maybeSingle() : Promise.resolve({data:null}),
-    plan.termStart ? sb.from('verification_usage').select('id',{count:'exact'}).eq('buyer_account_id',userId).eq('term_start',plan.termStart).is('returned_at',null) : Promise.resolve({data:[]}),
+    sb.from('plans').select('verification_business_days,verification_recheck_business_days').eq('status','live').eq('role','seller').order('sort').limit(1).maybeSingle(),
+    Promise.resolve({data:null}),
+    Promise.resolve({data:[]}),
     buyer ? sb.from('buyer_profiles').select('investor_id,investors(investor_name)').eq('user_id',userId).maybeSingle() : Promise.resolve({data:null}),
   ]);
   if (se || ve || !s) throw new Error('Company report unavailable');
@@ -58,5 +55,5 @@ export async function verificationState(sb: any, userId: string, companyId: stri
   let logo: string|null=null;
   if (s.logo_url && !/^https?:/.test(s.logo_url)) { const {data:l}=await sb.storage.from('startup-media').createSignedUrl(s.logo_url,3600); logo=l?.signedUrl??null; } else logo=s.logo_url??null;
   const o=orders?.[0]; const valid=!!canRead;
-  return {companyId,company:s.startup_name||hp?.ref_no||'Company',code:hp?.code_name??null,ref:hp?.ref_no??null,logo,status,included:!plan.ended&&plan.plan?.verification_mode==='included',startedAt:v?.started_at??null,readyBy:v?.ready_by??null,checkedAt:v?.checked_at??null,affidavitOn:v?.affidavit_issued_on??null,buyer,plan:plan.plan?.name??null,mode:plan.ended?'none':buyer?(report?.mode??'none'):(plan.plan?.verification_mode??'paid'),allowance:report?.per_term??0,left:Math.max(0,(report?.per_term??0)-(uses?.length??0)),termEnd:plan.sub?.term_end??null,price:rate?.verification_price_thb==null?null:Number(rate.verification_price_thb),vatPct:Number(rate?.verification_vat_pct??plan.plan?.verification_vat_pct??0),businessDays:rate?.verification_business_days??plan.plan?.verification_business_days??2,recheckDays:rate?.verification_recheck_business_days??1,access:buyer&&a&&valid?{via:a.via,openedAt:a.opened_at,requestedAt:a.requested_at,until:a.open_until}:null,payment:o?{status:o.status,total:Number(o.total),ref:o.ref,at:o.paid_at??o.created_at}:null,email:u?.email??null,viewer:[u?.first_name,u?.last_name].filter(Boolean).join(' '),firm:bp?.investors?.investor_name??'',record,checks,isAdmin};
+  return {companyId,company:s.startup_name||hp?.ref_no||'Company',code:hp?.code_name??null,ref:hp?.ref_no??null,logo,status,included:quote.method==='Plan'||quote.method==='Free period',startedAt:v?.started_at??null,readyBy:v?.ready_by??null,checkedAt:v?.checked_at??null,affidavitOn:v?.affidavit_issued_on??null,buyer,plan:plan.plan?.name??null,mode:quote.method==='Plan'||quote.method==='Free period'?'number':'paid',allowance:quote.total,left:quote.left,termEnd:plan.sub?.term_end??null,price:quote.price==null?null:Number(quote.price),vatPct:7,businessDays:rate?.verification_business_days??plan.plan?.verification_business_days??2,recheckDays:rate?.verification_recheck_business_days??1,access:buyer&&a&&valid?{via:a.via,openedAt:a.opened_at,requestedAt:a.requested_at,until:a.open_until}:null,payment:o?{status:o.status,total:Number(o.total),ref:o.ref,at:o.paid_at??o.created_at}:null,email:u?.email??null,viewer:[u?.first_name,u?.last_name].filter(Boolean).join(' '),firm:bp?.investors?.investor_name??'',record,checks,isAdmin};
 }

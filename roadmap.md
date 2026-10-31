@@ -1,5 +1,11 @@
 # One-step approval — roadmap
 
+## Admin Plans Reports — 31 October 2026
+- [x] Central report prices, history/scheduling, quarterly allowances and transactional usage; preserve existing workflows and bundle.
+- [x] Reports editor, Plans submenu/shared allowance rows and central price reads in report hub, offer pages, verification and Paid reports.
+- [x] 16 rule/plan tests; signed-in Admin publish/reload, shared counters, schedule/cancel and 1440/1024/390 layouts; no runtime errors, build OK. Restored paid statements price and Professional allowance after tests; no accounts created.
+- [ ] Seller/buyer test-account ordering and repeated-open quota checks, paid buyer fallback, remaining verification entitlement integration and on-request actions — not yet verified; complete before treating the full brief as finished.
+
 ## Buy order form text boxes — 30 October 2026
 - [x] Expand and wrap the four shared text boxes, align all labels and remove repeated business from EN/TH Agribusiness defaults; preserve saving, counts, hints and bullets.
 - [x] Verified signed-in sealed form EN desktop and TH 390px: correct dimensions, wrapped text/no sideways scroll, bold labels, vertical scrolling, drag-to-resize and bullet Enter; 44 existing tests pass and build OK. Advertisement/Admin check reuse these fields; their separate dialogs were not exercised, and no data was saved.

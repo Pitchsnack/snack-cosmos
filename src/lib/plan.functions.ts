@@ -29,6 +29,8 @@ export const getMyPlanStrip = createServerFn({ method: "GET" })
     const { planAccess, requestsLeft } = await import("./plan-access.server");
     const a = await planAccess(context.userId);
     const p = a.plan;
+    const {data:verificationQuote}=await context.supabase.rpc('report_quote',{_uid:context.userId,_key:'verification'});
+    const verificationFree=(verificationQuote as {left?:number;freePeriod?:boolean}|null)?.freePeriod||(Number((verificationQuote as {left?:number}|null)?.left??0)>0);
     const kind = a.role === "buyer" ? "nda" : "contact";
     const capTxt = (verb: string) => p?.value_cap_thb_m == null ? `${verb} a business of any size` : `${verb} businesses selling for under THB ${Number(p.value_cap_thb_m)}m`;
     const f = (label: string, on: boolean, needs?: string) => ({ label, on, needs: on ? undefined : needs });
@@ -38,7 +40,7 @@ export const getMyPlanStrip = createServerFn({ method: "GET" })
           f("Receive contact requests", true),
           f("Send contact requests", p.requests_mode !== "none", "Professional"),
           f("Teaser and data room", !!p.has_data_room, "Professional"),
-          p.verification_mode === "included"
+          verificationFree
             ? f("Company and registration verification · Certified badge", true)
             : { label: "Company and registration verification · pay per report", on: false },
           f("Dedicated manager", !!p.has_manager, "Executive"),

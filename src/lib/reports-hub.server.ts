@@ -43,14 +43,8 @@ export async function hubData(ctx:any,mode:HubMode,companyId?:string,pipelineId?
   const userIds=[...new Set([...ids,...owners.map((o:any)=>o.owning_agent_user_id),...sellerUsers.map((o:any)=>o.user_id)])].filter(Boolean);
   const users=userIds.length?await getRows(sb.from('users').select('id,first_name,last_name').in('id',userIds)):[];
   const buyerFor=(id:string)=>{const bp=bps.find((b:any)=>b.user_id===id),u=users.find((u:any)=>u.id===id);return {id,name:bp?.investors?.legal_name??bp?.investors?.investor_name??([u?.first_name,u?.last_name].filter(Boolean).join(' ')||'Buyer'),sub:[typeName(bp?.investors?.investor_type,bp?.investors?.acts_for_types),bp?.city].filter(Boolean).join(' · '),ref:bp?.ref_no??null,contact:[u?.first_name,u?.last_name].filter(Boolean).join(' ')||null};};
-  const a=mode==='buyer'?await planAccess(ctx.userId):null;
-  const [planRows,uses,rates]=await Promise.all([
-    a?.plan&&!a.ended?getRows(sb.from('plan_reports').select('*').eq('plan_id',a.plan.id)):[],
-    a?.termStart?getRows(sb.from('plan_usage').select('kind,ref').eq('user_id',ctx.userId).eq('term_start',a.termStart)):[],
-    getRows(sb.from('plans').select('verification_price_thb').eq('role','seller').eq('status','live').eq('verification_mode','paid').order('sort').limit(1)),
-  ]);
-  const verificationUses=a?.termStart?await getRows(sb.from('verification_usage').select('id').eq('buyer_account_id',ctx.userId).eq('term_start',a.termStart).is('returned_at',null)):[];
-  const catalog=(await import('@/config/report-catalog.json')).default;
+  const quotes=await Promise.all(REPORT_KEYS.map(async key=>{const {data,error}=await sb.rpc('report_quote',{_uid:ctx.userId,_key:key});if(error)throw new Error('Report prices unavailable');return [key,data] as const;}));
+  const prices=Object.fromEntries(quotes);
   const yearCount=new Set(fs.map((r:any)=>r.fiscal_year)).size;const years=yearCount>=5?5:yearCount>=3?3:1;
   const rows:HubRow[]=REPORT_KEYS.map(key=>{
     const r=records.find((r:any)=>r.report_key===key);const kind=key==='statements'?'financials':key;
@@ -63,7 +57,7 @@ export async function hubData(ctx:any,mode:HubMode,companyId?:string,pipelineId?
     if(key==='statements'&&fs.length&&!generatedAt)generatedAt=fs.map((f:any)=>f.retrieved_at??f.created_at).filter(Boolean).sort().at(-1)??null;
     if(key==='pnl'&&!o&&!r){const f=orders.find((o:any)=>['financials','bundle'].includes(o.kind));authorisedAt=f?.delivered_at??null;generatedAt=f?.generated_at??null;status=authorisedAt?'ready':f?'in_progress':'not_ordered';}
     // Persisted grant metadata is distinct from report readiness: ordering never fabricates content.
-    const planKey=key==='statements'?`fs${years}`:key;const pr=planRows.find((r:any)=>r.report_key===planKey);const total=pr?.mode==='number'?pr.per_term:null;const used=key==='verification'?verificationUses.length:uses.filter((u:any)=>u.kind===`report:${planKey}`).length;const left=total==null?null:Math.max(0,total-used);const inPlan=!!pr&&pr.mode!=='none'&&(pr.mode!=='number'||(left??0)>0);
+    const planKey=key;const quote=prices[key];const total=quote.total;const left=quote.left;const inPlan=quote.method==='Plan'||quote.method==='Free period';
     const audience:Audience[]=[];
     for(const d of ps){if(!hubNdaActive(d))continue;const b=buyerFor(d.buyer_user_id);const sh=shares.find((s:any)=>s.pipeline_id===d.id);const keys=sh?.report_keys??[];const shared=!!sh&&(keys.includes(key)||(key==='statements'&&sh.financials)||(key==='valuation'&&sh.valuation));const own=access.find((x:any)=>x.buyer_id===d.buyer_user_id&&x.report_key===key)??(key==='verification'?va.find((x:any)=>x.buyer_account_id===d.buyer_user_id&&(x.via==='paid'||x.via==='contract'||x.open_until&&Date.parse(x.open_until)>Date.now())):null);const req=requests.find((x:any)=>x.buyer_id===d.buyer_user_id&&x.report_key===key&&x.status==='open');
       if(shared&&status==='ready')audience.push({pipelineId:d.id,buyerId:b.id,name:b.name,sub:b.sub,ref:b.ref,contact:b.contact,state:'shared',at:sh.shared_at,openedAt:sh.report_opened_at?.[key]??(key==='statements'?d.report_viewed_at:null),allowDownload:!!sh.allow_download});
@@ -72,8 +66,8 @@ export async function hubData(ctx:any,mode:HubMode,companyId?:string,pipelineId?
     }
     const mine=p?audience.filter(x=>x.pipelineId===p.id):[];const sh=mine.find(x=>x.state==='shared'),own=mine.find(x=>x.state==='yours'),asked=mine.find(x=>x.state==='asked');const declined=p?requests.find((x:any)=>x.pipeline_id===p.id&&x.report_key===key&&x.status==='declined'):null;
     if(mode==='buyer'&&own&&generatedAt)status='ready';
-    const price=key==='verification'?num(Number(rates[0]?.verification_price_thb)):(catalog.prices as Record<string,number>)[key==='pnl'?'financials':kind]??null;
-    return {key,planKey,years:key==='statements'?years:0,name:HUB_NAMES[key],status,generatedAt,authorisedAt,readyBy,orderId:o?.id??null,paidAt:o?.paid_at??(key==='verification'?vos.find((o:any)=>o.status==='paid')?.paid_at:null),paidAmount:o?Number(o.amount):null,price,buyerState:buyerReportState({shared:!!sh,yours:!!own,asked:!!asked,ready:status==='ready',inPlan}),openedAt:sh?.openedAt??own?.openedAt??null,askedAt:asked?.at??null,declinedAt:declined?.resolved_at??null,inPlan,left,total,included:key==='verification'&&!!v?.included,audience:mode==='buyer'?[]:p?mine:audience,allowDownload:sh?.allowDownload??!!own};
+    const price=quote.priceType==='on_request'?null:Number(quote.price);
+    return {key,planKey,years:key==='statements'?years:0,name:HUB_NAMES[key],status,generatedAt,authorisedAt,readyBy,orderId:o?.id??null,paidAt:o?.paid_at??(key==='verification'?vos.find((o:any)=>o.status==='paid')?.paid_at:null),paidAmount:o?Number(o.amount):null,price,freePeriod:quote.freePeriod,freeUntil:quote.freeUntil,orderAmount:quote.amount,priceType:quote.priceType,buyerState:buyerReportState({shared:!!sh,yours:!!own,asked:!!asked,ready:status==='ready',inPlan}),openedAt:sh?.openedAt??own?.openedAt??null,askedAt:asked?.at??null,declinedAt:declined?.resolved_at??null,inPlan,left,total,included:key==='verification'&&!!v?.included,audience:mode==='buyer'?[]:p?mine:audience,allowDownload:sh?.allowDownload??!!own};
   });
   const step=p?Math.min(6,currentStep({ndaApprovedAt:p.nda_approved_at,reportSharedAt:p.report_shared_at,loiAcceptedAt:p.loi_accepted_at,contactAt:p.contact_at,legalAt:p.legal_at,spaAt:p.spa_at,paymentAt:p.payment_at} as any)):0;
   const ownerIds=[...owners.map((x:any)=>x.owning_agent_user_id),...sellerUsers.map((x:any)=>x.user_id)];const owner=users.filter((u:any)=>ownerIds.includes(u.id)).map((u:any)=>[u.first_name,u.last_name].filter(Boolean).join(' ')).filter(Boolean).join(', ')||null;

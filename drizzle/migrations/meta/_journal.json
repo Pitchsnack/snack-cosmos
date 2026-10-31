@@ -869,6 +869,27 @@
       "when": 1793385199171,
       "tag": "0123_admin_review_draft",
       "breakpoints": true
+    },
+    {
+      "idx": 124,
+      "version": "7",
+      "when": 1793450591569,
+      "tag": "0124_central_report_prices_and_quarters",
+      "breakpoints": true
+    },
+    {
+      "idx": 125,
+      "version": "7",
+      "when": 1793450819338,
+      "tag": "0125_atomic_report_price_publication",
+      "breakpoints": true
+    },
+    {
+      "idx": 126,
+      "version": "7",
+      "when": 1793451167345,
+      "tag": "0126_report_quotes_and_plan_quarters",
+      "breakpoints": true
     }
   ]
 }
