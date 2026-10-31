@@ -99,7 +99,7 @@ export const TH_WIZARDS: Record<string, string> = {
   "Pick at least one stage.": "เลือกช่วงการลงทุนอย่างน้อย 1 ช่วง",
   "Pick at least one industry, or Sector agnostic.": "เลือกอุตสาหกรรมอย่างน้อย 1 รายการ หรือเลือก ไม่จำกัดอุตสาหกรรม",
   "Majority stake (above 51%)": "ถือหุ้นข้างมาก (มากกว่า 51%)",
-  "Buyout": "ซื้อกิจการทั้งหมด",
+  "Buyout": "ซื้อกิจการ (Buyout)",
   "Your changes are saved.": "บันทึกการเปลี่ยนแปลงของท่านแล้ว",
   "Saved as a draft. Continue setup any time from My Company.": "บันทึกเป็นฉบับร่างแล้ว ท่านสามารถกลับมาตั้งค่าต่อได้ทุกเมื่อจาก บริษัทของฉัน",
   "Enter": "กรอก",

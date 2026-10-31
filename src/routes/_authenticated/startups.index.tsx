@@ -1,3 +1,4 @@
+import { useTranslation } from "@/i18n/language";
 import {CreatedDirectoryRow} from "@/components/common/created-directory-row";
 import {REPORT_KEYS} from '@/lib/reports-hub';
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -91,6 +92,7 @@ function StartupsPage() {
 }
 
 function StartupsPageInner() {
+  useTranslation(); // cards switch language at once
   const { has, isControl } = usePermissions();
   const [createdId,setCreatedId] = useState<string | null>(null);
   const [runBy, setRunBy] = useState<RunByFilter>("all");
@@ -252,7 +254,6 @@ function StartupsPageInner() {
             )}
           >
             <Star className={cn("h-4 w-4", favOnly && "fill-accent")} />
-            <span>&nbsp;</span>
             <span
               className={cn(
                 "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",

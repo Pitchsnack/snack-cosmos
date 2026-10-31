@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -45,7 +46,7 @@ export function useAddInvestorProfile() {
 export function AddInvestorProfileButton({ onClick, busy }: { onClick: () => void; busy?: boolean }) {
   return (
     <Button className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={busy} aria-busy={busy} onClick={onClick}>
-      {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />} Add Investor Profile
+      {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />} {setupText("Add Investor Profile")}
     </Button>
   );
 }

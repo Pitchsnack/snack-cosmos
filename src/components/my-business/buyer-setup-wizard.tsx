@@ -40,7 +40,7 @@ type A = {
 };
 
 const ROLES: { value: BuyerRelation; label: string; hint: string }[] = [
-  { value: "individual", label: "นักลงทุนรายบุคคลที่มีความเชี่ยวชาญ", hint: "I am a sophisticated investor. I invest my own money." },
+  { value: "individual", label: "Individual Investor", hint: "I am a sophisticated investor. I invest my own money." },
   { value: "corporate", label: "Corporate Enterprise", hint: "My company invests in or buys businesses." },
   { value: "agent", label: "Authorised representative / adviser", hint: "I am acting on behalf of the buyer." },
 ];
@@ -398,14 +398,14 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       : { req: true, t: tr("What type of investor is your firm?"), h: tr("Sellers see this, and it sets the artwork on your card."),
         body: <Choice cols icon list={WIZARD_TYPES} value={a.type} onPick={(v) => autoPick("type", { type: v }, { investor_type: v })} /> },
     name: { req: true, t: addrOnly ? tr("What is your address?") : nameShort ? tr("What is your firm's name and registration number?") : tr("What is the name of your firm?"),
-      h: addrOnly ? tr("Sellers see your country and province, never the full address, until they approve your NDA.") : nameShort ? tr("Check that the name matches your firm's registration. Sellers don't see either before an NDA.") : "ผู้ขายจะเห็นคำว่า “นักลงทุนรายบุคคล” แทนชื่อของท่าน จนกว่าผู้ขายจะอนุมัติ NDA ของท่าน",
+      h: addrOnly ? tr("Sellers see your country and province, never the full address, until they approve your NDA.") : nameShort ? tr("Check that the name matches your firm's registration. Sellers don't see either before an NDA.") : L(`Sellers see “${tr(tName)}” instead of your name until they approve your NDA.`, `ผู้ขายจะเห็นคำว่า “${tr(tName)}” แทนชื่อของท่าน จนกว่าผู้ขายจะอนุมัติ NDA ของท่าน`),
       body: (
         <div className={addrOnly ? "pt-[6px]" : "space-y-4"}>
           {!addrOnly && (<div>
             <div className="flex flex-col gap-[14px] sm:flex-row">
               <div className="flex-1">
                 <label className={lbl} htmlFor="w-name">{tr("Firm name")}<Req /></label>
-                <input id="w-name" aria-required autoFocus {...(errors.name ? { "data-need": "1" } : {})} className={`${inp} ${errors.name ? "need-fill" : ""} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder={setupText("e.g. บริษัท ตัวอย่าง จำกัด")}
+                <input id="w-name" aria-required autoFocus {...(errors.name ? { "data-need": "1" } : {})} className={`${inp} ${errors.name ? "need-fill" : ""} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder={L("e.g. Example Co., Ltd.", "เช่น บริษัท ตัวอย่าง จำกัด")}
                   onBlur={() => setTouched((t) => ({ ...t, name: true }))}
                   onChange={(e) => set({ name: e.target.value }, e.target.value.trim() ? { investor_name: e.target.value } : {})} />
               </div>

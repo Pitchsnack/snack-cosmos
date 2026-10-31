@@ -1,4 +1,4 @@
-import { setupText } from "@/i18n/language";
+import { setupText, useTranslation } from "@/i18n/language";
 import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
 import { sectorChips } from "@/lib/business-types";
 import { OwnerHandoverBox } from "@/components/handover/owner-check";
@@ -84,6 +84,7 @@ function useAddFirm() {
 }
 
 export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {}) {
+  useTranslation(); // re-render every text at once on language change
   const viewsFn = useServerFn(myFirmViews);
   const { data: views } = useQuery({ queryKey: ["advisor-firm-views"], queryFn: () => viewsFn(), staleTime: 60_000 });
   const { data, isLoading, refetch, isFetching } = useMyAdvisorFirms();

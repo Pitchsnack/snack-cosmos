@@ -1,4 +1,4 @@
-import { setupText } from "@/i18n/language";
+import { setupText, tr } from "@/i18n/language";
 import { revenueBandLabel } from "@/lib/revenue-bands";
 import { useTranslation } from "@/i18n/language";
 import { useManagedIds } from "@/hooks/use-managed-ids";
@@ -22,7 +22,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { FolderTab, Group, Intro, Ring, Row, RowLine } from "@/components/my-business/my-business-profiles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BuyerBrowseCard, BuyerCover, TypeIcon, type CardPart } from "@/components/marketplace/buyer-browse-card";
+import { BuyerBrowseCard, BuyerCover, TypeIcon, shortCityTh, type CardPart } from "@/components/marketplace/buyer-browse-card";
 import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing, withdrawBuyerProfile } from "@/lib/buyer-profile.functions";
 import { registerBuyerCompany } from "@/lib/approvals-one-step.functions";
 import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approval/review-company-dialog";
@@ -58,6 +58,10 @@ function toPublicLocal(p: BuyerProfile, org: BuyerOrg): PublicBuyer {
 }
 const monthYear = (d: string) => new Date(d).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+/** App-language date: Thai uses short Thai months and the Buddhist year (12 ต.ค. 2569). */
+const fmtDateL = (d: string, lang: string) => lang === "th"
+  ? new Intl.DateTimeFormat("th-TH", { timeZone: "Asia/Bangkok", day: "numeric", month: "short", year: "numeric" }).format(new Date(d))
+  : fmtDate(d);
 const STATUS_LABEL = { live: "Live", draft: "Draft", paused: "Paused" } as const;
 
 function StatusChip({ status }: { status: BuyerProfile["status"] }) {
@@ -149,6 +153,7 @@ const TYPES = ["Family office", "Private equity", "Venture capital", "Corporate 
 type Layout = "profiles" | ViewMode;
 
 export function BuyerMyCompany() {
+  useTranslation(); // re-render every text at once on language change
   const fetchMe = useServerFn(getMyBuyerProfile);
   const { data, isLoading, isFetching, refetch, error } = useQuery({ queryKey: KEY, queryFn: () => fetchMe(), meta: { pageLoading: true } });
   const [view, setView] = useState<View>("public");
@@ -260,7 +265,6 @@ export function BuyerMyCompany() {
             className={cn("inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors",
               favOnly ? "border-accent/50 bg-accent/10 text-accent" : "border-input bg-background text-muted-foreground hover:text-foreground")}>
             <Star className={cn("h-4 w-4", favOnly && "fill-accent")} />
-            <span>{setupText("&nbsp;")}</span>
             <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-semibold", favOnly ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground")}>0</span>
           </button>
           <Button variant={layout === "profiles" ? "default" : "outline"} size="sm" className="h-9" onClick={() => setLayout("profiles")}>{setupText("Profiles")}</Button>
@@ -349,7 +353,7 @@ function useOwnCard(p: BuyerProfile, org: BuyerOrg) {
   return {
     iv, inv,
     props: {
-      b: pub as PublicBuyer, empty: "Not added", status: p.status as "live" | "draft" | "paused",
+      b: pub as PublicBuyer, empty: setupText("Not added"), status: p.status as "live" | "draft" | "paused",
       relation: (inv.data?.buyer.relation ?? null) as BuyerRelation | null,
       bands: { aum: iv?.aum_band, ticket: iv?.ticket_band, rev: iv?.revenue_min_band },
     },
@@ -408,18 +412,18 @@ function BuyerDirectoryItem({ p, org, mode, selected, onClick }: {
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-semibold group-hover:text-accent">{name}</div>
-        <div className="mt-1 text-xs font-normal text-muted-foreground">{org.type || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</div>
+        <div className="mt-1 text-xs font-normal text-muted-foreground">{org.type ? tr(org.type) : <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</div>
         <div className="mt-1"><StatusChip status={p.status} /></div>
       </div>
     </div>
     <div className={cn("min-w-0 text-xs font-normal text-foreground/80", mode === "list" ? "hidden flex-1 md:block" : "w-full")}>
       <p className="line-clamp-2">{p.private_description || p.description || p.headline || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</p>
       <div className="mt-2 flex flex-wrap gap-1">
-        {p.sectors.length ? p.sectors.slice(0, 4).map((x) => <span key={x} className="rounded-full border border-transparent bg-muted/50 px-2 py-0.5 text-[10.5px] text-muted-foreground">{x}</span>) : <span className="text-[#9CA3AF]">{setupText("Sectors not added")}</span>}
+        {p.sectors.length ? p.sectors.slice(0, 4).map((x) => <span key={x} className="rounded-full border border-transparent bg-muted/50 px-2 py-0.5 text-[10.5px] text-muted-foreground">{tr(x)}</span>) : <span className="text-[#9CA3AF]">{setupText("Sectors not added")}</span>}
       </div>
     </div>
     <div className={cn("flex items-center gap-2 text-xs font-normal text-muted-foreground", mode === "list" ? "ml-auto shrink-0" : "mt-auto w-full justify-between")}>
-      <span className="inline-flex items-center gap-1">{ticket ? <><Coins className="h-3 w-3" /> {ticket}</> : <><MapPin className="h-3 w-3" /> {[p.city, p.country].filter(Boolean).join(", ") || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</>}</span>
+      <span className="inline-flex items-center gap-1">{ticket ? <><Coins className="h-3 w-3" /> {ticket}</> : <><MapPin className="h-3 w-3" /> {[p.city, p.country].filter(Boolean).map((v) => shortCityTh(tr(v!))).join(", ") || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</>}</span>
       <ArrowRight className="h-3.5 w-3.5 text-accent" />
     </div>
   </Button>;
@@ -468,7 +472,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
     onSuccess: (d: any, s) => { toast.success(d?.submitted ? "Sent to Admin for review. You'll be notified when it's approved." : s === "live" ? "Live again in Browse investors." : "Paused. Sellers can't find you in Browse investors."); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const appr = (p as any).approval_status as string | undefined;
   const tone = typeTone(org.type);
   const { iv, inv, props } = useOwnCard(p, org);
@@ -481,7 +485,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const setupDone = !!iv?.setup_done_at;
   const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
   const leaks = descriptionLeaks([(p as any).suggested_listing_name, (p as any).suggested_headline, p.description].filter(Boolean).join("\n"), org.name ?? "", org.website ?? "");
-  const since = p.status === "live" && p.live_since ? `Live since ${fmtDate(p.live_since)}` : p.status === "paused" ? `Paused since ${fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}` : "Not published yet";
+  const since = p.status === "live" && p.live_since ? `Live since ${fmtDateL(p.live_since, language)}` : p.status === "paused" ? `Paused since ${fmtDateL(p.updated_at ?? p.live_since ?? new Date().toISOString(), language)}` : "Not published yet";
   // One-step approval: Register your company opens the review pop-up.
   const registerFn = useServerFn(registerBuyerCompany);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -525,7 +529,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   return (
     <div className="overflow-hidden rounded-[14px] border border-border">
       <div className="px-5 pt-5">
-        <PanelHead kind="public" title={setupText(title)} meta={[p.ref_no, p.country].filter(Boolean).join(" · ")}
+        <PanelHead kind="public" title={setupText(title)} meta={[p.ref_no, p.country ? tr(p.country) : null].filter(Boolean).join(" · ")}
           thumb={<div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-[10px]", tone.bg, tone.fg)}><TypeIcon type={org.type} className="h-6 w-6" /></div>}
           editLabel="Edit information" onEdit={() => openProfileEdit({ section: "description", from: "public" })} pill={pill}
           deleteDraft={iv ? { kind: "investor", id: iv.id, invalidate: [KEY, ["buyer-investor"]] } : undefined} />
@@ -534,7 +538,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
         <div className="flex flex-col gap-3 rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted">
           <BuyerBrowseCard {...props} managed={managedIds.has(iv?.id ?? "")} expanded editable={(k) => openProfileEdit({ section: PART_SEC[k], from: "public" })} cardFooter={
             <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border pt-2 text-[11.5px] text-[#6B7280] dark:text-muted-foreground">
-              <span className="truncate">{setupText(title)} · {p.ref_no}</span><span className="shrink-0">{since}</span>
+              <span className="truncate">{setupText(title)} · {p.ref_no}</span><span className="shrink-0">{setupText(since)}</span>
             </div>
           } />
         </div>
@@ -547,13 +551,13 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E9EBEF] bg-[#FAFAFB] px-5 py-3.5 text-[13px] text-[#6A7181] dark:border-border dark:bg-muted/40 dark:text-muted-foreground">
         {state === "live"
-          ? <span>{setupText("Live in Browse investors since")} {p.live_since ? fmtDate(p.live_since) : "—"} · {org.ndas}{setupText("NDA")}{org.ndas === 1 ? "" : "s"} · {org.lois}{setupText("LOI")}{org.lois === 1 ? "" : "s"}</span>
+          ? <span>{setupText("Live in Browse investors since")} {p.live_since ? fmtDateL(p.live_since, language) : "—"} · {org.ndas}{setupText("NDA")}{org.ndas === 1 ? "" : "s"} · {org.lois}{setupText("LOI")}{org.lois === 1 ? "" : "s"}</span>
           : state === "pending"
-            ? <span>{setupText("Submitted on")} {(p as any).submitted_at ? fmtDate((p as any).submitted_at) : "—"}{setupText("· sellers can't find you yet")}</span>
+            ? <span>{setupText("Submitted on")} {(p as any).submitted_at ? fmtDateL((p as any).submitted_at, language) : "—"}{setupText("· sellers can't find you yet")}</span>
           : state === "changes" || state === "declined"
             ? <span>{setupText("Fix what PitchSnack asked with Edit information, then register again.")}</span>
           : state === "paused"
-            ? <span>{setupText("Hidden from Browse investors since")} {fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}.</span>
+            ? <span>{setupText("Hidden from Browse investors since")} {fmtDateL(p.updated_at ?? p.live_since ?? new Date().toISOString(), language)}.</span>
             : !setupDone && iv
               ? <span>{setupText("Finish setting up your profile to publish it.")}</span>
               : <span><b className="font-semibold text-foreground">{setupText("Draft")}</b>{setupText("· not live yet. Register once: PitchSnack checks your firm and publishes your profile together.")}</span>}
@@ -623,7 +627,7 @@ function PrivatePanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg
   const web = org.website ? <a href={org.website.startsWith("http") ? org.website : `https://${org.website}`} target="_blank" rel="noreferrer" className="font-medium text-blue-600">{org.website.replace(/^https?:\/\//, "")}</a> : null;
   return (
     <div>
-      <PanelHead kind="private" title={org.name ?? "Your firm"} meta={[org.type ?? "Investor", [p.city, p.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
+      <PanelHead kind="private" title={org.name ?? "Your firm"} meta={[tr(org.type ?? "Investor"), [p.city, p.country].filter(Boolean).map((v) => tr(v!)).join(", ")].filter(Boolean).join(" · ")}
         thumb={<Logo p={p} org={org} size={56} />} editLabel="Edit profile" onEdit={() => onEdit("company")} pill={pill} />
       <div className="[&>div]:bg-[#F3F4F6] dark:[&>div]:bg-muted">
         <Intro icon={<Lock className="h-4 w-4 text-muted-foreground" />}>{setupText("Your full firm details. Only sellers who approve your NDA can see this.")}</Intro>
@@ -647,8 +651,8 @@ function PrivatePanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg
         <button type="button" onClick={() => onEdit("people")} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-border py-2 text-[13px] font-medium text-muted-foreground hover:bg-muted"><Plus className="h-4 w-4" />{setupText("Add a decision maker")}</button>
       </Sec>
       <Sec title={setupText("Mandate")} onEdit={() => onEdit("mandate")}>
-        <R label={setupText("Sectors")} value={p.sectors.join(", ")} /><R label={setupText("Stages")} value={p.stages.join(", ")} /><R label={setupText("Deal types")} value={p.deal_types.join(", ")} />
-        <MandateBands /><R label={setupText("Geography")} value={p.geography} />
+        <R label={setupText("Sectors")} value={p.sectors.map((x) => tr(x)).join(", ")} /><R label={setupText("Stages")} value={p.stages.map((x) => tr(x)).join(", ")} /><R label={setupText("Deal types")} value={p.deal_types.map((x) => tr(x)).join(", ")} />
+        <MandateBands /><R label={setupText("Geography")} value={p.geography ? p.geography.split(/\s*[,·]\s*/).filter(Boolean).map((x) => tr(x)).join(" · ") : p.geography} />
       </Sec>
       <Sec title={setupText("Portfolio")} action={setupText("Add")} onEdit={() => onEdit("portfolio")}>
         <R label={setupText("Current holdings")} value={p.portfolio.length ? p.portfolio.map((h) => h.note ? `${h.name} (${h.note})` : h.name).join(", ") : null} />

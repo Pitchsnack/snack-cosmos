@@ -127,12 +127,12 @@ export function KeyFigures({ i, empty, oneRow, onPart }: { i: CardInvestor; empt
       </div>
       <div className="investor-focus-row">
         <dt>{tr('Investment Focus')}<PartEdit k="focus" onPart={onPart} /></dt>
-        <dd>{i.dealTypes.length ? i.dealTypes.join(' · ') : empty}</dd>
+        <dd>{i.dealTypes.length ? i.dealTypes.map((d) => tr(d)).join(' · ') : empty}</dd>
       </div>
       {(
         <div className="flex flex-wrap items-baseline gap-x-2.5 border-t border-[#EEF0F3] bg-[#FAFBFC] px-[11px] pb-[10px] pt-[9px] dark:border-border dark:bg-muted/40">
           <dt className="text-[11.5px] text-[#6B7280] dark:text-muted-foreground">{setupText("Geography")}</dt>
-          <dd className={cn("text-[12.5px]", places.length ? "font-semibold text-[#434A5C] dark:text-foreground" : "font-medium text-[#9CA3AF]")}>{places.length ? places.map(shortPlace).join(" · ") : empty}</dd>
+          <dd className={cn("text-[12.5px]", places.length ? "font-semibold text-[#434A5C] dark:text-foreground" : "font-medium text-[#9CA3AF]")}>{places.length ? places.map((pl) => tr(shortPlace(pl))).join(" · ") : empty}</dd>
           <PartEdit k="geography" onPart={onPart} />
         </div>
       )}
@@ -141,6 +141,8 @@ export function KeyFigures({ i, empty, oneRow, onPart }: { i: CardInvestor; empt
 }
 
 const shortPlace = (p: string) => p.replace(/\s+Sub-region$/i, "");
+/** Cards use the short Thai city form (กรุงเทพฯ); address pickers keep the official province name. */
+export const shortCityTh = (translated: string) => (translated === "กรุงเทพมหานคร" ? "กรุงเทพฯ" : translated);
 const shortChip = (s: string) => s.replace(/\(above 51%\)/i, "(51%+)");
 
 export function NameAfterNdaPill() {
@@ -167,7 +169,7 @@ function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: 
     <>
       <div className="flex items-baseline justify-between gap-3">
         <div data-card-title className="text-[18px] font-semibold leading-snug text-[#111827] dark:text-foreground">{i.publishedListingName ?? tr(typeName(i.type, i.actsFor))}</div>
-        <div className="whitespace-nowrap text-[13px] tabular-nums text-[#6B7280] dark:text-muted-foreground">{i.refNo}{i.country && <><span className="mx-1.5 text-[#D1D5DB]">·</span><span className="font-medium text-[#4B5563] dark:text-foreground/80">{i.country}</span></>}</div>
+        <div className="whitespace-nowrap text-[13px] tabular-nums text-[#6B7280] dark:text-muted-foreground">{i.refNo}{i.country && <><span className="mx-1.5 text-[#D1D5DB]">·</span><span className="font-medium text-[#4B5563] dark:text-foreground/80">{tr(i.country)}</span></>}</div>
       </div>
       {i.publishedHeadline && <div className="mt-0.5 text-[13.5px] font-semibold leading-snug text-[#374151] dark:text-foreground/85">{i.publishedHeadline}</div>}
       {i.publishedListingName && <div className="mt-0.5 text-[12.5px] text-muted-foreground">{tr(typeName(i.type, i.actsFor))}</div>}
@@ -180,10 +182,10 @@ function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: 
       {desc && <p className="mb-3 mt-1.5 text-[14px] leading-[1.5] text-[#374151] dark:text-foreground/85">{desc}{onPart && <span className="ml-2 inline-flex align-baseline"><PartEdit k="description" onPart={onPart} /></span>}</p>}
       <div className={desc ? "" : "mt-3"}><KeyFigures i={i} empty={empty} oneRow={oneRow} onPart={onPart} /></div>
       {showMore && (i.city || chips.length > 0) && <div className="mt-3">
-        {i.city && row("Based in", i.city, "based")}
-        {chips.length > 0 && row("Focus", (
+        {i.city && row(setupText("Based in"), shortCityTh(tr(i.city)), "based")}
+        {chips.length > 0 && row(setupText("Focus"), (
           <div className="flex flex-wrap gap-1.5">
-            {chips.map((c, k) => <span key={c + k} className="rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-[9px] py-0.5 text-[12px] text-[#374151] dark:border-border dark:bg-muted dark:text-foreground">{c}</span>)}
+            {chips.map((c, k) => <span key={c + k} className="rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-[9px] py-0.5 text-[12px] text-[#374151] dark:border-border dark:bg-muted dark:text-foreground">{tr(c)}</span>)}
           </div>
         ), "focus")}
       </div>}

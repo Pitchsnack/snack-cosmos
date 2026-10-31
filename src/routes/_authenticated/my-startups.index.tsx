@@ -196,7 +196,6 @@ function MyStartupsPageInner() {
             )}
           >
             <Star className={cn("h-4 w-4", favOnly && "fill-accent")} />
-            <span>{setupText("&nbsp;")}</span>
             <span
               className={cn(
                 "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
