@@ -113,7 +113,7 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
               ].map(([l, v]) => (
                 <li key={l} className="flex items-center gap-2.5">
                   <span className="grid h-[22px] w-[22px] place-items-center rounded-full bg-[#E3F3EA] text-[#1E7A4C]"><Check className="h-3.5 w-3.5" /></span>
-                  <span className="w-28 text-[12.5px] text-[#6B7280]">{setupText(l)}</span><span className="text-sm font-semibold">{v}</span>
+                  <span className="w-28 text-[12.5px] text-[#6B7280]">{setupText(l ?? "")}</span><span className="text-sm font-semibold">{v}</span>
                 </li>
               ))}
               <li className="flex items-center gap-2.5">
