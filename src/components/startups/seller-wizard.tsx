@@ -427,7 +427,7 @@ export function SellerWizard({
         <span className="text-[14px] font-semibold">{title}</span>
         <span className="ml-auto text-[13px] text-[#9ca3af]">{justSaved ? "Saved just now" : tr("All changes saved")}</span>
       </div>
-      <div className="mx-auto max-w-[680px] px-5 pb-16 pt-10">
+      <div className={`mx-auto ${cur.id === "web" ? "max-w-[800px]" : "max-w-[680px]"} px-5 pb-16 pt-10`}>
         <div className="mb-2.5 flex items-baseline justify-between text-[13px] text-[#6b7280]">
           <b className="font-semibold text-[#111827]">{tr(SECTIONS[cur.sec])}</b>
           <span>Step {pos + 1} of {shown.length}</span>
