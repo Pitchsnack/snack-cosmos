@@ -73,7 +73,7 @@ export function DraftCompanyCard({ role, name, typeLine, typeClass, founded, siz
       </div>
       <div className={`absolute left-4 top-[58px] grid h-[52px] w-[52px] place-items-center rounded-[12px] border border-[#E5E7EB] bg-card text-[17px] font-bold shadow-[0_1px_2px_rgba(16,24,40,.06)] dark:border-border ${t.fg}`}>{draftInitials(name)}</div>
       <div className="flex flex-col gap-[5px] px-4 pb-4 pt-9">
-        <div className="text-[16px] font-bold text-foreground">{name || "Untitled"}</div>
+        <div className="text-[16px] font-bold text-foreground">{name === "New investor profile" ? setupText("New investor profile") : name || "Untitled"}</div>
         {typeLine && <div className={`text-[13px] font-semibold ${typeClass ?? ""}`}>{typeLine}</div>}
         {meta && <div className="text-[13px] text-[#4B5563] dark:text-muted-foreground">{meta}</div>}
         <div className="flex items-center gap-1.5 text-[13px] text-[#4B5563] dark:text-muted-foreground">
@@ -98,7 +98,7 @@ export function DraftCompanyPanel({ role, name, banner, onEdit, onFinish, delete
       <div className="flex items-center gap-3.5 border-b border-border p-5">
         <div className={`grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[12px] text-[17px] font-bold ${t.bg} ${t.fg}`}>{draftInitials(name)}</div>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-[21px] font-bold leading-tight">{name || "Untitled"}</h2>
+          <h2 className="truncate text-[21px] font-bold leading-tight">{name === "New investor profile" ? setupText("New investor profile") : name || "Untitled"}</h2>
           <div className="text-[13px] font-medium text-[#92400E] dark:text-amber-400">{setupText(line)}</div>
         </div>
         <CompanyMenu name={name} onEdit={onEdit} deleteDraft={deleteDraft} />

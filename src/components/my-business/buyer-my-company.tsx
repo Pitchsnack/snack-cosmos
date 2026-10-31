@@ -627,7 +627,7 @@ function PrivatePanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg
   const web = org.website ? <a href={org.website.startsWith("http") ? org.website : `https://${org.website}`} target="_blank" rel="noreferrer" className="font-medium text-blue-600">{org.website.replace(/^https?:\/\//, "")}</a> : null;
   return (
     <div>
-      <PanelHead kind="private" title={org.name ?? "Your firm"} meta={[org.type ?? "Investor", [p.city, p.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
+      <PanelHead kind="private" title={org.name ?? "Your firm"} meta={[tr(org.type ?? "Investor"), [p.city, p.country].filter(Boolean).map((v) => tr(v!)).join(", ")].filter(Boolean).join(" · ")}
         thumb={<Logo p={p} org={org} size={56} />} editLabel="Edit profile" onEdit={() => onEdit("company")} pill={pill} />
       <div className="[&>div]:bg-[#F3F4F6] dark:[&>div]:bg-muted">
         <Intro icon={<Lock className="h-4 w-4 text-muted-foreground" />}>{setupText("Your full firm details. Only sellers who approve your NDA can see this.")}</Intro>
@@ -651,8 +651,8 @@ function PrivatePanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg
         <button type="button" onClick={() => onEdit("people")} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-border py-2 text-[13px] font-medium text-muted-foreground hover:bg-muted"><Plus className="h-4 w-4" />{setupText("Add a decision maker")}</button>
       </Sec>
       <Sec title={setupText("Mandate")} onEdit={() => onEdit("mandate")}>
-        <R label={setupText("Sectors")} value={p.sectors.join(", ")} /><R label={setupText("Stages")} value={p.stages.join(", ")} /><R label={setupText("Deal types")} value={p.deal_types.join(", ")} />
-        <MandateBands /><R label={setupText("Geography")} value={p.geography} />
+        <R label={setupText("Sectors")} value={p.sectors.map((x) => tr(x)).join(", ")} /><R label={setupText("Stages")} value={p.stages.map((x) => tr(x)).join(", ")} /><R label={setupText("Deal types")} value={p.deal_types.map((x) => tr(x)).join(", ")} />
+        <MandateBands /><R label={setupText("Geography")} value={p.geography ? p.geography.split(/\s*[,·]\s*/).filter(Boolean).map((x) => tr(x)).join(" · ") : p.geography} />
       </Sec>
       <Sec title={setupText("Portfolio")} action={setupText("Add")} onEdit={() => onEdit("portfolio")}>
         <R label={setupText("Current holdings")} value={p.portfolio.length ? p.portfolio.map((h) => h.note ? `${h.name} (${h.note})` : h.name).join(", ") : null} />
