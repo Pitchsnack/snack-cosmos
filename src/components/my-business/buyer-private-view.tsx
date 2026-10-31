@@ -157,7 +157,8 @@ export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInv
       )}
       <span className="flex-1" />
       <Pill d={d} onEdit={editItem} />
-      <CompanyMenu name={i.investor_name || "Investor profile"} onEdit={edit}>
+      <CompanyMenu name={i.investor_name || "Investor profile"} onEdit={edit}
+        deleteDraft={{ kind: "investor", id: i.id, invalidate: [["buyer-profile", "me"], ["buyer-investor"], BUYER_INVESTOR_KEY] }}>
         {web && <DropdownMenuItem onClick={() => window.open(web, "_blank", "noopener")}>Open website</DropdownMenuItem>}
       </CompanyMenu>
     </div>

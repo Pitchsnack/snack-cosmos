@@ -408,7 +408,8 @@ export function FirmPanel({ f, client, views }: { f: AdvisorFirm; client?: Clien
         </div>
         {client ? <div className="flex items-center">{client.headerRight}</div> : <div className="flex items-center">
           {!inSetup && <ChecklistPill f={f} onItem={edit} />}
-          <CompanyMenu name={f.name || "New firm profile"} onEdit={() => edit("firm")}>
+          <CompanyMenu name={f.name || "New firm profile"} onEdit={() => edit("firm")}
+            deleteDraft={{ kind: "advisor_firm", id: f.id, invalidate: [ADVISOR_FIRMS_KEY], onDeleted: onDeletedDraft }}>
             {!inSetup && (f.status === "live"
               ? <DropdownMenuItem onClick={() => changeStatus("paused")}>Pause listing</DropdownMenuItem>
               : <DropdownMenuItem disabled={!complete || declined || busy} title={declined ? DECLINED_TIP : undefined} onClick={() => changeStatus("live")}>Publish</DropdownMenuItem>)}
