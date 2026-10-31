@@ -5,6 +5,7 @@ import { TH_ADVISORS } from "./th-advisors";
 // Thai translations keyed by the exact English UI string.
 // Any string without an entry falls back to English.
 const TH_BASE: Record<string, string> = {
+  "Subscription plans": "แพ็กเกจสมาชิก",
   "Education": "การศึกษา",
   "Energy & Utilities": "พลังงานและสาธารณูปโภค",
   "AUM": "สินทรัพย์ที่บริหาร",

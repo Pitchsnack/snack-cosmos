@@ -56,6 +56,7 @@ import { GlobalBar, PersonaCard, MarketplaceEmptyMenu } from "@/components/marke
 import { SidebarShare } from '@/components/marketplace/sidebar-share';
 import { GlobalRouteLoading } from "@/components/ui/global-loading";
 import { useTranslation } from "@/i18n/language";
+import {REPORT_PRICE_LAUNCH} from '@/lib/report-pricing';
 
 type NavPath =
   | "/tenants"
@@ -70,6 +71,7 @@ type NavPath =
   | "/audit"
   | "/users"
   | "/admin/plans"
+  | "/admin/plans/reports"
   | "/admin/access-codes"
   | "/admin/advertisement"
   | "/access-management"
@@ -235,6 +237,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   { label: "Users", icon: UsersIcon, path: "/users", exact: false, perm: "users.read" },
   { label: "Plans", icon: Tag, path: "/admin/plans", exact: false, controlOnly: true, perm: "users.assign_role" },
+  { label: "Reports", icon: FileText, path: "/admin/plans/reports", exact: true, controlOnly: true, perm: "users.assign_role" },
   { label: "Access codes", icon: KeyRound, path: "/admin/access-codes", exact: false, controlOnly: true, perm: "users.assign_role" },
   {
     label: "Access Management",
@@ -484,7 +487,7 @@ function SidebarBody({
               {sections.map((group) => (
                 <div key={group.title} className="space-y-1">
                   {showLabels && <div className={headingClass}>{t(group.title)}</div>}
-                  {group.items.map((it, i) => renderItem(it, i))}
+                  {group.items.map((it, i) => it.label==='Plans'?<WorkspaceSubmenu key="admin-plans" id="admin-plans" toggleOnly label={t('Plans')} heading={t('Plans')} groupLabel="Plans pages" icon={Tag} destination="/admin/plans" active={pathname.startsWith('/admin/plans')} collapsed={!showLabels} items={[{to:'/admin/plans',label:t('Subscription plans'),current:pathname==='/admin/plans'},{to:'/admin/plans/reports',label:t('Reports'),current:pathname==='/admin/plans/reports',suffix:Date.now()-Date.parse(REPORT_PRICE_LAUNCH)<30*86400000?<span className="hub-new">{t('NEW')}</span>:undefined}]}/>:renderItem(it, i))}
                 </div>
               ))}
               {leftovers.length > 0 && (

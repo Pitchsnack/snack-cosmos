@@ -45,6 +45,7 @@ const PATH_LABELS: Record<string, string> = {
   "/intake-queue": "Default Intake Queue",
   "/users": "Users",
   "/admin/plans": "Plans",
+  "/admin/plans/reports": "Reports",
   "/admin/analytics": "Analytics",
   "/admin/messages": "Messages",
   "/admin/access-codes": "Access codes",
@@ -83,7 +84,7 @@ const HOME_ROUTE = "/dashboard";
 const HIDDEN_ROUTE_IDS = new Set(["/", "/_authenticated", "__root__"]);
 
 function getPathTemplate(routeId: string) {
-  return routeId.replace(/^\/_authenticated/, "").replace(/\/$/, "") || "/";
+  return routeId.replace(/^\/_authenticated/, "").replace(/_\//g,'/').replace(/\/$/, "") || "/";
 }
 
 function formatLabelFromTemplate(pathTemplate: string) {
@@ -157,6 +158,7 @@ export function RouteBreadcrumbs({ className, placement }: { className?: string;
     }
     const unique = Array.from(byTemplate.values());
 
+    if(unique.some(m=>getPathTemplate(m.routeId)==='/admin/plans/reports'))return [{label:'Plans',to:'/admin/plans',params:{}},{label:'Reports',to:'/admin/plans/reports',params:{}}];
     return unique
       .filter((m) => !HIDDEN_ROUTE_IDS.has(m.routeId))
       .map((m) => {
