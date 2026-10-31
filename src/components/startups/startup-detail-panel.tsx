@@ -348,6 +348,7 @@ export function StartupDetailPanel({
   extraMenuItems,
   headerPill,
   companyMenuEdit,
+  companyMenuDeleteDraft,
   ownerMedia,
 }: {
   id: string;
