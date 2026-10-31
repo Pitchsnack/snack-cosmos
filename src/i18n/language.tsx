@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { TH } from "./th";
 import { companySetupThai } from "./th-company-setup";
+import { EDIT_INFO_TH } from "./th-edit-info";
 
 /** Translate a known interface message, including its existing numeric placeholders. */
 export function setupText(text: string): string {
-  return currentLanguage === "th" ? TH[text] ?? companySetupThai(text) ?? text : text;
+  return currentLanguage === "th" ? TH[text] ?? EDIT_INFO_TH[text] ?? companySetupThai(text) ?? text : text;
 }
 
 export type Language = "en" | "th";
