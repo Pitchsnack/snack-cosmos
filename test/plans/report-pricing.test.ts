@@ -10,6 +10,6 @@ describe('report price rules',()=>{
  it('free period is role scoped',()=>{expect(freePeriod({...p,price_type:'free',free_for_buyers:false},'buyer')).toBe(false);});
  it('credit is on request after plan allowance is exhausted',()=>{expect(reportAmount({...p,price_type:'on_request',price_thb:null},'buyer',0).amount).toBe(null);expect(reportAmount({...p,price_type:'on_request',price_thb:null},'buyer',1).method).toBe('Plan');});
  it('quarters are anchored to term start, with month-end clamping',()=>{expect(reportQuarter('2026-01-31T05:00:00Z',new Date('2026-07-31T05:00:00Z'))).toEqual({start:'2026-07-31T05:00:00.000Z',end:'2026-10-31T05:00:00.000Z'});});
- it('quarter before anniversary does not roll early',()=>{expect(reportQuarter('2026-01-31T05:00:00Z',new Date('2026-04-30T04:59:59Z'))).start).toBe('2026-01-31T05:00:00.000Z');});
+ it('quarter before anniversary does not roll early',()=>{expect(reportQuarter('2026-01-31T05:00:00Z',new Date('2026-04-30T04:59:59Z')).start).toBe('2026-01-31T05:00:00.000Z');});
  it('allowance numbers stay within 0–20',()=>{expect(reportErrors({...p,allowances:{a:21}}).allowances).toBeDefined();expect(reportErrors({...p,allowances:{a:0,b:20}})).toEqual({});});
 });
