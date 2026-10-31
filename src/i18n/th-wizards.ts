@@ -189,7 +189,7 @@ export const TH_WIZARDS: Record<string, string> = {
   "Company registry": "ทะเบียนบริษัท",
   "News": "ข่าว",
   "Recent deals and press": "ดีลและข่าวประชาสัมพันธ์ล่าสุด",
-  "กรอกข้อมูลอัตโนมัติ": "กรอกข้อมูลอัตโนมัติ",
+  "Auto Enrich": "กรอกข้อมูลอัตโนมัติ",
   "Almost done": "เกือบเสร็จแล้ว",
   "Your profile is filled in": "กรอกข้อมูลในโปรไฟล์ของท่านแล้ว",
   "Filling in your profile": "กำลังกรอกข้อมูลในโปรไฟล์ของท่าน",
