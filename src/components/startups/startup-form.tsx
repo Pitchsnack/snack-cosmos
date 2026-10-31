@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { X, RefreshCw, Sparkles, Upload, Scissors, Loader2, Lock } from "lucide-react";
-import { useTranslation } from "@/i18n/language";
+import { setupText, useTranslation } from "@/i18n/language";
 import { AddressBox } from "@/components/common/business-address";
 import { SnippingCapture } from "@/components/media/snipping-capture";
 import { Button } from "@/components/ui/button";
@@ -829,7 +829,7 @@ export function StartupForm({
   const MISSING_INPUT =
     "border-destructive focus-visible:ring-destructive placeholder:text-destructive text-destructive";
   const MISSING_LABEL = "text-destructive";
-  const missingPh = (field: string) => missingLine(tr(field, field), th);
+  const missingPh = (field: string) => missingLine(setupText(field), th);
 
   /**
    * Empty-field-only merge of an Auto Enrich result. Never overwrites
