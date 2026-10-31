@@ -154,7 +154,7 @@ export function BuyerInvestorForm({ data, setup, onCreated }: { data: Data; setu
 function Tag({ s }: { s?: SourceTag }) {
   if (!s) return null;
   const cls = s === "Your answer" ? "bg-[#EEF1F7] text-[#1E2A4A] dark:bg-[#1B2140] dark:text-[#C7CEF5]" : s === "Auto Enrich" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-muted text-muted-foreground";
-  return <span className={`ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>{s}</span>;
+  return <span className={`ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>{setupText(s)}</span>;
 }
 
 export type Data = Awaited<ReturnType<typeof getMyBuyerInvestor>>;
@@ -407,11 +407,11 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       const ready = !!f.ticket_band && deals.length > 0 && industries.length > 0 && (!showsStages(typeOf, agent ? actsFor : null) || stages.length > 0);
       const msg = live ? "Profile saved. Sellers see the changes in Browse investors."
         : ready ? "Profile saved as a draft. Publish it when you're ready." : "Profile saved as a draft. Finish the required items to publish.";
-      if (setup) setup.onSaved(msg);
-      else { toast.success(msg); if (pop) { pop.setDirty(false); pop.done(); } else back(); }
+      if (setup) setup.onSaved(setupText(msg));
+      else { toast.success(setupText(msg)); if (pop) { pop.setDirty(false); pop.done(); } else back(); }
     } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   };
-  const Err = ({ k }: { k: string }) => errs[k] && errs[k] !== "leak" ? <p className="text-[12.5px] text-[#B42318]">{errs[k]}</p> : null;
+  const Err = ({ k }: { k: string }) => errs[k] && errs[k] !== "leak" ? <p className="text-[12.5px] text-[#B42318]">{setupText(errs[k])}</p> : null;
   const req = <span className="ml-[3px] text-[12px] font-semibold text-[#B42318] relative -top-0.5">*</span>;
   const corp = isCorporateBuyer(typeOf);
   const allStages = Array.from(new Set([...STAGE_OPTIONS, ...stages]));
@@ -478,7 +478,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             <div className="space-y-1.5">
               <Label>{tr("Registered Number")}{f.country === "Thailand" && req}<Tag s={src.registration_no} /></Label>
               <Input id="f-registration_no" value={f.registration_no} aria-required={f.country === "Thailand"}
-                maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? "13 digits" : ""}
+                maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? setupText("13 digits") : ""}
                 inputMode={f.country === "Thailand" ? "numeric" : undefined}
                 onChange={(e) => setF((o) => ({ ...o, registration_no: o.country === "Thailand" ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value }))}
                 onBlur={() => setErrs((o) => ({...o, registration_no: regError(f.registration_no, f.country) ?? ""}))} className={errs.registration_no ? "border-destructive" : ""} />
@@ -493,7 +493,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               <SelectContent>
                 <SelectItem value="none">{setupText("— Select —")}</SelectItem>
                 {Array.from(new Set([...INVESTOR_CLASSIFICATIONS, ...(f.investor_type ? [f.investor_type] : [])])).map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                  <SelectItem key={c} value={c}>{setupText(c)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -597,7 +597,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         <div className="space-y-1.5">
           <Label>{setupText("About Company")}<LangTag /></Label>
           <Textarea lang={tl} value={bv("short_description")} onChange={(e) => bset("short_description")(e.target.value)} rows={3} maxLength={2000} className="startup-long-description"
-            placeholder={bph("short_description", "Brief description of the company")} />
+            placeholder={bph("short_description", setupText("Brief description of the company"))} />
         </div>
 
 {directory && <div className="space-y-1.5"><Label>{setupText("Bio")}</Label><Textarea value={bio} onChange={e=>setBio(e.target.value)} maxLength={2000} /></div>}{directory && <div className="space-y-1.5"><Label>{setupText("Long Description")}</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</div>}
@@ -807,7 +807,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               <SelectContent>
                 <SelectItem value="none">{setupText("— Select —")}</SelectItem>
                 {Array.from(new Set([...INVESTOR_CLASSIFICATIONS, ...(f.investor_type ? [f.investor_type] : [])])).map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                  <SelectItem key={c} value={c}>{setupText(c)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -969,7 +969,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         <div className="space-y-1.5">
           <Label>{setupText("About Company")}<LangTag /></Label>
           <Textarea lang={tl} value={bv("short_description")} onChange={(e) => bset("short_description")(e.target.value)} rows={3} maxLength={2000} className="startup-long-description"
-            placeholder={bph("short_description", "Brief description of the company")} />
+            placeholder={bph("short_description", setupText("Brief description of the company"))} />
         </div>
 
         {/* Tags */}
@@ -1028,7 +1028,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             <div className="space-y-1.5">
               <Label>{f.country === "Thailand" ? <>{setupText("Company Registration Number (เลขทะเบียนนิติบุคคล)")}{req}</> : <>{setupText("Company registration number")} <span className="font-normal text-[#9CA3AF]">{setupText("optional")}</span></>}<Tag s={src.registration_no} /></Label>
               <Input id="f-registration_no" value={f.registration_no} aria-required={f.country === "Thailand"}
-                maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? "13 digits" : ""}
+                maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? setupText("13 digits") : ""}
                 inputMode={f.country === "Thailand" ? "numeric" : undefined}
                 onChange={(e) => setF((o) => ({ ...o, registration_no: o.country === "Thailand" ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value }))}
                 className={errs.registration_no ? "border-[#B42318]" : ""} />
@@ -1069,8 +1069,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           <p className="text-xs text-muted-foreground">{setupText("Required fields are marked with")} <span className="text-destructive">*</span>
           </p>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={back} disabled={busy}>{setup ? "Back to answers" : "Cancel"}</Button>
-            <Button type="submit" disabled={busy}>{busy ? "Saving…" : setup ? "Save profile" : "Save changes"}</Button>
+            <Button type="button" variant="outline" onClick={back} disabled={busy}>{setupText(setup ? "Back to answers" : "Cancel")}</Button>
+            <Button type="submit" disabled={busy}>{setupText(busy ? "Saving…" : setup ? "Save profile" : "Save changes")}</Button>
           </div>
         </div>
         )}

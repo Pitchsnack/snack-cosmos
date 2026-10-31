@@ -1,3 +1,4 @@
+import { setupText } from "@/i18n/language";
 import { useState } from "react";
 import { tr } from '@/i18n/language';
 import { BadgeCheck, ChevronDown, ChevronUp, Briefcase, Building2, EyeOff, Landmark, Lock, Rocket, Sprout, User, Users } from "lucide-react";
@@ -88,7 +89,7 @@ type OnPart = ((k: CardPart) => void) | undefined;
 function PartEdit({ k, onPart }: { k: CardPart; onPart: OnPart }) {
   if (!onPart) return null;
   return <button type="button" onClick={(e) => { e.stopPropagation(); onPart(k); }} onKeyDown={(e) => e.stopPropagation()}
-    className="ml-auto shrink-0 text-[12.5px] font-medium text-[#4338CA] hover:underline dark:text-[#A5ADFF]">Edit</button>;
+    className="ml-auto shrink-0 text-[12.5px] font-medium text-[#4338CA] hover:underline dark:text-[#A5ADFF]">{setupText("Edit")}</button>;
 }
 
 const nbspDash = (s: string) => s.replace(/ – /g, "\u00A0– ");
@@ -120,9 +121,9 @@ export function KeyFigures({ i, empty, oneRow, onPart }: { i: CardInvestor; empt
     <dl className="overflow-hidden rounded-[12px] border border-[#E9EBF0] dark:border-border">
       <div className={cn("grid gap-px bg-[#EEF0F3] dark:bg-border",
         oneRow ? (individual ? "grid-cols-2" : "grid-cols-3") : "grid-cols-2")}>
-        <Figure label="Ticket size" band={i.ticketBand} empty={empty} big part="ticket" onPart={onPart} />
+        <Figure label={setupText("Ticket size")} band={i.ticketBand} empty={empty} big part="ticket" onPart={onPart} />
         {!individual && <Figure label={corp ? "Group revenue" : "AUM"} band={i.aumBand} empty={empty} big part="aum" onPart={onPart} />}
-        <Figure label="Min. target revenue" band={i.revBand} empty={empty} shade wideSpan={!individual && !oneRow} big part="revenue" onPart={onPart} />
+        <Figure label={setupText("Min. target revenue")} band={i.revBand} empty={empty} shade wideSpan={!individual && !oneRow} big part="revenue" onPart={onPart} />
       </div>
       <div className="investor-focus-row">
         <dt>{tr('Investment Focus')}<PartEdit k="focus" onPart={onPart} /></dt>
@@ -130,7 +131,7 @@ export function KeyFigures({ i, empty, oneRow, onPart }: { i: CardInvestor; empt
       </div>
       {(
         <div className="flex flex-wrap items-baseline gap-x-2.5 border-t border-[#EEF0F3] bg-[#FAFBFC] px-[11px] pb-[10px] pt-[9px] dark:border-border dark:bg-muted/40">
-          <dt className="text-[11.5px] text-[#6B7280] dark:text-muted-foreground">Geography</dt>
+          <dt className="text-[11.5px] text-[#6B7280] dark:text-muted-foreground">{setupText("Geography")}</dt>
           <dd className={cn("text-[12.5px]", places.length ? "font-semibold text-[#434A5C] dark:text-foreground" : "font-medium text-[#9CA3AF]")}>{places.length ? places.map(shortPlace).join(" · ") : empty}</dd>
           <PartEdit k="geography" onPart={onPart} />
         </div>
@@ -145,7 +146,7 @@ const shortChip = (s: string) => s.replace(/\(above 51%\)/i, "(51%+)");
 export function NameAfterNdaPill() {
   return (
     <span className="inline-flex h-6 shrink-0 items-center gap-[5px] rounded-full border border-[#FCD9A0] bg-[#FFFBEB] px-2.5 text-[12.5px] font-medium text-[#B45309] dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
-      <Lock className="h-[13px] w-[13px]" />Name after NDA
+      <Lock className="h-[13px] w-[13px]" />{setupText("Name after NDA")}
     </span>
   );
 }
@@ -172,8 +173,8 @@ function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: 
       {i.publishedListingName && <div className="mt-0.5 text-[12.5px] text-muted-foreground">{typeName(i.type, i.actsFor)}</div>}
       {(i.verified || i.proofOfFunds) && (
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {i.verified && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />Verified investor</Pill>}
-          {i.proofOfFunds && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />Proof of funds</Pill>}
+          {i.verified && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />{setupText("Verified investor")}</Pill>}
+          {i.proofOfFunds && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />{setupText("Proof of funds")}</Pill>}
         </div>
       )}
       {desc && <p className="mb-3 mt-1.5 text-[14px] leading-[1.5] text-[#374151] dark:text-foreground/85">{desc}{onPart && <span className="ml-2 inline-flex align-baseline"><PartEdit k="description" onPart={onPart} /></span>}</p>}
@@ -234,7 +235,7 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
       <BuyerCover type={i.type} src={(i as { coverUrl?: string | null }).coverUrl} className="h-[110px]">
         <div ref={fit.box} className="pointer-events-none absolute inset-x-0 top-0 h-0" />
         <span ref={fit.left as React.RefObject<HTMLSpanElement>} className={cn("absolute left-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-semibold text-foreground", panel && managed ? "top-3" : "top-2.5")}>
-          {coverBadge ?? <><EyeOff className="h-3 w-3" />Name hidden</>}
+          {coverBadge ?? <><EyeOff className="h-3 w-3" />{setupText("Name hidden")}</>}
         </span>
         {(topRight || status || managed) && <div ref={fit.right} className={cn("absolute flex items-center gap-1.5", panel && managed ? "right-3 top-3" : "right-2.5 top-2.5")}>{managed && <ManagedBadge size={status ? "sm" : panel ? "panel" : "card"} border={!!status} shadow={!status} hatOnly={fit.level >= 1} />}{status && <StatusPill status={status} />}{topRight}</div>}
       </BuyerCover>

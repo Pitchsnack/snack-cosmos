@@ -88,7 +88,7 @@ function Section({ id, title, action, setup, active, children }: { id: EditSecti
     <section id={`sec-${id}`} className={pop ? "scroll-mt-6" : "scroll-mt-6 rounded-[14px] border border-border bg-card p-5 shadow-card"}>
       <EditSec id={id} tone="buyer" active={active}>
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className={setup ? "text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]" : "text-[16px] font-semibold"}>{title}</h2>
+          <h2 className={setup ? "text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]" : "text-[16px] font-semibold"}>{setupText(title)}</h2>
           {action}
         </div>
         <div className="space-y-4">{children}</div>
@@ -100,7 +100,7 @@ function Tag({ t }: { t?: SourceTag }) {
   if (!t) return null;
   return (
     <span className={cn("ml-1.5 inline-flex h-[18px] items-center rounded-[5px] border px-1.5 align-[1px] text-[10.5px] font-semibold",
-      t === "Your answer" ? "border-[#D5DAE6] bg-[#F4F6FA] text-[#1E2A4A]" : "border-[#BBE8CA] bg-[#E9F6EE] text-[#15803D]")}>{t}</span>
+      t === "Your answer" ? "border-[#D5DAE6] bg-[#F4F6FA] text-[#1E2A4A]" : "border-[#BBE8CA] bg-[#E9F6EE] text-[#15803D]")}>{setupText(t)}</span>
   );
 }
 function F({ label, req, opt, hint, err, tag, children, className, htmlFor }: {
@@ -109,13 +109,13 @@ function F({ label, req, opt, hint, err, tag, children, className, htmlFor }: {
   return (
     <div className={cn("space-y-1.5", className)} data-edit-sec={htmlFor === "fe-teamSize" ? "team-size" : undefined}>
       <Label htmlFor={htmlFor}>
-        {label}
+        {typeof label === "string" ? setupText(label) : label}
         {req && <span aria-hidden className="relative -top-0.5 ml-[3px] text-[12px] font-semibold text-[#B42318]">*</span>}
         {opt && <span className="ml-1.5 font-normal text-[#9CA3AF]">{setupText("optional")}</span>}
         <Tag t={tag} />
       </Label>
       {children}
-      {err ? <p className="text-[12.5px] text-[#B42318]">{err}</p> : hint ? <p className="text-[12px] text-muted-foreground">{hint}</p> : null}
+      {err ? <p className="text-[12.5px] text-[#B42318]">{setupText(err)}</p> : hint ? <p className="text-[12px] text-muted-foreground">{typeof hint === "string" ? setupText(hint) : hint}</p> : null}
     </div>
   );
 }
@@ -247,7 +247,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       const msg = complete ? "Profile saved as a draft. Publish it when you're ready." : "Profile saved as a draft. Finish the checklist to publish.";
       if (created && adminCreate) { pop?.setDirty(false); toast.success(`${f.name.trim()} created`); adminCreate(created.id); return; }
       base.current = f;
-      if (setup) { setup.onDirty(null); setup.onSaved(msg); return; }
+      if (setup) { setup.onDirty(null); setup.onSaved(setupText(msg)); return; }
       toast.success(firm?.setupDoneAt || firm?.status !== "draft" ? "Profile saved." : msg);
       if (pop) { pop.setDirty(false); pop.done(); } else back();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
@@ -290,14 +290,14 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           </F>
           <F label={setupText("Firm name")} req tag={src.name} err={show("name")} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && (adminCreate && forced ? "creation-invalid" : errB))} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F>
           <F label={thai ? "Registration no. (เลขทะเบียนนิติบุคคล)" : "Registration no."} req={thai} opt={!thai} tag={f.registrationNo ? src.registrationNo : undefined} err={show("reg")} htmlFor="fe-reg">
-            <Input id="fe-reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? "13 digits" : undefined}
+            <Input id="fe-reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? setupText("13 digits") : undefined}
               className={cn(inp, thai && "border-[#93C5FD] bg-[#EFF6FF] dark:border-[#1E40AF] dark:bg-[#172554]", show("reg") && errB)}
               value={f.registrationNo} onBlur={blur("reg")} onChange={(e) => set("registrationNo", thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value.slice(0, 50))} />
           </F>
 </CompactFields><CompactFields>          <F label={setupText("Firm type")} req tag={src.firmType}>
             <select aria-required className={sel} value={f.firmType} onChange={(e) => set("firmType", e.target.value)}>
               <option value="" disabled>{setupText("Select type")}</option>
-              {FIRM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              {FIRM_TYPES.map((t) => <option key={t} value={t}>{setupText(t)}</option>)}
             </select>
           </F>
           <F label={setupText("Team size")} req tag={src.teamSize} err={show("teamSize")} htmlFor="fe-teamSize">
@@ -319,7 +319,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
               return (
                 <button key={l} type="button" aria-pressed={on} onClick={() => set("languages", on ? f.languages.filter((x) => x !== l) : [...f.languages, l])}
                   className={cn("inline-flex h-8 items-center gap-1 rounded-full border px-3 text-[13px]", on ? "border-[#1E2A4A] bg-[#F4F6FA] font-semibold text-[#1E2A4A] dark:bg-muted dark:text-foreground" : "border-border hover:bg-muted")}>
-                  {on && <Check className="h-3.5 w-3.5" />}{l}
+                  {on && <Check className="h-3.5 w-3.5" />}{setupText(l)}
                 </button>
               );
             })}
@@ -427,7 +427,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <F label={setupText("Firm type")} req tag={src.firmType}>
             <select aria-required className={sel} value={f.firmType} onChange={(e) => set("firmType", e.target.value)}>
               <option value="" disabled>{setupText("Select type")}</option>
-              {FIRM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              {FIRM_TYPES.map((t) => <option key={t} value={t}>{setupText(t)}</option>)}
             </select>
           </F>
           <F label={setupText("Year founded")} req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
@@ -474,7 +474,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
               return (
                 <button key={l} type="button" aria-pressed={on} onClick={() => set("languages", on ? f.languages.filter((x) => x !== l) : [...f.languages, l])}
                   className={cn("inline-flex h-8 items-center gap-1 rounded-full border px-3 text-[13px]", on ? "border-[#1E2A4A] bg-[#F4F6FA] font-semibold text-[#1E2A4A] dark:bg-muted dark:text-foreground" : "border-border hover:bg-muted")}>
-                  {on && <Check className="h-3.5 w-3.5" />}{l}
+                  {on && <Check className="h-3.5 w-3.5" />}{setupText(l)}
                 </button>
               );
             })}
@@ -494,7 +494,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           </F>
           <F label={setupText("Thai name")} opt={!thai} tag={f.thaiName ? src.thaiName : undefined}><Input className={inp} maxLength={200} placeholder="บริษัท … จำกัด" value={f.thaiName} onChange={(e) => set("thaiName", e.target.value)} /></F>
           <F label={thai ? "Registration no. (เลขทะเบียนนิติบุคคล)" : "Registration no."} req={thai} opt={!thai} tag={f.registrationNo ? src.registrationNo : undefined} err={show("reg")} htmlFor="fe-reg">
-            <Input id="fe-reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? "13 digits" : undefined}
+            <Input id="fe-reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? setupText("13 digits") : undefined}
               className={cn(inp, thai && "border-[#93C5FD] bg-[#EFF6FF] dark:border-[#1E40AF] dark:bg-[#172554]", show("reg") && errB)}
               value={f.registrationNo} onBlur={blur("reg")} onChange={(e) => set("registrationNo", thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value.slice(0, 50))} />
           </F>
