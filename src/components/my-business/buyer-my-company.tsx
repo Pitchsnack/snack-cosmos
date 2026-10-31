@@ -1,4 +1,4 @@
-import { setupText } from "@/i18n/language";
+import { setupText, tr } from "@/i18n/language";
 import { revenueBandLabel } from "@/lib/revenue-bands";
 import { useTranslation } from "@/i18n/language";
 import { useManagedIds } from "@/hooks/use-managed-ids";
@@ -149,6 +149,7 @@ const TYPES = ["Family office", "Private equity", "Venture capital", "Corporate 
 type Layout = "profiles" | ViewMode;
 
 export function BuyerMyCompany() {
+  useTranslation(); // re-render every text at once on language change
   const fetchMe = useServerFn(getMyBuyerProfile);
   const { data, isLoading, isFetching, refetch, error } = useQuery({ queryKey: KEY, queryFn: () => fetchMe(), meta: { pageLoading: true } });
   const [view, setView] = useState<View>("public");
@@ -260,7 +261,6 @@ export function BuyerMyCompany() {
             className={cn("inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors",
               favOnly ? "border-accent/50 bg-accent/10 text-accent" : "border-input bg-background text-muted-foreground hover:text-foreground")}>
             <Star className={cn("h-4 w-4", favOnly && "fill-accent")} />
-            <span>{setupText("&nbsp;")}</span>
             <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-semibold", favOnly ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground")}>0</span>
           </button>
           <Button variant={layout === "profiles" ? "default" : "outline"} size="sm" className="h-9" onClick={() => setLayout("profiles")}>{setupText("Profiles")}</Button>
