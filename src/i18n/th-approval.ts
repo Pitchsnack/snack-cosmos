@@ -558,7 +558,7 @@ export const TH_APPROVAL: Record<string, string> = {
   "City": "เมือง",
   "Long Description": "คำอธิบายแบบยาว",
   "Company Address": "ที่อยู่บริษัท",
-  "Business address": "ที่อยู่สำหรับติดต่อธุรกิจ",
+  "Business address": "ที่อยู่ของบริษัท (ในเลขทะเบียนนิติบุคล)",
   "Owner Info": "ข้อมูลเจ้าของ",
   "Add founder": "เพิ่มผู้ก่อตั้ง",
   "Click a highlighted part to change it.": "คลิกส่วนที่ไฮไลต์เพื่อแก้ไข",
