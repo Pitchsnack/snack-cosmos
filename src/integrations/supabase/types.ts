@@ -8107,6 +8107,7 @@ export type Database = {
         Returns: undefined
       }
       apply_scheduled_plan_changes: { Args: never; Returns: number }
+      apply_scheduled_pricing: { Args: never; Returns: undefined }
       apply_scheduled_report_changes: { Args: never; Returns: number }
       asking_price_band: { Args: { _thb: number }; Returns: string }
       can_access_deal: {
