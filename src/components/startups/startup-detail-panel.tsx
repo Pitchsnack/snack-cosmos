@@ -357,6 +357,8 @@ export function StartupDetailPanel({
   headerPill?: ReactNode;
   /** My Company only: turns ⋮ into the company menu with Edit information first. */
   companyMenuEdit?: () => void;
+  /** My Company only: adds Delete draft under Edit information in the ⋮ menu. */
+  companyMenuDeleteDraft?: Omit<DeleteDraftTarget, "name">;
   /** Rendered right under the header (profile tabs). */
   belowHeader?: ReactNode;
   /** Seller-only reports, placed after the canonical founder section. */
