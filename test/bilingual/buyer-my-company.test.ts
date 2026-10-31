@@ -39,4 +39,10 @@ describe("buyer My Company Thai texts", () => {
     expect(TH["Early"]).toBe("ระยะแรก");
     expect(TH["Sector Agnostic"]).toBe("ไม่จำกัดอุตสาหกรรม");
   });
+
+  it("shortens Bangkok to the card form in Thai only", () => {
+    expect(shortCityTh("กรุงเทพมหานคร")).toBe("กรุงเทพฯ");
+    expect(shortCityTh("Bangkok")).toBe("Bangkok");
+    expect(shortCityTh("เชียงใหม่")).toBe("เชียงใหม่");
+  });
 });
