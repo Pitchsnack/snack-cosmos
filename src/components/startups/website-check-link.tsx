@@ -13,6 +13,11 @@ export function WebsiteCheckLink({ valid, url, label, hint }: { valid: boolean; 
     timer.current = setTimeout(() => setOpen(true), delay);
   };
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  useEffect(() => {
+    const escape = (e: KeyboardEvent) => { if (e.key === "Escape") { if (timer.current) clearTimeout(timer.current); setOpen(false); } };
+    document.addEventListener("keydown", escape);
+    return () => document.removeEventListener("keydown", escape);
+  }, []);
   return (
     <span className="seller-web-check" tabIndex={valid ? undefined : 0} aria-describedby={valid ? undefined : id}
       onMouseEnter={() => show(300)} onMouseLeave={hide} onFocus={() => show(0)} onBlur={hide}
