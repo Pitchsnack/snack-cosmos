@@ -1193,10 +1193,10 @@ export function StartupForm({
 
         <div className="rounded-lg border border-border bg-card p-6 shadow-card">
           <SectorBusinessModelFields
-            sector={sector}
-            onSectorChange={setSector}
-            businessModel={businessModel}
-            onBusinessModelChange={setBusinessModel}
+            sector={sector || null}
+            onSectorChange={(v) => setSector(v ?? "")}
+            businessModel={businessModel || null}
+            onBusinessModelChange={(v) => setBusinessModel(v ?? "")}
           />
         </div>
 
@@ -1582,10 +1582,10 @@ export function StartupForm({
 
       {/* Sector + business model — financial benchmarking pair */}
       <EditSec id="sector" tone="seller" active={secOn("sector")}><SectorBusinessModelFields
-        sector={sector}
-        onSectorChange={setSector}
-        businessModel={businessModel}
-        onBusinessModelChange={setBusinessModel}
+        sector={sector || null}
+        onSectorChange={(v) => setSector(v ?? "")}
+        businessModel={businessModel || null}
+        onBusinessModelChange={(v) => setBusinessModel(v ?? "")}
       /></EditSec>
 
 

@@ -242,6 +242,7 @@ function PositionMultiSelect({
 
 export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", salesFor, addOnOpen }: Props) {
   const {language} = useTranslation();
+  const tr = (en: string, th: string) => (language === "th" ? th : en);
   const { lang: textLang, switchable } = useTextLang();
   const root = useRef<HTMLDivElement>(null);
   const added = useRef(false);
