@@ -8,7 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Check, Flag, X } from "lucide-react";
 import { dismissWelcome, getSignupState } from "@/lib/signup.functions";
 import { ensureMySellerDraft, getSellerSetup } from "@/lib/seller-setup.functions";
-import { SELLER_STEPS, emptyDraft, sellerShown, sellerValid, sellerAnswered, sellerQuestionKeys, isMissed, firstUnanswered, joinNames, STEP_SHORT, STEP_FULL, stepIdx, type SellerDraft } from "@/lib/seller-wizard";
+import { SELLER_STEPS, emptyDraft, sellerShown, sellerValid, sellerAnswered, sellerQuestionKeys, isMissed, firstUnanswered, STEP_SHORT, STEP_FULL, stepIdx, type SellerDraft } from "@/lib/seller-wizard";
 import { buyerSkips, shownSteps } from "@/lib/buyer-wizard";
 import { WIZARD_QS, advisorSkips } from "@/lib/advisor-firm";
 import { SELLER_OPTS, BUYER_OPTS, BUYER_REL_OPTS, ADVISOR_OPTS } from "@/components/login/signup-copy";
