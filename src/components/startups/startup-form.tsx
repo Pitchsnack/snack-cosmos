@@ -2002,7 +2002,7 @@ export function StartupForm({
           }
 
         >
-          Cancel
+          {tr("Cancel", "ยกเลิก")}
         </Button>
         <Button
           type="submit"
