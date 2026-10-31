@@ -527,7 +527,7 @@ function BuyerPreview({ d, sector, pickedImage, source, refNo }: { d: HiddenDraf
   const rev = (source?.last_year_revenue ? founderRevenueLabel(source.last_year_revenue, lang) : null) ?? revenueBand(source?.last_year_revenue) ?? "—";
   const caption = <div className="mb-2 flex items-center gap-[6px] text-[12.5px] font-semibold text-[#4338CA]"><Eye className="h-[14px] w-[14px]" strokeWidth={2} />{appTr("Buyer preview", "ตัวอย่างที่ผู้ซื้อเห็น")}{lang !== appLang && <span className={cn("lang-tag", lang === "th" ? "lang-tag-th" : "lang-tag-en")}>{lang === "th" ? "ไทย" : "English"}</span>}</div>;
   const nameEl = <div className={cn("text-[14px] font-bold text-[#151A28] dark:text-foreground", !name && "font-semibold text-[#8A90A0]")}>{name || refNo || tr("Your listing name", "ชื่อประกาศของท่าน")}</div>;
-  const headEl = (cls: string) => <div className={cn("text-[12px] text-[#4B5563] dark:text-muted-foreground", cls, !head && "font-semibold text-[#8A90A0]")}>{head || tr("Your headline", "หัวข้อประกาศของท่าน")}</div>;
+  const headEl = (cls: string) => <div className={cn("text-[12px] text-[#4B5563] dark:text-muted-foreground", cls, !head && "font-semibold text-[#8A90A0]")}>{head || tr("Your headline", "หัวข้อของท่าน")}</div>;
   return (
     <div aria-hidden className="pointer-events-none sm:sticky sm:top-4">
       {caption}
@@ -535,7 +535,7 @@ function BuyerPreview({ d, sector, pickedImage, source, refNo }: { d: HiddenDraf
         <SectorArt sector={sector} imageId={pickedImage ?? null} className="h-[140px] w-full [&_img]:object-cover" />
         <div className="px-3 pb-[14px] pt-3">
           {nameEl}
-          <div className="mt-1 truncate text-[11.5px] text-[#6A7181]">{[refNo, sector, city].filter(Boolean).join(" · ")}</div>
+          <div className="mt-1 truncate text-[11.5px] text-[#6A7181]">{[refNo, sector, countryLabel(city, lang)].filter(Boolean).join(" · ")}</div>
           {headEl("mt-2")}
           <div className="mt-3 space-y-2 text-[11.5px]">
             <div className="flex justify-between"><span className="text-[#6A7181]">{tr("Revenue", "รายได้")}</span><span className="font-medium">{rev}</span></div>
