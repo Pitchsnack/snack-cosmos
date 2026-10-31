@@ -1,6 +1,7 @@
 import { TH_APPROVAL } from "./th-approval";
 import { TH_WIZARDS } from "./th-wizards";
 import { TH_ADVISORS } from "./th-advisors";
+import { TH_DELETE_DRAFT } from "./th-delete-draft";
 
 // Thai translations keyed by the exact English UI string.
 // Any string without an entry falls back to English.
