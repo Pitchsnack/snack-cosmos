@@ -350,7 +350,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           {FIRM_TYPE_OPTIONS.map((t, i) => {
             const on = a.type === t.value;
             return (
-              <button key={setupText(t.value)} type="button" role="radio" aria-checked={on} data-v={setupText(t.value)} tabIndex={on || (!a.type && i === 0) ? 0 : -1}
+              <button key={t.value} type="button" role="radio" aria-checked={on} data-v={t.value} tabIndex={on || (!a.type && i === 0) ? 0 : -1}
                 onClick={() => pickType(t.value)} onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); e.stopPropagation(); pickType(t.value); } }}
                 className={cn(tile(on), "flex items-center gap-3 p-3.5")}>
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-[#E0F5F2] text-[#0F766E]"><t.icon className="h-5 w-5" /></span>

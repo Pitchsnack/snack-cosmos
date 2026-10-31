@@ -1,5 +1,9 @@
 /** Interface text only; never pass user-authored profile content through this dictionary. */
 export const TH_COMPANY_SETUP: Record<string, string> = {
+  "What is your address?": "ที่อยู่ของท่านคืออะไร?",
+  "Upload": "อัปโหลด",
+  "Request a Price Quote": "ขอใบเสนอราคา",
+  "All manufacturing": "การผลิตทุกประเภท",
   "Bangkok": "กรุงเทพมหานคร",
   "Amnat Charoen": "อำนาจเจริญ",
   "Ang Thong": "อ่างทอง",
@@ -408,6 +412,9 @@ export function companySetupThai(text: string): string | undefined {
     [/^Team · (\d+)$/, n => `ทีมงาน · ${n}`],
     [/^Services and fees · (\d+)$/, n => `บริการและค่าธรรมเนียม · ${n}`],
     [/^(\d+) selected$/, n => `เลือกแล้ว ${n} รายการ`],
+    [/^(\d+) questions?$/, n => `${n} คำถาม`],
+    [/^Live since (.+)$/, date => `เผยแพร่ตั้งแต่ ${date}`],
+    [/^Paused since (.+)$/, date => `หยุดชั่วคราวตั้งแต่ ${date}`],
   ];
   for (const [pattern, format] of rules) {
     const match = text.match(pattern);

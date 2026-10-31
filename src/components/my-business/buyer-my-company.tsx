@@ -440,12 +440,12 @@ function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill, deleteDr
         {kind === "public"
           ? <span className="inline-flex rounded-full bg-[#EEF0FF] px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-[#4338CA] dark:bg-indigo-950/50 dark:text-indigo-300">{setupText("Listing view · Seller preview")}</span>
           : <span className="inline-flex rounded-full bg-[#E8F6EE] px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-[#166534] dark:bg-green-950/50 dark:text-green-400">{setupText("Exclusive view · Shared after NDA")}</span>}
-        <h2 className="mt-0.5 truncate text-[21px] font-bold leading-tight">{setupText(title)}</h2>
+        <h2 className="mt-0.5 truncate text-[21px] font-bold leading-tight">{title}</h2>
         <div className="truncate text-[13px] text-muted-foreground">{meta}</div>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
         {pill}
-        <CompanyMenu name={setupText(title)} onEdit={onEdit} deleteDraft={deleteDraft} />
+        <CompanyMenu name={title} onEdit={onEdit} deleteDraft={deleteDraft} />
       </div>
     </div>
   );

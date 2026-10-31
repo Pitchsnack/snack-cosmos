@@ -484,7 +484,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
                     <div className="mt-auto pt-2.5">
                       <div className="border-t border-[#D3ECE7] pt-2">
                         <div className="text-[10.5px] font-bold uppercase text-[#6A7181]">{setupText("Fee")}</div>
-                        {fee ? <div className="text-[13px] font-semibold text-[#111827] dark:text-foreground">{fee}</div> : client ? <div className="text-[13px] text-[#6F7B88]">{tr("Request a Price Quote")}</div> : (
+                        {fee ? <div className="text-[13px] font-semibold text-[#111827] dark:text-foreground">{fee === "Request a Price Quote" ? tr(fee) : fee}</div> : client ? <div className="text-[13px] text-[#6F7B88]">{tr("Request a Price Quote")}</div> : (
                           <div className="text-[13px]"><span className="text-[#6F7B88]">{setupText("Not set yet")}</span> · <button type="button" onClick={() => edit("services")} className="font-semibold text-[#0F766E] hover:underline">{setupText("Add a fee")}</button></div>
                         )}
                         {client && <div className="mt-1.5 text-[12.5px]">{client.tileAction(s)}</div>}
@@ -766,7 +766,7 @@ function ClientFeedback({ f, client }: { f: AdvisorFirm; client?: boolean }) {
         {n > 3 && <button type="button" onClick={() => setAll((v) => !v)} className="text-[13px] font-semibold text-[#0F766E] hover:underline">{all ? "Show the latest 3" : `Show all ${n} reviews`}</button>}
       </div>
       {n === 0 ? (
-        <p className="text-[13.5px] text-muted-foreground"><strong className="text-foreground">{tr("No reviews yet.")}</strong> {client ? tr("Only sellers and buyers who engaged this firm through PitchSnack can rate it, once the work is done.") : "Sellers and buyers who engage you through PitchSnack can rate you once the work is done."}</p>
+        <p className="text-[13.5px] text-muted-foreground"><strong className="text-foreground">{tr("No reviews yet.")}</strong> {client ? tr("Only sellers and buyers who engaged this firm through PitchSnack can rate it, once the work is done.") : tr("Sellers and buyers who engage you through PitchSnack can rate you once the work is done.")}</p>
       ) : (
         <>
           <div className="grid gap-7 rounded-[12px] border border-[#F3E4C2] bg-[#FFFBF2] px-5 py-4 sm:grid-cols-[220px_1fr] dark:bg-muted/30">
