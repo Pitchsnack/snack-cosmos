@@ -468,7 +468,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
     onSuccess: (d: any, s) => { toast.success(d?.submitted ? "Sent to Admin for review. You'll be notified when it's approved." : s === "live" ? "Live again in Browse investors." : "Paused. Sellers can't find you in Browse investors."); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const appr = (p as any).approval_status as string | undefined;
   const tone = typeTone(org.type);
   const { iv, inv, props } = useOwnCard(p, org);
