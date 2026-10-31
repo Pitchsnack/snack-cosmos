@@ -384,7 +384,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       : { req: true, t: tr("What type of investor is your firm?"), h: tr("Sellers see this, and it sets the artwork on your card."),
         body: <Choice cols icon list={WIZARD_TYPES} value={a.type} onPick={(v) => autoPick("type", { type: v }, { investor_type: v })} /> },
     name: { req: true, t: addrOnly ? tr("What is your address?") : nameShort ? "What is your firm's name and registration number?" : tr("What is the name of your firm?"),
-      h: addrOnly ? tr("Sellers see your country and province, never the full address, until they approve your NDA.") : nameShort ? "Check that the name matches your firm's registration. Sellers don't see either before an NDA." : `Sellers see "${tName}" instead of your name until they approve your NDA.`,
+      h: addrOnly ? tr("Sellers see your country and province, never the full address, until they approve your NDA.") : nameShort ? "Check that the name matches your firm's registration. Sellers don't see either before an NDA." : "ผู้ขายจะเห็นคำว่า “นักลงทุนรายบุคคล” แทนชื่อของคุณ จนกว่าผู้ขายจะอนุมัติ NDA ของคุณ",
       body: (
         <div className={addrOnly ? "pt-[6px]" : "space-y-4"}>
           {!addrOnly && (<div>
