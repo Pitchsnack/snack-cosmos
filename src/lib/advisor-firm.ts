@@ -1,3 +1,5 @@
+import { setupAnswered as questionAnswered } from "./setup-step-state";
+import { yearError } from "./investor-bands";
 import {
   Banknote, Briefcase, Calculator, FileChartColumn, Handshake, Percent, RefreshCw, Scale, Search, Sprout, Store, type LucideIcon,
 } from "lucide-react";
@@ -145,7 +147,7 @@ export type AdvisorFirm = {
   publishedListingName?: string | null; publishedHeadline?: string | null;
   status: FirmStatus; liveSince: string | null; verifiedAt: string | null; updatedAt: string;
   verification?: { state: string; note: string | null; fields: string[]; reason: string | null; declineNote: string | null };
-  setupAnswered: string[]; setupDoneAt: string | null; wizard: WizardState;
+  setupReached?: string | null; setupAnswered: string[]; setupDoneAt: string | null; wizard: WizardState;
   team: FirmTeam[]; credentials: FirmCredential[]; documents: FirmDocument[]; reviews: FirmReview[];
 };
 
@@ -260,3 +262,17 @@ export type WizardState = {
   feeVisited?: boolean; enrichSig?: string; fromSignup?: string[];
   enrich?: { logo: boolean; legalName: string | null; thaiName: string | null; teamAdded: boolean; found: number };
 };
+
+/** Valid saved answers, rather than historic Continue clicks, drive resume. */
+export function advisorSetupProgress(f: AdvisorFirm) {
+  const valid: Record<WizardQ, boolean> = {
+    type: !!f.firmType, name: !!f.country && !nameError(f.name) && !yearError(String(f.yearFounded ?? "")) && (f.country !== "Thailand" || /^\d{13}$/.test(f.registrationNo ?? "")) && addressDone(f),
+    web: !webError(f.website ?? ""), services: !!f.services.length && f.services.every(s => !!feeWords(f.feeDetails[s] ?? newFee())),
+    deal: !!f.dealBand, team: !teamSizeError(String(f.teamSize ?? "")) && !!f.languages.length,
+    sectors: !!f.sectorAgnostic || (!!f.sectorPicks?.types.length && (!f.sectorPicks.types.includes("other") || !!f.sectorPicks.other.length)),
+    contact: !emailError(f.email ?? "") && !phoneError(f.phone ?? ""), logo: !!f.logoPath && !!f.media?.length,
+    desc: !descError(f.description ?? ""), review: false,
+  };
+  const order = [...WIZARD_QS, "review"];
+  return setupProgress(WIZARD_QS.filter(k => questionAnswered(k, valid[k], ["deal", "logo"], order, f.setupReached)), advisorSkipsFor(f));
+}

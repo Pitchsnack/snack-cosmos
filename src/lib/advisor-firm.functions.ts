@@ -70,7 +70,7 @@ function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: an
     suggestedListingName: r.suggested_listing_name ?? null, suggestedHeadline: r.suggested_headline ?? null,
     publishedListingName: r.published_listing_name ?? null, publishedHeadline: r.published_headline ?? null,
     verification: { state: r.advisor_verification ?? "unverified", note: r.more_info_note ?? null, fields: r.more_info_fields ?? [], reason: r.decline_reason ?? null, declineNote: r.decline_note ?? null },
-    setupAnswered: r.setup_answered ?? [], setupDoneAt: r.setup_done_at ?? null, wizard: r.wizard_state ?? {},
+    setupReached: r.setup_reached ?? null, setupAnswered: r.setup_answered ?? [], setupDoneAt: r.setup_done_at ?? null, wizard: r.wizard_state ?? {},
     team: mine(kids.team).sort((a, b) => a.sort_order - b.sort_order).map((t) => ({ id: t.id, name: t.name, role: t.role, roleTh: t.role_th ?? null, email: t.email })),
     credentials: mine(kids.creds).sort((a, b) => a.sort_order - b.sort_order).map((c) => ({ id: c.id, name: c.name, nameTh: c.name_th ?? null, note: c.note, noteTh: c.note_th ?? null, status: c.status, checkedAt: c.checked_at })),
     documents: mine(kids.docs).map((d) => ({ id: d.id, path: d.file_path, name: d.name, type: d.doc_type, checkedAt: d.checked_at, validUntil: d.valid_until, url: urls.get(d.file_path) ?? null })),
@@ -206,17 +206,25 @@ export const saveAdvisorWizard = createServerFn({ method: "POST" })
       website: nz(200), services: z.array(z.string().max(60)).max(10), deal_size_band: z.enum(BAND_KEYS).nullable(), team_size: z.number().int().min(1).max(99999).nullable(),
       languages: z.array(z.string().max(40)).max(20), sectors: z.array(z.string().max(80)).max(60), sector_agnostic: z.boolean(), sector_picks: z.object({ types: z.array(z.string().max(30)).max(5), kinds: z.record(z.string().max(20), z.array(z.string().max(30)).max(20)), other: z.array(z.string().max(80)).max(40) }).nullable(), email: nz(120), phone: nz(30), logo_path: nz(300), logo_source: z.enum(["upload", "enrich"]).nullable(),
       media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(300) })).max(3),
+      setup_reached: z.enum(["type", "name", "web", "services", "deal", "team", "sectors", "contact", "logo", "desc", "review"]),
       description: nz(300), setup_answered: z.array(z.string().max(20)).max(20), wizard_state: z.object({ fromSignup: z.array(z.string().max(20)).max(10).optional(), feeVisited: z.boolean().optional(), enrichSig: z.string().optional(), enrich: z.any().optional() }),
     }).partial(),
     fees: z.record(z.string().max(60), FeeIn).optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = context.supabase as any;
+    const { data: current, error: readError } = await sb.from("advisor_firms").select("owner_user_id, wizard_state, logo_path, media").eq("id", data.id).maybeSingle();
+    if (readError || !current) throw new Error("Firm profile not found.");
+    if (current.owner_user_id !== context.userId) {
+      const { data: control } = await sb.rpc("is_control", { _user_id: context.userId });
+      if (!control) throw new Error("This firm profile isn't yours.");
+    }
+    if (data.patch.wizard_state) data.patch.wizard_state = { ...(current.wizard_state ?? {}), ...data.patch.wizard_state };
     const own = `advisor/${context.userId}/`;
-    if (data.patch.logo_path && !data.patch.logo_path.startsWith(own)) throw new Error("Invalid logo file.");
-    if (data.patch.media?.some((m) => !m.image_path.startsWith(own))) throw new Error("Invalid photo file.");
+    if (data.patch.logo_path && !data.patch.logo_path.startsWith(own) && data.patch.logo_path !== current.logo_path) throw new Error("Invalid logo file.");
+    if (data.patch.media?.some((m) => !m.image_path.startsWith(own) && !(current.media ?? []).some((old: any) => old.image_path === m.image_path))) throw new Error("Invalid photo file.");
     if (Object.keys(data.patch).length) {
-      const { error } = await sb.from("advisor_firms").update(data.patch).eq("id", data.id).eq("owner_user_id", context.userId);
+      const { error } = await sb.from("advisor_firms").update(data.patch).eq("id", data.id);
       if (error) throw new Error(error.message);
     }
     if (data.fees && Object.keys(data.fees).length) {

@@ -192,7 +192,7 @@ export function BuyerMyCompany() {
   const hasFilter = !!(q || type !== "all" || status !== "all" || sector || hq);
   const openProfile = () => setPanelOpen(true);
   const iv = inv.data?.investor;
-  const prog = buyerProgressFor((inv.data?.buyer.relation ?? null) as BuyerRelation | null, iv);
+  const prog = buyerProgressFor((inv.data?.buyer.relation ?? null) as BuyerRelation | null, iv, inv.data?.buyer);
   const openWizard = () => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: {} });
   const setup = iv && !iv.setup_done_at ? { label: prog.n === 0 ? "Start setup" : "Continue setup", onClick: openWizard } : null;
   const pill = <BuyerPill p={p} org={org} onItem={onItem} setup={setup} />;
@@ -477,7 +477,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const navigate = useNavigate();
   const openProfileEdit = useOpenProfileEdit();
   const rel = (inv.data?.buyer.relation ?? null) as BuyerRelation | null;
-  const prog = buyerProgressFor(rel, iv);
+  const prog = buyerProgressFor(rel, iv, inv.data?.buyer);
   const setupDone = !!iv?.setup_done_at;
   const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
   const leaks = descriptionLeaks([(p as any).suggested_listing_name, (p as any).suggested_headline, p.description].filter(Boolean).join("\n"), org.name ?? "", org.website ?? "");

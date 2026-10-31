@@ -35,7 +35,7 @@ import { FirmCard, FirmLogo, ServiceChip, Stars, VerifiedAdvisorChip } from "@/c
 import { myFirmViews } from "@/lib/advisor-enquiries.functions";
 import { createAdvisorDraft, getMapsEmbedKey, listMyAdvisorFirms, saveAdvisorServices, setAdvisorFirmStatus } from "@/lib/advisor-firm.functions";
 import {
-  ADVISOR_SERVICES, SERVICE_COLS, dealBandLabels, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, serviceOf, setupProgress, advisorSkipsFor,
+  ADVISOR_SERVICES, SERVICE_COLS, dealBandLabels, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, serviceOf, advisorSetupProgress, advisorSkipsFor,
   type AdvisorFirm, type EditSection,
 } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
@@ -609,7 +609,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
 }
 
 function SetupBanner({ f, onOpen }: { f: AdvisorFirm; onOpen: () => void }) {
-  const { n, N } = setupProgress(f.setupAnswered, advisorSkipsFor(f));
+  const { n, N } = advisorSetupProgress(f);
   return (
     <div data-tour-banner data-tour-n={N} data-tour-m={4} className="flex flex-wrap items-center gap-4 rounded-[14px] border border-[#B9E6DF] bg-[#EFFAF8] px-[18px] py-4 dark:border-[#1F5A52] dark:bg-[#10302C]">
       <span className="hidden h-10 w-10 shrink-0 place-items-center rounded-[11px] bg-white text-[#0F766E] min-[860px]:grid dark:bg-background dark:text-[#5EEAD4]"><Flag className="h-5 w-5" /></span>
