@@ -503,16 +503,16 @@ export function SectorBusinessModelFields({
     >
       <div className="space-y-1.5">
         <div className="text-[13px] font-medium text-foreground">
-          Sector <span className="text-muted-foreground">(optional)</span>
+          {tr("Sector", "กลุ่มอุตสาหกรรม")} <span className="text-muted-foreground">{tr("(optional)", "(ไม่บังคับ)")}</span>
         </div>
         <p className="text-[11.5px] text-muted-foreground">
-          SET classification, used for financial benchmarking
+          {tr("SET classification, used for financial benchmarking", "การจัดกลุ่มของ SET ใช้เทียบเคียงตัวเลขทางการเงิน")}
         </p>
         <SectorPicker value={sector} onChange={onSectorChange} />
       </div>
       <div className="space-y-1.5">
         <div className="text-[13px] font-medium text-foreground">
-          Business model <span className="text-muted-foreground">(optional)</span>
+          {tr("Business model", "รูปแบบธุรกิจ")} <span className="text-muted-foreground">{tr("(optional)", "(ไม่บังคับ)")}</span>
         </div>
         <BusinessModelPicker
           value={businessModel}
