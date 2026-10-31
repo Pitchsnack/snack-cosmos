@@ -412,18 +412,18 @@ function BuyerDirectoryItem({ p, org, mode, selected, onClick }: {
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-semibold group-hover:text-accent">{name}</div>
-        <div className="mt-1 text-xs font-normal text-muted-foreground">{org.type || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</div>
+        <div className="mt-1 text-xs font-normal text-muted-foreground">{org.type ? tr(org.type) : <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</div>
         <div className="mt-1"><StatusChip status={p.status} /></div>
       </div>
     </div>
     <div className={cn("min-w-0 text-xs font-normal text-foreground/80", mode === "list" ? "hidden flex-1 md:block" : "w-full")}>
       <p className="line-clamp-2">{p.private_description || p.description || p.headline || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</p>
       <div className="mt-2 flex flex-wrap gap-1">
-        {p.sectors.length ? p.sectors.slice(0, 4).map((x) => <span key={x} className="rounded-full border border-transparent bg-muted/50 px-2 py-0.5 text-[10.5px] text-muted-foreground">{x}</span>) : <span className="text-[#9CA3AF]">{setupText("Sectors not added")}</span>}
+        {p.sectors.length ? p.sectors.slice(0, 4).map((x) => <span key={x} className="rounded-full border border-transparent bg-muted/50 px-2 py-0.5 text-[10.5px] text-muted-foreground">{tr(x)}</span>) : <span className="text-[#9CA3AF]">{setupText("Sectors not added")}</span>}
       </div>
     </div>
     <div className={cn("flex items-center gap-2 text-xs font-normal text-muted-foreground", mode === "list" ? "ml-auto shrink-0" : "mt-auto w-full justify-between")}>
-      <span className="inline-flex items-center gap-1">{ticket ? <><Coins className="h-3 w-3" /> {ticket}</> : <><MapPin className="h-3 w-3" /> {[p.city, p.country].filter(Boolean).join(", ") || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</>}</span>
+      <span className="inline-flex items-center gap-1">{ticket ? <><Coins className="h-3 w-3" /> {ticket}</> : <><MapPin className="h-3 w-3" /> {[p.city, p.country].filter(Boolean).map((v) => tr(v!)).join(", ") || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</>}</span>
       <ArrowRight className="h-3.5 w-3.5 text-accent" />
     </div>
   </Button>;
@@ -557,7 +557,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
           : state === "changes" || state === "declined"
             ? <span>{setupText("Fix what PitchSnack asked with Edit information, then register again.")}</span>
           : state === "paused"
-            ? <span>{setupText("Hidden from Browse investors since")} {fmtDate(p.updated_at ?? p.live_since ?? new Date().toISOString())}.</span>
+            ? <span>{setupText("Hidden from Browse investors since")} {fmtDateL(p.updated_at ?? p.live_since ?? new Date().toISOString(), language)}.</span>
             : !setupDone && iv
               ? <span>{setupText("Finish setting up your profile to publish it.")}</span>
               : <span><b className="font-semibold text-foreground">{setupText("Draft")}</b>{setupText("· not live yet. Register once: PitchSnack checks your firm and publishes your profile together.")}</span>}
