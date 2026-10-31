@@ -9,7 +9,8 @@ import { BuyerSetupWizard } from "@/components/my-business/buyer-setup-wizard";
 
 export const Route = createFileRoute("/buyer/company/$id/setup")({
   ssr: false,
-  validateSearch: z.object({ q: z.string().optional() }),
+  // The router's search parser turns ?q=1 into a number; coerce back to string.
+  validateSearch: z.object({ q: z.coerce.string().optional() }),
   beforeLoad: async ({ location }) => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) throw redirect({ to: "/login", search: { redirect: location.href } });
