@@ -1,3 +1,7 @@
+import { WizardStepBar } from "@/components/common/wizard-step-bar";
+import { BUYER_STEP_NAMES } from "@/lib/setup-step-labels";
+import { furthestStep, setupStepState } from "@/lib/setup-step-state";
+import { buyerProgressFor } from "@/lib/buyer-wizard";
 import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
 import { descriptionWords, singleLineDescription } from '@/lib/buyer-description';
@@ -152,6 +156,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const live = data.buyer.status === "live";
   const setupDone = !!data.investor.setup_done_at;
   const [a, setA] = useState<A>(() => fromData(data));
+  const [reached, setReached] = useState<string | null>(data.investor.setup_reached);
+  const reachedRef = useRef(reached);
   const [answered, setAnswered] = useState<string[]>(data.investor.wizard?.answered ?? []);
   const [peTicked, setPeTicked] = useState(!!data.investor.wizard?.pe_ticked);
   // Logo and photos: saved to the investor record as each upload finishes.
@@ -167,7 +173,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const [cur, setCur] = useState<QId>(() => {
     if (startAt === "deal") return "rev";
     if (startAt && stepsAll.some((s) => s.id === startAt)) return startAt as QId;
-    return buyerProgress(data.buyer.relation, data.investor.wizard?.answered, skipOf(fromData(data))).first as QId;
+    return buyerProgressFor(data.buyer.relation, data.investor, data.buyer).first;
   });
   const steps = stepsAll.filter((s) => !skipSet.has(s.id) || s.id === full || s.id === cur);
   const hiddenF = full === "name" ? new Set<string>() : buyerHiddenFields(fromSignup, { role: a.role, type: a.type, web: a.web, year: a.year, name: a.name });
@@ -245,7 +251,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const show = (k: string) => (touched[k] || forced[k]) && errors[k] && errors[k] !== "leak" ? errors[k] : null;
 
   const idx = steps.findIndex((s) => s.id === cur);
-  const step = steps[idx] ?? steps[0]!;
+  const step = steps[idx] ?? steps[0] ?? { id: "review" as QId, sec: "Review" };
   const optional = cur === "rev" || cur === "desc";
 
   // ---- address (Country first; a new country clears the address and registration number) ----
@@ -285,7 +291,13 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     return n;
   };
 
-  const goTo = (id: QId) => { setForced({}); setCur(id); };
+  const remember = (id: QId) => {
+    const next = furthestStep(stepsFor(a.role).map(s => s.id), reachedRef.current, id);
+    if (next && next !== reachedRef.current) { reachedRef.current = next; setReached(next); queue({ setup_reached: next }); }
+  };
+  useEffect(() => { if (phase === "q") remember(cur); }, [cur, phase]);
+  const goTo = (id: QId) => { setForced({}); remember(id); setCur(id); };
+  const pickStep = (key: string) => { const id = steps.find(s => s.id === key)?.id; if (id) { setFromReview(false); setFull(null); goTo(id); } };
   const advance = (from: QId) => {
     markAnswered(from);
     if (fromProfile && from === "desc") { void flush().then(() => setPhase("complete")); return; }
@@ -323,7 +335,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     if (cur === "desc") set({ desc: "" }, { description: "" });
     advance(cur);
   };
-  const back = () => { if (idx > 0) goTo(steps[idx - 1]!.id); };
+  const back = () => { if (idx > 0) goTo(steps[idx - 1]?.id ?? "review"); };
   const [exiting, setExiting] = useState(false);
   const saveExit = async () => {
     if (exiting) return;
@@ -340,7 +352,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   };
 
   const requiredQs = stepsAll.filter((s) => s.id !== "review" && s.id !== "rev" && s.id !== "desc");
-  const allValid = requiredQs.every((s) => qValid(s.id)) && !errors.desc;
+  const missingRequired = requiredQs.filter(s => !qValid(s.id));
+  const allValid = missingRequired.length === 0 && !errors.desc;
 
   // Enter = Continue (not on buttons/links/textarea).
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -511,6 +524,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       ) },
     review: { req: false, t: tr("Review your answers"), h: tr("Check them, then we'll fill in the rest of your profile."),
       body: <Review a={a} med={med} steps={stepsAll} errors={errors} individual={individual} thai={thai} stagesShown={stagesShown} corp={corp}
+        missingNames={missingRequired.map(s => L(...BUYER_STEP_NAMES[s.id].full))}
         onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
   };
   const q = Q[step.id];
@@ -536,7 +550,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const header = (sec: string, right: string, pct: number) => (
     <>
       <div className="flex items-baseline justify-between text-[15px]"><b className="font-semibold text-[#151A28] dark:text-foreground">{setupText(sec)}</b><span className="text-[#6B7280]">{setupText(right)}</span></div>
-      <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-[#E5E7EB] dark:bg-muted"><i className="block h-full bg-[#1E2A4A] transition-[width] duration-300 dark:bg-[#818CF8]" style={{ width: `${pct}%` }} /></div>
+
     </>
   );
   const card = "mt-[22px] rounded-[14px] border border-[#E9EBF0] bg-white px-[18px] pb-5 pt-6 sm:mt-[34px] sm:rounded-[16px] sm:p-10 dark:border-border dark:bg-card";
@@ -549,10 +563,16 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       {phase === "q" && (
         <div className="mx-auto max-w-[690px] px-4 pb-16 pt-8 sm:pt-10">
           {header(step.sec, `Step ${idx + 1} of ${steps.length}`, ((idx + 1) / steps.length) * 100)}
+          <WizardStepBar lineTo={Math.max(idx, steps.findIndex(s => s.id === reached))} onPick={pickStep} steps={steps.map(({id}) => {
+            const names = id === "name" && addrOnly ? { short: ["Address", "ที่อยู่"] as [string,string], full: ["Your address", "ที่อยู่ของท่าน"] as [string,string] } : id === "aum" && corp ? { short: ["Revenue", "รายได้"] as [string,string], full: ["Group annual revenue", "รายได้ต่อปีของกลุ่มบริษัท"] as [string,string] } : BUYER_STEP_NAMES[id];
+            const state = setupStepState(id, cur, qValid(id) && (id !== "desc" || !!a.desc.trim()), ["rev", "desc"], stepsAll.map(s => s.id), reached);
+            const tip = state === "here" ? L("You are here", "ท่านอยู่ที่ขั้นนี้") : state === "done" ? L("Answered · click to change", "ตอบแล้ว · กดเพื่อแก้ไข") : state === "missed" ? L("Not answered · click to answer", "ยังไม่ได้ตอบ · กดเพื่อตอบ") : L("Not reached yet · click to go there", "ยังไม่ถึงขั้นนี้ · กดเพื่อไปที่ขั้นนี้");
+            return {key:id, label:L(...names.short), full:L(...names.full), state, tip};
+          })} />
           <div className={card}>
             <div key={step.id} ref={qRef} className="animate-in fade-in duration-200">
               <h1 className="text-[21px] font-bold leading-snug sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>
-                {typeof q.t === "string" ? setupText(q.t) : q.t}{!optional && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">{setupText(", required")}</span></>}
+                {typeof q.t === "string" ? setupText(q.t) : q.t}{q.req && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">{setupText(", required")}</span></>}
               </h1>
               <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{typeof q.h === "string" ? setupText(q.h) : q.h}</p>
               {q.body}
@@ -582,8 +602,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   );
 }
 
-function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, onEdit }: {
-  a: A; med: { logo: boolean; photos: number }; steps: { id: QId }[]; errors: Record<string, string | null>; individual: boolean; thai: boolean; stagesShown: boolean; corp: boolean; onEdit: (id: QId) => void;
+function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, missingNames, onEdit }: {
+  a: A; med: { logo: boolean; photos: number }; steps: { id: QId }[]; errors: Record<string, string | null>; individual: boolean; thai: boolean; stagesShown: boolean; corp: boolean; missingNames: string[]; onEdit: (id: QId) => void;
 }) {
   const shown = new Set(steps.map((s) => s.id));
   type Row = [string, React.ReactNode, QId, "req" | "opt", string | null, string?];
@@ -623,27 +643,30 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, on
           <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
             {rows.map(([k, v, id, kind, err, tag], i) => {
               const empty = !v;
-              const status = id === "photos" && (empty || err) ? <b className="flex items-center gap-2 font-semibold text-[#B91C1C]"><span className="h-2 w-2 rounded-full bg-[#DC2626]" />{tr("Not answered")}</b>
-                : kind === "req" && (empty || err) ? <b className="font-semibold text-[#B42318]">{tr("Missing")}</b>
-                : id === "desc" && err ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b>
-                : empty ? <span className="text-[#9CA3AF]">{tr("Not set")}</span> : null;
+              const red = kind === "req" && (empty || !!err);
+              const status = red ? <b className="flex items-center gap-2 font-semibold text-destructive"><span className="h-2 w-2 shrink-0 rounded-full bg-destructive" />{tr("Not answered")}</b>
+                : id === "desc" && err ? <b className="font-semibold text-destructive">{tr("Needs a fix")}</b>
+                : empty ? <span className="text-muted-foreground">{tr("Not given") === "Not given" ? setupText("Not given") : tr("Not given")}</span> : null;
               return (
-                <div key={k + i} className="flex items-start gap-3 border-b border-[#F0F1F4] px-4 py-3 text-[14px] last:border-0 dark:border-border">
-                  <span className="w-[150px] flex-none text-[#6B7280]">{k}</span>
+                <div key={k + i} className={`flex items-start gap-3 border-b border-border px-4 py-3 text-[14px] last:border-0 ${red ? "bg-destructive/10" : ""}`}>
+                  <span className="w-[150px] max-sm:w-[100px] flex-none text-muted-foreground">{k}</span>
                   <span className="min-w-0 flex-1 font-semibold">
                     {status ?? v}
                     {!status && tag && <span className={`ml-2 rounded px-1.5 py-0.5 text-[10.5px] font-semibold ${tag === "Range" ? "bg-[#EEF0FF] text-[#4338CA]" : "bg-muted text-muted-foreground"}`}>{setupText(tag)}</span>}
                   </span>
-                  <button type="button" className="text-[13px] font-semibold text-[#2563EB] hover:underline" onClick={() => onEdit(id)}>{id === "photos" && !v ? tr("Answer") : tr("Edit")}</button>
+                  <button type="button" className="text-[13px] font-semibold text-[#2563EB] hover:underline" onClick={() => onEdit(id)}>{red ? tr("Answer") : tr("Edit")}</button>
                 </div>
               );
             })}
           </div>
         </div>
       ))}
+      {missingNames.length > 0 && <p className="text-sm text-destructive">{useReviewWarning(missingNames)}</p>}
     </div>
   );
 }
+
+function useReviewWarning(names: string[]) { return tr("Answer {names} before you continue.").replace("{names}", names.join(", ")); }
 
 type HeaderFn = (sec: string, right: string, pct: number) => React.ReactNode;
 
