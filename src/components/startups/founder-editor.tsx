@@ -314,7 +314,7 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
         size="sm"
         onClick={add}
       >
-        <Plus className="h-4 w-4 mr-1" /> Add founder
+        <Plus className="h-4 w-4 mr-1" /> {tr("Add founder", "เพิ่มผู้ก่อตั้ง")}
       </Button>
     </div>
   );
