@@ -1,5 +1,9 @@
 # One-step approval — roadmap
 
+## Seller optional setup — 31 October 2026
+- [ ] Update Website actions/tooltip, optional answered rules and seller missing-step icons across wizard/banner.
+- [ ] Test progress/resume rules and EN/TH desktop/phone presentation with test accounts, preserving buyer/advisor setup.
+
 ## Admin Plans Reports — 31 October 2026
 - [x] Central report prices, history/scheduling, quarterly allowances and transactional usage; preserve existing workflows and bundle.
 - [x] Reports editor, Plans submenu/shared allowance rows and central price reads in report hub, offer pages, verification and Paid reports.

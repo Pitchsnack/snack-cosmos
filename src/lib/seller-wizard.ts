@@ -76,12 +76,12 @@ export function answeredFlags(d: SellerDraft): boolean[] {
   return [
     !!d.role,
     !!d.name.trim() && /^\d{13}$/.test(d.reg) && addrComplete(d.addr),
-    !!d.web.trim(),
+    sellerAnswered(d).web,
     /^\d{4}$/.test(d.year),
     !!d.rev,
     !!d.size,
     !!d.sector,
-    d.licences.length + d.iso.length > 0,
+    sellerAnswered(d).lic,
     !!d.hasLogo && (d.photos ?? 0) > 0,
     !!d.deal,
     d.stays === "yes" || d.stays === "no",
@@ -165,7 +165,7 @@ export function firstOpenStep(d: SellerDraft, fromSignup: string[] = []): number
   return i ?? REVIEW_STEP;
 }
 
-/* ── Step bar: answered = the saved answer is valid (Skip leaves it unanswered) ── */
+/* Step progress also counts optional questions once the seller has passed them. */
 export const STEP_KEYS = ["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "review"] as const;
 export type StepKey = (typeof STEP_KEYS)[number];
 export const STEP_SHORT: Record<StepKey, [string, string]> = {
@@ -202,16 +202,24 @@ export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
   };
 }
 export const stepIdx = (k: string | null | undefined) => (k ? STEP_KEYS.indexOf(k as StepKey) : -1);
+/** Progress only: never use an optional-step tick to validate a website URL. */
+export function sellerAnswered(d: SellerDraft): Record<StepKey, boolean> {
+  return {
+    ...sellerValid(d),
+    web: isValidUrl(d.web) || stepIdx(d.reached) > stepIdx("web"),
+    lic: d.licences.length + d.iso.length > 0 || stepIdx(d.reached) > stepIdx("lic"),
+  };
+}
 /** Later of two reached keys. */
 export const laterKey = (a: string | null | undefined, b: string | null | undefined) => (stepIdx(b) > stepIdx(a) ? b ?? null : a ?? null);
 /** Question keys that show (sign-up answers left out), in order. */
 export const sellerQuestionKeys = (d: SellerDraft, fromSignup: string[] = []): StepKey[] =>
   sellerShown(d, fromSignup).map((i) => SELLER_STEPS[i]!.id as StepKey);
 /** Not answered = no valid answer and before the furthest step opened. */
-export const isMissed = (k: StepKey, d: SellerDraft) => !sellerValid(d)[k] && stepIdx(k) < stepIdx(d.reached);
+export const isMissed = (k: StepKey, d: SellerDraft) => !sellerAnswered(d)[k] && stepIdx(k) < stepIdx(d.reached);
 /** First question without an answer (skipped included), else review. */
 export function firstUnanswered(d: SellerDraft, fromSignup: string[] = []): StepKey {
-  const v = sellerValid(d);
+  const v = sellerAnswered(d);
   return sellerQuestionKeys(d, fromSignup).find((k) => !v[k]) ?? "review";
 }
 export const joinNames = (n: string[], th: boolean) =>

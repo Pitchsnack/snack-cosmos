@@ -7,7 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Check, Flag, X } from "lucide-react";
 import { dismissWelcome, getSignupState } from "@/lib/signup.functions";
 import { ensureMySellerDraft, getSellerSetup } from "@/lib/seller-setup.functions";
-import { SELLER_STEPS, emptyDraft, sellerShown, sellerValid, sellerQuestionKeys, isMissed, firstUnanswered, joinNames, STEP_SHORT, STEP_FULL, stepIdx, type SellerDraft } from "@/lib/seller-wizard";
+import { SELLER_STEPS, emptyDraft, sellerShown, sellerValid, sellerAnswered, sellerQuestionKeys, isMissed, firstUnanswered, joinNames, STEP_SHORT, STEP_FULL, stepIdx, type SellerDraft } from "@/lib/seller-wizard";
 import { buyerSkips, shownSteps } from "@/lib/buyer-wizard";
 import { WIZARD_QS, advisorSkips } from "@/lib/advisor-firm";
 import { SELLER_OPTS, BUYER_OPTS, BUYER_REL_OPTS, ADVISOR_OPTS } from "@/components/login/signup-copy";
@@ -160,9 +160,9 @@ export function SellerSetupBanner({ setup }: { setup: Awaited<ReturnType<typeof 
   const navigate = useNavigate();
   const draft: SellerDraft = { ...emptyDraft(), role: setup.role, name: setup.name, reg: setup.reg, web: setup.web, year: setup.year, city: setup.city,
     rev: setup.rev, size: setup.size, sector: setup.sector, licences: setup.licences as SellerDraft["licences"], iso: setup.iso, addr: setup.addr, reached: setup.reached, hasLogo: !!setup.media.logoPath, photos: setup.media.slots.length, deal: setup.listing.deal, stays: setup.listing.stays, months: setup.listing.months, price: setup.listing.price, listingName: setup.listing.name, nameOk: setup.listing.name ? true : undefined };
-  // Answered = the saved answer is valid (a skipped question isn't answered).
+  // Optional questions count as answered once passed.
   const keys = sellerQuestionKeys(draft, setup.fromSignup);
-  const ok = sellerValid(draft);
+  const ok = sellerAnswered(draft);
   const sellerN = keys.length, sellerDone = keys.filter((k) => ok[k]).length;
   const open = (k: string) => void navigate({ to: "/my-startups/setup/$id", params: { id: setup.id }, search: { step: k } });
   const items: StepItem[] = keys.map((k) => {
@@ -184,7 +184,7 @@ export function SellerSetupBanner({ setup }: { setup: Awaited<ReturnType<typeof 
           {sellerDone >= sellerN ? `All ${sellerN} questions are answered. Check your profile and save it.` : `Buyers can't find your business yet. Answer ${sellerN} short questions. It takes about 3 minutes and saves as you go.`}
         </p>
         <div className="mt-4 max-w-[470px]">
-          <StepBar variant="banner" steps={items} lineTo={lineTo} onPick={open} label={L("Setup questions", "คำถามตั้งค่า")}
+          <StepBar missedIcon variant="banner" steps={items} lineTo={lineTo} onPick={open} label={L("Setup questions", "คำถามตั้งค่า")}
             stepWord={(n) => L(`Step ${n}`, `ขั้นที่ ${n}`)} missedWord={L("Not answered", "ยังไม่ได้ตอบ")} />
         </div>
         <p className="mt-3 text-xs font-semibold text-[#2563EB] dark:text-[#8CBFF0]">
