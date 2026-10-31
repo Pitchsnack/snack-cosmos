@@ -1407,12 +1407,12 @@ export function StartupForm({
               onValueChange={(v) => setRegion(v === "__clear__" ? "" : v)}
             >
               <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Select Region" />
+                <SelectValue placeholder={tr("Select Region", "เลือกภูมิภาค")} />
               </SelectTrigger>
               <SelectContent>
                 {region && (
                   <SelectItem value="__clear__" className="text-muted-foreground">
-                    Clear selection
+                    {tr("Clear selection", "ล้างการเลือก")}
                   </SelectItem>
                 )}
                 {REGION_OPTIONS.map((r) => (
@@ -1435,8 +1435,8 @@ export function StartupForm({
           </TooltipProvider>
         </div>
 </CompactFields>
-      {/* Row 2: Investment Stage | Company Size | Last Year's Revenue */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* Row 2: Investment Stage (1 col) | Last Year's Revenue (2 cols) */}
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="stage">{secOn("stage") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
           <Label className="text-[#9CA3AF]">{th ? "ระยะการลงทุน" : "Investment Stage"}</Label>
           <TooltipProvider><Tooltip><TooltipTrigger asChild>
