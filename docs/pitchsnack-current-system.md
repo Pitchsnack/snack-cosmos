@@ -631,3 +631,116 @@ Live check: for `admin.acme@prd2.test`, `is_account_admin = true`, `role_is(…,
 | Report pricing: `publish_report_price_checked`, `schedule_report_price_edit`, `cancel_report_price_change`, `apply_report_price_edit`, price history/changes policies, `getAdminReportPrices` (`checked()`) | is_control AND is_account_admin | **No** |
 
 **Which is correct?** Both statements are consistent: report pricing is **Control only**. Every report-pricing function requires `is_control` **and** `is_account_admin`, so a client tenant admin with `account_role = 'admin'` but no CONTROL role is refused ("Control Admin only"). `is_account_admin` alone is never sufficient for report pricing.
+
+---
+
+## 11. Corporate Buyer Scenario
+
+Scenario: PitchSnack looks after about 50 corporate clients who want to buy businesses. For each one, PitchSnack sets up the account, posts a buy order in Businesses Wanted, reviews the sellers who apply, and shortlists the best ones into the client's own account. The client then takes the shortlisted deals forward.
+
+Live data checked on 1 Nov 2026: 28 investors (`run_by`: 17 `none`, 10 `owner`, 1 `pitchsnack`). The only managed buyer is **Lakeshore Capital** (INV-1001, Control tenant `9df87a29-e8ef-4dbc-9c63-28410d45b985`). Its `buyer_profiles` user has `account_role = 'admin'`. There is 1 buy order (BO-1003, Fashion, `kind = 'sealed'`, `posted`, for Lakeshore Capital), 0 rows in `buy_order_applications` and 0 rows in `managed_clients`.
+
+### 11.1 Creating the client
+
+**What exists**
+- There are two separate ideas of "managed":
+  - **Flag:** `investors.run_by = 'pitchsnack'`. This is set by `startManaging` in `src/lib/profile-handover.functions.ts` (Control + Admin via `requireControlAdmin`). It also writes a `managed_clients` row with contact name, email/phone, job title, "Managed by" and the written-agreement tick. Screen: Investors Directory (`/investors`, `src/routes/_authenticated/investors.index.tsx`) → ownership menu → **Let PitchSnack manage it** (`ManageDialog` in `src/components/handover/ownership.tsx`). `publishManaged` then makes the buyer profile live without Approvals.
+  - **Rule used by Businesses Wanted:** `managedInvestorIds` in `src/lib/managed.server.ts`. The investor must be in the Control tenant **and** have a `buyer_profiles` row whose `user_id` is an `account_role = 'admin'` user. `managedClients` in `src/lib/buy-orders.functions.ts` also requires `buyer_profiles.approval_status = 'approved'`. This rule does **not** read `run_by`.
+- The investor row itself is created with `createInvestor` (`src/lib/investors.functions.ts`), from the Investors Directory **Add** pop-up (`InvestorAddPopup`). An `investor_ownership` row is created at the same time.
+
+**Several logins for one client**
+- `buyer_profiles` has one row per user (key `user_id`), with one `investor_id`. Nothing in the code found blocks two users' rows from pointing at the same investor. But every Businesses Wanted and Pipeline buyer check works per user: `myInvestorIds(userId)`, and `deal_pipelines.buyer_user_id = context.userId`.
+- On a Sealed order, `decideApplication` picks `buyer_profiles ... .limit(1)` for that investor. So any NDA goes to only one user.
+- `investor_users` (investor + user + role) exists and is managed from `/investors/$id` (`InvestorUsersCard`, `src/lib/investor-users.functions.ts`). It is only read by the CRM page and Analytics, not by Businesses Wanted or Pipeline.
+
+**What does not exist:** a single step that creates both the client and a managed buyer account. There is also no deal-team model in which several logins share one buyer's buy orders, applications and Pipeline.
+
+### 11.2 Handover
+
+**What exists:** on handover, `finishClaim` in `src/lib/profile-handover.server.ts` does the following for an investor:
+- removes `investor_id` from Admin users' `buyer_profiles` rows;
+- links the client's own `buyer_profiles` row;
+- sets `run_by = 'owner'`;
+- ends the `managed_clients` row.
+
+`buy_orders` and `buy_order_applications` are not touched. They stay on the same `investor_profile_id` and keep `kind = 'sealed'`.
+
+**What the client keeps:**
+- `myBuyOrders` shows a buyer only `kind = 'advertisement'` orders. `reviewRows` gives buyers only applications on `advertisement` orders.
+- So after handover, the client **does not see** the Sealed buy orders or their applications, even though they are still stored under their investor.
+- `deal_pipelines` rows created before handover have `buyer_user_id` = the Admin user picked at that time. The code does not move them to the new owner.
+
+**What Control can still do:**
+- `saveBuyOrder` (new or edit) requires the client to be in `managedClients`. After handover the client fails the Admin-user test, so Control **cannot draft, edit or post new** buy orders for them.
+- For Sealed orders that already exist, `isOwnSide` returns true for any Admin. So Control can still `sendBuyOrder`, see applications, and `decideApplication` on them. An NDA request then fails with "This client has no buyer account", because no Admin `buyer_profiles` row is linked any more.
+
+### 11.3 Posting for a client with their own login
+
+**Not supported.** `saveBuyOrder` for an Admin always writes `kind = 'sealed'`, and only for investors returned by `managedClients`. That means investors in the Control tenant whose buyer user is an Admin. A self-signed-up buyer's investor fails this test. A buyer writes their own `advertisement` with `investor_profile_id = myInvestorIds(userId)[0]`. Admins have no "post as this buyer" option.
+
+### 11.4 Reviewing applications
+
+**Function:** `decideApplication` (`src/lib/buy-orders.functions.ts`). It has two actions: `nda` (Request NDA) and `not_a_fit`. Allowed statuses: `new`, `nda_requested`, `not_a_fit` (`BoAppStatus`, `src/lib/buy-orders.ts`). There is no "approved" status.
+
+**Who can decide:** `isOwnSide` decides.
+- **Sealed order:** only callers with `account_role = 'admin'`. Through `listApplications` / `requireControlAdmin`, in practice only Control Admins see these. The buyer cannot decide.
+- **Advertisement:** only the buyer whose `buyer_profiles.investor_id` matches. Control cannot decide.
+
+Only one side can decide on any given order, never both.
+
+**Screen:** Pipeline › NDA Invitations › **Applications** tab (`ApplicationsTab` / `ReviewList` in `src/components/businesses-wanted/bw-applications.tsx`, mounted from `src/components/pipeline/workspace-invitations.tsx`). The menu count comes from `applicationsToCheck`.
+
+### 11.5 What the client sees
+
+- **Advertisement (the buyer's own):** the buyer sees every application with its status (New, NDA requested, Not a fit). They see the seller's **public Listing view only**: code name, ref, sector, province, last-year revenue, deal type, headline, description, highlights, and the four match ticks. The screen explains that the company name, website and exact figures show only after the seller approves the NDA.
+- **Sealed (posted by PitchSnack):** the client sees nothing. `reviewRows` returns Sealed applications only to Admins, who also get the client's name and ref.
+
+### 11.6 After a decision
+
+- No `deal_pipelines` row is created when a seller applies.
+- When the deciding side picks **Request NDA**, `decideApplication` itself:
+  - inserts a `deal_pipelines` row, or reactivates a withdrawn/declined one. For Sealed orders `buyer_user_id` = the managed client's Admin buyer user; otherwise it is the caller.
+  - logs `nda_requested` in `deal_pipeline_events`;
+  - sends the email alert and seller notification;
+  - sets the application to `nda_requested`, with `nda_request_id`.
+- The buyer does not request the NDA again from the listing. The seller then approves it in their Pipeline as usual.
+- For buyers there are extra checks: a verified profile is required, and the NDA counts against the plan (`spendRequest`). Admins skip the plan count.
+
+### 11.7 Using the status as a shortlist
+
+**Not supported.**
+- There is no separate "approved" or "shortlisted" status. The only forward action, `nda`, immediately sends a signed NDA request to the seller.
+- For Sealed orders, the resulting deal belongs to the Admin buyer user, not to a client login.
+- The client cannot see Sealed applications (11.5).
+- So PitchSnack cannot mark applications for the client to review and then take forward from the client's own account.
+
+### 11.8 Scale (50 clients, several employees)
+
+**What exists:**
+- Admin › Approvals › Advertisement (`adminBuyOrders`) lists every non-draft buy order. It can be searched by client name/ref/company and filtered by kind and sector. It has counts for New, NDA requested and Not a fit.
+- Control's Applications tab shows the client name on each Sealed row.
+- `managed_clients.managed_by` stores a free-text team name.
+- The Sealed form's client picker lists all managed clients (`myBuyOrders` → `clients`).
+
+**What does not exist:**
+- grouping buy orders or applications by client;
+- a per-client page;
+- splitting clients between employees: `managed_by` is text only and not used for filtering or access, and every Control Admin sees all Sealed orders and applications;
+- using `investor_ownership` here: it gives no rights in Businesses Wanted or Pipeline (see Section 9).
+
+### 11.9 Summary table
+
+| Step | Status | Why |
+|---|---|---|
+| Create managed corporate buyer | Partly supported | Investor row + `startManaging`/`publishManaged` exist. Businesses Wanted needs a separate rule: Control tenant + Admin-owned approved `buyer_profiles` row. `run_by` alone is not enough. |
+| Several logins per client (deal team) | Not supported | Buyer access is per user. Sealed NDAs go to one `buyer_profiles` user (`limit(1)`). `investor_users` is CRM only. |
+| Post buy order for managed client | Supported | `saveBuyOrder` as Admin writes a `sealed` order for a client in `managedClients`. |
+| Post buy order for self-signed-up buyer | Not supported | Admin orders are only allowed for `managedClients`. Buyers write their own advertisements. |
+| Client keeps orders/applications after handover | Partly supported | Rows stay stored, but Sealed orders and their applications are hidden from buyers. Existing pipelines stay on the Admin user. |
+| Control edits/posts after handover | Not supported | Client leaves `managedClients`. Existing Sealed orders can still be sent/decided, but an NDA request fails. |
+| Review applications | Supported | `decideApplication` (Request NDA / Not a fit). Control for Sealed, buyer for Advertisement, never both. |
+| Client sees applications | Partly supported | Advertisements: yes, public Listing view only. Sealed: no. |
+| Deal created after decision | Supported | Request NDA creates the `deal_pipelines` row and the NDA request automatically. |
+| Shortlist set by PitchSnack, used by client | Not supported | No shortlist status. The decision sends the NDA straight away. The client cannot see Sealed applications. |
+| View by client at 50-client scale | Partly supported | Search/filter by client in Admin Advertisement. No grouping or per-client view. |
+| Split clients between employees | Not supported | `managed_by` is free text. All Control Admins see everything. |
