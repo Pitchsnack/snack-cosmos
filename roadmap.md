@@ -1,11 +1,12 @@
 # One-step approval — roadmap
 
 ## Buyer editing every way in — 1 November 2026
-- [ ] Unify all buyer edit/add paths and inline Review & complete; remove long-form branch while preserving access and saves.
-- [ ] Setup actions resume unanswered questions or Review; preserve My Company layout.
-- [ ] Shared seller-style Listing title/labels, Suggest, empty-only Auto-fill, sticky preview and mandate beside card; EN/TH and phone layout.
-- [ ] About Company 80-word bilingual changed-only validation, existing Admin bypass and check order; no database changes.
-- [ ] Tests and test-account browser checks; entry-point inventory and blockers.
+- [x] Replace Control extra-profile generic dialog with EditInfoPopup; remove long-form branch and retired BuyerInvestorForm export. Same BuyerInformationForm in popup and inline completion; existing own/accountless Directory authorization retained.
+- [x] Preserve setup-action wizard resume and My Company layout; popup saves no longer mark incomplete setup finished, wizard Save profile does.
+- [x] Shared seller title/label/Suggest controls, sticky real preview, 150px description and mandate beside card; bilingual layout and phone checks.
+- [x] About Company 80-word bilingual changed-only frontend/server validation, existing directory Admin bypass and check order; no schema/direct record changes.
+- [x] 37 rule/access/setup tests; test buyer EN/TH, 1440x960/390, Suggest, retained filled text, word blocking, save/read-back/restore; inline completion/source-tag removal verified. Admin Add popup loaded. Fixed numbered adding=1 legacy link.
+- [ ] Control own/extra profile and accountless Directory Edit/save/Approvals click-through blocked: admin.acme test identity only TENANT_ADMIN, not CONTROL; no privileges changed. New draft first-missing/resume/finish-save screenshots require suitable test draft (buyer2 welcome modal intercepted clicks).
 
 ## Buyer and advisor wizard step bars — 31 October 2026
 - [x] Reuse seller StepBar on shown questions and Review; bilingual labels and missing-question navigation; seller and banners' layouts unchanged. Current questions combine location with Firm/Address, so no separate Location step was invented.
