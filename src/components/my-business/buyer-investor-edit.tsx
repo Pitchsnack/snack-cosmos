@@ -24,7 +24,7 @@ import {
 } from "@/lib/investor-bands";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Eye, Lock, Shield, Pencil, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
+import { Eye, Lock, Shield, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
