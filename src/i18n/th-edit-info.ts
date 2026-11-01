@@ -13,6 +13,12 @@
  */
 
 export const EDIT_INFO_TH: Record<string, string> = {
+  "Your card in Browse investors": "การ์ดของท่านในหน้าค้นหานักลงทุน",
+  "What sellers see": "สิ่งที่ผู้ขายเห็น",
+  "Up to 80 words.": "ไม่เกิน 80 คำ",
+  "Keep it to 80 words.": "โปรดเขียนไม่เกิน 80 คำ",
+  "words": "คำ",
+  "Buying Requirement": "เงื่อนไขการซื้อ",
   // 2.1 Header, footer and buttons
   "Listing view": "มุมมองรายการ",
   "Exclusive view": "มุมมองพิเศษ",

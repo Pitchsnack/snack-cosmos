@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { descriptionChanged } from './buyer-description';
+import { buyerAboutError, descriptionChanged } from './buyer-description';
 import {
   AUM_KEYS, REV_KEYS, TICKET_KEYS, bandOf, descriptionError, sortActsFor, descriptionLeaks, regError, ticketColumns, yearError,
 } from "@/lib/investor-bands";
@@ -304,13 +304,16 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     const { sb, investorId } = r;
     const relation = r.extra ? ((r.p.buyer_relation ?? null) as string | null) : await relationOf(sb, r.bpUser ?? context.userId);
     // Same checks as Review & complete (section 5); the buyer can't save past them.
+    const { data: stored } = await sb.from("investors").select("short_description, short_description_th").eq("id", investorId).single();
     const problem =
-      (relation !== "individual" && yearError(data.year_founded?.toString() ?? "")) ||
-      (!/^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(data.website_url ?? "") && "Enter a valid website address, e.g. www.yourfirm.com") ||
       (descriptionChanged(data.description, r.p.description) && data.description && (descriptionError(data.description) ||
         (descriptionLeaks(data.description, data.investor_name, data.website_url ?? "").length ? "Your description mentions names, websites or contact details." : null))) ||
-      (data.description_th && descriptionLeaks(data.description_th, data.investor_name, data.website_url ?? "").length ? "Your Thai description mentions names, websites or contact details." : null) ||
-      (relation !== "individual" && regError(data.registration_no ?? "", data.country ?? ""));
+      (descriptionChanged(data.description_th, r.p.description_th) && data.description_th && (descriptionError(data.description_th) || (descriptionLeaks(data.description_th, data.investor_name, data.website_url ?? "").length ? "Your Thai description mentions names, websites or contact details." : null))) ||
+      (relation !== "individual" && regError(data.registration_no ?? "", data.country ?? "")) ||
+      buyerAboutError(data.short_description, stored?.short_description) ||
+      buyerAboutError(data.short_description_th, stored?.short_description_th) ||
+      (relation !== "individual" && yearError(data.year_founded?.toString() ?? "")) ||
+      (!/^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(data.website_url ?? "") && "Enter a valid website address, e.g. www.yourfirm.com");
     if (!r.directory && problem) throw new Error(problem);
     const own = (x?: string | null) => !x || /^https?:/.test(x) || x.includes(`/${investorId}/`);
     if (!own(data.logo_path) || (data.media ?? []).some((m) => !own(m.image_path))) throw new Error("Invalid file.");

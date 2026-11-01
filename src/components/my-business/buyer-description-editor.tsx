@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { FieldRow } from '@/components/common/listing-editor-fields';
+import { LangTag } from '@/components/common/text-lang';
 import { Eye } from 'lucide-react';
 import { StandardInvestorCard } from '@/components/marketplace/standard-investor-card';
 import type { CardInvestor } from '@/components/marketplace/buyer-browse-card';
@@ -6,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTr } from '@/components/common/edit-info-popup';
 import { buyerDescriptionError, descriptionWords, singleLineDescription } from '@/lib/buyer-description';
 
-export function BuyerDescriptionEditor({ i, leaks, value, onChange, forced }: { i: CardInvestor; leaks: string[]; value: string; onChange: (value: string) => void; forced?: boolean }) {
+export function BuyerDescriptionEditor({ i, leaks, value, onChange, forced, children, suggest, source, lang }: { i: CardInvestor; leaks: string[]; value: string; onChange: (value: string) => void; forced?: boolean; children?: ReactNode; suggest?: () => void; source?: ReactNode; lang?: 'en' | 'th' }) {
   const L = useTr();
   const [touched, setTouched] = useState(false);
   const problem = buyerDescriptionError(value);
@@ -29,13 +31,13 @@ export function BuyerDescriptionEditor({ i, leaks, value, onChange, forced }: { 
   const pattern = escaped.length ? new RegExp(`(${escaped.join('|')})`, 'gi') : null;
   const description = !value.trim() ? <span className="buyer-preview-empty">{L('Your description shows here.', 'คำอธิบายของท่านจะแสดงที่นี่')}</span> : pattern ? value.split(pattern).map((part, index) => leaks.some((word) => word.toLowerCase() === part.toLowerCase()) ? <mark key={index}>{part}</mark> : part) : value;
   return <div ref={root} className="buyer-description-layout">
-    <div className="buyer-preview-col"><div className="buyer-preview-sticky"><p className="buyer-preview-caption"><Eye aria-hidden />{L('WHAT SELLERS SEE', 'สิ่งที่ผู้ขายเห็น')}</p><StandardInvestorCard i={i} descriptionContent={description} className="buyer-editor-preview" /></div></div>
-    <section data-edit-sec="description" className="buyer-description-field">
-      <h3>{L('Public Description', 'คำอธิบายสาธารณะ')}</h3>
-      <div className="buyer-description-label"><label htmlFor="f-description">{L('Description', 'คำอธิบาย')} <span>{L('(1–2 sentences)', '(1–2 ประโยค)')}</span></label><span className={descriptionWords(value) > 25 ? 'buyer-description-error' : ''}>{descriptionWords(value)} / 25 {L('words','คำ')}</span></div>
-      <Textarea id="f-description" value={value} onChange={(e) => onChange(singleLineDescription(e.target.value))} onBlur={() => setTouched(true)} onKeyDown={(e) => {if(e.key === 'Enter') e.preventDefault();}} aria-invalid={!!message} aria-describedby="buyer-description-help buyer-description-message" className="buyer-description-textarea" />
+    <div className="buyer-preview-col"><div className="buyer-preview-sticky"><p className="buyer-preview-caption"><Eye aria-hidden />{L('What sellers see', 'สิ่งที่ผู้ขายเห็น')}</p><StandardInvestorCard i={i} descriptionContent={description} className="buyer-editor-preview" /></div></div>
+    <div className="buyer-description-fields"><section data-edit-sec="description" className="buyer-description-field">
+      <FieldRow htmlFor="f-description" label={<>{L('Description', 'คำอธิบาย')} <span className="buyer-label-explanation">{L('(1–2 sentences)', '(1–2 ประโยค)')}</span></>} after={!source && <LangTag />} source={source} suggest={suggest} right={<span className={descriptionWords(value) > 25 ? 'text-destructive font-semibold' : ''}>{descriptionWords(value)} / 25 {L('words','คำ')}</span>}>
+      <Textarea id="f-description" lang={lang} value={value} onChange={(e) => onChange(singleLineDescription(e.target.value))} onBlur={() => setTouched(true)} onKeyDown={(e) => {if(e.key === 'Enter') e.preventDefault();}} aria-invalid={!!message} aria-describedby="buyer-description-help buyer-description-message" className="buyer-description-textarea" />
+      </FieldRow>
       <p id="buyer-description-help" className="buyer-description-help">{L("Up to 25 words. Leave out your firm's name, website and contact details.", 'ไม่เกิน 25 คำ โปรดอย่าระบุชื่อบริษัท เว็บไซต์ และข้อมูลติดต่อ')}</p>
       <div id="buyer-description-message" aria-live="polite">{message === 'leak' ? <p className="buyer-description-warning">{L('Your description mentions', 'คำอธิบายของท่านกล่าวถึง')} <b>{leaks.join(', ')}</b>{L('. Sellers read it before an NDA, so leave out names, websites and contact details.', ' ผู้ขายจะอ่านก่อนลงนาม NDA โปรดไม่ระบุชื่อ เว็บไซต์ และข้อมูลติดต่อ')}</p> : message ? <p className="buyer-description-error">{message === 'Keep it to 2 sentences.' ? L(message,'โปรดเขียนไม่เกิน 2 ประโยค') : message === 'Keep it to 25 words.' ? L(message,'โปรดเขียนไม่เกิน 25 คำ') : L(message,'โปรดเขียนอย่างน้อย 10 ตัวอักษร')}</p> : null}</div>
-    </section>
+    </section>{children}</div>
   </div>;
 }
