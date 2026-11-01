@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { buyerListingName } from "./buyer-listing-identity";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
@@ -51,7 +52,7 @@ export const getMyApprovalNotice = createServerFn({ method: "GET" })
 
     // Newest activity wins across the user's listings/profiles.
     const [{ data: bp }, { data: hps }, { data: firms }, { data: me }] = await Promise.all([
-      sb.from("buyer_profiles").select("user_id, ref_no, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline").eq("user_id", uid).maybeSingle(),
+      sb.from("buyer_profiles").select("user_id, ref_no, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline, investors(investor_type)").eq("user_id", uid).maybeSingle(),
       sb.from("hidden_profiles").select("id, ref_no, approval_status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, code_name, startups!inner(startup_users!inner(user_id))").eq("startups.startup_users.user_id", uid),
       sb.from("advisor_firms").select("id, ref_no, advisor_verification, status, verification_requested_at, more_info_at, more_info_note, more_info_fields, declined_at, decline_note, decline_reason, verified_at, suggested_listing_name, suggested_headline, published_listing_name, published_headline").eq("owner_user_id", uid),
       sb.from("users").select("first_name, email").eq("id", uid).maybeSingle(),
@@ -72,7 +73,7 @@ export const getMyApprovalNotice = createServerFn({ method: "GET" })
         submittedAt: bp.submitted_at, decidedAt: bp.decided_at, decisionNote: bp.decision_note,
         reasons: (bp.decision_reasons ?? []) as string[],
         suggestedName: bp.suggested_listing_name, suggestedHeadline: bp.suggested_headline,
-        publishedName: bp.published_listing_name, publishedHeadline: bp.published_headline,
+        publishedName: buyerListingName(bp.investors?.investor_type, bp.ref_no, bp.published_listing_name), publishedHeadline: bp.published_headline,
         adminRewrote: diff(bp.suggested_listing_name, bp.published_listing_name) || diff(bp.suggested_headline, bp.published_headline),
         activity: bp.decided_at ?? bp.submitted_at,
       });

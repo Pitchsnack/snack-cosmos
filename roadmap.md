@@ -1,5 +1,10 @@
 # One-step approval — roadmap
 
+## Buyer removes Listing name and Headline — 1 November 2026
+- [x] Remove buyer editor fields/note and save payload keys in EN/TH; leave seller fields and stored legacy values untouched.
+- [x] Remove buyer submission requirements, description-only identity checks, public type/ref fallbacks in review/notices/emails and optional buyer approval headline.
+- [ ] Verify rule regressions and EN/TH buyer editor with test identity; no Dan login or direct database edits.
+
 ## Edit information legal company name — 1 November 2026
 - [x] Audit existing second-name differences before implementation; preserve all stored values.
 - [x] Update shared seller/buyer/advisor editors with locked copy, focus link, bilingual help and optional other-language names; setup forms remain unchanged.

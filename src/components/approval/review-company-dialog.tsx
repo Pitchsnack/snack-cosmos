@@ -55,7 +55,7 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
         </div>
         <div className="ap-db overflow-y-auto">
           {/* 1 · Listing name and headline */}
-          <section>
+          {role !== "buyer" && <section>
             <div className="ap-dbh">
               <span className="ap-stepn" aria-hidden>1</span>
               <span className="ap-cap">{t("Listing name and headline")} · {t("your suggestion")}</span>
@@ -72,12 +72,12 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
                 </span>
               </div>
             </div>
-          </section>
+          </section>}
 
           {/* 2 · Listing view */}
           <section>
             <div className="ap-dbh">
-              <span className="ap-stepn" aria-hidden>2</span>
+              <span className="ap-stepn" aria-hidden>{role === "buyer" ? 1 : 2}</span>
               <span className="ap-cap">{t("Listing view")} · {seeLabel}</span>
               <button type="button" onClick={() => onEdit("description")}>{t("Edit")}</button>
             </div>
@@ -92,7 +92,7 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
                     {data.identityWords.length ? (
                       <span className="ap-warnline"><TriangleAlert className="h-3.5 w-3.5" />{t("Mentions")} {data.identityWords.join(", ")}. {t("Leave out names, websites and contact details.")}</span>
                     ) : (
-                      <span className="ap-ok"><Check className="h-3.5 w-3.5" />{t("Clean")} · {role === "seller" ? t("no name, website or contact in the listing name, headline, description, highlights or customer profile") : t("no name, website or contact in the listing name, headline or description")}</span>
+                      <span className="ap-ok"><Check className="h-3.5 w-3.5" />{t("Clean")} · {role === "buyer" ? t("Description") : role === "seller" ? t("no name, website or contact in the listing name, headline, description, highlights or customer profile") : t("no name, website or contact in the listing name, headline or description")}</span>
                     )}
                   </span>
                 </div>
@@ -103,7 +103,7 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
           {/* 3 · Exclusive view */}
           <section>
             <div className="ap-dbh">
-              <span className="ap-stepn" aria-hidden>3</span>
+              <span className="ap-stepn" aria-hidden>{role === "buyer" ? 2 : 3}</span>
               <span className="ap-cap" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                 {role === "advisor" ? <ShieldCheck className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
                 {role === "advisor" ? t("What PitchSnack checks") : <>{t("Exclusive view")} · {t("what PitchSnack checks")}</>}
