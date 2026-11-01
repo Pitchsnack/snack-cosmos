@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { optionalCompanyName } from "./company-name";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { buyerAboutError, descriptionChanged } from './buyer-description';
 import {
@@ -128,6 +129,8 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
         investor_name: inv.investor_name as string,
         legal_name: inv.legal_name as string | null,
         firm_name: inv.firm_name as string | null,
+        thai_name: inv.thai_name as string | null,
+        english_name: inv.english_name as string | null,
         investor_type: inv.investor_type as string | null,
         acts_for_types: (inv.acts_for_types ?? []) as string[],
         year_founded: inv.year_founded as number | null,
@@ -269,6 +272,7 @@ export const addInvestorProfile = createServerFn({ method: "POST" })
 const txt = (n: number) => z.string().trim().max(n).nullable().optional();
 const arr = (max: number) => z.array(z.string().trim().min(1).max(80)).max(max).optional();
 const Patch = z.object({
+  thai_name: optionalCompanyName, english_name: optionalCompanyName,
   investor_name: z.string().trim().min(1).max(200),
   investor_type: txt(80), year_founded: z.number().int().min(1800).max(2100).nullable().optional(),
   company_size_band: z.enum(["1-10", "11-50", "51-200", "201-500", "500+"]).nullable().optional(),
@@ -336,6 +340,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       updated_by: context.userId, updated_at: new Date().toISOString(),
     };
     for (const k of ["address_line1", "address_line2", "address_city_district", "address_province_state", "postal_code"] as const) if (data[k] !== undefined) inv[k] = data[k] || null;
+    for (const k of ["thai_name", "english_name"] as const) if (data[k] !== undefined) inv[k] = data[k];
     if (data.revenue_min_m !== undefined) inv.revenue_min_m = data.revenue_min_m;
     if (data.revenue_max_m !== undefined) inv.revenue_max_m = data.revenue_max_m;
     if (data.keywords) inv.keywords = data.keywords;

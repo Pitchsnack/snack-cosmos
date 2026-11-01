@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { optionalCompanyName } from "./company-name";
 import { DEAL_BANDS } from "@/lib/advisor-firm";
 const BAND_KEYS = DEAL_BANDS.map((b) => b.key) as [string, ...string[]];
 const FEE_TYPES = ["fixed", "hourly", "retainer", "success", "retainer_success", "quote", "other"] as const;
@@ -25,6 +26,7 @@ export const CompleteFirmInput = z.object({
   sectorAgnostic: z.boolean().optional(),
   legalName: z.string().trim().min(1).max(200),
   thaiName: s(200),
+  englishName: optionalCompanyName,
   registrationNo: s(50),
   addrStreet: s(120), addrUnit: s(120), addrDistrict: s(80), addrProvince: s(80), addrPostal: s(12),
   website: z.string().trim().min(3).max(200), email: z.string().trim().email().max(120), phone: z.string().trim().min(9).max(30),
@@ -44,3 +46,8 @@ export const DraftFirmInput = CompleteFirmInput.innerType().extend({
   email: z.string().trim().max(120), phone: z.string().trim().max(30),
 });
 export function advisorNeedsCompleteSave(status: string | null | undefined) { return status !== "draft"; }
+
+/** Edit information uses the already-required company name, not the legacy second name. */
+export const EditCompleteFirmInput = CompleteFirmInput.innerType().extend({
+  legalName: z.string().trim().max(200).optional(),
+}).refine((d) => d.country !== "Thailand" || /^\d{13}$/.test(d.registrationNo ?? ""), { message: "The registration number has 13 digits." });

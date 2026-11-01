@@ -1,4 +1,6 @@
 import { setupText } from "@/i18n/language";
+import { companyNameHelp } from "@/lib/company-name";
+import { CompanyNameFields } from "@/components/common/company-name-fields";
 import { tr } from "@/i18n/language";
 import { LangTag, useTextLang } from "@/components/common/text-lang";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +38,7 @@ export type FirmForm = {
   city: string; country: string; services: string[]; fees: Record<string, FeeDetail>;
   dealBand: string; teamSize: string; languages: string[]; sectors: string[]; sectorAgnostic: boolean;
   legalName: string; thaiName: string; registrationNo: string; addr: Addr;
+  englishName?: string;
   website: string; email: string; phone: string;
   team: { id?: string; name: string; role: string; roleTh?: string; email: string }[];
   credentials: { id?: string; name: string; nameTh?: string; note: string; noteTh?: string; status?: string }[];
@@ -64,6 +67,7 @@ export const toFirmForm = (f: AdvisorFirm | null): FirmForm => ({
   fees: Object.fromEntries((f?.services ?? []).map((s) => [s, f?.feeDetails[s] ?? newFee()])),
   dealBand: f?.dealBand ?? "", teamSize: f?.teamSize ? String(f.teamSize) : "", languages: f?.languages ?? [], sectors: f?.sectors ?? [], sectorAgnostic: !!f?.sectorAgnostic,
   legalName: f?.legalName ?? "", thaiName: f?.thaiName ?? "", registrationNo: f?.registrationNo ?? "",
+  englishName: f?.englishName ?? "",
   addr: { street: f?.addrStreet ?? "", unit: f?.addrUnit ?? "", district: f?.country === "Thailand" ? f?.addrDistrict ?? "" : "", province: f?.addrProvince ?? "", postal: f?.addrPostal ?? "" },
   website: f?.website ?? "", email: f?.email ?? "", phone: f?.phone ?? "",
   team: (f?.team ?? []).map((t) => ({ id: t.id, name: t.name, role: t.role ?? "", roleTh: t.roleTh ?? "", email: t.email ?? "" })),
@@ -148,6 +152,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   type Tab = "logo" | "about" | "address" | "services" | "team" | "documents" | "admin";
   const sectionTab: Record<string, Tab> = { firm: "about", work: "about", company: "address", services: "services", team: "team", credentials: "documents", documents: "documents" };
   const [tab, setTab] = useState<Tab>(section ? sectionTab[section] ?? "about" : "about");
+  const [nameFocus, setNameFocus] = useState(false);
+  useOpenAtSection(nameFocus ? "company-name" : undefined);
   const visible = (t: Tab) => !pop || !!setup || tab === t;
 
   const back = () => (pop ? pop.requestClose() : onDone ? onDone() : navigate({ to: "/marketplace/my-company", search: firm ? ({ open: firm.id } as never) : undefined }));
@@ -192,7 +198,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
     ["year", yearError(f.yearFounded)],
     ["desc", descError(f.description || f.descriptionTh)],
     ["teamSize", teamSizeError(f.teamSize)],
-    ["legalName", f.legalName.trim() ? null : "Add your firm's legal name."],
+    ["legalName", !setup || f.legalName.trim() ? null : "Add your firm's legal name."],
     ["reg", thai && !/^\d{13}$/.test(f.registrationNo) ? "The registration number has 13 digits." : null],
     ["web", webError(f.website)],
     ["email", emailError(f.email)],
@@ -229,7 +235,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           description: f.description.trim() || f.descriptionTh.trim(), descriptionTh: f.descriptionTh.trim() || null, yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
           dealBand: f.dealBand || null, teamSize: f.teamSize ? Number(f.teamSize) : null, languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
-          legalName: f.legalName.trim(), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
+          ...(setup ? { legalName: f.legalName.trim() } : { englishName: nul(f.englishName ?? "") }), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
           addrStreet: nul(f.addr.street), addrUnit: nul(f.addr.unit), addrDistrict: thai ? nul(f.addr.district) : nul(f.city),
           addrProvince: nul(f.addr.province), addrPostal: nul(f.addr.postal),
           website: f.website.trim() ? normalizeUrl(f.website) : "", email: f.email.trim(), phone: f.phone.trim(),
@@ -288,7 +294,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {visible("about") && <EditSec id={section === "work" ? "work" : "firm"} active={section === "work" || section === "firm"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Info")} /><CompactFields>          <F label={setupText("Year founded")} req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
             <Input id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder={setupText("e.g. 2014")} value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
           </F>
-          <F label={setupText("Firm name")} req tag={src.name} err={show("name")} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && (adminCreate && forced ? "creation-invalid" : errB))} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F>
+          <EditSec id="company-name" tone="buyer" active={nameFocus}><F label={setupText(setup ? "Firm name" : "Company name")} req tag={src.name} err={show("name")} hint={!setup ? companyNameHelp(tl === "th" ? false : false).replace(companyNameHelp(false), tr("Company name") === "ชื่อบริษัท" ? companyNameHelp(true) : companyNameHelp(false)) : undefined} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && (adminCreate && forced ? "creation-invalid" : errB))} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F></EditSec>
           <F label={thai ? "Registration no. (เลขทะเบียนนิติบุคคล)" : "Registration no."} req={thai} opt={!thai} tag={f.registrationNo ? src.registrationNo : undefined} err={show("reg")} htmlFor="fe-reg">
             <Input id="fe-reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? setupText("13 digits") : undefined}
               className={cn(inp, thai && "border-[#93C5FD] bg-[#EFF6FF] dark:border-[#1E40AF] dark:bg-[#172554]", show("reg") && errB)}
@@ -342,12 +348,12 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} lang={tl} value={descV} onBlur={blur("desc")} onChange={(e) => setDesc(e.target.value)} />
         </F>
 </EditSec>}
-        {visible("address") && <EditSec id="company" active={section === "company"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Address")} /><CompactFields two>          <F label={setupText("Legal name")} req tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
+        {visible("address") && <EditSec id="company" active={section === "company"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Address")} />{!setup ? <CompanyNameFields name={f.name} nameLabel="Company name" thaiName={f.thaiName} englishName={f.englishName ?? ""} onThaiName={v => set("thaiName", v)} onEnglishName={v => set("englishName", v)} onChangeCompany={() => { setTab("about"); setNameFocus(true); setTimeout(() => document.getElementById("fe-name")?.focus(), 100); }} /> : <CompactFields two>          <F label={setupText("Legal name")} req tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
             hint={firm?.verifiedAt ? "Changing this sends your firm back to Admin for a check." : undefined}>
             <Input id="fe-legalName" aria-required className={cn(inp, show("legalName") && errB)} maxLength={200} placeholder={setupText("e.g. Acme Advisory Co., Ltd.")} value={f.legalName} onBlur={blur("legalName")} onChange={(e) => set("legalName", e.target.value)} />
           </F>
           <F label={setupText("Thai name")} opt={!thai} tag={f.thaiName ? src.thaiName : undefined}><Input className={inp} maxLength={200} placeholder="บริษัท … จำกัด" value={f.thaiName} onChange={(e) => set("thaiName", e.target.value)} /></F>
-</CompactFields><CompactFields two>
+</CompactFields>}<CompactFields two>
           <F label={tr("Country")} req><select id="fe-country" className={sel} value={f.country} onChange={e=>changeCountry(e.target.value)}><option value="">{tr("Choose a country")}</option>{COUNTRIES.map(c=><option key={c} value={c}>{tr(c)}</option>)}</select></F>
           <F label={tr("City / province")} req err={show("city")}><Input id="fe-city" value={thai ? f.addr.province : f.city} onChange={e=>thai ? set("addr", {...f.addr,province:e.target.value}) : set("city",e.target.value)} /></F>
         </CompactFields><div>
