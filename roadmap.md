@@ -1,5 +1,12 @@
 # One-step approval — roadmap
 
+## Buyer editing every way in — 1 November 2026
+- [ ] Unify all buyer edit/add paths and inline Review & complete; remove long-form branch while preserving access and saves.
+- [ ] Setup actions resume unanswered questions or Review; preserve My Company layout.
+- [ ] Shared seller-style Listing title/labels, Suggest, empty-only Auto-fill, sticky preview and mandate beside card; EN/TH and phone layout.
+- [ ] About Company 80-word bilingual changed-only validation, existing Admin bypass and check order; no database changes.
+- [ ] Tests and test-account browser checks; entry-point inventory and blockers.
+
 ## Buyer and advisor wizard step bars — 31 October 2026
 - [x] Reuse seller StepBar on shown questions and Review; bilingual labels and missing-question navigation; seller and banners' layouts unchanged. Current questions combine location with Firm/Address, so no separate Location step was invented.
 - [x] Persist monotonic setup_reached through authorised autosaves and triggers; derive completion from validity and optional-step passage; block Review on missing required answers. Existing fields reused, no historical backfill or direct record mutations.
