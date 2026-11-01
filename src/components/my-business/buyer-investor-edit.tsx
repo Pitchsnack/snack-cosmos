@@ -40,6 +40,7 @@ import {
   type EntityMediaState, type SlotState,
 } from "@/components/media/entity-media-editor";
 import { supabase } from "@/integrations/supabase/client";
+import { investorEnrichAdapter } from "@/lib/auto-enrich/investor-enrich-adapter";
 import { createMyBuyerUploadUrl, getBuyerInvestorById, getMyBuyerInvestor, saveMyBuyerInvestor } from "@/lib/buyer-investor.functions";
 import { useInvestor } from "@/hooks/use-investor";
 import { createInvestor, updateInvestor } from "@/lib/investors.functions";
@@ -124,7 +125,7 @@ function TagEditor({
   );
 }
 
-/** Buyer › My Company › Edit profile — same fields, same order as Edit investor. */
+/** Shared buyer field section, including legacy section deep links. */
 function S({ id, cur, className, children }: { id: string; cur?: string; className?: string; children: React.ReactNode }) {
   return <EditSec id={id} tone="buyer" active={cur === id} className={className}>{children}</EditSec>;
 }
@@ -302,6 +303,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
   /** Auto Enrich merge — back-fills ONLY empty fields, same as Edit investor. */
   const applyEnrichment = (r: EnrichInvestorResult) => {
+    if (setup) setSources(p=>({...p, ...(!f.short_description.trim() && r.bio ? {short_description:"Auto Enrich" as const} : {})}));
     setF((o) => {
       const t = (cur: string, next?: string) => (!cur.trim() && next?.trim() ? next.trim() : cur);
       const country = t(o.country, r.headquarters);
@@ -348,11 +350,19 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
     return descriptionLeaks(next, f.investor_name, f.website_url).length ? suggestBuyerDescription({type:"", industries:[], geography:[]}, tl) : next;
   };
   const suggest = () => bset("description")(suggestion());
-  const fillTab = () => {
+  const fillTab = async () => {
     if (!bv("description").trim()) suggest();
     setF(o => ({...o, aum_band:o.aum_band || inv.aum_band || "", ticket_band:o.ticket_band || inv.ticket_band || "", rev_band:o.rev_band || inv.revenue_min_band || ""}));
     if (!deals.length && data.buyer.deal_types.length) setDeals(data.buyer.deal_types);
     if (!focus.length && inv.investment_focus.length) setFocus(inv.investment_focus);
+    if (f.website_url.trim() && (!f.aum_band || !f.ticket_band || !focus.length)) {
+      setBusy(true);
+      try {
+        const result = await investorEnrichAdapter.enrichInvestor({websiteUrl:f.website_url});
+        if (!focus.length && result.investmentFocus?.length) setFocus(result.investmentFocus.slice(0,10));
+      } catch (e) { toast.error(e instanceof Error ? e.message : "Auto-fill failed."); }
+      finally { setBusy(false); }
+    }
   };
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -428,6 +438,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         revenue_band: (f.revenue_band || null) as never,
         contact_number: t(f.contact_number) || null,
         investor_id: inv.id,
+        complete_setup: !!setup,
       } });
       if (admin && directoryRecord) await updateDirectory({data:{id:inv.id,bio:bio || null,...(portfolioInvestorsDirty ? {portfolioInvestorIds:portfolioInvestors.flatMap(x=>x.refId ? [x.refId] : [])} : {}),...(linkedDirty ? {startupIds:linkedPortfolio.flatMap(x=>x.refId ? [x.refId] : [])} : {}),revenueMinM:revenueMin ? Number(revenueMin) : null,revenueMaxM:revenueMax ? Number(revenueMax) : null,tenantId:tenant,legalName:legalName || null,longDescription:longDescription || null,status:directoryStatus,visibility:directoryVisibility,...(human ? {owningAgentUserId:human}:{}),...(ai ? {owningAiAgentId:ai}:{})}});
       if (admin && companyTypeDirty) await updateDirectory({data:{id:inv.id,...(companyTypeReset ? {companyTypeReset:true} : companyType ? {companyType:companyType as "SME" | "Corporate Enterprise" | "Individual"} : {})}});
@@ -699,7 +710,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 <div className="buyer-mandate-money">        {showsFund && (
           <S cur={setup ? undefined : sec} id="fund">
             <div className="space-y-1.5">
-              <Label>{corp ? tr("Group revenue band") : <>{tr("Fund's AUM")} <span className="buyer-label-explanation">{tr("(Assets under management)")}</span></>}<Tag s={src.aum_band} /></Label>
+              <div className="listing-editor-label-row"><Label>{corp ? tr("Group revenue band") : <>{tr("Fund's AUM")} <span className="buyer-label-explanation">{tr("(Assets under management)")}</span></>}<Tag s={src.aum_band} /></Label></div>
               <Select value={f.aum_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, aum_band: v === "none" ? "" : v }))}>
                 <SelectTrigger><SelectValue placeholder={setupText("Not set")} /></SelectTrigger>
                 <SelectContent>
@@ -712,7 +723,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           </S>
         )}
         <S cur={setup ? undefined : sec} id="mandate" className="space-y-1.5">
-          <Label>{tr("Average investment per deal")}<Tag s={src.ticket_band} /></Label>
+          <div className="listing-editor-label-row"><Label>{tr("Average investment per deal")}<Tag s={src.ticket_band} /></Label></div>
           <Select value={f.ticket_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, ticket_band: v === "none" ? "" : v }))}>
             <SelectTrigger><SelectValue placeholder={setupText("Not set")} /></SelectTrigger>
             <SelectContent>
@@ -726,7 +737,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
           <div className="text-xs font-bold uppercase text-muted-foreground">{tr("Buying Requirement")}</div>
           <S cur={setup ? undefined : sec} id="revenue" className="space-y-1.5">
-          <Label>{tr("Min. target revenue")} <span className="buyer-label-explanation">{tr("(The minimum company revenue you would consider acquiring)")}</span><Tag s={src.revenue_min_band} /></Label>
+          <div className="listing-editor-label-row"><Label>{tr("Min. target revenue")} <span className="buyer-label-explanation">{tr("(The minimum company revenue you would consider acquiring)")}</span><Tag s={src.revenue_min_band} /></Label></div>
           <Select value={f.rev_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, rev_band: v === "none" ? "" : v }))}>
             <SelectTrigger className="w-full"><SelectValue placeholder={setupText("Not set")} /></SelectTrigger>
             <SelectContent>
@@ -738,7 +749,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           </S>
         </div>
         <S cur={setup ? undefined : sec} id="focus" className="buyer-mandate-divider space-y-1.5">
-          <Label>{tr("Investment Focus")}<Tag s={src.deal_types} /></Label>
+          <div className="listing-editor-label-row"><Label>{tr("Investment Focus")}<Tag s={src.deal_types} /></Label></div>
           <div className="flex flex-wrap gap-2">
             {allDeals.map((d) => <Pill key={d} active={deals.includes(d)} onClick={() => setDeals(toggle(deals, d))}>{tr(d)}</Pill>)}
           </div>
@@ -746,7 +757,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
         {/* Geography */}
         <S cur={setup ? undefined : sec} id="geography" className="buyer-mandate-divider space-y-1.5">
-          <Label>{tr("Geography")}<Tag s={src.geography} /></Label>
+          <div className="listing-editor-label-row"><Label>{tr("Geography")}<Tag s={src.geography} /></Label></div>
           <div className="flex flex-wrap gap-2">
             {allGeo.map((g) => <Pill key={g} active={focus.includes(g)} onClick={() => setFocus(toggle(focus, g, 10))}>{tr(g)}</Pill>)}
           </div>

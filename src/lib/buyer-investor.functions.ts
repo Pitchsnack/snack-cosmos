@@ -289,6 +289,7 @@ const Patch = z.object({
   suggested_headline: z.string().trim().max(300).nullable().optional(),
   revenue_band: z.enum(["rv_lt100", "rv_100_300", "rv_300_800", "rv_800_1500", "rv_1500"]).nullable().optional(),
   contact_number: z.string().trim().max(60).nullable().optional(),
+  complete_setup: z.boolean().optional(),
 });
 
 async function relationOf(sb: any, userId: string) {
@@ -354,7 +355,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
         inv.acts_for_types = acts; inv.investor_type = acts[0];
       }
     } else inv.acts_for_types = [];
-    if (!r.directory) inv.setup_done_at = new Date().toISOString();
+    if (!r.directory && data.complete_setup) inv.setup_done_at = new Date().toISOString();
     const { error } = await sb.from("investors").update(inv).eq("id", investorId);
     if (error) throw new Error(error.message);
 
