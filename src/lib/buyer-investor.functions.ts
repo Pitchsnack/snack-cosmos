@@ -335,7 +335,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       investor_name: data.investor_name, investor_type: n(data.investor_type), year_founded: data.year_founded ?? null,
       ...(data.company_size_band !== undefined ? { company_size_band: data.company_size_band } : {}),
       country: n(data.country), email: n(data.email), website_url: n(data.website_url), linkedin_url: n(data.linkedin_url),
-      firm_name: n(data.firm_name), business_address: n(data.business_address), aum: n(data.aum),
+      ...(data.firm_name === undefined ? {} : { firm_name: n(data.firm_name) }), business_address: n(data.business_address), aum: n(data.aum),
       min_ticket_size: n(data.min_ticket_size), max_ticket_size: n(data.max_ticket_size), short_description: n(data.short_description),
       updated_by: context.userId, updated_at: new Date().toISOString(),
     };
@@ -374,7 +374,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
 
     // Mirror the mandate into the buyer's seller-facing (Listing view) fields.
     const bp: Record<string, unknown> = {
-      legal_name: n(data.firm_name), city: n(data.city), country: n(data.country), address: n(data.business_address),
+      ...(data.firm_name === undefined ? {} : { legal_name: n(data.firm_name) }), city: n(data.city), country: n(data.country), address: n(data.business_address),
       aum_exact: n(data.aum), aum_value: num(data.aum), ticket_min: num(data.min_ticket_size), ticket_max: num(data.max_ticket_size),
       ticket_exact: [data.min_ticket_size, data.max_ticket_size].filter(Boolean).join(" – ") || null,
       private_description: n(data.short_description), updated_at: new Date().toISOString(),

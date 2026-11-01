@@ -125,7 +125,7 @@ function Review({ f, me, onBack, onAssign }: { f: AdminFirm; me?: string; onBack
     if (!isRe) return [] as [string, React.ReactNode][];
     const out: [string, React.ReactNode][] = [];
     const ch = (label: string, a: any, b: any) => { if ((a ?? null) !== (b ?? null)) out.push([label, <><s className="text-[#9CA3AF]">{a || "—"}</s> {b || "—"}</>]); };
-    ch("Legal name", snap.legal_name, f.name); ch("Registration no.", snap.registration_no, f.registrationNo);
+    if (snap.company_name !== undefined) ch("Company name", snap.company_name, f.name); ch("Registration no.", snap.registration_no, f.registrationNo);
     for (const c of f.credentials) {
       const o = sc.get(c.id);
       if (!o) out.push(["Licence", <span className="font-semibold text-[#6D28D9]">+ {c.name}</span>]);

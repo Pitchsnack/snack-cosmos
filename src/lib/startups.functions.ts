@@ -744,6 +744,8 @@ export const createStartup = createServerFn({ method: "POST" })
         contact_number: emptyToNull(data.contactNumber),
         ...addrCols(data.address),
         registered_name: emptyToNull(data.registeredName),
+        ...(data.thaiName === undefined ? {} : {thai_name: data.thaiName}),
+        ...(data.englishName === undefined ? {} : {english_name: data.englishName}),
         registered_number: emptyToNull(data.registeredNumber),
         company_size: emptyToNull(data.companySize),
         last_year_revenue: emptyToNull(data.lastYearRevenue),

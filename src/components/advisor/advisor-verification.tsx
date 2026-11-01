@@ -49,7 +49,7 @@ const list = (a: string[]) => (a.length <= 1 ? a.join("") : `${a.slice(0, -1).jo
 export function recheckSentence(f: AdminFirm) {
   const snap = f.v.snapshot ?? {};
   const parts: string[] = [];
-  if ((snap.legal_name ?? null) !== (f.legalName ?? null)) parts.push("changed its legal name");
+  if (snap.company_name !== undefined && (snap.company_name ?? null) !== (f.name ?? null)) parts.push("changed its legal name");
   if ((snap.registration_no ?? null) !== (f.registrationNo ?? null)) parts.push("changed its registration number");
   const sc = new Map<string, any>((snap.credentials ?? []).map((c: any) => [c.id, c]));
   const sd = new Map<string, any>((snap.documents ?? []).map((d: any) => [d.id, d]));

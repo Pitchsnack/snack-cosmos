@@ -319,13 +319,13 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
     // Admin's Edit keeps the verified snapshot in step, so its own changes never show as the firm's.
     const { data: ctl } = await sb.rpc("is_control", { _user_id: context.userId });
     if (ctl) {
-      const { data: f } = await sb.from("advisor_firms").select("verified_snapshot, legal_name, registration_no").eq("id", id).single();
+      const { data: f } = await sb.from("advisor_firms").select("verified_snapshot, name, legal_name, registration_no").eq("id", id).single();
       if (f?.verified_snapshot) {
         const [{ data: c }, { data: d }] = await Promise.all([
           sb.from("advisor_firm_credentials").select("id, name, note").eq("firm_id", id),
           sb.from("advisor_firm_documents").select("id, name, file_path").eq("firm_id", id),
         ]);
-        await sb.from("advisor_firms").update({ verified_snapshot: { legal_name: f.legal_name, registration_no: f.registration_no, credentials: c ?? [], documents: d ?? [] } }).eq("id", id);
+        await sb.from("advisor_firms").update({ verified_snapshot: { company_name: f.name, legal_name: f.legal_name, registration_no: f.registration_no, credentials: c ?? [], documents: d ?? [] } }).eq("id", id);
       }
     }
     return { id };
