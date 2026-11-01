@@ -206,7 +206,15 @@ export const getBuyerInvestorById = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     try { return { ok: true as const, data: await loadBuyerData(context, await resolveBuyer(context.userId, data.id)) }; }
-    catch (e) { if ((e as Error).message === "This profile isn't yours.") return { ok: false as const, data: null }; throw e; }
+    catch (e) {
+      if ((e as Error).message === "This profile isn't yours.") {
+        // A deleted (or never-existing) profile is "not found", not a permission problem.
+        const sb = await admin();
+        const { data: inv } = await sb.from("investors").select("id").eq("id", data.id).maybeSingle();
+        return { ok: false as const, data: null, missing: !inv };
+      }
+      throw e;
+    }
   });
 
 /** Ids of the investor profiles this account holds: its own, plus Admin's extra ones (newest first). */
