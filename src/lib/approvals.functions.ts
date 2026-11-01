@@ -134,7 +134,8 @@ export const resumeListing = createServerFn({ method: "POST" })
   .inputValidator((d: { listingId: string }) => d)
   .handler(async ({ data, context }) => {
     const sb = context.supabase as any;
-    const { data: p } = await sb.from("hidden_profiles").select("id, startup_id, tenant_id, version, approval_status, live_snapshot").eq("id", data.listingId).eq("user_id", context.userId).maybeSingle();
+    // RLS limits this read/update to members of the business.
+    const { data: p } = await sb.from("hidden_profiles").select("id, startup_id, tenant_id, version, approval_status, live_snapshot").eq("id", data.listingId).maybeSingle();
     if (!p) throw new Error("Listing not found");
     if (p.approval_status !== "unpublished" || !p.live_snapshot) throw new Error("This listing can't go live again from here. Register your company instead.");
     const pub = ((p.live_snapshot as { public?: Record<string, unknown> }).public ?? {}) as Record<string, unknown>;
