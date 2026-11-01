@@ -48,7 +48,7 @@ export const investorDirectorySearchSchema = z.object({
   cards: z.enum(["full", "hidden"]).optional(),
   editor: z.string().optional(),
   tab: z.string().optional(),
-  adding:z.boolean().optional(),
+  adding:z.preprocess(v => v === 1 || v === "1" || v === "true" ? true : v === 0 || v === "0" || v === "false" ? false : v, z.boolean().optional()),
 });
 
 export type InvestorDirectorySearch = z.infer<typeof investorDirectorySearchSchema>;
