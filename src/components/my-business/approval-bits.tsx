@@ -16,6 +16,7 @@ import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approv
 import { SentForApprovalDialog } from "@/components/approval/sent-for-approval";
 import { WithdrawDialog } from "@/components/approval/withdraw-dialog";
 import { cn } from "@/lib/utils";
+import { refreshListingStatus } from "@/lib/listing-status";
 
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");
 
@@ -32,20 +33,20 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
   const [sentOpen, setSentOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [failures, setFailures] = useState<string[]>([]);
-  const done = () => { void qc.invalidateQueries({ queryKey: ["my-startups"] }); void qc.invalidateQueries({ queryKey: ["my-hidden-profiles"] }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); };
+  const done = () => refreshListingStatus(qc);
   const doSubmit = useMutation({
     mutationFn: () => submit({ data: { startupId: profile.startup_id } }),
-    onSuccess: () => { setReviewOpen(false); setFailures([]); setSentOpen(true); done(); },
+    onSuccess: async () => { setReviewOpen(false); setFailures([]); setSentOpen(true); await done(); },
     onError: (e: Error) => setFailures([e.message]),
   });
   const doUnpublish = useMutation({
     mutationFn: () => unpublish({ data: { startupId: profile.startup_id } }),
-    onSuccess: () => { toast.success(t("Removed. Your listing is hidden from buyers.")); done(); },
+    onSuccess: async () => { toast.success(t("Removed. Your listing is hidden from buyers.")); await done(); },
     onError: (e: Error) => toast.error(e.message),
   });
   const doResume = useMutation({
     mutationFn: () => resume({ data: { listingId: profile.id } }),
-    onSuccess: () => { toast.success(t("Live again in Browse listings.")); done(); },
+    onSuccess: async () => { toast.success(t("Live again in Browse listings.")); await done(); },
     onError: (e: Error) => toast.error(e.message),
   });
   const st = useQuery({

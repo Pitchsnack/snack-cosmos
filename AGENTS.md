@@ -12,7 +12,7 @@
 - Marketplace My Company, Pipeline and the Admin menu share WorkspaceSubmenu (Admin: toggleOnly rows never navigate); role colour vars default to amber at :root so the shared styles work outside the Marketplace.
 - Live agreement cards use a browser-safe Bangkok calendar-day helper and a Pipeline-parent context for midnight updates and reload-only expansion reset; existing document dialogs and stored legal end dates remain authoritative.
 
-- Listings publish only by Admin approval (DB trigger). Sellers pick via setMyListingImage; covers use picks only while sector-matched.
+- Admin approves listings; seller resume restores only RLS-visible approved snapshots via resume-listing.server with conditional writes. listing-status refreshes owner queries before unlocking actions. Seller covers use sector-matched setMyListingImage picks.
 - Admin review uses MyBusinessProfiles in AdminReviewCtx; StartupCard serves My Business/Directory; private_notes stay server-only.
 - Reports: reports-hub scopes company/deal reads; report_shares gates buyer DTOs. Private company_report_records hold analyst content. Sellers unlock on delivery; one seven-report hub reuses viewers and legacy redirects. Valuation generation needs usable peer-based inputs, not import alone.
 - Deal steps: deal_pipelines/_events via pipeline.functions.ts only, after access checks; 'waiting on you' logic in pipeline-state.ts drives filters and badge.

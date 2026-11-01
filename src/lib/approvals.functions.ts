@@ -131,24 +131,10 @@ export const unpublishListing = createServerFn({ method: "POST" })
  *  live snapshot from the last approval is restored as-is. */
 export const resumeListing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { listingId: string }) => d)
+  .inputValidator((d) => z.object({ listingId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const sb = context.supabase as any;
-    // RLS limits this read/update to members of the business.
-    const { data: p } = await sb.from("hidden_profiles").select("id, startup_id, tenant_id, version, approval_status, live_snapshot").eq("id", data.listingId).maybeSingle();
-    if (!p) throw new Error("Listing not found");
-    if (p.approval_status !== "unpublished" || !p.live_snapshot) throw new Error("This listing can't go live again from here. Register your company instead.");
-    const pub = ((p.live_snapshot as { public?: Record<string, unknown> }).public ?? {}) as Record<string, unknown>;
-    // Membership was checked by the RLS read above; restoring the Admin-approved
-    // snapshot needs the server client because sellers can't publish directly.
-    const sbAdmin = await admin();
-    const { error } = await sbAdmin.from("hidden_profiles").update({
-      status: "live", approval_status: "live", live: pub, unpublished_at: null, updated_by: context.userId,
-    }).eq("id", p.id).eq("approval_status", "unpublished");
-    if (error) throw new Error(error.message);
-    await sbAdmin.from("startups").update({ visibility: "Tenant" }).eq("id", p.startup_id).eq("visibility", "Private");
-    await logEvent({ item_type: "listing", item_id: p.id, startup_id: p.startup_id, subject_user_id: context.userId, version: p.version, action: "publish", actor_id: context.userId });
-    return { ok: true };
+    const { restoreApprovedListing } = await import("@/lib/resume-listing.server");
+    return restoreApprovedListing(context.supabase, data.listingId, context.userId, admin, logEvent);
   });
 
 /** Snapshot preview for the seller's confirmation dialog. */
