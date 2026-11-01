@@ -4,6 +4,7 @@
  * wizard answers / private view; only the headline is written by the seller.
  */
 import { findTermsIn, identityTerms, type EntryFacts } from "@/lib/hidden-profile";
+import type { LastLoginStep } from "@/lib/last-login";
 
 export interface ListingSource {
   startup_name: string;

@@ -39,6 +39,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
   const { data: vrows } = await sb.rpc("investor_is_verified", { _ids: ids });
   const verifiedIds = new Set(((vrows ?? []) as any[]).filter((v) => v.verified).map((v) => v.investor_id));
   const managed = await (await import("@/lib/managed.server")).managedInvestorIds(sb, (rows ?? []).map((r: any) => r.id));
+  const loginSteps = await (await import("@/lib/last-login.server")).investorLoginSteps(sb, userIds);
   return (rows ?? []).map((r: any) => {
     const bp = buyerByInv.get(r.id);
     const h = hash(r.id);
@@ -83,6 +84,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
       ticketLabel: bandText(r.ticket_band),
       revLabel: bandText(r.revenue_min_band),
       managed: managed.has(r.id),
+      lastLoginStep: loginSteps.get(bp.user_id) ?? null,
     };
   });
 }
