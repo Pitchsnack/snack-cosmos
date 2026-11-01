@@ -137,6 +137,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthStateSync />
+      <LastActiveTracker />
       <ToolsOfferHistoryTracker />
       <SignInDayRecorder />
       <LanguageProvider>
