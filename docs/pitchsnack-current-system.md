@@ -548,3 +548,86 @@ PitchSnack strictly follows a **zero-trust server security architecture**:
      * Deal counterparty profile summary (`advisorOtherProfile`) shared under the advisor NDA.
      * Deal history audit log (`advisorDealHistory`).
   * In summary, the Advisor role functions as an **accredited deal intermediary and transaction observer**, rather than an account proxy with delegation authority.
+
+---
+
+## 9. Account Manager Scenario — Questions & Answers
+
+All answers below were checked against the codebase and the live database on 1 Nov 2026. Documentation only.
+
+### 9.1 Default tenant for independent sellers and buyers
+
+**Sellers** (`src/lib/seller-setup.server.ts`): `ensureSellerDraftFromSignup` uses the tenant where the user already holds `STARTUP_USER`; otherwise it reads `default_intake_settings` (one row). That row points to:
+
+| Field | Value |
+|---|---|
+| Tenant | **Acme Ventures** (`ACME`) |
+| Tenant ID | `59db2338-4631-4209-91d2-5d931e723168` |
+| Default owning agent for new startups | `admin.acme@prd2.test` (`1577561e-…`) |
+
+The seller is added to `user_tenants` and gets `STARTUP_USER` in Acme; the startup gets `startup_ownership` (owning agent = intake agent), `startup_ai_ownership` and a `startup_users` row (role `Founder`) for the seller.
+
+**Buyers** (`ensureLinked` in `src/lib/buyer-investor.functions.ts`, called from `finishSignup`): the buyer's investor row is created in the **Control** tenant (`tenant_code = 'control'`, ID `9df87a29-e8ef-4dbc-9c63-28410d45b985`). Buyers are **not** added to `user_tenants` or `user_roles`, and **no `investor_ownership` row is created** for them.
+
+**Contents of Acme Ventures today**
+
+- Users linked to the tenant: **25**. 7 are system/test accounts (`*@prd2.test` ×5, AI agents `@snackportal.ai` ×2). The other 18 are Gmail sign-ups; many are internal test aliases (`+seller`, `+buyer`, "test" names). There is no "test account" flag in the database, so a strict real-user count cannot be given.
+- Companies: **53** (`run_by`: pitchsnack 24, owner 18, none 11). 21 have test-like or empty names ("test", "testete", etc.).
+- Control tenant: 0 users, 0 startups, 15 buyer investor rows.
+
+**Users with elevated access to Acme Ventures**
+
+| User | Access |
+|---|---|
+| `admin.acme@prd2.test` | TENANT_ADMIN (also the default intake agent) |
+| `danando.ki@gmail.com` | TENANT_ADMIN (also platform CONTROL) |
+| `agent.acme@prd2.test` | TENANT_AGENT |
+| `master.agent@prd2.test` | MASTER_AGENT (via `master_agent_tenants`; also assigned to Zeta Capital) |
+
+Any CONTROL user can also act in Acme through `is_control`.
+
+### 9.2 One owning agent or many
+
+- **One only.** `startup_ownership.startup_id` is `UNIQUE` and `owning_agent_user_id` is `NOT NULL`, so each startup has exactly one human owning agent at a time (plus one AI owner in `startup_ai_ownership`).
+- `reassignOwner` (`src/lib/startup-ownership.functions.ts`) only updates `owning_agent_user_id` and `assigned_at` on that row and logs `OWNER_REASSIGNED` to `startup_activity` and `audit_logs`. It does not touch `startup_users`, `user_tenants`, `user_roles` or `startups.created_by`.
+- **The seller keeps full access.** Seller access comes from `startup_users` / `is_startup_member` and `can_access_startup`, none of which depend on being owning agent. Seller `listPipeline` combines owning-agent startups **and** `startup_users` startups, so the seller still sees and acts on the same deals. Nothing is lost.
+- Live distribution today: `admin.acme@prd2.test` is owning agent for 44 startups; four other users hold 5, 4, 2 and 1.
+
+### 9.3 Employee view in /marketplace/pipeline (seller side)
+
+- `listPipeline({ as: "seller" })` collects startup IDs from `startup_ownership` where the caller is owning agent, plus `startup_users` where the caller is a member, then filters them through `scopeStartupIds` (`workspace-scope.server.ts`; Control sees all of them, others only their workspace's).
+- The server function itself does **not** check `account_role`. Seller actions (`decideNda`, `shareReport`, `decideLoi`, step updates) check only `can_access_startup`.
+- The **page** is reached through the marketplace seller persona: the menu and Pipeline pages are shown according to the account's `account_role` (or, for Admin, the selected Seller persona). So in practice the employee needs `account_role = 'seller'`, or `admin` using the Seller persona, to open the seller Pipeline.
+- **With 10 startups:** the pipeline shows one combined list of every open deal (`status` not declined/withdrawn) across all 10 businesses, newest first. Each card shows its own deal company via the deal company chip. There is no per-client grouping or client filter.
+
+### 9.4 Features gated by is_account_admin / requireAccountAdmin
+
+Definitions (migration 0061):
+- `is_account_admin(uid)` = `is_control(uid) OR users.account_role = 'admin'`.
+- `role_is(uid, role)` = `is_account_admin(uid) OR account_role = role`.
+- `requireAccountAdmin` (`plan-access.server.ts`) calls `is_account_admin`.
+
+Live check: for `admin.acme@prd2.test`, `is_account_admin = true`, `role_is(…,'admin') = true`, `is_control = false`.
+
+| Feature / check | Gate | Does admin.acme pass? |
+|---|---|---|
+| `adminContactRequests` | requireAccountAdmin | Yes |
+| `adminInvitations` | requireAccountAdmin | Yes |
+| Users list / create / edit tenant role / advisor_view (`users.functions.ts`) | requireAccountAdmin + requireControlOrTenantAdmin | Yes, within own tenant |
+| Delete account; change roles and plans | requireAccountAdmin + `is_control` | **No** |
+| Registration verified read/set (`plan.functions.ts`) | requireAccountAdmin | Yes |
+| Advisor full address in deal (`advisor-pipeline.functions.ts`) | is_account_admin | Yes |
+| Asking price cap triggers (0061, 0080) | bypass if is_account_admin | Yes (bypassed) |
+| Listing name (code_name) edits (0085) | is_account_admin | Yes |
+| `listing_invitations` / `contact_requests` read policies | is_account_admin | Yes |
+| Plan check function (0061 line 45–46) | is_account_admin → always true | Yes |
+| `verification_owner`, verification order read (0100) | is_account_admin AND can_access_startup | Yes, own tenant's companies |
+| Withdrawal feedback read (0082) | role_is 'admin' | Yes |
+| Every `role_is` restrictive policy (buyer_profiles, buyer_verifications, saved_listings, saved_investors, seller_report_prefs, advisor_firms, advisor_favourites) | role_is | Yes (admin passes every role check) |
+| Contact enquiries read (0065) | is_account_admin AND is_control | **No** |
+| Plan history / plan changes (0063) | is_account_admin AND is_control | **No** |
+| Buy order cover uploads/edits (0118) | is_control AND is_account_admin | **No** |
+| Admin contact notes (0112) | is_control AND role_is 'admin' | **No** |
+| Report pricing: `publish_report_price_checked`, `schedule_report_price_edit`, `cancel_report_price_change`, `apply_report_price_edit`, price history/changes policies, `getAdminReportPrices` (`checked()`) | is_control AND is_account_admin | **No** |
+
+**Which is correct?** Both statements are consistent: report pricing is **Control only**. Every report-pricing function requires `is_control` **and** `is_account_admin`, so a client tenant admin with `account_role = 'admin'` but no CONTROL role is refused ("Control Admin only"). `is_account_admin` alone is never sufficient for report pricing.
