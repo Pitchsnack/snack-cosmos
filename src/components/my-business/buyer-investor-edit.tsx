@@ -1,4 +1,6 @@
 import { setupText } from "@/i18n/language";
+import { companyNameHelp } from "@/lib/company-name";
+import { CompanyNameFields } from "@/components/common/company-name-fields";
 import { FieldRow, AutoFillTabButton, ListingEditorTitle } from "@/components/common/listing-editor-fields";
 import { BuyerDescriptionEditor } from "./buyer-description-editor";
 import { LangTag, missingLangHint, useTextLang } from "@/components/common/text-lang";
@@ -213,6 +215,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
     country: inv.country ?? "", region: regionForCountry(inv.country) || "", city: inv.city ?? "",
     email: inv.email ?? "", website_url: inv.website_url ?? "", linkedin_url: inv.linkedin_url ?? "",
     firm_name: inv.firm_name ?? "", business_address: inv.business_address ?? "",
+    thai_name: inv.thai_name ?? "", english_name: inv.english_name ?? "",
     aum: inv.aum ?? "", min_ticket_size: inv.min_ticket_size ?? "", max_ticket_size: inv.max_ticket_size ?? "",
     short_description: inv.short_description ?? "",
     aum_band: inv.aum_band ?? "", ticket_band: inv.ticket_band ?? "", rev_band: inv.revenue_min_band ?? "",
@@ -258,6 +261,8 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   type Tab = "media" | "about" | "address" | "industries" | "people" | "description" | "mandate" | "admin";
   const tabFor = (field?: string): Tab => field === "description" ? "description" : ["fund","mandate","revenue","focus","geography"].includes(field ?? "") ? "description" : ["country","address"].includes(field ?? "") ? "address" : ["industries","portfolio","keywords","stages"].includes(field ?? "") ? "industries" : field === "people" ? "people" : field === "media" ? "media" : "about";
   const [tab, setTab] = useState<Tab>(setup || onCreated ? "about" : section ? tabFor(section) : initialView === "public" ? "description" : "media");
+  const [nameFocus, setNameFocus] = useState(false);
+  useOpenAtSection(nameFocus ? "company-name" : undefined);
   const [view, setView] = useState<"public" | "private">(initialView ?? (section && ["description","mandate"].includes(tabFor(section)) ? "public" : "private"));
   const sec = section === "fund" && !showsFund ? "classification" : section;
   useOpenAtSection(setup ? undefined : sec, true, sec === "people" && add ? { focusSelector: "div[data-row]:last-of-type input" } : sec === "industries" ? { focusSelector: "button[role=checkbox]" } : undefined);
@@ -418,7 +423,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         investor_name: f.investor_name.trim(), investor_type: t(typeOf), ...(agent ? { acts_for_types: actsFor } : {}), year_founded: yr && Number.isFinite(yr) ? yr : null,
         company_size_band: individual ? null : ((f.company_size_band || null) as "1-10" | null),
         country: t(f.country), city:t(f.city), email: t(f.email), website_url: t(f.website_url), linkedin_url: t(f.linkedin_url),
-        firm_name: t(f.firm_name),
+        ...(setup ? { firm_name: t(f.firm_name) } : { thai_name: t(f.thai_name), english_name: t(f.english_name) }),
         business_address: [addr.unit, addr.street, addr.district, [addr.province, addr.postal].filter(Boolean).join(" "), f.country].map((x) => x.trim()).filter(Boolean).join(", ") || null,
         address_line1: t(addr.street), address_line2: t(addr.unit), address_city_district: t(addr.district), address_province_state: t(addr.province), postal_code: t(addr.postal),
         short_description: t(f.short_description),
@@ -499,12 +504,13 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
               className={errs.year_founded ? "border-[#B42318]" : ""} />
             <Err k="year_founded" />
           </div>
-          <div className="space-y-1.5">
+          <EditSec id="company-name" tone="buyer" active={nameFocus} className="space-y-1.5">
             <Label>{setupText("Company Name")}{req}<Tag s={src.investor_name} /></Label>
             <Input id="f-investor_name" aria-required value={f.investor_name} onChange={set("investor_name")} placeholder={setupText("e.g. Acme Ventures")} maxLength={120}
               className={errs.investor_name && !f.investor_name.trim() ? "creation-invalid" : ""} />
             {!f.investor_name.trim() && <Err k="investor_name" />}
-          </div>
+            {!setup && <p className="text-xs text-muted-foreground">{companyNameHelp(language === "th")}</p>}
+          </EditSec>
           {!individual && (
             <div className="space-y-1.5">
               <Label>{tr("Registered Number")}{f.country === "Thailand" && req}<Tag s={src.registration_no} /></Label>
@@ -632,13 +638,13 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </div>
 
 {directory && <div className="space-y-1.5"><Label>{setupText("Bio")}</Label><Textarea value={bio} onChange={e=>setBio(e.target.value)} maxLength={2000} /></div>}{directory && <div className="space-y-1.5"><Label>{setupText("Long Description")}</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</div>}
-          {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")}>{autoEnrich}</TabHead>{directory && <div className="space-y-1.5"><Label>{setupText("Legal name")}</Label><Input value={legalName} onChange={e=>setLegalName(e.target.value)} maxLength={255} /></div>}        {/* Row 4: Firm Name, then the address box */}
-        <div className="grid gap-4">
+          {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")}>{autoEnrich}</TabHead>        {/* Company name is edited only in About Company. */}
+        {!setup ? <CompanyNameFields name={f.investor_name} nameLabel="Company Name" thaiName={f.thai_name} englishName={f.english_name} onThaiName={set("thai_name")} onEnglishName={set("english_name")} onChangeCompany={() => { setView("private"); setTab("about"); setNameFocus(true); setTimeout(() => document.getElementById("f-investor_name")?.focus(), 100); }} /> : <div className="grid gap-4">
           <div className="space-y-1.5">
             <Label>{setupText("Firm Name")}</Label>
             <Input id="f-firm_name" value={f.firm_name} onChange={set("firm_name")} placeholder={setupText("e.g. Sequoia Capital")} maxLength={100} />
           </div>
-        </div>
+        </div>}
         <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec={sec === "address" ? "address" : "country"}>
           {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
           <AddressBox noteOutside compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}

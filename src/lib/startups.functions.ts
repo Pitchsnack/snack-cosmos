@@ -868,6 +868,8 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.contactNumber !== undefined) patch.contact_number = emptyToNull(data.contactNumber);
     if (data.address) Object.assign(patch, addrCols(data.address));
     if (data.registeredName !== undefined) patch.registered_name = emptyToNull(data.registeredName);
+    if (data.thaiName !== undefined) patch.thai_name = data.thaiName;
+    if (data.englishName !== undefined) patch.english_name = data.englishName;
     if (data.registeredNumber !== undefined) patch.registered_number = emptyToNull(data.registeredNumber);
     if (data.companySize !== undefined) patch.company_size = emptyToNull(data.companySize);
     if (data.lastYearRevenue !== undefined) patch.last_year_revenue = emptyToNull(data.lastYearRevenue);
