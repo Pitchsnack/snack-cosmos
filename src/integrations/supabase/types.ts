@@ -7334,6 +7334,21 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity: {
+        Row: {
+          last_active_at: string
+          user_id: string
+        }
+        Insert: {
+          last_active_at?: string
+          user_id: string
+        }
+        Update: {
+          last_active_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_contacts: {
         Row: {
           company: string | null
@@ -8344,6 +8359,7 @@ export type Database = {
         Returns: undefined
       }
       share_email_has_account: { Args: { _email: string }; Returns: boolean }
+      touch_last_active: { Args: never; Returns: undefined }
       user_in_tenant: {
         Args: { _tenant: string; _user_id: string }
         Returns: boolean
