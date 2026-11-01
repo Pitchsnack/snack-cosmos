@@ -14,7 +14,7 @@ import { CompanySizeField } from "@/components/investors/company-size-field";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { CompactFields, EditInfoFooter, EditInfoTabsSlot, MainTabs, TabHead, TabRow, useEditInfo } from "@/components/common/edit-info-popup";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { isCorporateBuyer } from "@/lib/investor-browse";
 import {
   AUM_BANDS, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, TICKET_BANDS,
@@ -22,7 +22,7 @@ import {
 } from "@/lib/investor-bands";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Eye, Lock, Shield, Pencil, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
+import { Eye, Lock, Shield, Pencil, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -144,17 +144,17 @@ export function BuyerInvestorEdit({ section, add, id, directory, initialView }: 
   return <Form data={data} section={section} add={add} directory={directory} initialView={initialView} directoryRecord={directoryData.data} />;
 }
 
-export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry";
+export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry" | "From your account";
 export type SetupMode = { onBack: () => void; sources: Record<string, SourceTag>; onSaved: (msg: string) => void; enrich?: EnrichInvestorResult | null };
 
 /** Review & complete in the setup wizard: the same form, with source tags. */
-export function BuyerInvestorForm({ data, setup, onCreated }: { data: Data; setup?: SetupMode; onCreated?: (id:string) => void; directoryRecord?: NonNullable<ReturnType<typeof useInvestor>["data"]> }) {
+export function BuyerInformationForm({ data, setup, onCreated }: { data: Data; setup?: SetupMode; onCreated?: (id:string) => void; directoryRecord?: NonNullable<ReturnType<typeof useInvestor>["data"]> }) {
   return <Form data={data} setup={setup} directory={!!onCreated} onCreated={onCreated} />;
 }
 
 function Tag({ s }: { s?: SourceTag }) {
   if (!s) return null;
-  const cls = s === "Your answer" ? "bg-[#EEF1F7] text-[#1E2A4A] dark:bg-[#1B2140] dark:text-[#C7CEF5]" : s === "Auto Enrich" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-muted text-muted-foreground";
+  const cls = s === "Auto Enrich" ? "bg-secondary text-success" : "bg-muted text-muted-foreground";
   return <span className={`ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>{setupText(s)}</span>;
 }
 
@@ -198,7 +198,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const ais = useQuery({queryKey:["investor-form-ais",tenant],queryFn:()=>getUsers({data:{tenantId:tenant,userType:"AI"}}),enabled:admin && !!directory && !!tenant});
 
   const inv = data.investor;
-  const src = setup?.sources ?? {};
+  const [src, setSources] = useState<Record<string, SourceTag>>(setup?.sources ?? {});
   const rel = data.buyer.relation;
   const individual = rel === "individual";
   const [errs, setErrs] = useState<Record<string, string>>({});
@@ -252,7 +252,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const [focus, setFocus] = useState(inv.investment_focus);
   const [stages, setStages] = useState(inv.preferred_stages);
   const showsFund = !individual && rel !== "agent";
-  const buyerMissing = {media: mediaMissing(inv),about:[!individual && !!yearError(f.year_founded),!f.investor_name.trim(),!f.website_url.trim(),!individual && !!regError(f.registration_no,f.country)].filter(Boolean).length,address:0,people:0};
+  const buyerMissing = {media: mediaMissing(inv),about:[!!errs.short_description || !!errs.short_description_th,!individual && !!yearError(f.year_founded),!f.investor_name.trim(),!f.website_url.trim(),!individual && !!regError(f.registration_no,f.country)].filter(Boolean).length,address:0,people:0};
   // Fund falls back to Investor Classification when the form hides the band.
   type Tab = "media" | "about" | "address" | "industries" | "people" | "description" | "mandate" | "admin";
   const tabFor = (field?: string): Tab => field === "description" ? "description" : ["fund","mandate","revenue","focus","geography"].includes(field ?? "") ? "description" : ["country","address"].includes(field ?? "") ? "address" : ["industries","portfolio","keywords","stages"].includes(field ?? "") ? "industries" : field === "people" ? "people" : field === "media" ? "media" : "about";
@@ -280,6 +280,19 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((o) => ({ ...o, [k]: e.target.value }));
   const pop = useEditInfo();
+  useEffect(() => {
+    if (!setup) return;
+    setSources(previous => Object.fromEntries(Object.entries(previous).filter(([key]) => {
+      if (key === "description") return f.description === data.buyer.description && thx.description === (data.buyer.description_th ?? "");
+      if (key === "short_description") return f.short_description === (inv.short_description ?? "");
+      if (key === "deal_types") return JSON.stringify(deals) === JSON.stringify(data.buyer.deal_types);
+      if (key === "geography") return JSON.stringify(focus) === JSON.stringify(inv.investment_focus);
+      if (key === "preferred_industries") return JSON.stringify(industries) === JSON.stringify(inv.preferred_industries);
+      const field = key === "revenue_min_band" ? "rev_band" : key;
+      if (field in f) return String(f[field as keyof typeof f] ?? "") === String(inv[key as keyof typeof inv] ?? "");
+      return true;
+    })));
+  }, [f, thx, deals, focus, industries]);
   const editSnapshot = JSON.stringify([thx,keywordsTh,f,addr,companyType,companyTypeDirty,companyTypeReset,tenant,directoryStatus,directoryVisibility,legalName,longDescription,human,ai,deals,keywords,focus,stages,actsFor,industries,portfolio,media,people,linkedPortfolio,portfolioInvestors,bio,revenueMin,revenueMax]);
   const originalSnapshot = useRef(editSnapshot);
   useEffect(()=>{pop?.setDirty(editSnapshot !== originalSnapshot.current);},[editSnapshot]);
@@ -330,7 +343,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
   const autoEnrich = <InvestorAutoEnrichButton websiteUrl={f.website_url} onEnriched={applyEnrichment} disabled={busy} />;
   const leaks = descriptionLeaks(bv("description"), f.investor_name, f.website_url);
-  const suggestion = () => suggestBuyerDescription({type:typeOf, industries, geography:focus}, tl);
+  const suggestion = () => {
+    const next = suggestBuyerDescription({type:typeOf, industries, geography:focus}, tl);
+    return descriptionLeaks(next, f.investor_name, f.website_url).length ? suggestBuyerDescription({type:"", industries:[], geography:[]}, tl) : next;
+  };
   const suggest = () => bset("description")(suggestion());
   const fillTab = () => {
     if (!bv("description").trim()) suggest();
@@ -359,7 +375,6 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       ["suggested_headline", setup && !f.suggested_headline.trim() ? "Write a headline." : null],
     ];
     const aBad = addrErr && (!f.country ? "Choose a country." : Object.values(addrErr).find(Boolean));
-    if (!directory && aBad) { setAddrShow(true); setErrs({ address: aBad }); setView("private");setTab("address"); document.getElementById(f.country ? "addr-street" : "addr-country")?.focus(); return; }
     const bad = checks.find(([key, m]) => key.startsWith("description") && m) ?? checks.find(([key, m]) => key === "registration_no" && m) ?? checks.find(([key,m]) => key.startsWith("short_description") && m) ?? checks.find(([, m]) => m);
     if ((!directory || bad?.[0] === "registration_no") && bad) {
       setErrs({ [bad[0]]: bad[1] ?? "Check this field." });
@@ -370,6 +385,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       setTimeout(()=>document.getElementById(`f-${bad[0].replace(/_th$/, "")}`)?.focus(),60);
       return;
     }
+    if (!directory && aBad) { setAddrShow(true); setErrs({ address: aBad }); setView("private");setTab("address"); document.getElementById(f.country ? "addr-street" : "addr-country")?.focus(); return; }
     setErrs({});
     const yr = individual ? null : Number(f.year_founded);
     setBusy(true);
@@ -440,7 +456,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       <form noValidate id="buyer-edit-form" onSubmit={submit} onChange={() => pop?.setDirty(true)} className={pop ? "space-y-4 pt-5 text-sm" : "space-y-4 rounded-lg border border-border bg-card p-6 shadow-card text-sm"}>
         {<>
           {!setup ? <EditInfoTabsSlot><MainTabs tone="buyer" idBase="buyer-edit" value={view} onChange={(v) => {setView(v);setTab(v === "public" ? "description" : "media");}} tabs={[{key:"public",label:tr("Listing view"),icon:<Eye />,count:0},{key:"private",label:tr("Exclusive view"),icon:<Lock />,count:buyerMissing.about+buyerMissing.media+buyerMissing.people}]} /></EditInfoTabsSlot> : <MainTabs tone="buyer" idBase="buyer-setup-edit" value={view} onChange={v=>{setView(v);setTab(v === "public" ? "description" : "about");}} tabs={[{key:"public",label:tr("Listing view"),icon:<Eye />,count:0},{key:"private",label:tr("Exclusive view"),icon:<Lock />,count:buyerMissing.about+buyerMissing.media}]} />}
-          <TabRow idBase="buyer-edit" label={setupText("Buyer information")} value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Description & Mandate")}] : [{key:"media",label:tr("Images & Logo"),count:buyerMissing.media},{key:"about",label:tr("About Company"),count:buyerMissing.about,error:!!onCreated && !!errs.creation && !f.investor_name.trim()},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Team"),count:buyerMissing.people},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />,error:!!onCreated && !!errs.creation && (!tenant || !human || !ai)}]:[])]} />
+          <TabRow idBase="buyer-edit" label={setupText("Buyer information")} value={tab} onChange={setTab} tabs={view === "public" ? [{key:"description",label:tr("Description & Mandate"),count:errs.description || errs.description_th ? 1 : 0}] : [{key:"media",label:tr("Images & Logo"),count:buyerMissing.media},{key:"about",label:tr("About Company"),count:buyerMissing.about,error:!!onCreated && !!errs.creation && !f.investor_name.trim()},{key:"address",label:tr("Address")},{key:"industries",label:tr("Industries & Portfolio")},{key:"people",label:tr("Team"),count:buyerMissing.people},...(admin && directory ? [{key:"admin" as const,label:tr("Admin settings"),icon:<Shield className="h-3.5 w-3.5" />,error:!!onCreated && !!errs.creation && (!tenant || !human || !ai)}]:[])]} />
           {tab === "media" && <div className="space-y-4"><TabHead title={tr("Images & Logo")} />        {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
         <S cur={setup ? undefined : sec} id="media"><div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
@@ -678,7 +694,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           </div>
           <p className="flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.")}</p>
           <ListingEditorTitle title={tr("Your card in Browse investors")}><AutoFillTabButton onClick={fillTab} disabled={busy} /></ListingEditorTitle>
-          <BuyerDescriptionEditor lang={tl} source={<Tag s={src.description} />} suggest={suggest} value={bv("description")} onChange={bset("description")} leaks={leaks} forced={!!errs.description} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} >          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
+          <BuyerDescriptionEditor lang={tl} source={setup ? <Tag s={src.description} /> : undefined} suggest={suggest} value={bv("description")} onChange={bset("description")} leaks={leaks} forced={!!errs.description || !!errs.description_th} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} >          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
         {directory && <CompactFields><div className="space-y-1.5"><Label>{setupText("AUM")}</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>{setupText("Min Ticket Size")}</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>{setupText("Max Ticket Size")}</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
 <div className="buyer-mandate-money">        {showsFund && (
           <S cur={setup ? undefined : sec} id="fund">
@@ -712,7 +728,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           <S cur={setup ? undefined : sec} id="revenue" className="space-y-1.5">
           <Label>{tr("Min. target revenue")} <span className="buyer-label-explanation">{tr("(The minimum company revenue you would consider acquiring)")}</span><Tag s={src.revenue_min_band} /></Label>
           <Select value={f.rev_band || "none"} onValueChange={(v) => setF((o) => ({ ...o, rev_band: v === "none" ? "" : v }))}>
-            <SelectTrigger className="max-w-[360px]"><SelectValue placeholder={setupText("Not set")} /></SelectTrigger>
+            <SelectTrigger className="w-full"><SelectValue placeholder={setupText("Not set")} /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">{setupText("Not set")}</SelectItem>
               {REV_BANDS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label} ({b.baht})</SelectItem>)}
@@ -743,7 +759,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{setupText("For verification · also visible to Admin")}</h3>
           <p className="text-[12.5px] text-muted-foreground">{tr("Your name is checked against your company's list of directors.")}</p>
           <S cur={setup ? undefined : sec} id="people" className="space-y-1.5">
-            <Label>{tr(pop ? "Team members" : "Decision makers")}</Label>
+            <Label>{tr("Team members")}</Label>
             <div className="space-y-2">
               {people.map((p, i) => (
                 <div key={i} data-row className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
@@ -757,7 +773,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={() => setPeople((o) => [...o, { name: "", role: "", email: "", phone: "" }])}>
-                <Plus className="mr-1 h-4 w-4" />{tr(pop ? "Add team member" : "Add decision maker")}
+                <Plus className="mr-1 h-4 w-4" />{tr("Add team member")}
               </Button>
             </div>
           </S>

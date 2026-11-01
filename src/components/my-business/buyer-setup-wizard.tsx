@@ -22,7 +22,7 @@ import { createMyBuyerUploadUrl, saveBuyerMedia, saveBuyerWizard } from "@/lib/b
 import { LogoPhotosStep } from "@/components/common/logo-photos-step";
 import { AddressBox, addrErrors, type Addr } from "@/components/advisor/advisor-firm-fields";
 import { investorEnrichAdapter, type EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
-import { buyerInvestorKey, BuyerInvestorForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
+import { buyerInvestorKey, BuyerInformationForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
 import {
   AUM_BANDS, COUNTRIES, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, THAI_PROVINCES_77,
   TICKET_BANDS, WIZARD_TYPES, ALL_TYPES, sortActsFor, typeLabel, bandText, descriptionError, descriptionLeaks, regError, showsStages, typeName, yearError,
@@ -750,7 +750,7 @@ function Complete({ invId, header, enrich, answered, onBack, onSaved }: {
       <div className="mt-[22px] sm:mt-[34px]">
         <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{tr("Check your profile and save it")}</h1>
         <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{tr("Your answers and what Auto Enrich found are filled in. Change anything you need.")}</p>
-        <BuyerInvestorForm data={data} setup={{ onBack, sources, onSaved, enrich }} />
+        <BuyerInformationForm data={data} setup={{ onBack, sources, onSaved, enrich }} />
       </div>
     </div>
   );
