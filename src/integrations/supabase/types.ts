@@ -604,6 +604,7 @@ export type Database = {
           description: string | null
           description_th: string | null
           email: string | null
+          english_name: string | null
           firm_type: string
           id: string
           languages: string[]
@@ -683,6 +684,7 @@ export type Database = {
           description?: string | null
           description_th?: string | null
           email?: string | null
+          english_name?: string | null
           firm_type?: string
           id?: string
           languages?: string[]
@@ -762,6 +764,7 @@ export type Database = {
           description?: string | null
           description_th?: string | null
           email?: string | null
+          english_name?: string | null
           firm_type?: string
           id?: string
           languages?: string[]
@@ -4435,6 +4438,7 @@ export type Database = {
           created_by: string | null
           deal_size_band: string | null
           email: string | null
+          english_name: string | null
           firm_name: string | null
           id: string
           imported_at: string | null
@@ -4471,6 +4475,7 @@ export type Database = {
           source_global_id: string | null
           status: string
           tenant_id: string
+          thai_name: string | null
           ticket_band: string | null
           ticket_size: string | null
           updated_at: string
@@ -4500,6 +4505,7 @@ export type Database = {
           created_by?: string | null
           deal_size_band?: string | null
           email?: string | null
+          english_name?: string | null
           firm_name?: string | null
           id?: string
           imported_at?: string | null
@@ -4536,6 +4542,7 @@ export type Database = {
           source_global_id?: string | null
           status?: string
           tenant_id: string
+          thai_name?: string | null
           ticket_band?: string | null
           ticket_size?: string | null
           updated_at?: string
@@ -4565,6 +4572,7 @@ export type Database = {
           created_by?: string | null
           deal_size_band?: string | null
           email?: string | null
+          english_name?: string | null
           firm_name?: string | null
           id?: string
           imported_at?: string | null
@@ -4601,6 +4609,7 @@ export type Database = {
           source_global_id?: string | null
           status?: string
           tenant_id?: string
+          thai_name?: string | null
           ticket_band?: string | null
           ticket_size?: string | null
           updated_at?: string
@@ -6876,6 +6885,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           email: string | null
+          english_name: string | null
           headquarters: string | null
           id: string
           imported_at: string | null
@@ -6919,6 +6929,7 @@ export type Database = {
           startup_name_th: string | null
           status: string
           tenant_id: string
+          thai_name: string | null
           updated_at: string
           updated_by: string | null
           url_key: string | null
@@ -6943,6 +6954,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          english_name?: string | null
           headquarters?: string | null
           id?: string
           imported_at?: string | null
@@ -6986,6 +6998,7 @@ export type Database = {
           startup_name_th?: string | null
           status?: string
           tenant_id: string
+          thai_name?: string | null
           updated_at?: string
           updated_by?: string | null
           url_key?: string | null
@@ -7010,6 +7023,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          english_name?: string | null
           headquarters?: string | null
           id?: string
           imported_at?: string | null
@@ -7053,6 +7067,7 @@ export type Database = {
           startup_name_th?: string | null
           status?: string
           tenant_id?: string
+          thai_name?: string | null
           updated_at?: string
           updated_by?: string | null
           url_key?: string | null

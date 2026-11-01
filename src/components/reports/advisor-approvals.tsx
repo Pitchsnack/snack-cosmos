@@ -44,7 +44,7 @@ function ReqChip({ f }: { f: AdminFirm }) {
   const [t, c] = f.v.state === "more_info" ? ["More info sent", "text-[#8A5A06] bg-[#FFF4E0] border-[#F3D9A6]"] : f.v.reason === "re_check" ? ["Re-check", "text-[#6D28D9] bg-[#F5F3FF] border-[#DDD6FE]"] : ["Waiting", "text-[#1D4ED8] bg-[#EFF6FF] border-[#BFDBFE]"];
   return <span className={cn("inline-flex h-[22px] items-center rounded-full border px-2 text-[11px] font-semibold", c)}>{t}</span>;
 }
-const regOk = (f: AdminFirm) => !!f.v.dbd.name && sameName(f.v.dbd.name, f.legalName);
+const regOk = (f: AdminFirm) => !!f.v.dbd.name && sameName(f.v.dbd.name, f.name);
 const sameName = (a?: string | null, b?: string | null) => !!a && !!b && a.toLowerCase().replace(/[^a-z0-9ก-๙]/g, "") === b.toLowerCase().replace(/[^a-z0-9ก-๙]/g, "");
 
 export function AdvisorApprovals({ openId, onOpen }: { openId?: string; onOpen: (id?: string) => void }) {
@@ -125,7 +125,7 @@ function Review({ f, me, onBack, onAssign }: { f: AdminFirm; me?: string; onBack
     if (!isRe) return [] as [string, React.ReactNode][];
     const out: [string, React.ReactNode][] = [];
     const ch = (label: string, a: any, b: any) => { if ((a ?? null) !== (b ?? null)) out.push([label, <><s className="text-[#9CA3AF]">{a || "—"}</s> {b || "—"}</>]); };
-    ch("Legal name", snap.legal_name, f.legalName); ch("Registration no.", snap.registration_no, f.registrationNo);
+    if (snap.company_name !== undefined) ch("Company name", snap.company_name, f.name); ch("Registration no.", snap.registration_no, f.registrationNo);
     for (const c of f.credentials) {
       const o = sc.get(c.id);
       if (!o) out.push(["Licence", <span className="font-semibold text-[#6D28D9]">+ {c.name}</span>]);
@@ -172,7 +172,7 @@ function Review({ f, me, onBack, onAssign }: { f: AdminFirm; me?: string; onBack
         <div className="mt-4 grid gap-3.5 lg:grid-cols-[1fr_1.08fr]">
           <div className="space-y-3.5">
             <Box title="Firm"><KV rows={[["Firm type", f.firmType], ["City", f.city], ["Status", f.status[0]!.toUpperCase() + f.status.slice(1)], ["Website", f.website], ["Email", f.email], ["Phone", f.phone]]} /></Box>
-            <Box title="Company"><KV rows={[["Legal name", <span className={cn(f.v.dbd.name && !sameName(f.v.dbd.name, f.legalName) && "text-[#8A5A06]")}>{f.legalName}</span>], ["Thai name", f.thaiName], ["Registration no.", f.registrationNo], ["Founded", f.yearFounded], ["Business address", f.address]]} /></Box>
+            <Box title="Company"><KV rows={[["Legal name", <span className={cn(f.v.dbd.name && !sameName(f.v.dbd.name, f.name) && "text-[#8A5A06]")}>{f.name}</span>], ["Thai name", f.thaiName], ["Registration no.", f.registrationNo], ["Founded", f.yearFounded], ["Business address", f.address]]} /></Box>
             <Box title={`Team · ${f.team.length}`}>{f.team.length ? <ul className="space-y-1 text-[13px]">{f.team.map((t, i) => <li key={i}><b className="font-medium">{t.name}</b><span className="text-muted-foreground">{[t.role, t.email].filter(Boolean).map((x) => ` · ${x}`).join("")}</span></li>)}</ul> : <p className="text-[13px] text-muted-foreground">—</p>}</Box>
             <Box title={`Services and fees · ${f.services.length}`}><ul className="space-y-1 text-[13px]">{f.services.map((sv) => <li key={sv} className="flex justify-between gap-2"><span>{sv}</span><span className="text-muted-foreground">{f.fees.find((x) => x.service === sv)?.fee || "—"}</span></li>)}</ul></Box>
           </div>
@@ -191,7 +191,7 @@ function Review({ f, me, onBack, onAssign }: { f: AdminFirm; me?: string; onBack
                 <Check2 tone={regTone} title="Company registration">
                   {abroad ? "Not in Thailand: check by hand."
                     : f.v.dbd.name ? (regOk(f) ? <>Found in the DBD registry: <b>{f.v.dbd.name}</b>{f.v.dbd.status ? ` · ${f.v.dbd.status}` : ""}{f.v.dbd.registeredOn ? ` · registered ${day(f.v.dbd.registeredOn)}` : ""}{f.v.dbd.capital ? ` · capital ฿${Number(f.v.dbd.capital).toLocaleString()}` : ""}. The name matches.</>
-                      : <>The DBD registry has <b>{f.v.dbd.name}</b> for {f.registrationNo}. The legal name given is {f.legalName || "—"}. Check by hand.</>)
+                      : <>The DBD registry has <b>{f.v.dbd.name}</b> for {f.registrationNo}. The legal name given is {f.name || "—"}. Check by hand.</>)
                     : dbdState === "unavailable" ? "The DBD registry couldn't be reached. Check by hand."
                     : dbdState || f.v.dbd.checkedAt ? `No company with ${f.registrationNo || "that number"} in the DBD registry. Check by hand.` : "Checking the DBD registry…"}
                 </Check2>

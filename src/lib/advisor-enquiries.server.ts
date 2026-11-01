@@ -46,8 +46,8 @@ export async function orgInfo(sb: any, side: ClientSide, orgId: string) {
     const { data } = await sb.from("startups").select("startup_name, registered_name, sector").eq("id", orgId).maybeSingle();
     return { name: (data?.registered_name || data?.startup_name || "Your company") as string, detail: (data?.sector ?? null) as string | null };
   }
-  const { data } = await sb.from("investors").select("investor_name, legal_name, firm_name, investor_type").eq("id", orgId).maybeSingle();
-  return { name: (data?.legal_name || data?.firm_name || data?.investor_name || "Your company") as string, detail: (data?.investor_type ?? null) as string | null };
+  const { data } = await sb.from("investors").select("investor_name, investor_type").eq("id", orgId).maybeSingle();
+  return { name: (data?.investor_name || "Your company") as string, detail: (data?.investor_type ?? null) as string | null };
 }
 
 export async function people(sb: any, ids: string[]) {

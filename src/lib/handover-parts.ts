@@ -37,7 +37,7 @@ export const PARTS: Record<HandoverKind, PartDef[]> = {
     { key: "firm", view: "open", en: "Firm", th: "บริษัท", fields: [f("af.name", "Name"), f("af.year_founded", "Year founded"), f("af.description", "Description"), f("af.logo_path", "Logo")], edit: { section: "firm" } },
     { key: "services", view: "open", en: "Services and fees", th: "บริการและค่าธรรมเนียม", fields: [f("af.services", "Services"), f("af.deal_size_band", "Deal size")], edit: { section: "services" } },
     { key: "work", view: "open", en: "Work", th: "ผลงาน", fields: [f("af.sectors", "Sectors"), f("af.languages", "Languages")], edit: { section: "work" } },
-    { key: "company", view: "open", en: "Company", th: "ข้อมูลบริษัท", fields: [f("af.legal_name", "Legal name"), f("af.registration_no", "Registration number"), f("af.addr_street", "Address"), f("af.addr_province", "Province"), f("af.website", "Website"), f("af.email", "Email"), f("af.phone", "Phone")], edit: { section: "company" } },
+    { key: "company", view: "open", en: "Company", th: "ข้อมูลบริษัท", fields: [f("af.name", "Legal name"), f("af.registration_no", "Registration number"), f("af.addr_street", "Address"), f("af.addr_province", "Province"), f("af.website", "Website"), f("af.email", "Email"), f("af.phone", "Phone")], edit: { section: "company" } },
     { key: "team", view: "open", en: "Team", th: "ทีมงาน", fields: [f("team", "Team", true)], edit: { section: "team" } },
     { key: "credentials", view: "open", en: "Licences and credentials", th: "ใบอนุญาตและคุณวุฒิ", fields: [f("credentials", "Licences", true)], edit: { section: "credentials" } },
     { key: "documents", view: "open", en: "Documents", th: "เอกสาร", fields: [f("documents", "Documents", true)], edit: { section: "documents" } },

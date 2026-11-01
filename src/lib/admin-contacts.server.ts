@@ -17,7 +17,7 @@ export async function loadAdminContacts(sb: any): Promise<AdminContact[]> {
   const [users, profiles, buyers, investors, firms, startups, hidden, members, owners, pipelines] = await Promise.all([
     contactRows(sb, "users", "id,first_name,last_name,email,account_role,status,created_at"),
     contactRows(sb, "user_profiles", "user_id,title,organisation,phone,linkedin,website,city,country", "user_id"),
-    contactRows(sb, "buyer_profiles", "user_id,investor_id,legal_name,ref_no,approval_status,status", "user_id"),
+    contactRows(sb, "buyer_profiles", "user_id,investor_id,ref_no,approval_status,status", "user_id"),
     contactRows(sb, "investors", "id,investor_name"),
     contactRows(sb, "advisor_firms", "id,owner_user_id,name,ref_no,status,advisor_verification,phone,website,city,country"),
     contactRows(sb, "startups", "id,created_by,startup_name,city,region,website_url"),
@@ -43,7 +43,7 @@ export async function loadAdminContacts(sb: any): Promise<AdminContact[]> {
     const startupIds = new Set([...members.filter(m => m.user_id === u.id).map(m => m.startup_id), ...owners.filter(o => o.owning_agent_user_id === u.id).map(o => o.startup_id)]);
     const myStartups = startups.filter(s => startupIds.has(s.id) || s.created_by === u.id);
     const organisations: AdminContact["organisations"] = u.account_role === "buyer" ? buyers.filter(b => b.user_id === u.id).map(b => ({
-      id: b.investor_id || b.user_id, name: inv.get(b.investor_id)?.investor_name || b.legal_name || p?.organisation || "—",
+      id: b.investor_id || b.user_id, name: inv.get(b.investor_id)?.investor_name || p?.organisation || "—",
       ref: b.ref_no, kind: "buyer", status: b.status === 'live' && b.approval_status === 'approved' ? 'live' : b.approval_status === 'pending' ? 'in_review' : 'draft',
     })) : u.account_role === "advisor" ? myFirms.map(f => ({ id: f.id, name: f.name, ref: f.ref_no, kind: "advisor", status: f.advisor_verification || 'unverified' })) : myStartups.map(s => ({
       id: s.id, name: s.startup_name, ref: hp.get(s.id)?.ref_no || null, kind: "seller", status: hp.get(s.id)?.approval_status || "draft",

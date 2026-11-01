@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { optionalCompanyName } from "./company-name";
 import { FounderStorySchema, composeFounderBio, type FounderStory } from "@/lib/founder-story";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
@@ -149,6 +150,7 @@ export interface StartupRow {
   business_address: string | null;
   address_line1?: string | null; address_line2?: string | null; address_city_district?: string | null; address_province_state?: string | null; postal_code?: string | null;
   registered_name: string | null;
+  thai_name?: string | null; english_name?: string | null;
   registered_number: string | null;
   company_size: string | null;
   last_year_revenue: string | null;
@@ -413,7 +415,7 @@ export const getStartup = createServerFn({ method: "GET" })
          logo_url, company_type, company_type_source, business_address, address_line1, address_line2, address_city_district, address_province_state, postal_code, registered_name, registered_number, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
         product_tags, market_tags, regulatory_licenses, iso_standards, url_key, source_global_id, imported_at,
-        short_description_th, long_description_th, product_tags_th, market_tags_th,
+        short_description_th, long_description_th, product_tags_th, market_tags_th, thai_name, english_name,
         tenants!inner(tenant_name),
         startup_ownership(owning_agent_user_id, assigned_at, users:owning_agent_user_id(id,email,first_name,last_name)),
         startup_ai_ownership(owning_ai_agent_id, assigned_at, users:owning_ai_agent_id(id,email,first_name,last_name)),
@@ -552,6 +554,7 @@ const ProfileFields = {
     street: z.string().max(120), unit: z.string().max(120), district: z.string().max(80), province: z.string().max(80), postal: z.string().max(12),
   }).optional(),
   registeredName: z.string().max(255).nullable().optional(),
+  thaiName: optionalCompanyName, englishName: optionalCompanyName,
   registeredNumber: z.string().max(64).nullable().optional(),
   companySize: z.string().max(100).nullable().optional(),
   lastYearRevenue: z.string().max(100).nullable().optional(),
@@ -741,6 +744,8 @@ export const createStartup = createServerFn({ method: "POST" })
         contact_number: emptyToNull(data.contactNumber),
         ...addrCols(data.address),
         registered_name: emptyToNull(data.registeredName),
+        ...(data.thaiName === undefined ? {} : {thai_name: data.thaiName}),
+        ...(data.englishName === undefined ? {} : {english_name: data.englishName}),
         registered_number: emptyToNull(data.registeredNumber),
         company_size: emptyToNull(data.companySize),
         last_year_revenue: emptyToNull(data.lastYearRevenue),
@@ -868,6 +873,8 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.contactNumber !== undefined) patch.contact_number = emptyToNull(data.contactNumber);
     if (data.address) Object.assign(patch, addrCols(data.address));
     if (data.registeredName !== undefined) patch.registered_name = emptyToNull(data.registeredName);
+    if (data.thaiName !== undefined) patch.thai_name = data.thaiName;
+    if (data.englishName !== undefined) patch.english_name = data.englishName;
     if (data.registeredNumber !== undefined) patch.registered_number = emptyToNull(data.registeredNumber);
     if (data.companySize !== undefined) patch.company_size = emptyToNull(data.companySize);
     if (data.lastYearRevenue !== undefined) patch.last_year_revenue = emptyToNull(data.lastYearRevenue);

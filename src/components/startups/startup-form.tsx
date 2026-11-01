@@ -1,4 +1,6 @@
 import { missingCreationFields } from "@/lib/profile-edit-rules";
+import { companyNameHelp } from "@/lib/company-name";
+import { CompanyNameFields } from "@/components/common/company-name-fields";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
@@ -386,6 +388,10 @@ export function StartupForm({
     postal: startup?.postal_code ?? prefill?.addr?.postal ?? "",
   });
   const [registeredName, setRegisteredName] = useState(startup?.registered_name ?? "");
+  const [thaiName, setThaiName] = useState(startup?.thai_name ?? "");
+  const [englishName, setEnglishName] = useState(startup?.english_name ?? "");
+  const [nameFocus, setNameFocus] = useState(false);
+  useOpenAtSection(nameFocus ? "company-name" : undefined);
   const [registeredNumber, setRegisteredNumber] = useState(startup?.registered_number ?? prefill?.registeredNumber ?? "");
   const [yearFounded, setYearFounded] = useState<string>(startup?.year_founded?.toString() ?? prefill?.yearFounded ?? "");
   const [email, setEmail] = useState(startup?.email ?? "");
@@ -604,7 +610,7 @@ export function StartupForm({
     companyType: (companyType || "SME") as "SME" | "Corporate Enterprise" | "Individual",
     ...(companyTypeReset ? { companyTypeReset: true } : {}),
     address: addr,
-    registeredName: registeredName || null,
+    ...(editCtx ? { thaiName, englishName } : { registeredName: registeredName || null }),
     registeredNumber: registeredNumber || null,
     companySize: companySize || null,
     lastYearRevenue: lastYearRevenue || null,
@@ -794,6 +800,7 @@ export function StartupForm({
   }, [startup?.id]);
   const isDirty = initialSnapshot !== "" && currentSnapshot !== initialSnapshot;
   const popupDirty = isDirty || pd.dirty || imagePick !== undefined
+    || thaiName !== (startup?.thai_name ?? "") || englishName !== (startup?.english_name ?? "")
     || JSON.stringify([regulatoryLicenses, isoStandards, sector, businessModel]) !== JSON.stringify([startup?.regulatory_licenses ?? [], startup?.iso_standards ?? [], startup?.sector ?? null, startup?.business_model ?? null]);
   useEffect(() => { editCtx?.setDirty(!!editCtx && popupDirty); }, [popupDirty]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1316,14 +1323,15 @@ export function StartupForm({
               className={miss(isStrEmpty(yearFounded)) ? MISSING_INPUT : undefined} />
           </div>
         </EditSec>
-        <div className="space-y-1.5">
+        <EditSec id="company-name" tone="seller" active={nameFocus} className="space-y-1.5">
           <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>{tr("Company Name", "ชื่อบริษัท")} <span className="text-destructive">*</span></Label>
           <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
             placeholder={miss(isStrEmpty(startupName)) ? missingPh("Company Name") : tr("Acme Inc.", "เช่น บริษัท ตัวอย่าง จำกัด")}
             className={nameErr && !startupName.trim() ? "creation-invalid" : miss(isStrEmpty(startupName)) ? MISSING_INPUT : undefined}
             id="sf-company-name" required={!popup && !editCtx} maxLength={255} />
           {nameErr && isStrEmpty(startupName) && <p className="text-[12.5px] text-destructive">{tr(isEdit ? "Add the Company Name before you save." : "Needed to create the startup.", "กรุณากรอกชื่อบริษัทก่อนบันทึก")}</p>}
-        </div>
+          {editCtx && <p className="text-xs text-muted-foreground">{companyNameHelp(th)}</p>}
+        </EditSec>
         <div className="space-y-1.5">
           <Label>{tr("Registered Number", "เลขทะเบียนนิติบุคคล")}</Label>
           <Input
@@ -1534,7 +1542,7 @@ export function StartupForm({
       </EditSec>
 
   </>);
-  const addressJsx = (<div className="space-y-4">        <EditSec id="address" tone="seller" active={secOn("address")} className="space-y-1.5">
+  const addressJsx = (<div className="space-y-4">{editCtx ? <CompanyNameFields name={startupName} nameLabel="Company Name" thaiName={thaiName} englishName={englishName} onThaiName={setThaiName} onEnglishName={setEnglishName} onChangeCompany={() => { navTab("private", "about"); setNameFocus(true); setTimeout(() => document.getElementById("sf-company-name")?.focus(), 100); }} /> : <EditSec id="address" tone="seller" active={secOn("address")} className="space-y-1.5">
           <Label>{tr("Registered Name", "ชื่อที่จดทะเบียน")}</Label>
           <Input
             value={registeredName}
@@ -1542,7 +1550,7 @@ export function StartupForm({
             placeholder={tr("Official registered company name", "ชื่อบริษัทตามที่จดทะเบียนอย่างเป็นทางการ")}
             maxLength={255}
           />
-        </EditSec>
+        </EditSec>}
         <div className="space-y-1.5">
           <Label htmlFor="addr-street">{tr("Business Address", "ที่อยู่ธุรกิจ")}</Label>
           <AddressBox noteOutside a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
@@ -1795,7 +1803,7 @@ export function StartupForm({
   // ── Tabs (edit) ──
   const has = (x: string | null | undefined) => !!x && !!x.trim();
   const privateCounts: Record<PrivateTab, number> = {
-    address: [registeredName, addr.street, addr.district, addr.province, addr.postal].filter((x) => !x?.trim()).length,
+    address: [...(editCtx ? [] : [registeredName]), addr.street, addr.district, addr.province, addr.postal].filter((x) => !x?.trim()).length,
     images: attachmentMissing(media),
     about: [has(yearFounded), has(startupName), has(headquarters), has(city), has(email), shortBi.filled, longBi.filled].filter((x) => !x).length,
     owner: founders.some((f) => f.full_name.trim()) ? 0 : 1,

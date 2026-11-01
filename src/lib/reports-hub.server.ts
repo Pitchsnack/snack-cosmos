@@ -36,13 +36,13 @@ export async function hubData(ctx:any,mode:HubMode,companyId?:string,pipelineId?
   const s=sts[0];if(!s)throw new Error('Company unavailable');const hp=hps[0],ci=cis[0],v=vs[0];
   const ids=[...new Set(ps.map((d:any)=>d.buyer_user_id))] as string[];
   const [bps,owners,sellerUsers]=await Promise.all([
-    ids.length?getRows(sb.from('buyer_profiles').select('user_id,investor_id,ref_no,city,investors(investor_name,investor_type,legal_name,acts_for_types)').in('user_id',ids)):[],
+    ids.length?getRows(sb.from('buyer_profiles').select('user_id,investor_id,ref_no,city,investors(investor_name,investor_type,acts_for_types)').in('user_id',ids)):[],
     getRows(sb.from('startup_ownership').select('owning_agent_user_id').eq('startup_id',cid)),
     getRows(sb.from('startup_users').select('user_id').eq('startup_id',cid)),
   ]);
   const userIds=[...new Set([...ids,...owners.map((o:any)=>o.owning_agent_user_id),...sellerUsers.map((o:any)=>o.user_id)])].filter(Boolean);
   const users=userIds.length?await getRows(sb.from('users').select('id,first_name,last_name').in('id',userIds)):[];
-  const buyerFor=(id:string)=>{const bp=bps.find((b:any)=>b.user_id===id),u=users.find((u:any)=>u.id===id);return {id,name:bp?.investors?.legal_name??bp?.investors?.investor_name??([u?.first_name,u?.last_name].filter(Boolean).join(' ')||'Buyer'),sub:[typeName(bp?.investors?.investor_type,bp?.investors?.acts_for_types),bp?.city].filter(Boolean).join(' · '),ref:bp?.ref_no??null,contact:[u?.first_name,u?.last_name].filter(Boolean).join(' ')||null};};
+  const buyerFor=(id:string)=>{const bp=bps.find((b:any)=>b.user_id===id),u=users.find((u:any)=>u.id===id);return {id,name:bp?.investors?.investor_name??([u?.first_name,u?.last_name].filter(Boolean).join(' ')||'Buyer'),sub:[typeName(bp?.investors?.investor_type,bp?.investors?.acts_for_types),bp?.city].filter(Boolean).join(' · '),ref:bp?.ref_no??null,contact:[u?.first_name,u?.last_name].filter(Boolean).join(' ')||null};};
   const quotes=await Promise.all(REPORT_KEYS.map(async key=>{const {data,error}=await sb.rpc('report_quote',{_uid:ctx.userId,_key:key});if(error)throw new Error('Report prices unavailable');return [key,data] as const;}));
   const prices=Object.fromEntries(quotes);
   const yearCount=new Set(fs.map((r:any)=>r.fiscal_year)).size;const years=yearCount>=5?5:yearCount>=3?3:1;

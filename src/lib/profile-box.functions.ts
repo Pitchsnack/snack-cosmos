@@ -91,7 +91,7 @@ export const getProfileBox = createServerFn({ method: "GET" })
     if (side === "seller") {
       // The buyer and their investor profile.
       const { data: inv } = bp?.investor_id
-        ? await sb.from("investors").select("investor_name, firm_name, investor_type, website_url, logo_url, preferred_industries, min_ticket_size, max_ticket_size").eq("id", bp.investor_id).maybeSingle()
+        ? await sb.from("investors").select("investor_name, investor_type, website_url, logo_url, preferred_industries, min_ticket_size, max_ticket_size").eq("id", bp.investor_id).maybeSingle()
         : { data: null };
       const { data: vr } = bp?.investor_id ? await sb.rpc("investor_is_verified", { _ids: [bp.investor_id] }) : { data: [] };
       const verified = !!((vr ?? []) as any[]).find((v) => v.verified);
@@ -110,7 +110,7 @@ export const getProfileBox = createServerFn({ method: "GET" })
       return {
         kind: "private", side, person: per, listingId: null,
         org: {
-          name: inv?.investor_name || inv?.firm_name || per.organisation || per.name,
+          name: inv?.investor_name || per.organisation || per.name,
           line: [inv?.investor_type, bp?.city].filter(Boolean).join(" · ") || null,
           logoUrl: bp?.logo_url || inv?.logo_url || null, rows,
         },

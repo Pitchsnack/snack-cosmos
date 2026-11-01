@@ -145,7 +145,7 @@ function toCard(r: any, ctx: { inv: Map<string, any>; bp: Map<string, any>; view
     myApp: a ? { status: a.status, appliedAt: a.applied_at } : null,
     appsTotal: own ? ctx.apps.get(r.id) ?? 0 : null, appsNew: own ? ctx.appsNew.get(r.id) ?? 0 : null,
     sentToAdminAt: own || ctx.isAdmin ? r.sent_to_admin_at : null, adminNote: own || ctx.isAdmin ? r.admin_note : null, extendedCount: r.extended_count ?? 0,
-    client: ctx.isAdmin ? { id: r.investor_profile_id, name: i.investor_name ?? i.firm_name ?? null, ref: b?.ref_no ?? null, writer: ctx.writers.get(r.written_by_user_id) ?? null } : null,
+    client: ctx.isAdmin ? { id: r.investor_profile_id, name: i.investor_name ?? null, ref: b?.ref_no ?? null, writer: ctx.writers.get(r.written_by_user_id) ?? null } : null,
   };
 }
 
@@ -329,7 +329,7 @@ async function reviewRows(sb: any, userId: string, role: string | null, onlyId?:
       sb.from("buyer_profiles").select("investor_id, ref_no").in("investor_id", invIds),
     ]);
     const refBy = new Map((bps ?? []).map((b: any) => [b.investor_id, b.ref_no]));
-    clients = new Map((invs ?? []).map((i: any) => [i.id, { name: i.investor_name ?? i.firm_name ?? null, ref: refBy.get(i.id) ?? null }]));
+    clients = new Map((invs ?? []).map((i: any) => [i.id, { name: i.investor_name ?? null, ref: refBy.get(i.id) ?? null }]));
   }
   const { matchOf } = await import("@/lib/buy-orders");
   return apps.map((a: any) => {
@@ -482,7 +482,7 @@ async function managedClients(sb: any) {
   const managed = await (await import("@/lib/managed.server")).managedInvestorIds(sb, ids);
   const { data: bps } = ids.length ? await sb.from("buyer_profiles").select("investor_id, ref_no, approval_status").in("investor_id", [...managed]) : { data: [] };
   const live = new Map((bps ?? []).filter((b: any) => b.approval_status === "approved").map((b: any) => [b.investor_id, b.ref_no]));
-  return (invs ?? []).filter((i: any) => live.has(i.id)).map((i: any) => ({ id: i.id as string, name: (i.investor_name ?? i.firm_name ?? "—") as string, ref: (live.get(i.id) ?? null) as string | null }))
+  return (invs ?? []).filter((i: any) => live.has(i.id)).map((i: any) => ({ id: i.id as string, name: (i.investor_name ?? "—") as string, ref: (live.get(i.id) ?? null) as string | null }))
     .sort((a: any, b: any) => a.name.localeCompare(b.name));
 }
 
@@ -612,7 +612,7 @@ export const adminBuyOrders = createServerFn({ method: "GET" })
     const { data: aps } = (rows ?? []).length ? await sb.from("buy_order_applications").select("buy_order_id, status").in("buy_order_id", (rows ?? []).map((r: any) => r.id)) : { data: [] };
     const invIds = [...new Set((rows ?? []).map((r: any) => r.investor_profile_id))];
     const { data: invs } = invIds.length ? await sb.from("investors").select("id, investor_name, legal_name, firm_name").in("id", invIds) : { data: [] };
-    const company = new Map<string, string | null>((invs ?? []).map((i: any) => [i.id, i.legal_name ?? i.firm_name ?? i.investor_name ?? null]));
+    const company = new Map<string, string | null>((invs ?? []).map((i: any) => [i.id, i.investor_name ?? null]));
     const rowBy = new Map((rows ?? []).map((r: any) => [r.id, r]));
     const today = bkkToday();
     const in30 = new Date(Date.parse(today) + 30 * 86400_000).toISOString().slice(0, 10);

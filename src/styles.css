@@ -25,6 +25,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+:root { --company-copy-bg: #F3F4F6; --company-copy-border: #E5E7EB; --company-copy-text: #6B7280; --company-copy-lock: #9CA3AF; }
+.dark { --company-copy-bg: var(--muted); --company-copy-border: var(--border); --company-copy-text: var(--muted-foreground); --company-copy-lock: var(--muted-foreground); }
+.company-name-copy { background: var(--company-copy-bg); border-color: var(--company-copy-border); color: var(--company-copy-text); }
+.company-name-lock { color: var(--company-copy-lock); }
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

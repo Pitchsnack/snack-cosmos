@@ -130,7 +130,7 @@ async function snapshot(sb: any, f: any) {
     sb.from("advisor_firm_credentials").select("id, name, note").eq("firm_id", f.id),
     sb.from("advisor_firm_documents").select("id, name, file_path").eq("firm_id", f.id),
   ]);
-  return { legal_name: f.legal_name, registration_no: f.registration_no, credentials: c ?? [], documents: d ?? [] };
+  return { company_name: f.name, legal_name: f.legal_name, registration_no: f.registration_no, credentials: c ?? [], documents: d ?? [] };
 }
 
 /** Verify · Request more info · Decline · Reopen · Send to verification. */

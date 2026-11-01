@@ -62,7 +62,7 @@ function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: an
     description: r.description, descriptionTh: r.description_th ?? null, yearFounded: r.year_founded, city: r.city, country: r.country,
     services: r.services ?? [], fees, feeDetails, dealBand: r.deal_size_band ?? null,
     teamSize: r.team_size, languages: r.languages ?? [], sectors: r.sectors ?? [], sectorAgnostic: !!r.sector_agnostic, sectorPicks: r.sector_picks ?? null,
-    legalName: r.legal_name, thaiName: r.thai_name, registrationNo: r.registration_no,
+    legalName: r.legal_name, thaiName: r.thai_name, englishName: r.english_name ?? null, registrationNo: r.registration_no,
     addrStreet: r.addr_street, addrUnit: r.addr_unit, addrDistrict: r.addr_district,
     addrProvince: r.addr_province, addrPostal: r.addr_postal,
     website: r.website, email: r.email, phone: r.phone,
@@ -239,6 +239,7 @@ export const saveAdvisorWizard = createServerFn({ method: "POST" })
 export const saveAdvisorFirm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => DraftFirmInput.extend({
+    legalName: z.string().trim().max(200).optional(),
     // One-step approval: the advisor's suggested listing name and headline.
     suggested_listing_name: z.string().trim().max(200).nullable().optional(),
     suggested_headline: z.string().trim().max(300).nullable().optional(),
@@ -251,7 +252,9 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
       ? await sb.from("advisor_firms").select("status, owner_user_id, logo_path, media").eq("id", data.id).maybeSingle()
       : { data: null, error: null };
     if (data.id && (readError || !current)) throw new Error("Firm profile not found.");
-    if (!current || advisorNeedsCompleteSave(current.status)) CompleteFirmInput.parse(data);
+    const { EditCompleteFirmInput } = await import("./advisor-form-schema");
+    const completeSchema = data.legalName === undefined ? EditCompleteFirmInput : CompleteFirmInput;
+    if (!current || advisorNeedsCompleteSave(current.status)) completeSchema.parse(data);
     const existingPaths = new Set<string>([current?.logo_path, ...(current?.media ?? []).map((m: any) => m.image_path)].filter(Boolean));
     if (data.logoPath && !data.logoPath.startsWith(own) && !existingPaths.has(data.logoPath)) throw new Error("Invalid logo file.");
     if (data.media?.some((m) => !m.image_path.startsWith(own) && !existingPaths.has(m.image_path))) throw new Error("Invalid photo file.");
@@ -261,13 +264,14 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
       name: data.name, firm_type: data.firmType, logo_path: data.logoPath, logo_source: data.logoPath ? data.logoSource ?? "upload" : null,
       description: data.description, ...(data.descriptionTh !== undefined ? { description_th: data.descriptionTh || null } : {}), year_founded: data.yearFounded, city: data.city, country: data.country, services: data.services,
       deal_size_band: data.dealBand, team_size: data.teamSize,
-      languages: data.languages, sectors: data.sectors, ...(data.sectorAgnostic === undefined ? {} : { sector_agnostic: data.sectorAgnostic }), legal_name: data.legalName, thai_name: data.thaiName,
+      languages: data.languages, sectors: data.sectors, ...(data.sectorAgnostic === undefined ? {} : { sector_agnostic: data.sectorAgnostic }), ...(data.legalName === undefined ? {} : { legal_name: data.legalName }), thai_name: data.thaiName,
+      ...(data.englishName === undefined ? {} : { english_name: data.englishName }),
       registration_no: data.registrationNo ?? null, addr_street: data.addrStreet, addr_unit: data.addrUnit,
       addr_district: thai ? data.addrDistrict : data.city, addr_province: data.addrProvince,
       addr_postal: data.addrPostal, website: data.website, email: data.email, phone: data.phone,
       ...(data.suggested_listing_name !== undefined ? { suggested_listing_name: data.suggested_listing_name || null } : {}),
       ...(data.suggested_headline !== undefined ? { suggested_headline: data.suggested_headline || null } : {}),
-      ...(CompleteFirmInput.safeParse(data).success ? { setup_done_at: new Date().toISOString() } : {}),
+      ...(completeSchema.safeParse(data).success ? { setup_done_at: new Date().toISOString() } : {}),
     };
     if (data.id) { const { data: ctl0 } = await sb.rpc("is_control", { _user_id: context.userId }); if (ctl0) delete (row as Record<string, unknown>).setup_done_at; }
     let id = data.id;
@@ -315,13 +319,13 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
     // Admin's Edit keeps the verified snapshot in step, so its own changes never show as the firm's.
     const { data: ctl } = await sb.rpc("is_control", { _user_id: context.userId });
     if (ctl) {
-      const { data: f } = await sb.from("advisor_firms").select("verified_snapshot, legal_name, registration_no").eq("id", id).single();
+      const { data: f } = await sb.from("advisor_firms").select("verified_snapshot, name, legal_name, registration_no").eq("id", id).single();
       if (f?.verified_snapshot) {
         const [{ data: c }, { data: d }] = await Promise.all([
           sb.from("advisor_firm_credentials").select("id, name, note").eq("firm_id", id),
           sb.from("advisor_firm_documents").select("id, name, file_path").eq("firm_id", id),
         ]);
-        await sb.from("advisor_firms").update({ verified_snapshot: { legal_name: f.legal_name, registration_no: f.registration_no, credentials: c ?? [], documents: d ?? [] } }).eq("id", id);
+        await sb.from("advisor_firms").update({ verified_snapshot: { company_name: f.name, legal_name: f.legal_name, registration_no: f.registration_no, credentials: c ?? [], documents: d ?? [] } }).eq("id", id);
       }
     }
     return { id };
