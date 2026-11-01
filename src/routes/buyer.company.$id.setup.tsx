@@ -1,4 +1,7 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { tr } from "@/i18n/language";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -39,7 +42,7 @@ function SetupPage() {
   useEffect(() => {
     if (!missing) return;
     toast(tr("This profile has been removed."));
-    void navigate({ to: "/my-company", replace: true });
+    void navigate({ to: "/marketplace/my-company", search: {}, replace: true });
   }, [missing, navigate]);
   if (error) return <p className="p-8 text-sm text-muted-foreground">Couldn't load your profile. Please refresh.</p>;
   if (!r || missing) return <div className="min-h-screen bg-[#F6F7F9] dark:bg-background" />;
