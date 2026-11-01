@@ -24,7 +24,7 @@ import {
 } from "@/lib/investor-bands";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Eye, Lock, Shield, Pencil, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
+import { Eye, Lock, Shield, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -221,9 +221,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
     aum_band: inv.aum_band ?? "", ticket_band: inv.ticket_band ?? "", rev_band: inv.revenue_min_band ?? "",
     aum_exact: inv.aum_exact_usd != null ? inv.aum_exact_usd.toLocaleString("en-US") : "",
     registration_no: inv.registration_no ?? "", description: data.buyer.description ?? "",
-    // One-step approval: the buyer's suggestion plus verification details.
-    suggested_listing_name: (data.buyer as any).suggested_listing_name ?? "",
-    suggested_headline: (data.buyer as any).suggested_headline ?? "",
+    // One-step approval verification details; legacy suggestions remain untouched.
     revenue_band: (data.buyer as any).revenue_band ?? "",
     contact_number: (data.buyer as any).contact_number ?? "",
   });
@@ -386,8 +384,6 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       ["short_description_th", buyerAboutError(thx.short_description, inv.short_description_th, !!directory)],
       ["registration_no", individual ? null : regError(f.registration_no, f.country)],
       ["acts_for", agent && !actsFor.length ? "Pick at least one investor type." : null],
-      ["suggested_listing_name", setup && !f.suggested_listing_name.trim() ? "Write a listing name." : null],
-      ["suggested_headline", setup && !f.suggested_headline.trim() ? "Write a headline." : null],
     ];
     const aBad = addrErr && (!f.country ? "Choose a country." : Object.values(addrErr).find(Boolean));
     const bad = checks.find(([key, m]) => key.startsWith("description") && m) ?? checks.find(([key, m]) => key === "registration_no" && m) ?? checks.find(([key,m]) => key.startsWith("short_description") && m) ?? checks.find(([, m]) => m);
@@ -395,7 +391,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       setErrs({ [bad[0]]: bad[1] ?? "Check this field." });
       if (bad[0].endsWith("_th") && tlSw) setLang("th");
       else if (tlSw && ["description","short_description"].includes(bad[0])) setLang("en");
-      const target = bad[0].startsWith("description") || bad[0].startsWith("suggested_") ? "description" : "about";
+      const target = bad[0].startsWith("description") ? "description" : "about";
       setView(target === "description" ? "public" : "private"); setTab(target);
       setTimeout(()=>document.getElementById(`f-${bad[0].replace(/_th$/, "")}`)?.focus(),60);
       return;
@@ -438,8 +434,6 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, ...(portfolioDirty ? {portfolio_extra: portfolio} : {}),
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
-        suggested_listing_name: t(f.suggested_listing_name) || null,
-        suggested_headline: t(f.suggested_headline) || null,
         revenue_band: (f.revenue_band || null) as never,
         contact_number: t(f.contact_number) || null,
         investor_id: inv.id,
@@ -697,19 +691,6 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
 </div>}
           {(tab === "description" || tab === "mandate") && <div className="buyer-description-mandate">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="f-suggested_listing_name">{tr("Listing name")}{setup && " *"}</Label>
-              <Input id="f-suggested_listing_name" value={f.suggested_listing_name} onChange={set("suggested_listing_name")} maxLength={120} placeholder={data.buyer.ref_no || ""} aria-invalid={!!errs.suggested_listing_name} />
-              {errs.suggested_listing_name && <p className="text-[12.5px] text-destructive">{tr(errs.suggested_listing_name)}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="f-suggested_headline">{tr("Headline")}{setup && " *"}</Label>
-              <Input id="f-suggested_headline" value={f.suggested_headline} onChange={set("suggested_headline")} maxLength={120} aria-invalid={!!errs.suggested_headline} />
-              {errs.suggested_headline && <p className="text-[12.5px] text-destructive">{tr(errs.suggested_headline)}</p>}
-            </div>
-          </div>
-          <p className="flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.")}</p>
           <ListingEditorTitle title={tr("Your card in Browse investors")}><AutoFillTabButton onClick={fillTab} disabled={busy} /></ListingEditorTitle>
           <BuyerDescriptionEditor lang={tl} source={setup ? <Tag s={src.description} /> : undefined} suggest={suggest} value={bv("description")} onChange={bset("description")} leaks={leaks} forced={!!errs.description || !!errs.description_th} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} >          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
         {directory && <CompactFields><div className="space-y-1.5"><Label>{setupText("AUM")}</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>{setupText("Min Ticket Size")}</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>{setupText("Max Ticket Size")}</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}

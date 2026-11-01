@@ -177,7 +177,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
   });
   const check = useMutation({ mutationFn: (row: string) => mark({ data: { kind: item.kind, id: item.id, row } }), onSuccess: () => { toast.success(t("Marked checked.")); void qc.invalidateQueries({ queryKey: KEY }); }, onError: (e: Error) => toast.error(t(e.message)) });
   const open = (action: "approve" | "request_changes" | "decline") => {
-    if (action === "approve") { setInvalid(true); if (!name.trim() || !headline.trim() && !headlineTh.trim()) return; }
+    if (action === "approve") { setInvalid(true); if (item.kind !== "buyer" && (!name.trim() || !headline.trim() && !headlineTh.trim())) return; }
     setReasons([]); setNote(t(DEFAULT_NOTE)); setReasonError(""); setDialog(action);
   };
   const submit = () => {
@@ -244,7 +244,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
         <span className={`os-chip ${rewritten ? "os-blue" : "os-grey"}`}>{t(rewritten ? "Rewritten" : `Same as the ${item.kind}'s`)}</span></div></div>
         <table className="os-table os-name-table"><thead><tr><th>{t("Detail")}</th><th>{t(`The ${item.kind} suggested`)}</th><th>{t("Published as")}</th></tr></thead><tbody>
           <tr><td>{t("Listing name")}</td><td data-label={t(`The ${item.kind} suggested`)}>{item.suggestedName || t("Not given")}</td><td data-label={t("Published as")}><Input aria-label={t("Published listing name")} maxLength={120} value={name} onChange={e => setName(e.target.value)} aria-invalid={invalid && !name.trim()} />{invalid && !name.trim() && <p className="text-destructive">{t("Write a listing name.")}</p>}</td></tr>
-          <tr><td>{t("Headline")} {tag(lang)}</td><td data-label={t(`The ${item.kind} suggested`)} lang={lang}>{sugHeadline || <span className="os-not-given">{t(lang === "th" ? "Not given in Thai" : "Not given in English")}</span>}</td><td data-label={t("Published as")}><Textarea lang={lang} aria-label={t("Published headline")} rows={2} maxLength={120} value={pubValue} placeholder={!pubValue && pubOther ? t(lang === "th" ? "No Thai yet. Thai readers see the English." : "No English yet. English readers see the Thai.") : undefined} onChange={e => (lang === "th" ? setHeadlineTh : setHeadline)(e.target.value)} aria-invalid={invalid && !headline.trim() && !headlineTh.trim()} />{invalid && !headline.trim() && !headlineTh.trim() && <p className="text-destructive">{t("Write a headline.")}</p>}</td></tr>
+          <tr><td>{t("Headline")} {tag(lang)}</td><td data-label={t(`The ${item.kind} suggested`)} lang={lang}>{sugHeadline || <span className="os-not-given">{t(lang === "th" ? "Not given in Thai" : "Not given in English")}</span>}</td><td data-label={t("Published as")}><Textarea lang={lang} aria-label={t("Published headline")} rows={2} maxLength={120} value={pubValue} placeholder={!pubValue && pubOther ? t(lang === "th" ? "No Thai yet. Thai readers see the English." : "No English yet. English readers see the Thai.") : undefined} onChange={e => (lang === "th" ? setHeadlineTh : setHeadline)(e.target.value)} aria-invalid={item.kind !== "buyer" && invalid && !headline.trim() && !headlineTh.trim()} />{item.kind !== "buyer" && invalid && !headline.trim() && !headlineTh.trim() && <p className="text-destructive">{t("Write a headline.")}</p>}</td></tr>
         </tbody></table>
       </section>
       <section>{!r.individual && <DbdStorePanel reg={r.dbd.registrationNo} initial={r.dbd} onChanged={() => void qc.invalidateQueries({ queryKey: KEY })} />}

@@ -56,10 +56,10 @@
 
 - Editors share EditInfoPopup, CompactFields and business-address; directory row focus stays transient, never changing access or saves.
 
-- Buyer description/About Company use shared counting and changed-only checks, preserving Admin bypass. Buyer previews use StandardInvestorCard; seller/buyer labels and Suggest share listing-editor-fields.
+- Buyer texts use shared changed-only counting/Admin bypass and StandardInvestorCard. Buyer identity/readiness helpers omit retired suggestion writes and allow missing suggestions; seller fields stay unchanged.
 
 - DBD fetch-once store: dbd_company_records (per registration number) is the only source of DBD facts; writes only via DB functions dbd_store_save/dbd_store_delete/dbd_apply_edit (Control-checked, trigger-guarded); seller report tables are materialised copies and analyst edits re-apply after refresh.
 - Read nested AGENTS.md before edits.
 - Buyer/advisor setup shares validity helpers and seller StepBar; authorised saves and monotonic setup_reached align progress.
 
-- Edit information shares CompanyNameFields for the live read-only canonical name and optional language twins; legacy second-name writes are omitted, setup schemas remain separate, and existing profile authorization governs every new name field.
+- CompanyNameFields shares live locked names and optional twins; omit legacy second-name writes, preserve setup schemas and profile authorization.

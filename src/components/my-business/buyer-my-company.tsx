@@ -1,4 +1,5 @@
 import { setupText, tr } from "@/i18n/language";
+import { buyerListingName } from "@/lib/buyer-listing-identity";
 import { revenueBandLabel } from "@/lib/revenue-bands";
 import { useTranslation } from "@/i18n/language";
 import { useManagedIds } from "@/hooks/use-managed-ids";
@@ -484,7 +485,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const prog = buyerProgressFor(rel, iv, inv.data?.buyer);
   const setupDone = !!iv?.setup_done_at;
   const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
-  const leaks = descriptionLeaks([(p as any).suggested_listing_name, (p as any).suggested_headline, p.description].filter(Boolean).join("\n"), org.name ?? "", org.website ?? "");
+  const leaks = descriptionLeaks(p.description ?? "", org.name ?? "", org.website ?? "");
   const since = p.status === "live" && p.live_since ? `Live since ${fmtDateL(p.live_since, language)}` : p.status === "paused" ? `Paused since ${fmtDateL(p.updated_at ?? p.live_since ?? new Date().toISOString(), language)}` : "Not published yet";
   // One-step approval: Register your company opens the review pop-up.
   const registerFn = useServerFn(registerBuyerCompany);
@@ -501,8 +502,8 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   // Review your company data pop-up: what sellers see + what PitchSnack checks.
   const invRow = inv.data?.investor as any;
   const reviewData: ReviewCompanyData = {
-    suggestedName: (p as any).suggested_listing_name ?? null,
-    suggestedHeadline: (p as any).suggested_headline ?? null,
+    suggestedName: buyerListingName(org.type, p.ref_no, (p as any).published_listing_name),
+    suggestedHeadline: null,
     listingRows: [
       ["Reference", [p.ref_no, org.type, invRow?.country ?? p.country].filter(Boolean).join(" · ")],
       ["Ticket size", bandText(invRow?.ticket_band) ?? ""], ["AUM", bandText(invRow?.aum_band) ?? ""],
