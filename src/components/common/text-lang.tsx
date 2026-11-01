@@ -38,11 +38,12 @@ export function useTextLang(): Ctx {
 
 export function TextLangSwitch() {
   const { lang, setLang, switchable } = useTextLang();
-  const { language } = useTranslation();
+  const { language, setLanguage } = useTranslation();
   if (!switchable) return null;
   const th = language === "th";
+  // Picking a language here also switches the interface, so tabs and labels follow at once.
   const opt = (k: TextLang, label: string) => (
-    <button type="button" aria-pressed={lang === k} onClick={() => setLang(k)} lang={k}
+    <button type="button" aria-pressed={lang === k} onClick={() => { setLang(k); setLanguage(k); }} lang={k}
       className={cn("text-lang-opt", lang === k && "is-on")}>{label}</button>
   );
   return (
