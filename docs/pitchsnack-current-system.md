@@ -744,3 +744,33 @@ Only one side can decide on any given order, never both.
 | Shortlist set by PitchSnack, used by client | Not supported | No shortlist status. The decision sends the NDA straight away. The client cannot see Sealed applications. |
 | View by client at 50-client scale | Partly supported | Search/filter by client in Admin Advertisement. No grouping or per-client view. |
 | Split clients between employees | Not supported | `managed_by` is free text. All Control Admins see everything. |
+
+### 11.10 One Admin login per managed client
+
+**Can one PitchSnack admin login be linked to more than one managed buyer?** No.
+- `buyer_profiles` has `user_id` as its primary key and one `investor_id` column. One login can therefore link to only one investor profile at a time.
+- Businesses Wanted treats an investor as a managed client (`managedInvestorIds` in `src/lib/managed.server.ts`, `managedClients` in `src/lib/buy-orders.functions.ts`) only when: the investor is in the Control tenant, it has a `buyer_profiles` row whose user has `account_role = 'admin'`, and that row has `approval_status = 'approved'`.
+- So each managed client needs its own Admin login. 50 clients need 50 Admin logins.
+
+**What access does each of those logins get?** There is no Admin level limited to one client. Every user with `account_role = 'admin'` gets:
+- **Navigation:** the Admin/Marketplace switch and the full Admin menu; the persona is not locked (`usePersona()` in `src/hooks/use-marketplace.ts` locks only non-admin roles), so they can switch between Seller, Buyer and Advisor.
+- **All Sealed buy orders:** `myBuyOrders` returns every `kind = 'sealed'` order for an Admin, for all clients, not only the client their own `buyer_profiles` row links to.
+- **All Sealed applications:** `reviewRows` and `isOwnSide` let any Admin see and decide (Request NDA / Not a fit) on applications to any client's Sealed order.
+- **`is_account_admin` features:** the SQL function is `is_control(_uid) OR account_role = 'admin'`, so every Admin login passes `is_account_admin` and `requireAccountAdmin`, including user administration in `src/lib/users.functions.ts`, contact-request functions and the other `requireAccountAdmin` checks.
+- **Not included without the CONTROL role:** features that require `is_control` (alone or together with `is_account_admin`) stay closed, for example listing approval/publishing (`tg_guard_listing_approval`), report pricing, the DBD store, and functions behind `requireControlAdmin` (which also covers `startManaging`/handover and `listApplications`). If the 50 logins hold the CONTROL role, they get all Control powers as well.
+
+### 11.11 Whose name the seller sees after Control's Request NDA
+
+`decideApplication` creates the `deal_pipelines` row with `buyer_user_id` = the managed client's Admin buyer user (`buyer_profiles ... .limit(1)` for that investor). Every seller-side screen resolves the buyer from that user's `buyer_profiles.investor_id`.
+
+**Before the seller approves the NDA** (`ndaActive` is false):
+- **Pipeline (`listPipeline`):** the card shows the buyer **type** (`investors.investor_type`), not a name; the person is `null`.
+- **NDA Invitations (`sellerRows`):** the row shows the client's public profile (type-based code name and `INV-` ref); `investorName` is `null`.
+- **NDA review (`sellerNdaReview`):** the client's public investor profile, with `name: null`.
+- **Email/notification (`pipelineAlert`, `notifySellers`):** "Buyer: A {investor_type} investor"; the notification text names no buyer.
+
+**After the seller approves the NDA** (`ndaActive` is true):
+- **Company:** the client company (`investors.investor_name`, e.g. Lakeshore Capital). In NDA Invitations, `investorName` is the same client company name.
+- **Person:** the Admin user's name (`userNames(buyer_user_id)`), because the Admin login is the buyer user on the deal.
+
+**PitchSnack:** not shown as the buyer's name at either stage. The seller is never shown "PitchSnack" as the counterparty; the client company plus the Admin user's personal name appear only after approval.
