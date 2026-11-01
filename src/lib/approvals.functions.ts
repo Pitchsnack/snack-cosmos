@@ -139,11 +139,13 @@ export const resumeListing = createServerFn({ method: "POST" })
     if (!p) throw new Error("Listing not found");
     if (p.approval_status !== "unpublished" || !p.live_snapshot) throw new Error("This listing can't go live again from here. Register your company instead.");
     const pub = ((p.live_snapshot as { public?: Record<string, unknown> }).public ?? {}) as Record<string, unknown>;
-    const { error } = await sb.from("hidden_profiles").update({
-      status: "live", approval_status: "live", live: pub, visibility: "Tenant",
-    }).eq("id", p.id);
-    if (error) throw new Error(error.message);
+    // Membership was checked by the RLS read above; restoring the Admin-approved
+    // snapshot needs the server client because sellers can't publish directly.
     const sbAdmin = await admin();
+    const { error } = await sbAdmin.from("hidden_profiles").update({
+      status: "live", approval_status: "live", live: pub, unpublished_at: null, updated_by: context.userId,
+    }).eq("id", p.id).eq("approval_status", "unpublished");
+    if (error) throw new Error(error.message);
     await sbAdmin.from("startups").update({ visibility: "Tenant" }).eq("id", p.startup_id).eq("visibility", "Private");
     await logEvent({ item_type: "listing", item_id: p.id, startup_id: p.startup_id, subject_user_id: context.userId, version: p.version, action: "publish", actor_id: context.userId });
     return { ok: true };
