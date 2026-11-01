@@ -163,8 +163,33 @@ function AuthStateSync() {
         router.invalidate();
         qc.invalidateQueries();
       }
+      if (event === "SIGNED_IN") stampLastActive();
     });
     return () => subscription.unsubscribe();
   }, [router, qc]);
+  return null;
+}
+
+/** Stamps the signed-in user's last-active time on the server (throttled 15 min there). */
+let lastActiveSentAt = 0;
+function stampLastActive() {
+  if (Date.now() - lastActiveSentAt < 15 * 60 * 1000) return;
+  lastActiveSentAt = Date.now();
+  void import("@/lib/last-login.functions").then((m) => m.touchLastActive()).catch(() => { lastActiveSentAt = 0; });
+}
+
+/** Records "opening PitchSnack or coming back to its tab with a valid session" as activity. */
+function LastActiveTracker() {
+  useEffect(() => {
+    const tick = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) stampLastActive();
+    };
+    void tick();
+    const onVisible = () => { if (document.visibilityState === "visible") void tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => { document.removeEventListener("visibilitychange", onVisible); window.removeEventListener("focus", onVisible); };
+  }, []);
   return null;
 }
