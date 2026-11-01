@@ -62,6 +62,8 @@ export interface PublicListing {
   th?: { headline: string; description: string; highlights: string[]; customerProfile: string };
   /** A PitchSnack private client (Control, Admin-owned). Only the flag is sent. */
   managed?: boolean;
+  /** Owner/team last-login bucket (never a timestamp); null = no login on record. */
+  lastLoginStep?: LastLoginStep | null;
   /** Seller-written public highlights (filled ones only, in order). */
   highlights?: string[];
   /** Seller-written anonymous customer profile (public). */

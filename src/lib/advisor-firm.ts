@@ -129,6 +129,8 @@ export type FirmReview = { id: string; role: "seller" | "buyer"; detail: string 
 export type AdvisorFirm = {
   /** Browse advisors only: a PitchSnack private client. */
   managed?: boolean;
+  /** Owner's last-login bucket (never a timestamp); null = no login on record. */
+  lastLoginStep?: import("@/lib/last-login").LastLoginStep | null;
   /** Own-company review only; omitted from public firm projections. */
   ownerReviewName?: string | null;
   id: string; refNo: string; name: string; firmType: string; logoPath: string | null; logoUrl: string | null; logoSource: "upload" | "enrich" | null;

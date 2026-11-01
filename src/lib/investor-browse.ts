@@ -3,10 +3,13 @@
  * Only US$ bands (never exact figures) and public buying criteria live here.
  */
 import { AUM_BANDS, REV_BANDS, TICKET_BANDS, bandOf } from "@/lib/investor-bands";
+import type { LastLoginStep } from "@/lib/last-login";
 
 export type PublicInvestor = {
   /** Days since the profile went live, only while under 14 days. */
   newDays?: number | null;
+  /** Owner's last-login bucket (never a timestamp); null = no login on record. */
+  lastLoginStep?: LastLoginStep | null;
   /** A PitchSnack private client (Control, Admin-owned). */
   managed?: boolean;
   /** Card-sized cover address sent with Browse investors. */
