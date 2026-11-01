@@ -501,7 +501,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
         <div className="grid gap-3.5 md:grid-cols-2">
           <Box title={setupText("Company")} action={client ? undefined : "Edit"} onAction={() => edit("company")}>
             <Fact label={setupText("Founded")}>{f.yearFounded ? String(f.yearFounded) : null}</Fact>
-            <Fact label={setupText("Legal name")}>{f.legalName}</Fact>
+            <Fact label={setupText("Legal name")}>{f.name}</Fact>
             <Fact label={setupText("Thai name")}>{f.thaiName}</Fact>
             <Fact label={setupText("Registration no.")}>{f.registrationNo}</Fact>
             <Fact label={setupText("Address")}>
@@ -712,7 +712,7 @@ function AddressDialog({ f, open, onOpenChange }: { f: AdvisorFirm; open: boolea
         </div>
         <div className="space-y-4 p-5">
           <div className="rounded-[12px] border border-border px-4 py-1">
-            <Fact label={setupText("Company name")}>{f.legalName}</Fact>
+            <Fact label={setupText("Company name")}>{f.name}</Fact>
             <Fact label={setupText("Address")}>{fullAddress(f)}</Fact>
             <Fact label={setupText("Website")}>{site ? <a href={site} target="_blank" rel="noopener noreferrer" className="text-[#0F766E] hover:underline">{f.website}</a> : null}</Fact>
             <Fact label={setupText("Phone")}>{f.phone ? <a href={`tel:${f.phone.replace(/\s+/g, "")}`} className="hover:underline">{f.phone}</a> : null}</Fact>

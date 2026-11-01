@@ -61,3 +61,5 @@
 - DBD fetch-once store: dbd_company_records (per registration number) is the only source of DBD facts; writes only via DB functions dbd_store_save/dbd_store_delete/dbd_apply_edit (Control-checked, trigger-guarded); seller report tables are materialised copies and analyst edits re-apply after refresh.
 - Read nested AGENTS.md before edits.
 - Buyer/advisor setup shares validity helpers and seller StepBar; authorised saves and monotonic setup_reached align progress.
+
+- Edit information shares CompanyNameFields for the live read-only canonical name and optional language twins; legacy second-name writes are omitted, setup schemas remain separate, and existing profile authorization governs every new name field.

@@ -633,7 +633,7 @@ function PrivatePanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg
         <Intro icon={<Lock className="h-4 w-4 text-muted-foreground" />}>{setupText("Your full firm details. Only sellers who approve your NDA can see this.")}</Intro>
       </div>
       <Sec title={setupText("Company")} onEdit={() => onEdit("company")}>
-        <R label={setupText("Name")} value={org.name} /><R label={setupText("Legal name")} value={p.legal_name} /><R label={setupText("Registration no.")} value={org.registrationNo} />
+        <R label={setupText("Name")} value={org.name} /><R label={setupText("Legal name")} value={org.name} /><R label={setupText("Registration no.")} value={org.registrationNo} />
         <R label={setupText("Website")} value={web} /><R label={setupText("Address")} value={p.address} />
       </Sec>
       <Sec title={setupText("Fund")} onEdit={() => onEdit("fund")}>
@@ -663,9 +663,9 @@ function PrivatePanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg
 
 /* --------------------------------- Editor --------------------------------- */
 
-function EditDialog({section,p,onClose}:{section:Section;p:BuyerProfile;org:BuyerOrg;onClose:()=>void}) {
+function EditDialog({section,p,org,onClose}:{section:Section;p:BuyerProfile;org:BuyerOrg;onClose:()=>void}) {
  const mapped = section === "public" ? "description" : section === "company" ? "address" : section;
- return <EditInfoPopup open subtitle="Your company" companyName={p.legal_name ?? ""} onClosed={onClose} phoneTabs><BuyerInvestorEdit section={mapped} /></EditInfoPopup>;
+ return <EditInfoPopup open subtitle="Your company" companyName={org.name ?? ""} onClosed={onClose} phoneTabs><BuyerInvestorEdit section={mapped} /></EditInfoPopup>;
 }
 
 function SplitPrivate() {

@@ -497,7 +497,7 @@ export const loiParties = createServerFn({ method: "GET" })
       ? await sb.from("investors").select("investor_name, legal_name").eq("id", bp.investor_id).maybeSingle()
       : { data: null };
     const thai = (s?: string | null) => !!s && /[\u0E00-\u0E7F]/.test(s);
-    const bLegal = inv?.legal_name || bp?.legal_name || bv?.company_name || null;
+    const bLegal = inv?.investor_name || null;
     const buyer: LoiParty = {
       nameTh: thai(bLegal) ? bLegal : null,
       nameEn: thai(bLegal) ? null : bLegal,

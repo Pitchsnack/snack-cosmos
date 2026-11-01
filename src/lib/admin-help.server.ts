@@ -24,7 +24,7 @@ export async function helpProfile(sb: any, id: string): Promise<HelpProfile | nu
     sb.from("users").select("id, first_name, last_name, email, account_role, created_at").eq("id", id).maybeSingle(),
     sb.from("user_profiles").select("organisation, phone").eq("user_id", id).maybeSingle(),
     sb.from("subscriptions").select("status, manager_user_id, plans(name)").eq("user_id", id).maybeSingle(),
-    sb.from("buyer_profiles").select("legal_name, approval_status, pof_verified_at").eq("user_id", id).limit(10),
+    sb.from("buyer_profiles").select("investors(investor_name), approval_status, pof_verified_at").eq("user_id", id).limit(10),
     sb.from("advisor_firms").select("name, status").eq("owner_user_id", id).limit(10),
     sb.from("startup_users").select("startup_id").eq("user_id", id),
     sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", id),
@@ -57,7 +57,7 @@ export async function helpProfile(sb: any, id: string): Promise<HelpProfile | nu
   if (u.account_role === "advisor") for (const f of firms ?? []) statuses.push({ label: f.name || "Firm", value: f.status });
   statuses.push({ label: "Plan", value: sub?.plans?.name ? `${sub.plans.name} · ${sub.status}` : "No plan" });
   return { id, name: [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email, first: u.first_name || u.email, role: u.account_role,
-    company: p?.organisation || (u.account_role === "buyer" ? buyer?.[0]?.legal_name : u.account_role === "advisor" ? firms?.[0]?.name : listings[0]?.startup_name) || "—",
+    company: p?.organisation || (u.account_role === "buyer" ? buyer?.[0]?.investors?.investor_name : u.account_role === "advisor" ? firms?.[0]?.name : listings[0]?.startup_name) || "—",
     email: u.email, phone: p?.phone || null, joined: u.created_at, statuses, advisor };
 }
 

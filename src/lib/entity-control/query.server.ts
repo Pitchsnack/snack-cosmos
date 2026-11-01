@@ -96,14 +96,14 @@ export async function fetchControlInvestors(
   let query = supabase
     .from("investors")
     .select(
-      "id,investor_name,firm_name,investor_type,preferred_stages,preferred_industries,investment_focus,country,logo_url,visibility,updated_at",
+      "id,investor_name,investor_type,preferred_stages,preferred_industries,investment_focus,country,logo_url,visibility,updated_at",
       { count: "exact" },
     );
 
   if (params.q) {
     const term = `%${params.q.replace(/[%,]/g, "")}%`;
     query = query.or(
-      `investor_name.ilike.${term},firm_name.ilike.${term},website_url.ilike.${term}`,
+      `investor_name.ilike.${term},website_url.ilike.${term}`,
     );
   }
   if (params.type) query = query.eq("investor_type", params.type);
@@ -122,7 +122,7 @@ export async function fetchControlInvestors(
 
   const rows: ControlInvestorRow[] = (data ?? []).map((r) => ({
     id: r.id as string,
-    name: (r.investor_name as string) ?? (r.firm_name as string) ?? "Untitled",
+    name: (r.investor_name as string) ?? "Untitled",
     investor_type: (r.investor_type as string) ?? null,
     stages: Array.isArray(r.preferred_stages) ? (r.preferred_stages as string[]) : [],
     sectors: Array.isArray(r.preferred_industries)
