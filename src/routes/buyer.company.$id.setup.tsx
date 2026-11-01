@@ -31,11 +31,18 @@ export const Route = createFileRoute("/buyer/company/$id/setup")({
 function SetupPage() {
   const { id } = Route.useParams();
   const { q } = Route.useSearch();
+  const navigate = useNavigate();
   const fetchById = useServerFn(getBuyerInvestorById);
   // The profile in the address, owner checked on the server: anyone else's sends no data.
-  const { data: r, error } = useQuery({ queryKey: buyerInvestorKey(id), queryFn: async () => { const x = await fetchById({ data: { id } }); return x.ok ? { ok: true as const, data: x.data as Data } : { ok: false as const, data: null }; } });
+  const { data: r, error } = useQuery({ queryKey: buyerInvestorKey(id), queryFn: async () => { const x = await fetchById({ data: { id } }); return x.ok ? { ok: true as const, data: x.data as Data, missing: false } : { ok: false as const, data: null, missing: !!(x as { missing?: boolean }).missing }; } });
+  const missing = !!r && !r.ok && r.missing;
+  useEffect(() => {
+    if (!missing) return;
+    toast(tr("This profile has been removed."));
+    void navigate({ to: "/my-company", replace: true });
+  }, [missing, navigate]);
   if (error) return <p className="p-8 text-sm text-muted-foreground">Couldn't load your profile. Please refresh.</p>;
-  if (!r) return <div className="min-h-screen bg-[#F6F7F9] dark:bg-background" />;
+  if (!r || missing) return <div className="min-h-screen bg-[#F6F7F9] dark:bg-background" />;
   if (!r.ok) return <p className="p-8 text-sm text-muted-foreground">This profile isn't yours.</p>;
   return <BuyerSetupWizard key={id} data={r.data} startAt={q} />;
 }
