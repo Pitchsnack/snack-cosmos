@@ -1,5 +1,10 @@
 # One-step approval — roadmap
 
+## Seller listing resume — 1 November 2026
+- [ ] Refresh the actual My Company queries after status changes; keep buttons busy until refreshed.
+- [ ] Return success for an already-live listing and avoid duplicate publish events from concurrent resume calls.
+- [ ] Run regression tests and test remove/resume/read-back with a seller test account, restoring its live state.
+
 ## Buyer editing every way in — 1 November 2026
 - [x] Replace Control extra-profile generic dialog with EditInfoPopup; remove long-form branch and retired BuyerInvestorForm export. Same BuyerInformationForm in popup and inline completion; existing own/accountless Directory authorization retained.
 - [x] Preserve setup-action wizard resume and My Company layout; popup saves no longer mark incomplete setup finished, wizard Save profile does.
