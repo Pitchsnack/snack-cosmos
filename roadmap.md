@@ -2,9 +2,10 @@
 
 ## Edit information legal company name — 1 November 2026
 - [x] Audit existing second-name differences before implementation; preserve all stored values.
-- [ ] Update shared seller/buyer/advisor editors with locked copy, focus link, bilingual help and optional other-language names.
-- [ ] Add trimmed 200-character optional names under existing authorization; switch buyer firm/advisor legal-name consumers.
-- [ ] Verify rule tests and test-account EN/TH desktop/phone/dark editing and saved read-back.
+- [x] Update shared seller/buyer/advisor editors with locked copy, focus link, bilingual help and optional other-language names; setup forms remain unchanged.
+- [x] Add trimmed 200-character optional names under existing authorization; switch buyer firm/advisor legal-name consumers and advisor company-name recheck without rewriting legacy names.
+- [x] Test-account seller/buyer/advisor locked copy, focus link, Thai name save/read-back/restore, EN/TH desktop/phone/dark checks; rule/access/setup regressions pass.
+- [ ] Control/Admin directory-specific click-through — blocked on a dedicated Control test account; shared form paths implemented, Dan's login not used.
 
 ## Seller listing resume — 1 November 2026
 - [x] Refresh the actual My Company queries after status changes; keep buttons busy until refreshed.

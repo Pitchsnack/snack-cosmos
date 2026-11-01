@@ -1803,7 +1803,7 @@ export function StartupForm({
   // ── Tabs (edit) ──
   const has = (x: string | null | undefined) => !!x && !!x.trim();
   const privateCounts: Record<PrivateTab, number> = {
-    address: [registeredName, addr.street, addr.district, addr.province, addr.postal].filter((x) => !x?.trim()).length,
+    address: [...(editCtx ? [] : [registeredName]), addr.street, addr.district, addr.province, addr.postal].filter((x) => !x?.trim()).length,
     images: attachmentMissing(media),
     about: [has(yearFounded), has(startupName), has(headquarters), has(city), has(email), shortBi.filled, longBi.filled].filter((x) => !x).length,
     owner: founders.some((f) => f.full_name.trim()) ? 0 : 1,
