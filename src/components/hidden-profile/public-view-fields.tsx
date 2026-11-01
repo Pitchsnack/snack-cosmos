@@ -1,3 +1,4 @@
+import { FieldRow, AutoFillTabButton } from "@/components/common/listing-editor-fields";
 import { Lock } from "lucide-react";
 import { bandOf, bandInText, fmtThb, thbWords, thbWordsTh } from "@/lib/asking-price";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
@@ -129,37 +130,6 @@ const BOX = "h-[42px] rounded-[9px] border-[#D7DCE3] px-[13px] text-[15px] place
 const AREA = "rounded-[9px] border-[#D7DCE3] px-[13px] py-[10px] text-[15px] leading-[1.5] placeholder:text-[#9CA3AF] focus-visible:border-[#2563EB] focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] dark:border-input";
 const MISS_BOX = "border-[#F87171]";
 
-function SuggestLink({ onClick }: { onClick: () => void }) {
-  const tr = useTr();
-  return (
-    <button type="button" onClick={onClick} className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#6D28D9] hover:underline dark:text-violet-300">
-      <Sparkles className="h-[14px] w-[14px]" />{tr("Suggest", "แนะนำ")}
-    </button>
-  );
-}
-
-function FieldRow({ label, missing, right, suggest, children, htmlFor, after }: {
-  label: ReactNode; missing?: boolean; right?: ReactNode; suggest?: () => void; children: ReactNode; htmlFor?: string; after?: ReactNode;
-}) {
-  const tr = useTr();
-  return (
-    <div>
-      <div className="mb-[6px] flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <div className="flex items-center">
-          <label htmlFor={htmlFor} className={cn(LABEL, missing && MISSING)}>{label}</label>
-          {after}
-          {missing && <span className="ml-1 text-[12.5px] font-medium text-[#DC2626]">{tr("· Missing", "· ยังขาด")}</span>}
-        </div>
-        <div className="flex items-center gap-3">
-          {right != null && <span className="text-[12px] tabular-nums text-[#6A7181]">{right}</span>}
-          {suggest && <SuggestLink onClick={suggest} />}
-        </div>
-      </div>
-      {children}
-    </div>
-  );
-}
-
 function IdentityMsg({ pd }: { pd: PublicDraftState }) {
   if (!pd.findings.length) return null;
   const fields = [...new Set(pd.findings.map((f) => f.field))];
@@ -203,13 +173,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
   const hlSet = (next: string[]) => setD((p) => ({ ...p, [lang === "th" ? "highlights_th" : "highlights"]: next }));
 
   if (tab === "identity") {
-    const fill = (
-      <TooltipProvider><Tooltip><TooltipTrigger asChild>
-        <button type="button" onClick={pd.fillAll} className="inline-flex h-9 items-center gap-2 rounded-[9px] border border-[#DCDFE5] bg-background px-[13px] text-[13.5px] font-medium hover:bg-muted dark:border-border">
-          <Sparkles className="h-[15px] w-[15px]" />{tr("Auto-fill this tab", "เติมข้อมูลแท็บนี้อัตโนมัติ")}
-        </button>
-      </TooltipTrigger><TooltipContent>{tr("Fills in every field on this tab for you. You can change anything afterwards.", "กรอกทุกช่องในแท็บนี้ให้ท่าน ท่านแก้ไขได้ภายหลัง")}</TooltipContent></Tooltip></TooltipProvider>
-    );
+    const fill = <AutoFillTabButton onClick={pd.fillAll} />;
     const hlMissing = ![0, 1, 2].every((i) => hlEn[i]?.trim() || hlTh[i]?.trim());
     return (
       <div>

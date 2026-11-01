@@ -7,7 +7,7 @@ import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { EditInfoPopup } from "@/components/common/edit-info-popup";
 import { DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company-menu";
 import { addInvestorProfile, getBuyerInvestorById, listMyInvestorProfileIds } from "@/lib/buyer-investor.functions";
 import { BuyerInvestorEdit, buyerInvestorKey, type Data } from "@/components/my-business/buyer-investor-edit";
@@ -69,7 +69,7 @@ function ExtraProfile({ id, open }: { id: string; open: boolean }) {
   const d = r.data;
   const iv = d.investor;
   const rel = (d.buyer.relation ?? null) as BuyerRelation | null;
-  const prog = buyerProgressFor(rel, iv as never);
+  const prog = buyerProgressFor(rel, iv, d.buyer);
   const individual = rel === "individual";
   const nm = iv.investor_name || (iv.investor_type ? typeName(iv.investor_type) : tr("New investor profile"));
   const openWizard = () => void navigate({ to: "/buyer/company/$id/setup", params: { id }, search: {} });
@@ -86,16 +86,11 @@ function ExtraProfile({ id, open }: { id: string; open: boolean }) {
           <p className="text-[15px] font-semibold">{nm}</p>
           <p className="mt-1 text-sm text-muted-foreground">{d.buyer.ref_no} · {tr("Setup done")}</p>
           <div className="mt-4 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>{tr("Edit profile")}</Button>
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>{tr("Edit information")}</Button>
           </div>
         </div>
       )}
-      <Dialog open={editing} onOpenChange={setEditing}>
-        <DialogContent className="max-h-[88vh] max-w-[860px] overflow-y-auto">
-          <DialogTitle className="sr-only">{tr("Edit profile")}</DialogTitle>
-          <BuyerInvestorEdit id={id} />
-        </DialogContent>
-      </Dialog>
+      {editing && <EditInfoPopup open subtitle={nm} companyName={nm} onClosed={()=>setEditing(false)}><BuyerInvestorEdit id={id} /></EditInfoPopup>}
     </div>
   );
 }

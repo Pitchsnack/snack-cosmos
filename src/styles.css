@@ -548,11 +548,12 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 
 /* Buyer editor: shared investor preview and description with the existing form below. */
 :root { --buyer-preview-ring:#2563EB; --buyer-description-invalid:#FCA5A5; --buyer-description-mark:#FDE68A; }
-.buyer-description-layout { display:grid; grid-template-columns:300px minmax(0,1fr); gap:28px; align-items:stretch; }
+.buyer-description-layout { display:grid; grid-template-columns:300px minmax(0,1fr); gap:28px; align-items:start; }
 .buyer-preview-col { min-width:0; }
-.buyer-preview-sticky { position:sticky; top:70px; }
-.buyer-preview-caption { display:flex; align-items:center; gap:6px; margin:0 0 8px; color:var(--muted-foreground); font-size:12px; font-weight:700; }
-.buyer-preview-caption svg { width:14px; height:14px; }
+.buyer-preview-col { position:sticky; top:64px; }
+.buyer-preview-sticky { position:static; }
+.buyer-preview-caption { display:flex; align-items:center; gap:6px; margin:0 0 10px; color:var(--hub-warning); font-size:14px; font-weight:600; }
+.buyer-preview-caption svg { width:16px; height:16px; }
 .buyer-description-field { display:flex; flex-direction:column; min-width:0; }
 .buyer-description-field h3 { font-size:17px; font-weight:600; margin:0 0 12px; }
 
@@ -560,21 +561,21 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .buyer-description-label label { font-size:14px; font-weight:600; display:block; }
 .buyer-description-label label span { font-size:12.5px; font-weight:400; color:var(--muted-foreground); }
 .buyer-description-label > span { flex:none; font-size:12px; color:var(--muted-foreground); font-variant-numeric:tabular-nums; }
-.buyer-description-textarea { flex:1; min-height:140px; padding:11px 14px; border-radius:8px; resize:vertical; font-size:15px; line-height:1.55; }
+.buyer-description-textarea { height:150px; min-height:150px; padding:11px 14px; border-radius:8px; resize:vertical; font-size:15px; line-height:1.55; }
 .buyer-description-textarea[aria-invalid=true] { border-color:var(--buyer-description-invalid); }
 .buyer-description-help { margin:8px 0 0; font-size:13px; color:var(--muted-foreground); }
 .buyer-description-error,.buyer-description-label > .buyer-description-error { margin-top:8px; font-size:13px; font-weight:500; color:var(--edit-needed-ink); }
 .buyer-description-warning { margin-top:8px; padding:9px 12px; border:1px solid var(--standard-request-edge); border-radius:8px; background:var(--standard-request-bg); color:var(--standard-request-ink); font-size:13px; }
 .buyer-preview-empty { color:var(--standard-faint); }
 .buyer-editor-preview mark { background:var(--buyer-description-mark); color:var(--standard-ink); border-radius:3px; }
-.buyer-investment-mandate { margin-top:20px; padding:20px 22px 22px; border:1px solid var(--border); border-radius:12px; background:var(--card); }
-.buyer-investment-mandate h3 { font-size:17px; }
+.buyer-investment-mandate { margin-top:22px; padding:22px 0 0; border:0; border-top:1px solid var(--border); border-radius:0; background:transparent; }
+.buyer-investment-mandate h3 { font-size:16px; }
 .buyer-investment-mandate label { font-size:15px; font-weight:500; }
 .buyer-investment-mandate label { flex-wrap:wrap; gap:4px; }
 .buyer-label-explanation { font-size:12.5px; font-weight:400; color:var(--muted-foreground); }
 .buyer-investment-mandate [role=combobox] { height:46px; }
 .buyer-mandate-money { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
-.buyer-mandate-money > [data-edit-sec=mandate]:first-child { grid-column:2; }
+.buyer-mandate-money > [data-edit-sec=mandate]:first-child { grid-column:auto; }
 .buyer-mandate-divider { border-top:1px solid var(--border); padding-top:18px; margin-top:20px; }
 .buyer-investment-mandate button[aria-pressed] { font-size:13.5px; padding-inline:14px; }
 .buyer-investment-mandate button[aria-pressed=true] { background:var(--standard-logo); border-color:var(--standard-logo); color:var(--standard-white); }
@@ -584,7 +585,7 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 @media (prefers-reduced-motion:reduce) { .buyer-preview-hit { animation:none; } }
 @media (max-width:639px) {
  .buyer-description-layout { grid-template-columns:minmax(0,1fr); gap:16px; }
- .buyer-preview-sticky { position:static; }
+ .buyer-preview-sticky, .buyer-preview-col { position:static; }
  .buyer-editor-preview { display:grid; grid-template-columns:88px minmax(0,1fr); }
  .buyer-editor-preview .standard-card-cover { height:100%; min-height:88px; }
  .buyer-editor-preview .standard-card-body { padding:10px 12px; gap:4px; }
@@ -592,11 +593,29 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
  .buyer-editor-preview .standard-card-ref { float:none; margin:0; white-space:normal; }
  .buyer-editor-preview .standard-card-description { -webkit-line-clamp:2; }
  .buyer-editor-preview .standard-card-status,.buyer-editor-preview .standard-card-figures,.buyer-editor-preview .standard-card-toggle { display:none; }
- .buyer-description-textarea { flex:none; height:140px; }
- .buyer-investment-mandate { padding:16px 14px 18px; }
+ .buyer-description-textarea { flex:none; height:150px; }
+ .buyer-investment-mandate { padding:22px 0 0; }
  .buyer-mandate-money { grid-template-columns:minmax(0,1fr); }
  .buyer-mandate-money > [data-edit-sec=mandate]:first-child { grid-column:auto; }
 }
+
+/* Seller and buyer Listing Identity share the same title and field controls. */
+.listing-editor-title { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+.listing-editor-title h3 { font-size:18px; font-weight:600; }
+.listing-editor-label-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 12px; margin-bottom:8px; }
+.listing-editor-label { display:flex; flex-wrap:wrap; align-items:center; gap:4px; min-width:0; }
+.listing-editor-label label { font-size:15px; font-weight:500; color:var(--foreground); }
+.listing-editor-label-actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+.listing-editor-count { font-size:12px; font-variant-numeric:tabular-nums; color:var(--muted-foreground); }
+.listing-suggest { display:inline-flex; align-items:center; gap:5px; font-size:14px; font-weight:600; color:var(--profile); }
+.listing-suggest:hover { text-decoration:underline; }
+.listing-suggest svg, .listing-autofill svg { width:15px; height:15px; color:var(--profile); }
+.listing-autofill { height:40px; border-radius:10px; background:var(--card); border-color:var(--seller-action-border); font-size:14px; font-weight:500; }
+.buyer-description-fields { min-width:0; }
+.buyer-editor-preview { border:1px solid var(--profile-line); box-shadow:0 0 0 1px var(--hub-buyer-soft); }
+.buyer-about-textarea[aria-invalid=true] { border-color:var(--buyer-description-invalid); }
+html[lang=th] #buyer-edit-form [class*="tracking-"], html[lang=th] [data-mkt-view=buyer] [class*="tracking-"] { letter-spacing:0; }
+[data-mkt-view=buyer] [class*="rounded-full"][class*="font-bold"] { white-space:nowrap; }
 
 /* Edit information: Texts in English | ไทย switch and EN/TH tags */
 .edit-info-switches { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }

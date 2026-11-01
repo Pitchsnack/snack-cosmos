@@ -1,5 +1,13 @@
 # One-step approval — roadmap
 
+## Buyer editing every way in — 1 November 2026
+- [x] Replace Control extra-profile generic dialog with EditInfoPopup; remove long-form branch and retired BuyerInvestorForm export. Same BuyerInformationForm in popup and inline completion; existing own/accountless Directory authorization retained.
+- [x] Preserve setup-action wizard resume and My Company layout; popup saves no longer mark incomplete setup finished, wizard Save profile does.
+- [x] Shared seller title/label/Suggest controls, sticky real preview, 150px description and mandate beside card; bilingual layout and phone checks.
+- [x] About Company 80-word bilingual changed-only frontend/server validation, existing directory Admin bypass and check order; no schema/direct record changes.
+- [x] 37 rule/access/setup tests; test buyer EN/TH, 1440x960/390, Suggest, retained filled text, word blocking, save/read-back/restore; inline completion/source-tag removal verified. Admin Add popup loaded. Fixed numbered adding=1 legacy link.
+- [ ] Control own/extra profile and accountless Directory Edit/save/Approvals click-through blocked: admin.acme test identity only TENANT_ADMIN, not CONTROL; no privileges changed. New draft first-missing/resume/finish-save screenshots require suitable test draft (buyer2 welcome modal intercepted clicks).
+
 ## Buyer and advisor wizard step bars — 31 October 2026
 - [x] Reuse seller StepBar on shown questions and Review; bilingual labels and missing-question navigation; seller and banners' layouts unchanged. Current questions combine location with Firm/Address, so no separate Location step was invented.
 - [x] Persist monotonic setup_reached through authorised autosaves and triggers; derive completion from validity and optional-step passage; block Review on missing required answers. Existing fields reused, no historical backfill or direct record mutations.

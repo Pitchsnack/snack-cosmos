@@ -35,7 +35,7 @@
 - Admin Plans publish atomically; public cards share the live-plan renderer.
 - Contact enquiries: sendContactEnquiry (rate-limited); email-identity.ts drives replies and Sending rules.
 - Edit information = one ?edit= pop-up (edit-info-popup.tsx); forms portal Cancel/Save into it, and Edit my startup holds the public view tabs so one Save stores both.
-- Directory and valuation edit hosts reuse StartupForm, BuyerInvestorForm and FirmEditForm; page wrappers own dismissal so form saves cannot change the originating page.
+- Buyer popup/wizard completion share BuyerInformationForm; hosts own dismissal to preserve origin.
 - Browse/Favourites header, plan pill, NDA strip, match tags: browse-header.tsx; matches only via myBrowseMatches. Buyer Company Type follows buyer_relation (trigger).
 - Soft-launch gate: AccessGate wraps public pages; codes/passes/claims checked only in access-gate.functions.ts; free-plan ends in free-plan.server.ts.
 - Asking price: asking_price_thb + DB asking_price_band(); servers send priceFor() (asking-price.ts): exact only to Admin/own users/approved NDA, else the range. Advisor email live from owner.
@@ -56,7 +56,7 @@
 
 - Editors share EditInfoPopup, CompactFields and business-address; directory row focus stays transient, never changing access or saves.
 
-- Buyer description counts and grandfathering use the browser-safe buyer-description helper in existing form/server validators; editor previews adapt unsaved public-only values into StandardInvestorCard, preserving existing persistence and authorization.
+- Buyer description/About Company use shared counting and changed-only checks, preserving Admin bypass. Buyer previews use StandardInvestorCard; seller/buyer labels and Suggest share listing-editor-fields.
 
 - DBD fetch-once store: dbd_company_records (per registration number) is the only source of DBD facts; writes only via DB functions dbd_store_save/dbd_store_delete/dbd_apply_edit (Control-checked, trigger-guarded); seller report tables are materialised copies and analyst edits re-apply after refresh.
 - Read nested AGENTS.md before edits.
