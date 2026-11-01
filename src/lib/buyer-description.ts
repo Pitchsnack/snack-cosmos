@@ -21,3 +21,18 @@ export function buyerDescriptionError(text: string): string | null {
 }
 /** Old descriptions are grandfathered only when the submitted value is unchanged. */
 export const descriptionChanged = (next: string | undefined, stored: string | null | undefined) => next !== undefined && next !== (stored ?? '');
+
+/** About Company uses the same word definition, independently for each language. */
+export function buyerAboutError(next: string | null | undefined, stored?: string | null, bypass = false): string | null {
+  if (bypass || next === undefined || !descriptionChanged(next ?? '', stored)) return null;
+  return descriptionWords(next ?? '') > 80 ? 'Keep it to 80 words.' : null;
+}
+
+/** A public-only suggestion: no names, website addresses or contact data. */
+export function suggestBuyerDescription(facts: { type: string; industries: string[]; geography: string[] }, lang: 'en' | 'th'): string {
+  const industry = facts.industries.find(x => x !== 'Sector Agnostic');
+  const candidate = lang === 'th'
+    ? 'ลงทุนและเข้าซื้อกิจการที่มีศักยภาพ พร้อมสนับสนุนการเติบโตอย่างยั่งยืน'
+    : `${facts.type || 'Investor'} seeking ${industry ? `${industry} ` : ''}businesses${facts.geography.length ? ` in ${facts.geography.slice(0, 2).join(' and ')}` : ''}. Supporting sustainable growth.`;
+  return buyerDescriptionError(candidate) ? (lang === 'th' ? 'ลงทุนในกิจการและสนับสนุนการเติบโต' : 'Investing in businesses and supporting sustainable growth.') : candidate;
+}
