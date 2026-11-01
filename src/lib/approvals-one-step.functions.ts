@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { buyerApprovalTextMissing, buyerListingName, buyerRegistrationMissing } from "./buyer-listing-identity";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resetApprovalNotice } from "@/lib/approval-notices.functions";
 import { TR_LIST, TR_MAX, setupLanguageOf, trBase, type TrKey, type TrRow } from "@/lib/review-translation";
@@ -174,7 +175,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
         decisionNote: p.decision_note,
         sentBackAt: p.approval_status === "changes_requested" ? p.decided_at : null,
         chip: p.approval_status === "changes_requested" ? "sent_back" : "waiting",
-        suggestedName: p.suggested_listing_name, suggestedHeadline: p.suggested_headline,
+        suggestedName: buyerListingName(inv?.investor_type, p.ref_no, p.suggested_listing_name || p.published_listing_name), suggestedHeadline: p.suggested_headline || p.published_headline,
         publishedName: p.published_listing_name, publishedHeadline: p.published_headline, review,
         ...extras({ person: uBy.get(p.user_id), draft: p.review_draft, savedAt: p.review_saved_at, suggestedTh: p.suggested_headline_th, publishedTh: p.published_headline_th, descriptionTh: p.description_th,
           rows: [
@@ -251,8 +252,8 @@ export const decideOneStep = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
 
     if (data.action === "approve") {
-      if (!data.publishedName?.trim()) throw new Error("Write a listing name.");
-      if (!data.publishedHeadline?.trim()) throw new Error("Write a headline.");
+      const missingText = buyerApprovalTextMissing(data.publishedName, data.publishedHeadline, data.kind);
+      if (missingText) throw new Error(missingText);
     } else {
       if (!data.reasons?.length) throw new Error("Choose at least one reason.");
     }
@@ -269,11 +270,14 @@ export const decideOneStep = createServerFn({ method: "POST" })
         : null;
 
       if (data.action === "approve") {
+        const { data: inv } = p.investor_id ? await sb.from("investors").select("ticket_band, investor_type").eq("id", p.investor_id).maybeSingle() : { data: null };
+        const publishedName = buyerListingName(inv?.investor_type, p.ref_no, data.publishedName || p.published_listing_name);
+        const publishedHeadline = data.publishedHeadline?.trim() || p.published_headline || null;
         const { error } = await sb.from("buyer_profiles").update({
           approval_status: "approved", status: "live", live_since: p.live_since ?? now,
           decided_at: now, decided_by: context.userId, decision_note: null, decision_reasons: [],
-          published_listing_name: (data.publishedName ?? "").trim(), published_headline: (data.publishedHeadline ?? "").trim(),
-          published_headline_th: data.publishedHeadlineTh?.trim() || null, review_draft: null, review_saved_at: null, updated_at: now,
+          published_listing_name: publishedName, published_headline: publishedHeadline,
+          published_headline_th: data.publishedHeadlineTh?.trim() || p.published_headline_th || null, review_draft: null, review_saved_at: null, updated_at: now,
         }).eq("user_id", p.user_id);
         if (error) throw new Error(error.message);
         // The verification moves with the profile, in the same decision.
@@ -287,15 +291,14 @@ export const decideOneStep = createServerFn({ method: "POST" })
         await resetApprovalNotice(sb, p.user_id, "buyer_profile", p.user_id, now);
         await logEvent({ item_type: "buyer_profile", item_id: p.user_id, subject_user_id: p.user_id, action: "approve", actor_id: context.userId, note: null, reasons: [],
           ...(await dbdStamp(p.investor_id ? (await sb.from("investors").select("registration_no").eq("id", p.investor_id).maybeSingle()).data?.registration_no : null)) });
-        await notify(p.user_id, "Your profile is approved", `Sellers can now find your firm as ${data.publishedName} (${p.ref_no}) in Browse investors, and you can request NDAs.`, "/marketplace/my-company");
+        await notify(p.user_id, "Your profile is approved", `Sellers can now find your firm as ${publishedName} in Browse investors, and you can request NDAs.`, "/marketplace/my-company");
         const { sendAlert } = await import("./email-alerts.server");
         const { bandText } = await import("@/lib/investor-bands");
-        const { data: inv } = p.investor_id ? await sb.from("investors").select("ticket_band").eq("id", p.investor_id).maybeSingle() : { data: null };
-        const rewrote = (p.suggested_listing_name ?? "").trim() !== (data.publishedName ?? "").trim() || (p.suggested_headline ?? "").trim() !== (data.publishedHeadline ?? "").trim();
+        const rewrote = !!p.suggested_listing_name?.trim() && p.suggested_listing_name.trim() !== publishedName || !!p.suggested_headline?.trim() && p.suggested_headline.trim() !== publishedHeadline;
         await sendAlert({
           alert: "approved", role: "buyer", userIds: [p.user_id],
-          vars: { "listing name": (data.publishedName ?? ""), ref: p.ref_no ?? "", rewrote: rewrote ? " PitchSnack rewrote your listing name and headline." : "" },
-          details: [["Listing name", (data.publishedName ?? "")], ["Headline", (data.publishedHeadline ?? "")], ["Verified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })], ["Ticket size", bandText(inv?.ticket_band) ?? "—"]],
+          vars: { "listing name": publishedName, ref: p.ref_no ?? "", rewrote: rewrote ? " PitchSnack rewrote your listing name and headline." : "" },
+          details: [["Listing name", publishedName], ...(publishedHeadline ? [["Headline", publishedHeadline] as [string, string]] : []), ["Verified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })], ["Ticket size", bandText(inv?.ticket_band) ?? "—"]],
           refKey: `buyer_profile:${p.user_id}:approved:${now}`,
         });
         return { ok: true };
@@ -593,20 +596,11 @@ export const registerBuyerCompany = createServerFn({ method: "POST" })
       ? await sb.from("investors").select("investor_name, investor_type, ticket_band, preferred_stages, preferred_industries, setup_done_at, website_url, registration_no, linkedin_url, email").eq("id", p.investor_id).maybeSingle()
       : { data: null };
 
-    // The same checks setBuyerListing runs today, plus the listing name, headline and identity check.
-    const { showsStages, descriptionLeaks } = await import("@/lib/investor-bands");
-    const missing = [
-      !inv?.setup_done_at && "finish setup",
-      !inv?.investor_name?.trim() && "company name",
-      !inv?.ticket_band && "average investment",
-      !(p.deal_types ?? []).length && "deal types",
-      showsStages(inv?.investor_type) && !(inv?.preferred_stages ?? []).length && "stages",
-      !(inv?.preferred_industries ?? []).length && "industries",
-      !p.suggested_listing_name?.trim() && "a listing name",
-      !p.suggested_headline?.trim() && "a headline",
-    ].filter(Boolean);
+    // Buyer suggestions are retired; existing readiness and public identity checks remain.
+    const { descriptionLeaks } = await import("@/lib/investor-bands");
+    const missing = buyerRegistrationMissing(inv, p);
     if (missing.length) throw new Error(`Add ${missing.join(", ")} before registering.`);
-    const leaks = descriptionLeaks([p.suggested_listing_name, p.suggested_headline, p.description].filter(Boolean).join("\n"), inv?.investor_name ?? "", inv?.website_url ?? "");
+    const leaks = descriptionLeaks(p.description ?? "", inv?.investor_name ?? "", inv?.website_url ?? "");
     if (leaks.length) throw new Error(`Identity check: mentions ${leaks.join(", ")}`);
 
     const now = new Date().toISOString();
