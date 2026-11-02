@@ -3,10 +3,11 @@ import { ManagedBadge } from "@/components/common/managed-badge";
 import { sectorChips } from "@/lib/business-types";
 import type React from "react";
 import { useState } from "react";
-import { BadgeCheck, Building2, ChevronDown, ChevronUp } from "lucide-react";
+import { BadgeCheck, Building2, ChevronDown, ChevronUp, LogIn } from "lucide-react";
 import { StatusPill } from "@/components/marketplace/buyer-browse-card";
 import { dealBandLabels, initials, reviewStats, serviceOf, type AdvisorFirm } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
+import { LAST_LOGIN_LABEL, type LastLoginStep } from "@/lib/last-login";
 import { tr } from "@/i18n/language";
 
 /** Advisor firm card: the investor public card's layout with firm content. */
@@ -25,8 +26,8 @@ export function FirmLogo({ f, size = 52, radius = 13, ring = true }: { f: Pick<A
 
 export function VerifiedAdvisorChip({ small }: { small?: boolean }) {
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 font-semibold text-[#15803D]", small ? "h-5 text-[11px]" : "h-[22px] text-[11px]")}>
-      <BadgeCheck className="h-3 w-3" />{setupText("Verified advisor")}
+    <span className={cn("inline-flex items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-[9px] font-semibold text-[#15803D] shadow-[0_1px_2px_rgba(16,24,40,.14)]", small ? "h-5 text-[11px]" : "h-6 text-[12px]")}>
+      <BadgeCheck className="h-[13px] w-[13px]" />{setupText("Verified advisor")}
     </span>
   );
 }
@@ -65,7 +66,8 @@ export function ServiceChip({ name }: { name: string }) {
   );
 }
 
-function Cover({ f, wide, noStatus }: { f: AdvisorFirm; wide?: boolean; noStatus?: boolean }) {
+/** 150px cover: the logo whole (up to 96 × 240px), centred 12px above the bottom, under the badge. */
+function Cover({ f, noStatus }: { f: AdvisorFirm; noStatus?: boolean }) {
   const pills = (
     <>
       {f.verifiedAt && <div className="absolute left-3 top-3"><VerifiedAdvisorChip /></div>}
@@ -74,16 +76,15 @@ function Cover({ f, wide, noStatus }: { f: AdvisorFirm; wide?: boolean; noStatus
     </>
   );
   if (f.logoUrl) {
-    // White cover: the logo whole, as large as fits, centred above the bottom line.
     return (
-      <div className="relative flex items-end justify-center border-b border-[#EEF0F3] bg-white px-5 pb-2.5" style={{ height: wide ? 136 : 126 }}>
-        <img src={f.logoUrl} alt="" className="max-w-[240px] object-contain" style={{ maxHeight: wide ? 80 : 72 }} />
+      <div className="relative flex items-end justify-center border-b border-[#EEF0F3] bg-white px-5 pb-3" style={{ height: 150 }}>
+        <img src={f.logoUrl} alt="" className="object-contain" style={{ maxHeight: 96, maxWidth: "min(240px, 100%)" }} />
         {pills}
       </div>
     );
   }
   return (
-    <div className="relative grid place-items-center overflow-hidden bg-[#E0F5F2]" style={{ height: wide ? 126 : 116 }}>
+    <div className="relative grid place-items-center overflow-hidden bg-[#E0F5F2]" style={{ height: 150 }}>
       <svg aria-hidden className="absolute inset-0 h-full w-full text-[#0F766E] opacity-35" viewBox="0 0 320 120" preserveAspectRatio="none">
         <circle cx="40" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="1" />
         <circle cx="280" cy="10" r="70" fill="none" stroke="currentColor" strokeWidth="1" />
@@ -104,6 +105,20 @@ function Fig({ label, main, sub }: { label: string; main: string; sub: string | 
   );
 }
 
+/** The figures box's last row: the first two languages, "+{n}" for more, tooltip lists them all. */
+function LanguagesRow({ f }: { f: AdvisorFirm }) {
+  const langs = f.languages.map(tr).filter(Boolean);
+  const shown = langs.slice(0, 2).join(" · ");
+  const extra = langs.length - 2;
+  return (
+    <div className="flex items-center gap-2.5 border-t border-border px-3 py-2" title={langs.length ? langs.join(" · ") : undefined}>
+      <span className="shrink-0 text-[11.5px] text-[#6B7280]">{tr("Languages")}</span>
+      <span className="min-w-0 flex-1 truncate text-right text-[13px] font-semibold text-[#111827] dark:text-foreground">{shown || tr("Not added")}</span>
+      {extra > 0 && <span className="shrink-0 rounded-full bg-[#F1F2F5] px-1.5 text-[11px] font-semibold leading-[18px] text-[#4B5563] dark:bg-muted dark:text-muted-foreground">+{extra}</span>}
+    </div>
+  );
+}
+
 function MoreRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex gap-3 text-[13px]">
@@ -113,25 +128,39 @@ function MoreRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function FirmCard({ f, wide, preview, selected, onClick, className, foot, accent = "#F6A823", noStatus }: { f: AdvisorFirm; wide?: boolean; preview?: boolean; selected?: boolean; onClick?: () => void; className?: string; foot?: React.ReactNode; accent?: string; noStatus?: boolean }) {
+export function FirmCard({ f, wide, preview, selected, onClick, className, action, accent = "#F6A823", noStatus, lastLogin }: {
+  f: AdvisorFirm; wide?: boolean; preview?: boolean; selected?: boolean; onClick?: () => void; className?: string;
+  /** Send enquiry (or the status chip), shown full width inside Show more after Sectors. */
+  action?: React.ReactNode; accent?: string; noStatus?: boolean;
+  /** Owner's last-login bucket on the left of Show more (Browse advisors only; previews/Admin omit it). */
+  lastLogin?: LastLoginStep | null;
+}) {
   const [open, setOpen] = useState(false);
   const deal = dealBandLabels(f.dealBand);
   const { n, avg } = reviewStats(f.reviews);
   const showMore = wide || open;
+  const toggle = (centred: boolean) => (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+      className={cn("inline-flex items-center gap-1 text-[14px] font-semibold text-[#374151] hover:text-foreground dark:text-foreground/80", centred && "w-full justify-center py-1")}
+    >
+      {open ? <>{tr("Show less")} <ChevronUp className="h-4 w-4" /></> : <>{tr("Show more")} <ChevronDown className="h-4 w-4" /></>}
+    </button>
+  );
   return (
     <div
       onClick={onClick}
       className={cn(
-        "group overflow-hidden rounded-[14px] border bg-card text-left transition-all",
-        foot && "flex flex-col",
+        "group flex flex-col overflow-hidden rounded-[14px] border bg-card text-left transition-all",
         selected ? "" : "border-border",
         onClick && "cursor-pointer hover:-translate-y-0.5",
         className,
       )}
       style={selected ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}` } : undefined}
     >
-      <Cover f={f} wide={wide} noStatus={noStatus} />
-      <div className={cn("space-y-2.5 p-4", foot && "flex-1")}>
+      <Cover f={f} noStatus={noStatus} />
+      <div className="flex-1 space-y-2.5 p-4">
         <div>
           <div className="flex items-start justify-between gap-3">
             <h3 className="min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.publishedListingName?.trim() || f.name.trim() || tr("New firm profile")}</h3>
@@ -153,35 +182,30 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, foot,
           ? <p className={cn("text-[13.5px] leading-[1.5] text-[#374151] dark:text-foreground/80", (!showMore || preview) && "line-clamp-3")}>{f.description}</p>
           : <p className="text-[13.5px] text-[#9CA3AF]">{tr("No description yet.")}</p>}
         {f.services.length > 0 && <div className="flex flex-wrap gap-1.5">{f.services.map((s) => <ServiceChip key={s} name={s} />)}</div>}
-        <div className="@container">
-          <div className="grid grid-cols-1 divide-y divide-border rounded-[10px] border border-border bg-muted/30 @[260px]:grid-cols-[3fr_2fr] @[260px]:divide-x @[260px]:divide-y-0">
+        <div className="@container rounded-[10px] border border-border bg-muted/30">
+          <div className="grid grid-cols-1 divide-y divide-border @[260px]:grid-cols-[3fr_2fr] @[260px]:divide-x @[260px]:divide-y-0">
             <Fig label={tr("Typical deal size")} main={deal?.usd ?? tr("Not added")} sub={deal ? `(${deal.thb})` : null} />
             <Fig label={tr("Team size")} main={f.teamSize ? String(f.teamSize) : tr("Not added")} sub={f.teamSize ? tr("people") : null} />
           </div>
+          <LanguagesRow f={f} />
         </div>
         {showMore && !preview && (
-          <div className="space-y-1.5">
-            <MoreRow label={tr("Languages")} value={f.languages.map(tr).join(" · ") || tr("Not added")} />
+          <div className="space-y-2.5">
             {(f.sectorAgnostic || f.sectors.length > 0) && <MoreRow label={tr("Sectors")} value={
               <span className="flex flex-wrap gap-1">{(f.sectorAgnostic ? [tr("Sector agnostic")] : sectorChips(f.sectors, f.sectorPicks)).map((s) => <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[12px]">{s}</span>)}</span>} />}
+            {action && <div className="flex justify-center pt-0.5 [&_button]:w-full [&_button]:justify-center">{action}</div>}
           </div>
         )}
       </div>
-      {foot ? (
-        <div className="flex items-center justify-between gap-2 border-t border-[#F0F1F3] px-3.5 pb-[11px] pt-[9px] dark:border-border">
-          <button type="button" onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }} className="inline-flex items-center gap-1 text-[13px] font-semibold text-muted-foreground hover:text-foreground">
-            {open ? <>{tr("Show less")} <ChevronUp className="h-4 w-4" /></> : <>{tr("Show more")} <ChevronDown className="h-4 w-4" /></>}
-          </button>
-          {foot}
+      {lastLogin ? (
+        <div className="flex items-center justify-between gap-2.5 px-4 pb-3 pt-1">
+          <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap text-[12px] leading-4 text-[#6B7280]" title={tr("When the advisor last logged in to PitchSnack")}>
+            <LogIn className="h-[13px] w-[13px] shrink-0" />{tr(LAST_LOGIN_LABEL[lastLogin])}
+          </span>
+          {toggle(false)}
         </div>
-      ) : !wide && !preview && (
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
-          className="flex w-full items-center justify-center gap-1 border-t border-border py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-        >
-          {open ? <>{setupText("Show less")} <ChevronUp className="h-4 w-4" /></> : <>{setupText("Show more")} <ChevronDown className="h-4 w-4" /></>}
-        </button>
+      ) : (
+        !wide && !preview && <div className="px-4 pb-3 pt-1">{toggle(true)}</div>
       )}
     </div>
   );

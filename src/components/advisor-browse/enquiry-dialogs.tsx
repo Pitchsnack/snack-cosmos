@@ -57,11 +57,12 @@ export function StatusChip({ s, big }: { s: EnquiryState; big?: boolean }) {
 /** Whether this company can send a new enquiry to the firm. */
 export const canEnquire = (s: EnquiryState | undefined) => !s || ["declined", "closed", "done"].includes(s.status);
 
-export function SendEnquiryButton({ onClick, big }: { onClick: () => void; big?: boolean }) {
+export function SendEnquiryButton({ onClick, big, card }: { onClick: () => void; big?: boolean; card?: boolean }) {
   return (
     <button type="button" onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className={cn("inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap font-semibold", NAVY, big ? "h-10 rounded-[10px] px-4 text-[14px]" : "h-[30px] rounded-[8px] px-2.5 text-[12.5px]")}>
-      <Send className={big ? "h-[15px] w-[15px]" : "h-[13px] w-[13px]"} />{tr("Send enquiry")}
+      className={cn("inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap font-semibold", NAVY,
+        card ? "h-9 rounded-[9px] px-3 text-[13px]" : big ? "h-10 rounded-[10px] px-4 text-[14px]" : "h-[30px] rounded-[8px] px-2.5 text-[12.5px]")}>
+      <Send className={card || big ? "h-[14px] w-[14px]" : "h-[13px] w-[13px]"} />{tr("Send enquiry")}
     </button>
   );
 }

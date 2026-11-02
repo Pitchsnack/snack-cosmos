@@ -125,10 +125,14 @@ export async function loadFirmCards(sb: any, ids: string[], fullAddressFor: Set<
     for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
   }
   const kids = { fees: fees.data ?? [], team: team.data ?? [], creds: (creds.data ?? []).filter((c: any) => c.status !== "rejected"), docs: docs.data ?? [], reviews: reviews.data ?? [] };
+  const loginSteps = await (await import("@/lib/last-login.server")).firmLoginSteps(sb, rows.map((r: any) => r.owner_user_id));
   // The full address only for firms named in fullAddressFor; others show "{place}, {country}".
-  return (await withOwnerEmails(rows)).map((r: any) => toFirm(fullAddressFor.has(r.id) ? r : {
-    ...r, addr_street: null, addr_unit: null, addr_subdistrict: null, addr_district: null, addr_postal: null, registration_no: null,
-  }, kids, urls));
+  return (await withOwnerEmails(rows)).map((r: any) => ({
+    ...toFirm(fullAddressFor.has(r.id) ? r : {
+      ...r, addr_street: null, addr_unit: null, addr_subdistrict: null, addr_district: null, addr_postal: null, registration_no: null,
+    }, kids, urls),
+    lastLoginStep: loginSteps.get(r.owner_user_id) ?? null,
+  }));
 }
 
 /** Admin: one firm in the advisor's own shape, for Edit in Advisors Directory. */

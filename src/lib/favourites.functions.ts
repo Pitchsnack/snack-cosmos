@@ -127,11 +127,13 @@ export async function loadBuyerFavourites(userId:string) {
       if (signed?.signedUrl) photoBy.set(photo.startup_id, signed.signedUrl);
     }
     const managed = await (await import("@/lib/managed.server")).managedStartupIds(sb, stIds);
+    const loginSteps = await (await import("@/lib/last-login.server")).startupLoginSteps(sb, stIds);
     const out: Favourite[] = rows.map((r: any) => {
       const live = (r.live ?? {}) as any;
       const st = Array.isArray(r.startups) ? r.startups[0] : r.startups;
       const listing = buildPublicListing(st, { ...live, ref_no: r.ref_no, public_image_id: r.public_image_id ?? null, live: true, published_at: r.published_at }, withFin.has(r.startup_id));
       listing.certified = !!st.registration_verified_at;
+      listing.lastLoginStep = loginSteps.get(r.startup_id) ?? null;
       const p = pipeBy.get(r.id);
       const state = p ? ndaState(p) : null;
       const status: FavStatus = state ?? "saved";

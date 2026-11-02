@@ -308,6 +308,14 @@ export function BrowseAdvisorsPage({ side, firmParam, enquire }: { side: Side; f
     if (s?.status === "done" && !big) return <StatusChip s={s} />;
     return <SendEnquiryButton big={big} onClick={() => setEnq({ firm: f, service: null })} />;
   };
+  /** Inside the card's Show more: full-width Send enquiry, or the status chip. */
+  const cardAction = (f: AdvisorFirm) => {
+    const s = states[f.id];
+    if (!canAct) return null;
+    if (s && !canEnquire(s)) return <StatusChip s={s} />;
+    if (s?.status === "done") return <StatusChip s={s} />;
+    return <SendEnquiryButton card onClick={() => setEnq({ firm: f, service: null })} />;
+  };
   const tileAction = (f: AdvisorFirm) => (svc: string) => {
     const s = states[f.id];
     if (!canAct) return null;
@@ -409,14 +417,14 @@ export function BrowseAdvisorsPage({ side, firmParam, enquire }: { side: Side; f
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[380px] rounded-[14px]" />)}</div>
         ) : shown.length === 0 ? empty : view === "grid" ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {shown.map((f) => <FirmCard key={f.id} f={f} noStatus className="h-full" accent={ACCENT[side]} onClick={() => openSplit(f.id)} foot={action(f) ?? <span />} />)}
+            {shown.map((f) => <FirmCard key={f.id} f={f} noStatus className="h-full" accent={ACCENT[side]} onClick={() => openSplit(f.id)} action={cardAction(f)} lastLogin={f.lastLoginStep} />)}
           </div>
         ) : view === "split" ? (
           <div className={splitFixed ? "grid min-h-0 flex-1 grid-cols-[372px_minmax(0,1fr)] gap-5" : "grid items-start gap-5 min-[1100px]:grid-cols-[372px_minmax(0,1fr)]"}>
             <div ref={listRef} tabIndex={-1} onKeyDown={onListKey} className={cn("space-y-[18px] outline-none", splitFixed && "min-h-0 overflow-y-auto pr-2 [scrollbar-gutter:stable]")}>
               {shown.map((f) => (
                 <div key={f.id} data-key={f.id} tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) setSel(f.id); }} className="rounded-[14px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--r-acc)]">
-                  <FirmCard f={f} noStatus accent={ACCENT[side]} selected={wide && current?.id === f.id} onClick={() => (wide ? setSel(f.id) : setSel(sel === f.id ? null : f.id))} foot={action(f) ?? <span />} />
+                  <FirmCard f={f} noStatus accent={ACCENT[side]} selected={wide && current?.id === f.id} onClick={() => (wide ? setSel(f.id) : setSel(sel === f.id ? null : f.id))} action={cardAction(f)} lastLogin={f.lastLoginStep} />
                   {!wide && sel === f.id && <div className="mt-3 flex flex-col">{panel(f)}</div>}
                 </div>
               ))}

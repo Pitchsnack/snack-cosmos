@@ -1,10 +1,11 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { ChevronDown, CircleCheck, Clock, EyeOff, FileText, LockOpen } from 'lucide-react';
+import { ChevronDown, CircleCheck, Clock, EyeOff, FileText, LockOpen, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ManagedBadge, useCoverFit } from '@/components/common/managed-badge';
 import { useTranslation } from '@/i18n/language';
 import { cn } from '@/lib/utils';
 import type { CardNdaStatus } from '@/lib/standard-card';
+import { LAST_LOGIN_LABEL, type LastLoginStep } from '@/lib/last-login';
 import { cardValue } from '@/lib/marketplace-contacts';
 
 const pending = new Set<HTMLElement>();
@@ -30,13 +31,15 @@ export function scheduleCardRows(el: Element | null) {
 }
 
 export type StandardFigure = { label: string; value?: string | null; second?: string | null };
-export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, textRow, more, selected, onOpen, className, sourceType, tag }: {
+export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip }: {
   title: string; subtitle?: string; refNo: string; place?: string | null; description?: string | null;
   cover: (children: ReactNode) => ReactNode; status?: CardNdaStatus; newDays?: number | null; managed?: boolean;
   topRight?: ReactNode; badges?: { label: string; financial?: boolean }[]; figures: StandardFigure[];
   fit: StandardFigure; textRow: StandardFigure; more?: ReactNode; selected?: boolean; onOpen?: () => void;
   focusRow?: StandardFigure; descriptionContent?: ReactNode;
   className?: string; sourceType?: string; tag?: ReactNode; hideStatus?: boolean;
+  /** Owner's last-login bucket on the left of Show more (browse/watchlist only; previews omit it). */
+  lastLogin?: LastLoginStep | null; lastLoginTooltip?: string;
 }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -112,7 +115,14 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
         <dl className="standard-card-text-row"><dt>{t(textRow.label)}</dt><dd title={textRow.value ?? undefined}>{textRow.value || t('Not stated')}</dd></dl>
       </div>
       {expanded && <div className="standard-card-more">{tag}{more}</div>}
-      <Button variant="unstyled" size="unstyled" className="standard-card-toggle" aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded((v) => !v)}>{t(expanded ? 'Show less' : 'Show more')}<ChevronDown aria-hidden /></Button>
+      {lastLogin ? (
+        <div className="standard-card-foot">
+          <span className="standard-card-last-login" title={lastLoginTooltip}><LogIn aria-hidden />{t(LAST_LOGIN_LABEL[lastLogin])}</span>
+          <Button variant="unstyled" size="unstyled" className="standard-card-toggle" aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded((v) => !v)}>{t(expanded ? 'Show less' : 'Show more')}<ChevronDown aria-hidden /></Button>
+        </div>
+      ) : (
+        <Button variant="unstyled" size="unstyled" className="standard-card-toggle" aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded((v) => !v)}>{t(expanded ? 'Show less' : 'Show more')}<ChevronDown aria-hidden /></Button>
+      )}
     </div>
   </article>;
 }

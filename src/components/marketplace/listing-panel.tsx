@@ -69,7 +69,7 @@ export function SaveButton({ saved, onClick, square, nda }: { saved: boolean; on
   const tip = nda ? t("In my watchlist because of your NDA") : saved ? t("Remove from my watchlist") : t("Add to my watchlist");
   const star = <Star className={cn("h-4 w-4", on ? "fill-[#F59E0B] text-[#D97706]" : "text-[#4B5563]")} />;
   if (square) {
-    const cls = cn("inline-flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border bg-white", on ? "border-[#FDE68A]" : "border-[#E5E7EB]");
+    const cls = cn("inline-flex h-8 w-8 items-center justify-center rounded-[8px] border bg-white", on ? "border-[#FDE68A]" : "border-[#E5E7EB]");
     if (nda) return <span className={cls} title={tip} aria-label={tip} onClick={(e) => e.stopPropagation()}>{star}</span>;
     return (
       <button type="button" aria-label={tip} aria-pressed={saved} title={tip} className={cls}

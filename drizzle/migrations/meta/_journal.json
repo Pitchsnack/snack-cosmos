@@ -911,6 +911,13 @@
       "when": 1793568438581,
       "tag": "0129_advisor_company_name_recheck",
       "breakpoints": true
+    },
+    {
+      "idx": 130,
+      "version": "7",
+      "when": 1793577248478,
+      "tag": "0130_user_activity_last_login",
+      "breakpoints": true
     }
   ]
 }

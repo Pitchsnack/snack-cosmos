@@ -25,7 +25,7 @@ export type ManagedSize = "card" | "panel" | "sm" | "xs";
 const SIZES: Record<ManagedSize, { h: number; px: number; fs: number; hat: number }> = {
   panel: { h: 26, px: 10, fs: 12, hat: 18 },
   card: { h: 24, px: 10, fs: 11.5, hat: 17 },
-  sm: { h: 22, px: 9, fs: 11, hat: 16 },
+  sm: { h: 24, px: 9, fs: 12, hat: 17 },
   xs: { h: 20, px: 8, fs: 10.5, hat: 15 },
 };
 
