@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ServiceTiles, useMyAdvisorFirms, ADVISOR_FIRMS_KEY } from "@/components/advisor/advisor-my-company";
 import { AddressBox, FeeControl, LogoRow, addrErrors, logoFileError, useLogoUpload, type Addr, type LogoState } from "@/components/advisor/advisor-firm-fields";
 import { createAdvisorFirmForAdmin, createAdvisorUploadUrl, saveAdvisorFirm } from "@/lib/advisor-firm.functions";
+import { SetupReview, setupMissing, focusReviewField, type ReviewSec } from "@/components/advisor/advisor-review-page";
 import {
   DEAL_BANDS, FIRM_TYPES, LANGUAGES, cityError, dealBandLabels, descError, emailError, feeWords, firmChecklist, mergeServiceOrder, nameError,
   newFee, phoneError, teamSizeError, webError, type AdvisorFirm, type EditSection, type FeeDetail,
@@ -147,6 +148,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   const [logoErr, setLogoErr] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [forced, setForced] = useState(false);
+  const [openSec, setOpenSec] = useState<ReviewSec | null>(null);
   const docInput = useRef<HTMLInputElement>(null);
   const set = <K extends keyof FirmForm>(k: K, v: FirmForm[K]) => setF((p) => ({ ...p, [k]: v }));
   const pop = useEditInfo();
