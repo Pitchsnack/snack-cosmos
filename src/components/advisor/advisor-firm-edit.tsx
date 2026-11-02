@@ -220,6 +220,18 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   async function submit() {
     if (adminCreate && nameError(f.name)) { setForced(true); setTab("about"); setTimeout(() => document.getElementById("fe-name")?.focus(), 60); return; }
 
+    // Setup Review & complete: close any open section, then stop at the first missing answer.
+    if (setup) {
+      setOpenSec(null);
+      const miss = setupMissing(f, thai);
+      if (miss.length) {
+        setOpenSec(miss[0].sec);
+        setTimeout(() => focusReviewField(miss[0].fieldId, miss[0].sec), 60);
+        return;
+      }
+    }
+
+
     if (!adminCreate && firm?.status !== "draft" && !f.services.length) { toast.error("Pick at least one service."); return; }
     if (!adminCreate && firm?.status !== "draft" && firstBad) {
       setForced(true);
@@ -238,7 +250,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           description: f.description.trim() || f.descriptionTh.trim(), descriptionTh: f.descriptionTh.trim() || null, yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
           dealBand: f.dealBand || null, teamSize: f.teamSize ? Number(f.teamSize) : null, languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
-          ...(setup ? { legalName: f.legalName.trim() || f.name.trim() } : { englishName: nul(f.englishName ?? "") }), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
+          englishName: nul(f.englishName ?? ""), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
           addrStreet: nul(f.addr.street), addrUnit: nul(f.addr.unit), addrDistrict: thai ? nul(f.addr.district) : nul(f.city),
           addrProvince: nul(f.addr.province), addrPostal: nul(f.addr.postal),
           website: f.website.trim() ? normalizeUrl(f.website) : "", email: f.email.trim(), phone: f.phone.trim(),
