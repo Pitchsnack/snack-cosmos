@@ -419,7 +419,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       </Section>
 
 </div>}
-        {visible("documents") && <div className="space-y-4"><TabHead title={tr("Licences & Documents")} />      <Section id="credentials" active={!setup && section === "credentials"} title={setupText("Licences and credentials")} setup={!!setup}>
+        {visible("documents") && <div className="space-y-4"><TabHead title={tr("Licences & Documents")} />      <Section id="credentials" active={!setup && section === "credentials"} title={setupText("Licences and credentials")} setup={!!setup} noTitle>
         {f.credentials.length === 0 && <p className="text-[13px] text-muted-foreground">{setupText("No licences or credentials yet. Add the ones your firm holds; Admin checks each one before it shows as Verified.")}</p>}
         {f.credentials.map((c, i) => (
           <div key={i} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto]">
