@@ -16,6 +16,7 @@
   --advisor-viewer-caption: #E5E7EB;
   --advisor-viewer-control: rgba(255,255,255,.14);
   --advisor-viewer-control-hover: rgba(255,255,255,.26);
+  --advisor-cover-ref: #4B5563;
 }
 .dark {
   --advisor-hover: var(--sidebar-accent);
@@ -29,7 +30,13 @@
   --advisor-score-line: var(--border);
   --advisor-review-track: var(--muted);
   --advisor-client: var(--success);
+  --advisor-cover-ref: var(--muted-foreground);
 }
+.advisor-cover-top { position:absolute; top:10px; left:10px; right:10px; display:flex; align-items:center; justify-content:space-between; gap:8px; height:24px; }
+.advisor-cover-right { display:flex; align-items:center; justify-content:flex-end; min-width:0; gap:6px; }
+.advisor-cover-ref { display:flex; min-width:0; height:24px; gap:3px; align-items:center; white-space:nowrap; font-size:12.5px; font-weight:500; font-variant-numeric:tabular-nums; color:var(--advisor-cover-ref); }
+.advisor-cover-hat.managed-badge { width:24px; height:24px; padding:0 !important; justify-content:center; }
+.advisor-cover-hat .managed-hat { width:17px; height:12px; }
 .advisor-panel-body { padding:20px; display:flex; flex-direction:column; gap:14px; }
 .advisor-client-body { padding:14px 18px 18px; }
 .advisor-client-header { position:sticky; top:0; z-index:20; background:var(--card); padding:14px 18px; align-items:center; }

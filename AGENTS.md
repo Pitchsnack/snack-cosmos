@@ -63,4 +63,4 @@
 - Buyer/advisor setup shares validity helpers and seller StepBar; authorised saves and monotonic setup_reached align progress.
 
 - CompanyNameFields shares live locked names and optional twins; omit legacy second-name writes, preserve setup schemas and profile authorization.
-- Advisor compact sections share presentation only; existing DTOs and separate Admin checks retain access. Read subdirectory AGENTS.md for details.
+- Advisors use Company name only; omit legacy listing/headline fields, preserve stored values and access; see nested AGENTS.md.

@@ -17,7 +17,7 @@ export function buyerRegistrationMissing(inv: { setup_done_at?: string | null; i
 }
 
 export function buyerApprovalTextMissing(name: string | undefined, headline: string | undefined, kind: "seller" | "buyer" | "advisor") {
-  if (kind === "buyer") return null;
+  if (kind === "buyer" || kind === "advisor") return null;
   if (!name?.trim()) return "Write a listing name.";
   if (!headline?.trim()) return "Write a headline.";
   return null;

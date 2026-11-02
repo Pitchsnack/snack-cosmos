@@ -69,9 +69,9 @@ function savedOf(item: OneStepItem): Saved {
   const texts: Texts = {};
   for (const r of item.translation) if (r.key !== PUBLISHED) texts[r.key] = { en: r.en, th: r.th };
   return {
-    name: item.draft?.name ?? item.suggestedName ?? "",
-    headline: item.draft?.headline ?? item.suggestedHeadline ?? "",
-    headlineTh: item.draft?.headlineTh ?? item.publishedHeadlineTh ?? item.suggestedHeadlineTh ?? "",
+    name: item.kind === "advisor" ? item.name : item.draft?.name ?? item.suggestedName ?? "",
+    headline: item.kind === "advisor" ? "" : item.draft?.headline ?? item.suggestedHeadline ?? "",
+    headlineTh: item.kind === "advisor" ? "" : item.draft?.headlineTh ?? item.publishedHeadlineTh ?? item.suggestedHeadlineTh ?? "",
     texts,
   };
 }
@@ -106,7 +106,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
     setSaved(next);
     setTexts(cur => { const merged: Texts = { ...next.texts }; for (const k of Object.keys(cur)) if (old.translation.find(r => r.key === k && (r.en !== cur[k].en || r.th !== cur[k].th))) merged[k] = cur[k]; return merged; });
     if (!item.draft) {
-      setName(n => n === (old.suggestedName ?? "") ? item.suggestedName ?? "" : n);
+      setName(n => item.kind === "advisor" ? item.name : n === (old.suggestedName ?? "") ? item.suggestedName ?? "" : n);
       setHeadline(h => h === (old.suggestedHeadline ?? "") ? item.suggestedHeadline ?? "" : h);
       setHeadlineTh(h => h === (old.publishedHeadlineTh ?? old.suggestedHeadlineTh ?? "") ? item.publishedHeadlineTh ?? item.suggestedHeadlineTh ?? "" : h);
     }
@@ -114,11 +114,11 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
   }, [item]);
 
   const r = item.review, first = (item.person ?? "").split(" ")[0] || item.name;
-  const fill = (text: string, values: Record<string, string> = {}) => Object.entries({ name: item.name, "first name": first, ref: item.ref, "listing name": name, ...values }).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, v), t(text));
+  const fill = (text: string, values: Record<string, string> = {}) => Object.entries({ name: item.name, "first name": first, ref: item.ref, "listing name": item.kind === "advisor" ? item.name : name, ...values }).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, v), t(text));
   const browse = item.kind === "seller" ? "Browse listings" : item.kind === "buyer" ? "Browse investors" : "Browse advisors";
   const badge = item.kind === "seller" ? "Certified" : item.kind === "buyer" ? "Verified investor" : "Verified advisor";
   const email = item.kind === "seller" ? "Your listing is approved" : "Your profile is approved";
-  const rewritten = name.trim() !== (item.suggestedName ?? "").trim() || headline.trim() !== (item.suggestedHeadline ?? "").trim() || headlineTh.trim() !== (item.suggestedHeadlineTh ?? "").trim() && !!(item.suggestedHeadlineTh ?? "").trim();
+  const rewritten = item.kind !== "advisor" && (name.trim() !== (item.suggestedName ?? "").trim() || headline.trim() !== (item.suggestedHeadline ?? "").trim() || headlineTh.trim() !== (item.suggestedHeadlineTh ?? "").trim() && !!(item.suggestedHeadlineTh ?? "").trim());
   const matches = r.verification.filter(v => v.result === "match" || v.result === "by_hand" && v.checked).length;
   const manual = r.verification.filter(v => v.result === "by_hand" && !v.checked).length;
   const differing = r.verification.filter(v => v.result === "differs" || v.result === "not_given").length;
@@ -179,7 +179,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
   });
   const check = useMutation({ mutationFn: (row: string) => mark({ data: { kind: item.kind, id: item.id, row } }), onSuccess: () => { toast.success(t("Marked checked.")); void qc.invalidateQueries({ queryKey: KEY }); }, onError: (e: Error) => toast.error(t(e.message)) });
   const open = (action: "approve" | "request_changes" | "decline") => {
-    if (action === "approve") { setInvalid(true); if (item.kind !== "buyer" && (!name.trim() || !headline.trim() && !headlineTh.trim())) return; }
+    if (action === "approve") { setInvalid(true); if (item.kind === "seller" && (!name.trim() || !headline.trim() && !headlineTh.trim())) return; }
     setReasons([]); setNote(t(DEFAULT_NOTE)); setReasonError(""); setDialog(action);
   };
   const submit = () => {
@@ -223,7 +223,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
   const card = {
     headline: pick(headline, headlineTh) ?? "",
     description: pick(desc?.en ?? r.card.description, desc?.th) ?? null,
-    realName: pick(company?.en ?? r.card.realName, company?.th),
+    realName: item.kind === "advisor" ? item.name : pick(company?.en ?? r.card.realName, company?.th),
     address: pick(address?.en ?? r.card.address, address?.th),
     contact: [pick(pName?.en, pName?.th), pick(pTitle?.en, pTitle?.th)].filter(Boolean).join(" · ") || r.card.contact,
   };
@@ -241,14 +241,14 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
     ]} /></div>
     <div role="tabpanel" id={`os-${item.id}-panel`} aria-labelledby={`os-${item.id}-tab-${tab}`}>
     {tab === "review" ? <div className="os-body">
-      <section><div className="os-section-head"><div><h3>{t("Listing name and headline")}</h3><p className="os-muted">{t(description)}</p></div><div className="os-summary">
+      {item.kind !== "advisor" && <section><div className="os-section-head"><div><h3>{t("Listing name and headline")}</h3><p className="os-muted">{t(description)}</p></div><div className="os-summary">
         <div role="group" aria-label={t("Texts in")} className="text-lang-switch" title={t("The language of the headline and the cards. The listing name is the same in both.")}><span className="text-lang-lab">{t("Texts in")}</span>{(["en", "th"] as const).map(k => <button key={k} type="button" lang={k} aria-pressed={lang === k} onClick={() => setLang(k)} className={`text-lang-opt ${lang === k ? "is-on" : ""}`}>{k === "en" ? "English" : "ไทย"}</button>)}</div>
         <span className={`os-chip ${rewritten ? "os-blue" : "os-grey"}`}>{t(rewritten ? "Rewritten" : `Same as the ${item.kind}'s`)}</span></div></div>
         <table className="os-table os-name-table"><thead><tr><th>{t("Detail")}</th><th>{t(`The ${item.kind} suggested`)}</th><th>{t("Published as")}</th></tr></thead><tbody>
           <tr><td>{t("Listing name")}</td><td data-label={t(`The ${item.kind} suggested`)}>{item.suggestedName || t("Not given")}</td><td data-label={t("Published as")}><Input aria-label={t("Published listing name")} maxLength={120} value={name} onChange={e => setName(e.target.value)} aria-invalid={invalid && !name.trim()} />{invalid && !name.trim() && <p className="text-destructive">{t("Write a listing name.")}</p>}</td></tr>
           <tr><td>{t("Headline")} {tag(lang)}</td><td data-label={t(`The ${item.kind} suggested`)} lang={lang}>{sugHeadline || <span className="os-not-given">{t(lang === "th" ? "Not given in Thai" : "Not given in English")}</span>}</td><td data-label={t("Published as")}><Textarea lang={lang} aria-label={t("Published headline")} rows={2} maxLength={120} value={pubValue} placeholder={!pubValue && pubOther ? t(lang === "th" ? "No Thai yet. Thai readers see the English." : "No English yet. English readers see the Thai.") : undefined} onChange={e => (lang === "th" ? setHeadlineTh : setHeadline)(e.target.value)} aria-invalid={item.kind !== "buyer" && invalid && !headline.trim() && !headlineTh.trim()} />{item.kind !== "buyer" && invalid && !headline.trim() && !headlineTh.trim() && <p className="text-destructive">{t("Write a headline.")}</p>}</td></tr>
         </tbody></table>
-      </section>
+      </section>}
       <section>{!r.individual && <DbdStorePanel reg={r.dbd.registrationNo} initial={r.dbd} onChanged={() => void qc.invalidateQueries({ queryKey: KEY })} />}
         <div className="os-section-head"><div><h3>{t("Verification")}</h3><p className="os-muted">{r.individual ? t("An individual investor: no registration number to verify with.") : fill("Verify with registration number {number}.", { number: r.registrationNo ?? "—" })}</p></div><div className="os-summary">{!!matches && <span className="os-chip os-green"><Check size={13} />{fill("{n} match", { n: String(matches) })}</span>}{!!manual && <span className="os-chip os-grey">{fill("{n} to check by hand", { n: String(manual) })}</span>}{!!differing && <span className="os-chip os-warn">{fill(differing === 1 ? "{n} differs" : "{n} differ", { n: String(differing) })}</span>}</div></div>
         <table className="os-table"><thead><tr><th>{t("Detail")}</th><th>{t(`From the ${item.kind}`)}</th><th>{t("Company verification")}</th><th>{t("Result")}</th></tr></thead><tbody>{r.verification.map(v => { const from = v.from || (v.key === "name" ? company?.th : v.key === "address" ? address?.th : null) || null; return <tr key={v.key} className={v.result === "differs" || v.result === "not_given" ? "os-diff-row" : ""}>
@@ -259,7 +259,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
       {item.kind === "advisor" && !!r.credentials?.length && <section><h3>{t("Licences and credentials")}</h3><ul className="divide-y divide-border">{r.credentials.map(c => <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 py-2 text-sm"><span className="min-w-0 break-words">{licenceName(c, language === "th")}{c.note && <span className="block text-xs text-muted-foreground">{c.note}</span>}</span><CredMark status={c.status} /></li>)}</ul></section>}
       <section><h3>{t(item.kind === "seller" ? "What buyers will see" : item.kind === "buyer" ? "What sellers will see" : "What sellers and buyers will see")}</h3><div className="os-previews"><Preview item={item} name={name} card={card} lang={lang} exclusive={false} />{item.kind !== "advisor" && <Preview item={item} name={name} card={card} lang={lang} exclusive />}</div></section>
     </div> : <div className="os-body">
-      <section><div className="os-section-head"><div><h3 className="os-tr-title">{t("Translation")}</h3><p className="os-tr-intro">{fill("The company and contact details, the published headline and every text {first name} wrote, in English and in Thai.")} {fill(setupTh ? "{first name} set up their account in Thai, so the Thai is in their own words." : "{first name} set up their account in English, so the English is in their own words.")} {t(readers)}</p></div>
+      <section><div className="os-section-head"><div><h3 className="os-tr-title">{t("Translation")}</h3><p className="os-tr-intro">{fill(item.kind === "advisor" ? "The company and contact details and every text {first name} wrote, in English and in Thai." : "The company and contact details, the published headline and every text {first name} wrote, in English and in Thai.")} {fill(setupTh ? "{first name} set up their account in Thai, so the Thai is in their own words." : "{first name} set up their account in English, so the English is in their own words.")} {t(readers)}</p></div>
         <div className="os-summary">{!!counts.both && <span className="os-chip os-green"><Check size={13} />{fill("{n} in both", { n: String(counts.both) })}</span>}{!!counts.noTh && <span className="os-chip os-warn">{fill("{n} without Thai", { n: String(counts.noTh) })}</span>}{!!counts.noEn && <span className="os-chip os-warn">{fill("{n} without English", { n: String(counts.noEn) })}</span>}</div></div>
         <table className="os-table os-tr-table"><thead><tr><th>{t("Text")}</th>{(["en", "th"] as const).map(l => <th key={l}>{t(l === "en" ? "English" : "Thai")} {tag(l)}{(l === "th") === setupTh && <span className="os-setup-who" title={fill(setupTh ? "{first name} set up their account in Thai" : "{first name} set up their account in English")}><User size={11} />{first}</span>}</th>)}<th>{t("Result")}</th></tr></thead><tbody>
           {(["company", "texts"] as const).map(group => [<tr key={group} className="os-tr-group"><td colSpan={4}>{t(group === "company" ? "COMPANY AND CONTACT" : "PROFILE TEXTS")}</td></tr>, ...rows.filter(row => row.group === group && (row.key !== "suggested_headline")).map(row => {

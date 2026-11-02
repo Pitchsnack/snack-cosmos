@@ -158,7 +158,7 @@ function GreenBanner({ n }: { n: ApprovalNotice }) {
   const line = n.role === "seller"
     ? t("Buyers can find your listing in Browse listings, and you can connect with buyers.")
     : n.role === "advisor"
-      ? t("Sellers and buyers can find you in Browse advisors.")
+      ? t("Admin verified your firm and published your profile. Sellers and buyers can now find {Company name} in Browse advisors.").replace("{Company name}", n.publishedName ?? "—")
       : t("Sellers can find you in Browse investors, and you can sign NDAs.");
   const whoSees = n.role === "seller" ? t("to reduce duplication and make your listing easier to distinguish. This is what buyers will see.")
     : n.role === "advisor" ? t("to reduce duplication and make your listing easier to distinguish. This is what sellers and buyers will see.")
@@ -174,7 +174,8 @@ function GreenBanner({ n }: { n: ApprovalNotice }) {
       {step2
         ? <button ref={startRef} type="button" className="ap-btn ap-sm ap-ok" onClick={start}>{t("Start browsing")}</button>
         : <button type="button" className="ap-btn ap-sm ap-ok" onClick={() => patch({ bannerStep: "ok" })}>{t("OK")}</button>}
-      {!step2 && n.adminRewrote && (
+      {n.role === "advisor" && !step2 && <div className="ap-okrw"><div className="ap-okrr"><span className="ap-l">{t("Verified")}</span><span className="ap-v">{approvalDate(n.decidedAt, language)}</span></div></div>}
+      {!step2 && n.role !== "advisor" && n.adminRewrote && (
         <div className="ap-okrw">
           <p className="ap-okrh"><Pencil className="h-[13px] w-[13px]" /><span><b>{adjusted}</b> {whoSees}</span></p>
           {changedName && (

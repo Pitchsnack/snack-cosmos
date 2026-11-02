@@ -59,8 +59,8 @@ export const EMAIL_ALERTS: AlertDef[] = [
       { subject: "Your profile is approved", title: "Your profile is approved", body: "Admin verified your account and published your investor profile. Sellers can now find your firm as {listing name} ({ref}) in Browse investors, and you can request NDAs.{rewrote}", button: "View my profile" },
       { subject: "โปรไฟล์ของท่านได้รับอนุมัติแล้ว", title: "โปรไฟล์ของท่านได้รับอนุมัติแล้ว", body: "ผู้ดูแลระบบยืนยันบัญชีของท่านและเผยแพร่โปรไฟล์นักลงทุนแล้ว ผู้ขายจะพบบริษัทของท่านในชื่อ {listing name} ({ref}) ใน ดูรายชื่อนักลงทุน และท่านขอ NDA ได้แล้ว{rewrote}", button: "ดูโปรไฟล์ของฉัน" }),
     advisor: v("Admin verifies the advisor firm", "The firm profile's owner", "My Company", "/marketplace/my-company",
-      { subject: "Your profile is approved", title: "Your profile is approved", body: "Admin verified your firm and published your profile. Sellers and buyers can now find {listing name} in Browse advisors.{rewrote}", button: "Open My Company" },
-      { subject: "โปรไฟล์ของท่านได้รับอนุมัติแล้ว", title: "โปรไฟล์ของท่านได้รับอนุมัติแล้ว", body: "ผู้ดูแลระบบยืนยันบริษัทของท่านและเผยแพร่โปรไฟล์แล้ว ผู้ขายและผู้ซื้อจะพบ {listing name} ใน ดูรายชื่อที่ปรึกษา{rewrote}", button: "เปิดบริษัทของฉัน" }),
+      { subject: "Your profile is approved", title: "Your profile is approved", body: "Admin verified your firm and published your profile. Sellers and buyers can now find {firm} in Browse advisors.", button: "Open My Company" },
+      { subject: "โปรไฟล์ของท่านได้รับอนุมัติแล้ว", title: "โปรไฟล์ของท่านได้รับอนุมัติแล้ว", body: "ผู้ดูแลระบบยืนยันบริษัทของท่านและเผยแพร่โปรไฟล์แล้ว ผู้ขายและผู้ซื้อจะพบ {firm} ใน ดูรายชื่อที่ปรึกษา", button: "เปิดบริษัทของฉัน" }),
   },
   {
     key: "changes_requested", n: 2, group: "Approvals", name: "Changes requested", icon: "edit", color: "#D97706", instant: true, wired: true,

@@ -1,4 +1,6 @@
 import { licenceName } from "@/lib/advisor-licences";
+import { FirmCover } from "@/components/advisor/advisor-firm-card";
+import { useOwnershipDir } from "@/components/handover/ownership";
 import { useTranslation } from "@/i18n/language";
 import {CreatedDirectoryRow} from "@/components/common/created-directory-row";
 import { FirmServices } from "@/components/advisor/firm-services";
@@ -231,19 +233,22 @@ function Logo({ f, size = 44 }: { f: AdminFirm; size?: number }) {
 function Bookmark({ on, onClick }: { on: boolean; onClick: () => void }) {
   return <button type="button" aria-label={on ? "Remove from favourites" : "Add to favourites"} onClick={(e) => { e.stopPropagation(); onClick(); }} className="grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted"><Star className={cn("h-4 w-4", on && "fill-accent text-accent")} /></button>;
 }
-const isNew = (f: AdminFirm) => Date.now() - +new Date(f.createdAt) < 14 * 86_400_000;
+
+function AdminFirmCover({ f, fav, onFav }: { f: AdminFirm; fav: boolean; onFav: () => void }) {
+  const ownership = useOwnershipDir();
+  return <div className="relative">
+    <FirmCover noStatus f={{ name:f.name, logoUrl:f.logoUrl, refNo:f.ref, city:f.city, verifiedAt:f.v.verifiedAt, managed:ownership?.map.get(f.id)?.runBy === "pitchsnack", status:f.status === "live" ? "live" : f.status === "paused" ? "paused" : "draft" }} />
+    <div className="absolute bottom-2 right-2"><Bookmark on={fav} onClick={onFav} /></div>
+  </div>;
+}
 
 function GridCard({ f, fav, onFav, onOpen }: { f: AdminFirm; fav: boolean; onFav: () => void; onOpen: () => void }) {
   const deal = dealBandLabels(f.dealBand);
   return (
     <div role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()} className="cursor-pointer overflow-hidden rounded-lg border border-border bg-card shadow-card transition hover:shadow-md">
-      <div className="relative grid h-28 place-items-center bg-white" style={f.logoUrl ? undefined : { backgroundImage: "repeating-linear-gradient(45deg,#0F766E 0 14px,#13867C 14px 28px)" }}>
-        {f.logoUrl ? <img src={f.logoUrl} alt="" className="max-h-20 max-w-[70%] object-contain" /> : <span className="text-3xl font-bold text-white">{initials(f.name)}</span>}
-        {isNew(f) && <span className="absolute left-2 top-2 rounded bg-[#F6A823] px-1.5 py-0.5 text-[10px] font-bold text-[#0E162F]">NEW</span>}
-        <div className="absolute right-1 top-1"><Bookmark on={fav} onClick={onFav} /></div>
-      </div>
+      <AdminFirmCover f={f} fav={fav} onFav={onFav} />
       <div className="space-y-2 p-4">
-        <div className="flex items-center gap-2.5"><Logo f={f} size={36} /><div className="min-w-0"><div className="truncate font-semibold">{f.name}</div><div className="truncate text-xs text-muted-foreground">{[f.firmType, f.city].filter(Boolean).join(" · ")}</div></div><span className="ml-auto"><OwnershipCardSlot id={f.id} /></span></div>
+        <div className="min-w-0"><div className="line-clamp-2 font-semibold">{f.name}</div><div className="truncate text-xs text-muted-foreground">{f.firmType}</div></div>
         {f.description && <p className="line-clamp-2 text-sm text-muted-foreground">{f.description}</p>}
         <div className="flex flex-wrap gap-1">{f.services.slice(0, 4).map((x) => <span key={x} className="rounded-full bg-[#E0F5F2] px-2 py-0.5 text-[11px] font-medium text-[#0F766E]">{x}</span>)}</div>
         <div className="space-y-0.5 text-xs text-muted-foreground">
@@ -260,16 +265,15 @@ function GridCard({ f, fav, onFav, onOpen }: { f: AdminFirm; fav: boolean; onFav
 function SplitCard({ f, selected, fav, onFav, onSelect }: { f: AdminFirm; selected: boolean; fav: boolean; onFav: () => void; onSelect: () => void }) {
   return (
     <div role="button" tabIndex={0} onClick={onSelect} onKeyDown={(e) => e.key === "Enter" && onSelect()}
-      className={cn("cursor-pointer rounded-lg border bg-card p-3 transition", selected ? "border-accent ring-2 ring-accent/30" : "border-border hover:border-muted-foreground/40")}>
-      <div className="flex items-start gap-3">
-        <Logo f={f} />
-        <div className="min-w-0 flex-1"><div className="truncate font-semibold">{f.name}</div><div className="truncate text-xs text-muted-foreground">{f.firmType || "—"}</div><div className="truncate text-xs text-muted-foreground">{f.city ?? ""}</div></div>
-        <Bookmark on={fav} onClick={onFav} />
-      </div>
+      className={cn("cursor-pointer overflow-hidden rounded-lg border bg-card transition", selected ? "border-accent ring-2 ring-accent/30" : "border-border hover:border-muted-foreground/40")}>
+      <AdminFirmCover f={f} fav={fav} onFav={onFav} />
+      <div className="p-3">
+      <div className="min-w-0"><div className="line-clamp-2 font-semibold">{f.name}</div><div className="truncate text-xs text-muted-foreground">{f.firmType || "—"}</div></div>
       {f.description && <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{f.description}</p>}
-      <div className="mt-2 flex flex-wrap items-center gap-1">{f.services.slice(0, 3).map((x) => <span key={x} className="rounded-full bg-[#E0F5F2] px-2 py-0.5 text-[11px] font-medium text-[#0F766E]">{x}</span>)}<span className="ml-auto"><OwnershipCardSlot id={f.id} /></span></div>
+      <div className="mt-2 flex flex-wrap items-center gap-1">{f.services.slice(0, 3).map((x) => <span key={x} className="rounded-full bg-[#E0F5F2] px-2 py-0.5 text-[11px] font-medium text-[#0F766E]">{x}</span>)}</div>
       <div className="mt-1.5 truncate text-xs text-muted-foreground">Sectors: {f.sectorAgnostic ? "Sector agnostic" : f.sectors.join(", ") || "—"}</div>
       <div className="mt-1 text-right text-xs font-medium text-[#2563EB]">View details</div>
+      </div>
     </div>
   );
 }

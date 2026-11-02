@@ -1,5 +1,11 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Advisor company name
+- [x] Use Company name on firm cards; move ref/city and managed hat onto cover.
+- [x] Remove advisor name/headline inputs and checks from editing, registration, review and notices without changing legacy data or other roles.
+- [x] EN/TH Browse at 1440/1024/390 and test-firm About Company checked; server registration/approval regression tests passed.
+- [ ] Live new-firm registration/approval and cleanup: existing Admin deletion only allows never-submitted drafts, so a registered test firm cannot be removed through Admin; no new firm created. Current approval queue is empty; managed firms are not live in Browse, so those requested screenshots remain unavailable without changing records.
+
 ## Compact advisor panels
 - [x] Compact shared Browse/My Company and separate Admin sections; accessible photo viewer, scoped hover and section-specific edits.
 - [x] Ten exact EN/TH service lines updated throughout app and Partners; saved data and fee words elsewhere unchanged.
