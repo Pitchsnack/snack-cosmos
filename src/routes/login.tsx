@@ -236,10 +236,13 @@ function LoginPage() {
                   </div>
                   {pwMsg && <ErrLine id="pw-err" text={t(pwMsg)} />}
                 </div>
+                {/* Keep-me-signed-in is hidden for now; the state and save logic stay in place for when it returns.
                 <label className="lg-check">
                   <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
                   {t(L.remember)}
                 </label>
+                */}
+
                 <button type="submit" className="lg-btn" disabled={busy}>
                   {busy ? <>{t(L.busy)}<LoaderCircle size={18} className="lg-spin" /></> : <>{t(L.btn)}<LogIn size={18} /></>}
                 </button>
