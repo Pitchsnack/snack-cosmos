@@ -125,3 +125,25 @@
   .advisor-hover-box,.advisor-card-body,.advisor-card-foot,.advisor-card-figures,.advisor-thumbnail img { transition:none; }
   .advisor-thumbnail:hover img { transform:none; }
 }
+/* Advisor My Company intro: shows in full, then folds into a small tag */
+.intro-fold { display:flex; align-items:flex-start; gap:10px; width:100%; padding:14px; border-radius:12px; background:#F3F4F6; font-size:13.5px; overflow:hidden; }
+.dark .intro-fold { background:var(--muted); }
+.intro-fold-icon { margin-top:2px; height:16px; width:16px; flex:none; color:var(--muted-foreground); }
+.intro-fold-sentence { margin:0; min-width:0; flex:1; transition:opacity .18s ease; }
+.intro-fold-tag { display:none; font-size:12.5px; font-weight:600; color:#374151; white-space:nowrap; }
+.dark .intro-fold-tag { color:var(--muted-foreground); }
+.intro-fold-btn { display:inline-flex; align-items:center; justify-content:center; gap:2px; flex:none; height:26px; padding:0 6px; margin-left:auto; border-radius:7px; font-size:12.5px; font-weight:600; color:#4B5563; }
+.dark .intro-fold-btn { color:var(--muted-foreground); }
+.intro-fold-btn:focus-visible { outline:2px solid var(--ring); outline-offset:1px; }
+@media (hover:hover) {
+  .intro-fold-btn:hover { background:#E5E7EB; }
+  .dark .intro-fold-btn:hover { background:var(--accent); }
+}
+.intro-fold.is-fading .intro-fold-sentence,.intro-fold.is-growing .intro-fold-sentence { opacity:0; }
+.intro-fold.is-folded { width:fit-content; align-items:center; gap:8px; padding:5px 6px 5px 10px; }
+.intro-fold.is-folded .intro-fold-icon { margin-top:0; }
+.intro-fold.is-folded .intro-fold-tag { display:inline; }
+.intro-fold.is-folded .intro-fold-btn { width:26px; padding:0; margin-left:0; }
+@media (prefers-reduced-motion:reduce) {
+  .intro-fold-sentence { transition:none; }
+}

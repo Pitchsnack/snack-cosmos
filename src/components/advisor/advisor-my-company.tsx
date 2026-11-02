@@ -446,10 +446,10 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
         {!client && <>
         {f.verification?.state === "more_info" && <FirmNotice state="more_info" note={f.verification.note} fields={f.verification.fields} />}
         {f.verification?.state === "declined" && <FirmNotice state="declined" note={f.verification.declineNote} fields={[]} reason={f.verification.reason} />}
-        <div className="flex gap-2.5 rounded-[12px] bg-[#F3F4F6] p-3.5 text-[13.5px] dark:bg-muted">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-          <p>{setupText("Everything on your profile is")} <strong>{setupText("open to sellers and buyers")}</strong>{setupText("in Browse advisors, so they can compare firms and choose one: your services and fees, team and contacts, licences and documents.")}</p>
-        </div>
+        <IntroFold
+          tag={setupText("Who sees your profile")}
+          sentence={<>{setupText("Everything on your profile is")} <strong>{setupText("open to sellers and buyers")}</strong>{setupText("in Browse advisors, so they can compare firms and choose one: your services and fees, team and contacts, licences and documents.")}</>}
+        />
 
         <div className="rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted/50">
           <div className="mb-3 flex items-center justify-between gap-2">
