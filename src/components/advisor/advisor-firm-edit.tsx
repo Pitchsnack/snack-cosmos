@@ -132,7 +132,7 @@ const errB = "border-[#B42318]";
 
 export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreate }: { firm: AdvisorFirm | null; section?: EditSection; setup?: SetupMode; initial?: FirmForm | null; onDone?: () => void; adminCreate?: (id: string) => void }) {
   const {data:session} = useSessionContext();
-  const {language} = useTranslation();
+  useTranslation();
   const {isControl} = usePermissions();
   const asAdmin = session?.user?.accountRole === "admin" && isControl;
   const navigate = useNavigate();
