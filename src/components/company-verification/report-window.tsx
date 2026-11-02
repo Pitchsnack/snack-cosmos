@@ -4,6 +4,7 @@ import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/u
 import {Button} from '@/components/ui/button';
 import type {VerificationState} from '@/lib/company-verification';
 import {VerificationReport} from './report';
+import {ReportScroll} from '@/components/reports/report-scroll';
 import {VerificationBadge} from './verification-badge';
 import {VERIFICATION_SAMPLE} from './sample';
 import {useVerificationCopy,useVerificationDate} from './copy';

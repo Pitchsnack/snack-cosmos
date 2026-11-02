@@ -10,6 +10,7 @@ import {getMyReportsState,saveMyReportsPrefs} from '@/lib/my-reports.functions';
 import {getCompanyVerification,orderCompanyVerification} from '@/lib/company-verification.functions';
 import type {VerificationState} from '@/lib/company-verification';
 import {VerificationReport} from './report';
+import {ReportScroll} from '@/components/reports/report-scroll';
 import {VerificationWindow} from './report-window';
 import {VerificationCheckout} from './checkout';
 import {VerificationBadge} from './verification-badge';

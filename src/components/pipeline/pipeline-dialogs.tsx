@@ -13,6 +13,7 @@ import { ProfileBox } from "./profile-box";
 import { STEPS, currentStep } from "@/lib/pipeline-state";
 import type { SampleReportData } from "@/lib/sample-report";
 import { FinancialsOverview } from "@/components/financials/financials-overview";
+import { ReportScroll } from "@/components/reports/report-scroll";
 import { StatementTable } from "@/components/financials/statement-table";
 import { RatiosTable } from "@/components/financials/ratios-table";
 import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS } from "@/lib/financials";
