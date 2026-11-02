@@ -363,7 +363,7 @@ export const TH_APPROVAL: Record<string, string> = {
   "Minority stake (below 49%)": "ถือหุ้นส่วนน้อย (ต่ำกว่า 49%)",
   "Majority stake": "ถือหุ้นส่วนใหญ่",
   "Minority stake": "ถือหุ้นส่วนน้อย",
-  "Growth capital": "เงินทุนเพื่อการเติบโต",
+  "Growth capital": "ให้เงินทุนเพื่อการเติบโต",
   "Management buy-in": "ผู้บริหารภายนอกเข้าซื้อกิจการ",
   "Owner leaves at completion": "เจ้าของออกเมื่อปิดดีล",
   "Family Office": "แฟมิลี่ออฟฟิศ",
