@@ -414,9 +414,9 @@ export function BrowseAdvisorsPage({ side, firmParam, enquire }: { side: Side; f
 
       <div className={cn("mt-5", splitFixed && "flex min-h-0 flex-1 flex-col")}>
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[380px] rounded-[14px]" />)}</div>
+          <div className="standard-card-grid">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[380px] rounded-[14px]" />)}</div>
         ) : shown.length === 0 ? empty : view === "grid" ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="standard-card-grid" style={{ alignItems: "stretch" }}>
             {shown.map((f) => <FirmCard key={f.id} f={f} noStatus className="h-full" accent={ACCENT[side]} onClick={() => openSplit(f.id)} action={cardAction(f)} lastLogin={f.lastLoginStep} />)}
           </div>
         ) : view === "split" ? (
