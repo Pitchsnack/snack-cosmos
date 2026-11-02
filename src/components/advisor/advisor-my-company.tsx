@@ -1,6 +1,7 @@
 import { licenceName } from "@/lib/advisor-licences";
 import { setupText, useTranslation } from "@/i18n/language";
 import { FirmServices } from "@/components/advisor/firm-services";
+import { IntroFold } from "@/components/advisor/intro-fold";
 import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
 import { sectorChips } from "@/lib/business-types";
 import { OwnerHandoverBox } from "@/components/handover/owner-check";
