@@ -1,7 +1,7 @@
 # Decisions
 - Businesses Wanted DTOs own privacy/access; scoped filters and `.bw-form` own layout, public input styles stay under `.bw` to avoid collisions. Cover pills/personas use tokens; browser-safe defaults own sector wording.
 - Marketplace Contacts shares role UI; list/card reads recheck active NDA and owner/view access before shared projection, keeping Admin access separate.
-- Admin contacts use a dedicated Control+Admin-authorized directory and separate admin_contact_notes, keyed by user ID; lazy company DTOs adapt shared cards without viewer controls, and profile/status/sign-in/NDA projections serve both Admin entry points without changing marketplace privacy.
+- Admin contacts use Control+Admin directory access and user-keyed admin_contact_notes; lazy company DTOs adapt shared cards without viewer controls. Shared Admin projections preserve marketplace privacy.
 - Seller founders use a browser-safe structured story helper and the existing founder bio plus nullable bio_story; existing startup authorization/saving and bio display gates remain authoritative.
 - Pipeline chat uses the Messages Chat in a lazy locked presentation inside the existing ProfileBox dialog; Pipeline-parent in-memory drafts preserve unsent content without new storage or authorization paths.
 - Pipeline full-profile dialogs reuse invitationPrivateProfile's selected-deal gate, the seller InvestorDetailPanel body and shared company identity/section/pill parts; only All deals/watchlist opt in so other profile viewers stay unchanged.

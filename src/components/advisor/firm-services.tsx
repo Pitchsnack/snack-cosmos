@@ -4,6 +4,10 @@ import { tr, useTranslation } from "@/i18n/language";
 import { serviceOf, type FeeDetail } from "@/lib/advisor-firm";
 import { panelFeeLines } from "@/lib/advisor-panel-fee";
 
+function FeeText({ words }: { words: string }) {
+  return <>{words.split(/(\d+(?:[.,]\d+)?[–-]\d+(?:[.,]\d+)?%)/g).map((part, i) => /^\d.*%$/.test(part) ? <span className="whitespace-nowrap" key={i}>{part}</span> : part)}</>;
+}
+
 /** Shared presentation only; callers retain their fee projection and action permissions. */
 export function FirmServices({ services, fee, detail, action, onAddFee }: {
   services: string[]; fee: (service: string) => string | undefined;
@@ -20,7 +24,7 @@ export function FirmServices({ services, fee, detail, action, onAddFee }: {
       <div className="advisor-service-name"><strong>{tr(service)}</strong><span>{tr(def.line)}</span></div>
       <div className="advisor-service-fee">
         {lines ? <strong>{lines.map((line, i) => <span className="advisor-fee-line" key={i}>{line}</span>)}</strong>
-          : words ? <strong>{words === "Request a Price Quote" ? tr(words) : words}</strong>
+          : words ? <strong><FeeText words={words === "Request a Price Quote" ? tr(words) : words} /></strong>
           : onAddFee ? <span>{tr("Not set yet")} · <Button variant="unstyled" onClick={onAddFee} className="advisor-text-action">{tr("Add a fee")}</Button></span>
           : <strong>{tr("Request a Price Quote")}</strong>}
         {action && <div className="advisor-service-action">{action(service)}</div>}
