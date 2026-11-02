@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Compact advisor panels
+- [ ] Compact shared Browse/My Company sections and separate Admin sections; photo viewer and scoped hover.
+- [ ] Replace ten EN/TH service lines throughout app and Partners without changing saved data or fees elsewhere.
+- [ ] Verify live panels, photo navigation/focus, languages, widths and relevant tests.
+
 ## Advisor licence dropdown
 - [x] Shared grouped picker, issuer lines, Other, duplicate prevention and validation.
 - [x] Persist keys, preserve legacy credentials, localize displays and snapshots, including active one-step review.
