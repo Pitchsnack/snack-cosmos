@@ -48,7 +48,7 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-h-[calc(100dvh-64px)] max-w-[880px] flex-col overflow-hidden p-0" aria-label={t("Review your company data")}>
+      <DialogContent className="flex max-h-[calc(100dvh-64px)] max-w-[880px] flex-col overflow-hidden p-0 [&>button.absolute]:hidden" aria-label={t("Review your company data")}>
         <div className="ap-dh">
           <DialogTitle asChild><h2>{t("Review your company data")}</h2></DialogTitle>
           <button type="button" className="ap-x" onClick={onClose} aria-label={t("Close")}><X className="h-4 w-4" /></button>
