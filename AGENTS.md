@@ -48,7 +48,7 @@
 
 - Company verification: whitelisted DTOs; selected-deal NDA + entitlement on buyer reads; DB-enforced quotas and six-check badge.
 
-- Seller/buyer Pipeline uses shared workspace-page/cards and six child routes; invitations and counts share existing authenticated DTOs, and watchlist keys the stable pipeline ID so NDA approval preserves stars. Pipeline › Reports embeds the shared ReportsHub (buyer or per-buyer seller mode) behind a deal selector in workspace-reports.tsx — never a table; per-buyer extras there are gated by the pipelinePage prop so /my-reports and the pop-up stay unchanged.
+- Seller/buyer Pipeline shares workspace-page/cards and six child routes; authenticated DTOs own invitations/counts, stable pipeline IDs own watchlist stars. workspace-reports embeds ReportsHub behind a deal selector, never a table; pipelinePage gates per-buyer extras, preserving /my-reports and pop-ups.
 - Invitation dialogs reuse extracted watchlist profile bodies; no route-module component imports and no private profile payload before a valid approved NDA.
 - NDA Invitations: one row per NDA (linked requests show only on the invitation row); Invite again (invite_count ≤ 2) via inviteAgain; approval boxes come from nda-approval.tsx and the buyer's box shows once via deal_pipelines.buyer_approval_seen_at.
 - Pipeline Investor/Seller profile box is read-only from getProfileBox (profile-box.functions.ts): private person/firm facts only while the NDA is approved and valid, else the public investor profile; nothing is stored.
@@ -63,3 +63,4 @@
 - Buyer/advisor setup shares validity helpers and seller StepBar; authorised saves and monotonic setup_reached align progress.
 
 - CompanyNameFields shares live locked names and optional twins; omit legacy second-name writes, preserve setup schemas and profile authorization.
+- Advisor compact sections share presentation only; existing DTOs and separate Admin checks retain access. Read subdirectory AGENTS.md for details.

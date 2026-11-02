@@ -187,7 +187,7 @@ export function reviewStats(reviews: FirmReview[]) {
 }
 
 export type ChecklistKey = "description" | "services" | "fees" | "team-size" | "address" | "website" | "email" | "phone" | "team" | "credentials" | "documents";
-export type EditSection = "firm" | "services" | "work" | "company" | "team" | "credentials" | "documents";
+export type EditSection = "firm" | "logo" | "services" | "work" | "company" | "team" | "credentials" | "documents";
 export function firmChecklist(f: AdvisorFirm): { key: ChecklistKey; label: string; done: boolean; section: EditSection }[] {
   return [
     { key: "description", label: "Description", done: !!f.description?.trim(), section: "firm" },

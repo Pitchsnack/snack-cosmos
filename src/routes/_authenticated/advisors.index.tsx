@@ -337,7 +337,7 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
         {facts.filter(([, t]) => t).map(([I, t]) => <span key={t} className="inline-flex items-center gap-1.5"><I className="h-3.5 w-3.5" />{t}</span>)}
         {f.website && <a href={/^https?:/.test(f.website) ? f.website : `https://${f.website}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[#2563EB]"><Globe className="h-3.5 w-3.5" />Website →</a>}
       </div>
-      <FirmPhotosBox photos={f.media} firm={f.name} canEdit onEdit={() => onEdit("firm")} />
+      <FirmPhotosBox photos={f.media} firm={f.name} canEdit onEdit={() => onEdit("logo")} />
       <Sec icon={Tag} title={tr("Services and fees") + ` · ${f.services.length}`} action={<Button variant="unstyled" className="advisor-text-action" onClick={() => onEdit("services")}>{tr("Edit services")}</Button>}>
         {f.services.length ? <FirmServices services={f.services} fee={s => f.fees.find(x => x.service === s)?.fee} onAddFee={() => onEdit("services")} /> : <p className="text-[13px] text-muted-foreground">{tr("No services yet.")}</p>}
       </Sec>

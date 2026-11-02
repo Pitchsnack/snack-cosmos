@@ -156,7 +156,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   const set = <K extends keyof FirmForm>(k: K, v: FirmForm[K]) => setF((p) => ({ ...p, [k]: v }));
   const pop = useEditInfo();
   type Tab = "logo" | "about" | "address" | "services" | "team" | "documents" | "admin";
-  const sectionTab: Record<string, Tab> = { firm: "about", work: "about", company: "address", services: "services", team: "team", credentials: "documents", documents: "documents" };
+  const sectionTab: Record<string, Tab> = { logo: "logo", firm: "about", work: "about", company: "address", services: "services", team: "team", credentials: "documents", documents: "documents" };
   const [tab, setTab] = useState<Tab>(section ? sectionTab[section] ?? "about" : "about");
   const [nameFocus, setNameFocus] = useState(false);
   useOpenAtSection(nameFocus ? "company-name" : undefined);

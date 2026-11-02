@@ -399,7 +399,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
 
   return (
     <div className="overflow-hidden rounded-[14px] border border-border bg-card shadow-card">
-      <div className="px-5 pt-5 empty:hidden"><OwnerHandoverBox kind="firm" id={f.id} onEdit={(x) => edit((x.edit.section ?? "firm") as EditSection)} /></div>
+      {!client && <div className="px-5 pt-5 empty:hidden"><OwnerHandoverBox kind="firm" id={f.id} onEdit={(x) => edit((x.edit.section ?? "firm") as EditSection)} /></div>}
       {/* Header */}
       <div className={cn("flex flex-wrap items-start gap-4 border-b border-border p-5", client && "advisor-client-header")}>
         <FirmLogo f={f} size={client ? 48 : 52} radius={client ? 11 : 13} ring={false} />
@@ -469,7 +469,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
         </p>
         </>}
 
-        {!client && <FirmPhotosBox photos={f.media} firm={f.name} canEdit onEdit={() => edit("firm")} />}
+        {!client && <FirmPhotosBox photos={f.media} firm={f.name} canEdit onEdit={() => edit("logo")} />}
 
         {/* Services and fees */}
         <section>
@@ -725,7 +725,7 @@ function AddressDialog({ f, open, onOpenChange }: { f: AdvisorFirm; open: boolea
 
 function ClientFacts({ f }: { f: AdvisorFirm }) {
   const band = dealBandLabels(f.dealBand);
-  const sectors = f.sectorAgnostic || !f.sectors.length ? [tr("Sector agnostic")] : sectorChips(f.sectors, f.sectorPicks);
+  const sectors = f.sectorAgnostic || !f.sectors.length ? [tr("Sector agnostic")] : f.sectors.map(tr);
   const cell = (label: string, value: React.ReactNode, className = "") => <div className={className}><span>{tr(label)}</span><strong>{value || "—"}</strong></div>;
   return <div className="advisor-client-facts advisor-hover-box">
     {cell("Typical deal size", band ? <>{band.usd}<small>({band.thb})</small></> : null)}
