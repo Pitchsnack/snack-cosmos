@@ -6,11 +6,11 @@ import { Check, CircleAlert, FileText, Mail, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { AddressBox, FeeControl, addrErrors, type Addr } from "@/components/advisor/advisor-firm-fields";
+import { AddressBox, FeeControl, addrErrors, nowrapPct, type Addr } from "@/components/advisor/advisor-firm-fields";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import {
   DEAL_BANDS, FIRM_TYPES, LANGUAGES, cityError, dealBandLabels, descError, feeError, feeWords, nameError, newFee,
-  nowrapPct, fullAddress, teamSizeError, webError, phoneError,
+  fullAddress, teamSizeError, webError, phoneError,
 } from "@/lib/advisor-firm";
 import { COUNTRIES, THAI_PROVINCES_77, yearError } from "@/lib/investor-bands";
 import { cn } from "@/lib/utils";
