@@ -1,3 +1,5 @@
+import { AdvisorLicenceField } from "./advisor-licence-field";
+import { licenceError } from "@/lib/advisor-licences";
 import { setupText } from "@/i18n/language";
 import { companyNameHelp } from "@/lib/company-name";
 import { CompanyNameFields } from "@/components/common/company-name-fields";
@@ -42,7 +44,7 @@ export type FirmForm = {
   englishName?: string;
   website: string; email: string; phone: string;
   team: { id?: string; name: string; role: string; roleTh?: string; email: string }[];
-  credentials: { id?: string; name: string; nameTh?: string; note: string; noteTh?: string; status?: string }[];
+  credentials: { id?: string; licenceKey?: string; name: string; nameTh?: string; note: string; noteTh?: string; status?: string }[];
   documents: { id?: string; path: string; name: string; type: string; checked?: boolean }[];
   /** One-step approval: the advisor's suggested listing name and headline. */
   suggestedListingName: string; suggestedHeadline: string;
@@ -72,7 +74,7 @@ export const toFirmForm = (f: AdvisorFirm | null): FirmForm => ({
   addr: { street: f?.addrStreet ?? "", unit: f?.addrUnit ?? "", district: f?.country === "Thailand" ? f?.addrDistrict ?? "" : "", province: f?.addrProvince ?? "", postal: f?.addrPostal ?? "" },
   website: f?.website ?? "", email: f?.email ?? "", phone: f?.phone ?? "",
   team: (f?.team ?? []).map((t) => ({ id: t.id, name: t.name, role: t.role ?? "", roleTh: t.roleTh ?? "", email: t.email ?? "" })),
-  credentials: (f?.credentials ?? []).map((c) => ({ id: c.id, name: c.name, nameTh: c.nameTh ?? "", note: c.note ?? "", noteTh: c.noteTh ?? "", status: c.status })),
+  credentials: (f?.credentials ?? []).map((c) => ({ id: c.id, licenceKey: c.licenceKey ?? "other", name: c.name, nameTh: c.nameTh ?? "", note: c.note ?? "", noteTh: c.noteTh ?? "", status: c.status })),
   documents: (f?.documents ?? []).map((d) => ({ id: d.id, path: d.path, name: d.name, type: d.type ?? "", checked: !!d.checkedAt })),
   suggestedListingName: f?.suggestedListingName ?? "", suggestedHeadline: f?.suggestedHeadline ?? "",
 });
@@ -147,6 +149,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   const [uploading, setUploading] = useState(false);
   const [logoErr, setLogoErr] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [licenceErrors, setLicenceErrors] = useState<Record<number, "choice" | "name">>({});
   const [forced, setForced] = useState(false);
   const [openSec, setOpenSec] = useState<ReviewSec | null>(null);
   const docInput = useRef<HTMLInputElement>(null);
@@ -218,6 +221,15 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   const changeCountry = (c: string) => setF((p) => ({ ...p, country: c, city: "", registrationNo: "", addr: { street: "", unit: "", district: "", province: "", postal: "" } }));
 
   async function submit() {
+    const errors: Record<number, "choice" | "name"> = {};
+    f.credentials.forEach((c, i) => { const e = licenceError(c); if (e) errors[i] = e; });
+    setLicenceErrors(errors);
+    const invalid = Object.keys(errors)[0];
+    if (invalid !== undefined) {
+      setTab("documents"); if (setup) setOpenSec("licences");
+      setTimeout(() => document.getElementById(`advisor-licence-${invalid}${errors[Number(invalid)] === "name" ? "-name" : ""}`)?.focus(), 60);
+      return;
+    }
     if (adminCreate && nameError(f.name)) { setForced(true); setTab("about"); setTimeout(() => document.getElementById("fe-name")?.focus(), 60); return; }
 
     // Setup Review & complete: close any open section, then stop at the first missing answer.
@@ -255,7 +267,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           addrProvince: nul(f.addr.province), addrPostal: nul(f.addr.postal),
           website: f.website.trim() ? normalizeUrl(f.website) : "", email: f.email.trim(), phone: f.phone.trim(),
           team: f.team.filter((t) => t.name.trim()).map((t) => ({ id: t.id, name: t.name, role: nul(t.role), roleTh: nul(t.roleTh ?? ""), email: nul(t.email) })),
-          credentials: f.credentials.filter((c) => c.name.trim()).map((c) => ({ id: c.id, name: c.name, nameTh: nul(c.nameTh ?? ""), note: nul(c.note), noteTh: nul(c.noteTh ?? "") })),
+          credentials: f.credentials.filter((c) => c.name.trim()).map((c) => ({ id: c.id, licenceKey: c.licenceKey ?? "other", name: c.name, nameTh: nul(c.nameTh ?? ""), note: nul(c.note), noteTh: nul(c.noteTh ?? "") })),
           documents: f.documents.map((d) => ({ id: d.id, path: d.path, name: d.name || "Document", type: nul(d.type) })),
           suggested_listing_name: nul(f.suggestedListingName), suggested_headline: nul(f.suggestedHeadline),
         },
@@ -411,16 +423,16 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {visible("documents") && <div className="space-y-4"><TabHead title={tr("Licences & Documents")} />      <Section id="credentials" active={!setup && section === "credentials"} title={setupText("Licences and credentials")} setup={!!setup}>
         {f.credentials.length === 0 && <p className="text-[13px] text-muted-foreground">{setupText("No licences or credentials yet. Add the ones your firm holds; Admin checks each one before it shows as Verified.")}</p>}
         {f.credentials.map((c, i) => (
-          <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1.4fr_auto_auto]">
-            <F label={setupText("Licence or credential")} req><Input className={inp} placeholder={setupText("e.g. Financial advisor licence")} lang={tl} value={tl === "th" ? pick(c.name, c.nameTh) : c.name} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "nameTh" : "name"]: e.target.value, ...(tl === "th" && !x.name ? { name: e.target.value } : {}), status: "pending" } : x)))} /></F>
+          <div key={i} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto]">
+            <AdvisorLicenceField row={c} rows={f.credentials} index={i} error={licenceErrors[i]} onChange={patch => { set("credentials", f.credentials.map((x, j) => j === i ? { ...x, ...patch } : x)); setLicenceErrors(e => { const next = { ...e }; delete next[i]; return next; }); }} />
             <F label={setupText("Note")}><Input className={inp} placeholder={setupText("Note, e.g. 2 licensed advisers on the team")} lang={tl} value={pick(c.note, c.noteTh)} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "noteTh" : "note"]: e.target.value, status: "pending" } : x)))} /></F>
-            <span className={cn("mb-2 rounded-full border px-2 py-0.5 text-[11.5px] font-semibold", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
-              {c.status === "verified" ? "✓ Verified" : "Pending check"}
+            <span className={cn("mb-2 w-fit self-start rounded-full border px-2 py-0.5 text-[11.5px] font-semibold sm:mt-7", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
+              {setupText(c.status === "verified" ? "✓ Verified" : c.status === "rejected" ? "Can't verify" : "Pending check")}
             </span>
             <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove credential")} onClick={() => set("credentials", f.credentials.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
           </div>
         ))}
-        <Button type="button" variant="outline" size="sm" onClick={() => set("credentials", [...f.credentials, { name: "", note: "", status: "pending" }])}><Plus className="mr-1.5 h-4 w-4" />{setupText("Add licence or credential")}</Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => set("credentials", [...f.credentials, { licenceKey: "", name: "", note: "", status: "pending" }])}><Plus className="mr-1.5 h-4 w-4" />{setupText("Add licence or credential")}</Button>
       </Section>
 
       <Section id="documents" active={!setup && section === "documents"} title={setupText("Documents (Optional)")} setup={!!setup}>
@@ -441,7 +453,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       </> : setup ? (
         <SetupReview f={f} set={set} setF={setF} thai={thai} openSec={openSec} setOpenSec={setOpenSec}
           onChangeServices={setup.onChangeServices} onLogo={onLogo} logoErr={logoErr} uploading={uploading}
-          onDoc={onDoc} docInput={docInput} changeCountry={changeCountry} />
+          onDoc={onDoc} docInput={docInput} changeCountry={changeCountry} licenceErrors={licenceErrors} clearLicenceError={i => setLicenceErrors(e => { const next = { ...e }; delete next[i]; return next; })} />
       ) : <>      <Section id="firm" active={false} title={setupText("Firm")} setup={!!setup}>
         <F label={tr("Logo and photos")} opt tag={f.logo.url ? (f.logo.source === "enrich" ? "Auto Enrich" : src.logo) : undefined}>
           <AttachmentCard value={f.media} onChange={(m) => set("media", m)} name={f.name || tr("Your firm")} sectorLine={[f.firmType, [f.city || f.addr.province, f.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
@@ -551,16 +563,16 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       <Section id="credentials" active={!setup && section === "credentials"} title={setupText("Licences and credentials")} setup={!!setup}>
         {f.credentials.length === 0 && <p className="text-[13px] text-muted-foreground">{setupText("No licences or credentials yet. Add the ones your firm holds; Admin checks each one before it shows as Verified.")}</p>}
         {f.credentials.map((c, i) => (
-          <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1.4fr_auto_auto]">
-            <F label={setupText("Licence or credential")} req><Input className={inp} placeholder={setupText("e.g. Financial advisor licence")} lang={tl} value={tl === "th" ? pick(c.name, c.nameTh) : c.name} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "nameTh" : "name"]: e.target.value, ...(tl === "th" && !x.name ? { name: e.target.value } : {}), status: "pending" } : x)))} /></F>
+          <div key={i} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto]">
+            <AdvisorLicenceField row={c} rows={f.credentials} index={i} error={licenceErrors[i]} onChange={patch => { set("credentials", f.credentials.map((x, j) => j === i ? { ...x, ...patch } : x)); setLicenceErrors(e => { const next = { ...e }; delete next[i]; return next; }); }} />
             <F label={setupText("Note")}><Input className={inp} placeholder={setupText("Note, e.g. 2 licensed advisers on the team")} lang={tl} value={pick(c.note, c.noteTh)} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "noteTh" : "note"]: e.target.value, status: "pending" } : x)))} /></F>
-            <span className={cn("mb-2 rounded-full border px-2 py-0.5 text-[11.5px] font-semibold", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
-              {c.status === "verified" ? "✓ Verified" : "Pending check"}
+            <span className={cn("mb-2 w-fit self-start rounded-full border px-2 py-0.5 text-[11.5px] font-semibold sm:mt-7", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
+              {setupText(c.status === "verified" ? "✓ Verified" : c.status === "rejected" ? "Can't verify" : "Pending check")}
             </span>
             <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove credential")} onClick={() => set("credentials", f.credentials.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
           </div>
         ))}
-        <Button type="button" variant="outline" size="sm" onClick={() => set("credentials", [...f.credentials, { name: "", note: "", status: "pending" }])}><Plus className="mr-1.5 h-4 w-4" />{setupText("Add licence or credential")}</Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => set("credentials", [...f.credentials, { licenceKey: "", name: "", note: "", status: "pending" }])}><Plus className="mr-1.5 h-4 w-4" />{setupText("Add licence or credential")}</Button>
       </Section>
 
       <Section id="documents" active={!setup && section === "documents"} title={setupText("Documents (Optional)")} setup={!!setup}>

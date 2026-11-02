@@ -1,4 +1,5 @@
-import { tr } from "@/i18n/language";
+import { licenceName } from "@/lib/advisor-licences";
+import { tr, useTranslation } from "@/i18n/language";
 import { AlertCircle, Check, CircleDashed, Clock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AdminFirm } from "@/lib/advisor-admin.functions";
@@ -53,7 +54,7 @@ export function recheckSentence(f: AdminFirm) {
   if ((snap.registration_no ?? null) !== (f.registrationNo ?? null)) parts.push("changed its registration number");
   const sc = new Map<string, any>((snap.credentials ?? []).map((c: any) => [c.id, c]));
   const sd = new Map<string, any>((snap.documents ?? []).map((d: any) => [d.id, d]));
-  const addC = f.credentials.filter((c) => !sc.has(c.id)).length, chC = f.credentials.filter((c) => sc.has(c.id) && (sc.get(c.id).name !== c.name || (sc.get(c.id).note ?? null) !== (c.note ?? null))).length;
+  const addC = f.credentials.filter((c) => !sc.has(c.id)).length, chC = f.credentials.filter((c) => sc.has(c.id) && ((sc.get(c.id).licence_key ?? "other") !== (c.licenceKey ?? "other") || sc.get(c.id).name !== c.name || (sc.get(c.id).note ?? null) !== (c.note ?? null))).length;
   const rmC = [...sc.keys()].filter((id) => !f.credentials.some((c) => c.id === id)).length;
   const addD = f.documents.filter((d) => !sd.has(d.id)).length, rmD = [...sd.keys()].filter((id) => !f.documents.some((d) => d.id === id)).length;
   const added = [addC && (addC === 1 ? "a licence" : `${addC} licences`), addD && (addD === 1 ? "a document" : `${addD} documents`)].filter(Boolean) as string[];
@@ -74,10 +75,11 @@ const BOX: Record<string, string> = {
 };
 
 export function VerificationBox({ f }: { f: AdminFirm }) {
+  const { language } = useTranslation();
   const k = chipKey(f.v);
   const [I] = CHIP[k]!;
   const by = (n: string | null) => (n ? `, by ${n}` : "");
-  const pendingCreds = f.credentials.filter((c) => c.status === "pending").map((c) => c.name);
+  const pendingCreds = f.credentials.filter((c) => c.status === "pending").map((c) => licenceName(c, language === "th"));
   let body: React.ReactNode;
   if (k === "unverified") body = <><b>Not verified yet.</b> {f.setupDone ? "The firm saved its setup." : `The firm hasn't saved its setup (${f.answered} of 11 answered).`} It joins Approvals › Advisors when it does, or when you use ⋮ › Send to verification.</>;
   else if (k === "first_check") body = <><b>Pending verification since {day(f.v.requestedAt)}</b> (first check, {waitWords(f.v.requestedAt)}). {f.status === "live" ? "It's already Live: verification doesn't hold back publishing." : f.status === "paused" ? "It stays unpublished until the firm publishes it again." : "It's still a Draft."}</>;

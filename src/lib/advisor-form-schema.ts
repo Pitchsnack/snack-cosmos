@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LICENCES, licenceOf } from "./advisor-licences";
 import { optionalCompanyName } from "./company-name";
 import { DEAL_BANDS } from "@/lib/advisor-firm";
 const BAND_KEYS = DEAL_BANDS.map((b) => b.key) as [string, ...string[]];
@@ -9,6 +10,20 @@ const s = (max: number) => z.string().trim().max(max).nullable().optional().tran
 const YEAR_CEILING = 2100;
 const notFutureYear = (y: number) => y <= new Date().getFullYear();
 const yearMsg = "Year cannot be in the future";
+export const CredentialInput = z.object({
+  id: z.string().uuid().optional(),
+  licenceKey: z.string().refine(key => LICENCES.some(x => x[1] === key), "Choose a licence or credential."),
+  name: z.string().trim().min(1).max(160), nameTh: s(160), note: s(300), noteTh: s(300),
+}).superRefine((c, ctx) => {
+  if (c.licenceKey === "other" && c.name.length > 120) ctx.addIssue({ code: "custom", path: ["name"], message: "Use up to 120 characters." });
+}).transform(c => ({ ...c, name: c.licenceKey === "other" ? c.name : licenceOf(c.licenceKey)?.[2] ?? c.name }));
+const CredentialsInput = z.array(CredentialInput).max(100).superRefine((rows, ctx) => {
+  const seen = new Set<string>();
+  rows.forEach((c, i) => {
+    if (c.licenceKey !== "other" && seen.has(c.licenceKey)) ctx.addIssue({ code: "custom", path: [i, "licenceKey"], message: "This licence is already added." });
+    seen.add(c.licenceKey);
+  });
+});
 
 export const CompleteFirmInput = z.object({
   id: z.string().uuid().nullable(),
@@ -36,7 +51,7 @@ export const CompleteFirmInput = z.object({
   addrStreet: s(120), addrUnit: s(120), addrDistrict: s(80), addrProvince: s(80), addrPostal: s(12),
   website: z.string().trim().min(3).max(200), email: z.string().trim().email().max(120), phone: z.string().trim().min(9).max(30),
   team: z.array(z.object({ id: z.string().uuid().optional(), name: z.string().trim().min(1).max(120), role: s(120), roleTh: s(120).optional(), email: s(255) })).max(100),
-  credentials: z.array(z.object({ id: z.string().uuid().optional(), name: z.string().trim().min(1).max(160), nameTh: s(160).optional(), note: s(300), noteTh: s(300).optional() })).max(100),
+  credentials: CredentialsInput,
   documents: z.array(z.object({ id: z.string().uuid().optional(), path: z.string().max(300), name: z.string().trim().min(1).max(160), type: s(40) })).max(100),
 }).refine((d) => d.country !== "Thailand" || /^\d{13}$/.test(d.registrationNo ?? ""), { message: "The registration number has 13 digits." });
 

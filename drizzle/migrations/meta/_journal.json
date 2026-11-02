@@ -918,6 +918,13 @@
       "when": 1793577248478,
       "tag": "0130_user_activity_last_login",
       "breakpoints": true
+    },
+    {
+      "idx": 131,
+      "version": "7",
+      "when": 1793610406291,
+      "tag": "0131_advisor_licence_keys",
+      "breakpoints": true
     }
   ]
 }

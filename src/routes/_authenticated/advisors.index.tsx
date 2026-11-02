@@ -1,3 +1,5 @@
+import { licenceName } from "@/lib/advisor-licences";
+import { useTranslation } from "@/i18n/language";
 import {CreatedDirectoryRow} from "@/components/common/created-directory-row";
 import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
 import { OwnershipProvider, RunBySelect, HeaderCounts, useOwnershipMap, runByMatches, OwnershipCardSlot, OwnershipPanelSlot, OwnershipMenuItem, type RunByFilter } from "@/components/handover/ownership";
@@ -281,6 +283,7 @@ function Sec({ icon: I, title, children }: { icon: typeof Tag; title: string; ch
 }
 
 function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: () => void; onEdit: () => void }) {
+  const { language } = useTranslation();
   const qc = useQueryClient();
   const decide = useServerFn(decideAdvisor);
   const deal = dealBandLabels(f.dealBand);
@@ -345,7 +348,7 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
         {f.team.length ? <ul className="space-y-1 text-[13px]">{f.team.map((t, i) => <li key={i}><b className="font-medium">{t.name}</b>{t.role && ` · ${t.role}`}{t.email && <span className="text-muted-foreground"> · {t.email}</span>}</li>)}</ul> : <p className="text-[13px] text-muted-foreground">—</p>}
       </Sec>
       <Sec icon={ShieldCheck} title="Licences and credentials">
-        {f.credentials.length ? <ul className="space-y-1.5 text-[13px]">{f.credentials.map((c) => <li key={c.id} className="flex items-center justify-between gap-3"><span>{c.name}{c.note && <span className="text-muted-foreground"> · {c.note}</span>}</span><CredMark status={c.status} /></li>)}</ul> : <p className="text-[13px] text-muted-foreground">None added.</p>}
+        {f.credentials.length ? <ul className="space-y-1.5 text-[13px]">{f.credentials.map((c) => <li key={c.id} className="flex items-center justify-between gap-3"><span>{licenceName(c, language === "th")}{c.note && <span className="text-muted-foreground"> · {c.note}</span>}</span><CredMark status={c.status} /></li>)}</ul> : <p className="text-[13px] text-muted-foreground">None added.</p>}
       </Sec>
       <Sec icon={FileText} title="Documents">
         {f.documents.length ? <ul className="space-y-1.5 text-[13px]">{f.documents.map((d) => <li key={d.id} className="flex items-center justify-between gap-3">{d.url ? <a href={d.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[#2563EB] hover:underline">{d.name}<ExternalLink className="h-3 w-3" /></a> : <span>{d.name}</span>}<DocMark checked={!!d.checkedAt} /></li>)}</ul> : <p className="text-[13px] text-muted-foreground">None added.</p>}

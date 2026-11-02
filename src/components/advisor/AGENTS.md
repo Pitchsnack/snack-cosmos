@@ -1,4 +1,5 @@
 # Advisor decisions
+- Advisor credentials share a browser-safe catalogue and picker; stable keys persist with canonical English names, reader-language labels derive from the catalogue, and existing authorized saves/triggers retain re-check ownership.
 
 - Advisor My Company: firm profiles live in advisor_firms (+ fees/team/credentials/documents/reviews), read/written only via advisor-firm.functions.ts; verification and check statuses are Admin-only, enforced by DB triggers.
 - Advisor firm setup wizard (advisor-setup-wizard.tsx at /advisor/company/$id/setup) autosaves via saveAdvisorWizard into the same advisor_firms row; Review & complete renders FirmEditForm in setup mode, so wizard and Edit profile share one form and one set of checks (advisor-firm.ts, advisor-firm-fields.tsx).
