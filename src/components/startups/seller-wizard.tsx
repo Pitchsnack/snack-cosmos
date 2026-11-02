@@ -408,7 +408,7 @@ export function SellerWizard({
           <div className={cur.id === "web" ? `seller-website-actions ${!webExpanded ? "has-no-website" : ""}` : "seller-setup-actions mt-8 flex items-center gap-2.5"}>
             <Button variant="unstyled" size="unstyled" type="button" onClick={back}
               className={cur.id === "web" ? "seller-action seller-action-back" : "rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"}>{pos === 0 && full == null ? tr("Cancel") : tr("Back")}</Button>
-            {canSkip && cur.id !== "web" && (
+            {canSkip && (
               <button type="button" className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"
                 ref={skipRef} onClick={() => advance()}>{cur.id === "lic" ? L("Have no license","ไม่มีใบอนุญาต") : tr("Skip")}</button>
             )}

@@ -55,7 +55,7 @@ async function saveWizardFounders(sb:any, id:string, userId:string, founders:z.i
   // Reuse Edit information's founder projection; never carry IDs between businesses.
   const {data:st,error:stError} = await sb.from("startups").select("tenant_id").eq("id",id).single();
   if(stError || !st) throw new Error(stError?.message ?? "Business unavailable");
-  const {data:old,error:readError} = await sb.from("startup_founders").select("id").eq("startup_id",id);
+  const {data:old,error:readError} = await sb.from("startup_founders").select("id").eq("startup_id",id).order("display_order");
   if(readError) throw new Error(readError.message);
   const ids = new Set((old ?? []).map((f:any) => f.id)); const keep = new Set<string>();
   for(const [i,f] of founders.entries()) {
@@ -65,7 +65,8 @@ async function saveWizardFounders(sb:any, id:string, userId:string, founders:z.i
       bio:f.bio_story?.mode === "lines" ? composeFounderBio(f.bio_story):f.bio ?? null,bio_story:f.bio_story ?? null,
       bio_th:f.bio_story_th?.mode === "lines" ? composeFounderBio(f.bio_story_th):f.bio_th ?? null,bio_story_th:f.bio_story_th ?? null,
       photo_url:f.photo_url ?? null,display_order:i};
-    if(f.id && ids.has(f.id)) {const {error}=await sb.from("startup_founders").update(patch).eq("id",f.id).eq("startup_id",id);if(error) throw new Error(error.message);keep.add(f.id);}
+    const existingId = f.id && ids.has(f.id) ? f.id : !f.id ? old?.[i]?.id : null;
+    if(existingId) {const {error}=await sb.from("startup_founders").update(patch).eq("id",existingId).eq("startup_id",id);if(error) throw new Error(error.message);keep.add(existingId);}
     else {const {data:r,error}=await sb.from("startup_founders").insert(patch).select("id").single();if(error) throw new Error(error.message);if(r) keep.add(r.id);}
   }
   const remove=(old ?? []).map((f:any)=>f.id).filter((id:string)=>!keep.has(id));
