@@ -426,8 +426,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <div key={i} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto]">
             <AdvisorLicenceField row={c} rows={f.credentials} index={i} error={licenceErrors[i]} onChange={patch => { set("credentials", f.credentials.map((x, j) => j === i ? { ...x, ...patch } : x)); setLicenceErrors(e => { const next = { ...e }; delete next[i]; return next; }); }} />
             <F label={setupText("Note")}><Input className={inp} placeholder={setupText("Note, e.g. 2 licensed advisers on the team")} lang={tl} value={pick(c.note, c.noteTh)} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "noteTh" : "note"]: e.target.value, status: "pending" } : x)))} /></F>
-            <span className={cn("mb-2 rounded-full border px-2 py-0.5 text-[11.5px] font-semibold", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
-              {c.status === "verified" ? "✓ Verified" : "Pending check"}
+            <span className={cn("mb-2 w-fit self-start rounded-full border px-2 py-0.5 text-[11.5px] font-semibold sm:mt-7", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
+              {setupText(c.status === "verified" ? "✓ Verified" : c.status === "rejected" ? "Can't verify" : "Pending check")}
             </span>
             <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove credential")} onClick={() => set("credentials", f.credentials.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
           </div>
@@ -566,8 +566,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <div key={i} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto]">
             <AdvisorLicenceField row={c} rows={f.credentials} index={i} error={licenceErrors[i]} onChange={patch => { set("credentials", f.credentials.map((x, j) => j === i ? { ...x, ...patch } : x)); setLicenceErrors(e => { const next = { ...e }; delete next[i]; return next; }); }} />
             <F label={setupText("Note")}><Input className={inp} placeholder={setupText("Note, e.g. 2 licensed advisers on the team")} lang={tl} value={pick(c.note, c.noteTh)} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "noteTh" : "note"]: e.target.value, status: "pending" } : x)))} /></F>
-            <span className={cn("mb-2 rounded-full border px-2 py-0.5 text-[11.5px] font-semibold", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
-              {c.status === "verified" ? "✓ Verified" : "Pending check"}
+            <span className={cn("mb-2 w-fit self-start rounded-full border px-2 py-0.5 text-[11.5px] font-semibold sm:mt-7", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
+              {setupText(c.status === "verified" ? "✓ Verified" : c.status === "rejected" ? "Can't verify" : "Pending check")}
             </span>
             <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove credential")} onClick={() => set("credentials", f.credentials.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
           </div>
