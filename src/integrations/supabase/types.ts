@@ -354,6 +354,7 @@ export type Database = {
           checked_by: string | null
           firm_id: string
           id: string
+          licence_key: string
           name: string
           name_th: string | null
           note: string | null
@@ -366,6 +367,7 @@ export type Database = {
           checked_by?: string | null
           firm_id: string
           id?: string
+          licence_key?: string
           name: string
           name_th?: string | null
           note?: string | null
@@ -378,6 +380,7 @@ export type Database = {
           checked_by?: string | null
           firm_id?: string
           id?: string
+          licence_key?: string
           name?: string
           name_th?: string | null
           note?: string | null
