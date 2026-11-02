@@ -17,7 +17,7 @@
 .standard-card-selected { border-color:var(--accent); }
 .standard-card-cover { height:116px; flex:none; position:relative; }
 .standard-card-cover > div { height:100%; }
-.standard-card-status { position:absolute; left:10px; top:13px; display:inline-flex; height:24px; gap:5px; align-items:center; padding:0 10px; border:1px solid; border-radius:999px; font-size:11.5px; font-weight:600; white-space:nowrap; overflow:hidden; box-shadow:var(--standard-pill-shadow); }
+.standard-card-status { position:absolute; left:10px; top:13px; display:inline-flex; height:24px; gap:5px; align-items:center; padding:0 9px; border:1px solid; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; box-shadow:var(--standard-pill-shadow); }
 .standard-card-status svg { width:13px; height:13px; flex:none; }
 .standard-card-status-hidden { background:var(--standard-white); border-color:var(--standard-hidden-edge); color:var(--standard-hidden-ink); }
 .standard-card-status-requested { background:var(--standard-request-bg); border-color:var(--standard-request-edge); color:var(--standard-request-ink); }
@@ -26,8 +26,8 @@
 .standard-card-new { display:inline-flex; align-self:stretch; align-items:center; margin-left:2px; padding:0 8px; background:var(--plan-seller); color:var(--accent-foreground); font-size:10.5px; font-weight:700; }
 .standard-card-tools { position:absolute; top:10px; right:10px; display:flex; align-items:center; gap:6px; }
 .standard-card-badges { position:absolute; left:10px; bottom:10px; display:flex; gap:6px; max-width:calc(100% - 20px); overflow:hidden; }
-.standard-card-badge { display:inline-flex; align-items:center; gap:5px; flex:none; height:24px; padding:0 10px; border-width:1px; border-style:solid; border-radius:999px; font-size:11.5px; font-weight:600; white-space:nowrap; box-shadow:var(--standard-pill-shadow); }
-.standard-card-badge svg { width:12px; height:12px; }
+.standard-card-badge { display:inline-flex; align-items:center; gap:5px; flex:none; height:24px; padding:0 9px; border-width:1px; border-style:solid; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; box-shadow:var(--standard-pill-shadow); }
+.standard-card-badge svg { width:13px; height:13px; }
 .standard-card-body { display:flex; flex-direction:column; gap:10px; padding:14px 16px 8px; min-width:0; }
 .standard-card-text { display:flex; flex-direction:column; gap:6px; min-width:0; }
 .standard-card-name { display:flow-root; position:relative; max-height:43.2px; overflow:hidden; }
@@ -67,6 +67,13 @@
 .standard-card-desc-4 { -webkit-line-clamp:4; }
 .standard-card-description:empty { display:none; }
 .standard-card-toggle { height:28px; width:100%; flex:none; margin:-2px 0 0; display:flex; align-items:center; justify-content:center; gap:5px; border-radius:8px; font-size:12.5px; font-weight:600; color:var(--standard-hidden-ink); background:transparent; }
+.standard-card-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; flex:none; margin:-2px 0 0; }
+.standard-card-foot .standard-card-toggle { width:auto; margin:0; padding:0 8px; }
+.standard-card-last-login { display:inline-flex; align-items:center; gap:6px; min-width:0; font-size:12px; line-height:16px; color:var(--standard-muted); white-space:nowrap; overflow:hidden; }
+.standard-card-last-login svg { width:13px; height:13px; flex:none; }
+.standard-card-plain-row { border-top:1px solid var(--standard-line); }
+.standard-card-more .standard-card-figures > .standard-card-text-row:first-child { border-top:none; }
+.standard-card-more .standard-card-figure-row { border-top:1px solid var(--standard-line); }
 .standard-card-toggle:hover { background:var(--standard-chip); color:var(--standard-ink); }
 .standard-card-toggle svg { height:14px; width:14px; transition:transform .18s; }
 .standard-card-open .standard-card-toggle svg { transform:rotate(180deg); }
