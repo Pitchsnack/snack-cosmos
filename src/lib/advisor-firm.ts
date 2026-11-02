@@ -200,7 +200,6 @@ export function firmChecklist(f: AdvisorFirm): { key: ChecklistKey; label: strin
     { key: "phone", label: "Phone", done: !!f.phone?.trim(), section: "company" },
     { key: "team", label: "At least one team member", done: f.team.length > 0, section: "team" },
     { key: "credentials", label: "At least one licence or credential", done: f.credentials.length > 0, section: "credentials" },
-    { key: "documents", label: "At least one document", done: f.documents.length > 0, section: "documents" },
   ];
 }
 

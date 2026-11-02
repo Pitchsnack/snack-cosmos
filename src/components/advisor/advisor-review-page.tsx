@@ -478,7 +478,7 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
       </Sec>
 
       {/* ------------------------------------------------------ Documents */}
-      <Sec id="documents" name={tr("Documents")} miss={0} open={openSec === "documents"} onEdit={() => open("documents")} onDone={() => done("documents")}
+      <Sec id="documents" name={tr("Documents (Optional)")} miss={0} open={openSec === "documents"} onEdit={() => open("documents")} onDone={() => done("documents")}
         rows={<>
           {f.documents.length === 0 && <p className="py-2 text-[14px] text-[#9CA3AF]">{setupText("No documents yet. Upload your company certificate and licences: PDF, DOCX or an image.")}</p>}
           {f.documents.map((d) => <Row key={d.id ?? d.path} label={d.name} strong value={d.type || "File"} />)}
