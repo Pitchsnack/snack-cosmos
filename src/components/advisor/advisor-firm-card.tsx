@@ -25,8 +25,8 @@ export function FirmLogo({ f, size = 52, radius = 13, ring = true }: { f: Pick<A
 
 export function VerifiedAdvisorChip({ small }: { small?: boolean }) {
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 font-semibold text-[#15803D]", small ? "h-5 text-[11px]" : "h-[22px] text-[11px]")}>
-      <BadgeCheck className="h-3 w-3" />{setupText("Verified advisor")}
+      <span className={cn("inline-flex items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-[9px] font-semibold text-[#15803D] shadow-[0_1px_2px_rgba(16,24,40,.14)]", small ? "h-5 text-[11px]" : "h-6 text-[12px]")}>
+      <BadgeCheck className="h-[13px] w-[13px]" />{setupText("Verified advisor")}
     </span>
   );
 }

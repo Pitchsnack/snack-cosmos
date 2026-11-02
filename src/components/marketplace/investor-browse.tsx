@@ -53,7 +53,7 @@ export function StarBtn({ saved, onClick }: { saved: boolean; onClick: () => voi
   return (
     <button type="button" aria-label={saved ? "Remove from my watchlist" : "Add to my watchlist"} title={saved ? "Remove from my watchlist" : "Add to my watchlist"}
       onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className="inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] border border-border bg-background hover:bg-muted">
+      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] border border-border bg-background hover:bg-muted">
       <Star className={cn("h-4 w-4", saved ? "fill-amber-500 text-amber-500" : "text-muted-foreground")} />
     </button>
   );
