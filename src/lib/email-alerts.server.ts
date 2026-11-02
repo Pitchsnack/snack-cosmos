@@ -24,12 +24,13 @@ export function buildAlert(alert: string, role: AlertRole, lang: AlertLang, ov: 
   const fallback = rolesOf(def)[0];
   const ver = def[role] ?? (fallback ? def[fallback] : undefined);
   if (!ver) throw new Error("Alert role is unavailable");
-  const localVars = { ...vars, ...(lang === "th" && vars.rewrote ? { rewrote: " PitchSnack ได้ปรับชื่อประกาศและพาดหัวของท่าน" } : {}) };
+  const advisorApproved = role === "advisor" && alert === "approved";
+  const localVars = { ...vars, ...(lang === "th" && vars.rewrote ? { rewrote: " PitchSnack ได้ปรับชื่อประกาศและพาดหัวของท่าน" } : {}), ...(advisorApproved ? { "listing name": vars.firm, rewrote: "" } : {}) };
   return {
     role, lang,
     subject: fill(t.subject, vars), title: fill(t.title, vars), body: fill(t.body, localVars),
     button: t.button, place: ver.place, url: SITE + (vars.pipeline ? (alert==='deal_withdrawn'?`/marketplace/pipeline/history?deal=${encodeURIComponent(vars.pipeline)}`:alert==='nda_declined'?`/marketplace/pipeline/invitations?open=${encodeURIComponent(vars.pipeline)}`:`/marketplace/pipeline/all-deals?deal=${encodeURIComponent(vars.pipeline)}`) : fill(ver.path, Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, encodeURIComponent(String(v))])))), color: def.color,
-    details, quote: quote ? quote.slice(0, 300) : undefined,
+    details: advisorApproved ? details?.filter(([label]) => label === "Verified") : details, quote: quote ? quote.slice(0, 300) : undefined,
   };
 }
 

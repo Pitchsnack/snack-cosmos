@@ -34,7 +34,7 @@
 }
 .advisor-cover-top { position:absolute; top:10px; left:10px; right:10px; display:flex; align-items:center; justify-content:space-between; gap:8px; height:24px; }
 .advisor-cover-right { display:flex; align-items:center; justify-content:flex-end; min-width:0; gap:6px; }
-.advisor-cover-ref { display:flex; min-width:0; height:24px; align-items:center; white-space:nowrap; font-size:12.5px; font-weight:500; font-variant-numeric:tabular-nums; color:var(--advisor-cover-ref); }
+.advisor-cover-ref { display:flex; min-width:0; height:24px; gap:3px; align-items:center; white-space:nowrap; font-size:12.5px; font-weight:500; font-variant-numeric:tabular-nums; color:var(--advisor-cover-ref); }
 .advisor-cover-hat.managed-badge { width:24px; height:24px; padding:0 !important; justify-content:center; }
 .advisor-cover-hat .managed-hat { width:17px; height:12px; }
 .advisor-panel-body { padding:20px; display:flex; flex-direction:column; gap:14px; }
