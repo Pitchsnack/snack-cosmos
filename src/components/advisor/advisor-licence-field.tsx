@@ -28,7 +28,9 @@ export function AdvisorLicenceField({ row, rows, index, onChange, error, compact
       <SelectTrigger id={id} aria-required aria-invalid={error === "choice" || undefined} aria-describedby={error === "choice" ? `${id}-error` : issuer ? `${id}-issuer` : undefined} className={cn(fieldClass, "bg-background", error === "choice" && "advisor-licence-invalid")}>
         <SelectValue placeholder={text("Choose a licence or credential", "เลือกใบอนุญาตหรือใบรับรอง")} />
       </SelectTrigger>
-      <SelectContent className="max-w-[calc(100vw-32px)]">
+      <SelectContent className="max-w-[calc(100vw-32px)]" onCloseAutoFocus={event => {
+        if (otherRef.current) { event.preventDefault(); otherRef.current.focus(); }
+      }}>
         {LICENCE_GROUPS.map(g => <SelectGroup key={g[0]}>
           <SelectLabel className="text-xs uppercase text-muted-foreground">{g[thai ? 2 : 1]}</SelectLabel>
           {LICENCES.filter(x => x[0] === g[0]).map(x => {
