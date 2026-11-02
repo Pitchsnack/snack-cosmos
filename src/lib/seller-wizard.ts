@@ -190,7 +190,7 @@ export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
     role: !!d.role,
     name: !!d.name.trim() && /^\d{13}$/.test(d.reg) && addrComplete(d.addr),
     web: isValidUrl(d.web),
-    year: /^\d{4}$/.test(d.year) && y >= 1800 && y <= YEAR_NOW,
+    year: /^\d{4}$/.test(d.year) && y >= 1800 && y <= new Date().getFullYear(),
     rev: !!d.rev, size: !!d.size, sector: !!d.sector,
     // Optional: answered once it has an entry or the seller has moved past it.
     lic: d.licences.length + d.iso.length > 0 || STEP_KEYS.indexOf(d.reached as StepKey) > STEP_KEYS.indexOf("lic"),
