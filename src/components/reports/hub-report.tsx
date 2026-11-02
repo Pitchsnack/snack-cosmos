@@ -11,8 +11,16 @@ import {INCOME_ROWS,POSITION_ROWS} from '@/lib/financials';
 import {buildRiskReport} from '@/lib/company-risk';
 import {Button} from '@/components/ui/button';
 import {useHubCopy} from './hub-copy';
+import {ReportScroll} from './report-scroll';
 
-export function HubReport({hub,row,tab:tabProp,onTab}:{hub:HubData;row:HubRow;tab?:string;onTab?:(t:string)=>void}){
+export type HubReportProps={hub:HubData;row:HubRow;tab?:string;onTab?:(t:string)=>void};
+
+/** Every report in the hub scrolls sideways instead of squeezing; the Expand button and the box above stay fixed outside. */
+export function HubReport(props:HubReportProps){
+ return <ReportScroll expandHint><HubReportContent {...props}/></ReportScroll>;
+}
+
+function HubReportContent({hub,row,tab:tabProp,onTab}:HubReportProps){
  const qc=useQueryClient();
  const {c,date,year}=useHubCopy(hub.mode==='admin');const fetch=useServerFn(getHubReport);const [own,setOwn]=useState('income');const tab=tabProp??own;const setTab=(t:string)=>{setOwn(t);onTab?.(t);};
  const q=useQuery({queryKey:['reports-hub','content',hub.mode,hub.companyId,hub.pipelineId,row.key],queryFn:async()=>{const result=await fetch({data:{mode:hub.mode,companyId:hub.companyId,pipelineId:hub.pipelineId??undefined,key:row.key}});if(hub.mode==='buyer'){void qc.invalidateQueries({queryKey:['reports-hub'],predicate:q=>q.queryKey[1]!=='content'});void qc.invalidateQueries({queryKey:['pipeline']});}return result;},staleTime:0});
