@@ -1,6 +1,9 @@
 import { licenceName } from "@/lib/advisor-licences";
 import { useTranslation } from "@/i18n/language";
 import {CreatedDirectoryRow} from "@/components/common/created-directory-row";
+import { FirmServices } from "@/components/advisor/firm-services";
+import { ClientFeedback } from "@/components/advisor/advisor-my-company";
+import { tr } from "@/i18n/language";
 import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
 import { OwnershipProvider, RunBySelect, HeaderCounts, useOwnershipMap, runByMatches, OwnershipCardSlot, OwnershipPanelSlot, OwnershipMenuItem, type RunByFilter } from "@/components/handover/ownership";
 import { useMemo, useState } from "react";
@@ -273,10 +276,10 @@ function Under({ f }: { f: AdminFirm }) {
   return <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground"><span>Verification:</span><VerificationChip v={f.v} /><span className="ml-auto"><FirmStatusPill status={f.status} /></span></div>;
 }
 
-function Sec({ icon: I, title, children }: { icon: typeof Tag; title: string; children: React.ReactNode }) {
+function Sec({ icon: I, title, children, boxed = false }: { icon: typeof Tag; title: string; children: React.ReactNode; boxed?: boolean }) {
   return (
-    <section className="space-y-2">
-      <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground"><I className="h-3.5 w-3.5" />{title}</h3>
+    <section className={boxed ? "advisor-info-box advisor-admin-box advisor-hover-box" : "space-y-2"}>
+      <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground"><I className="h-3.5 w-3.5" />{tr(title)}</h3>
       {children}
     </section>
   );
@@ -299,7 +302,7 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
     [Wallet, deal ? `Deal size ${deal.usd}` : null], [MapPin, f.city], [Languages, f.languages.join(", ") || null], [Mail, f.email], [Phone, f.phone],
   ];
   return (
-    <div className="space-y-5">
+    <div className="advisor-admin-panel">
       <div className="flex flex-wrap items-start gap-3">
         <Logo f={f} size={52} />
         <div className="min-w-0 flex-1">
@@ -332,30 +335,31 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
         {facts.filter(([, t]) => t).map(([I, t]) => <span key={t} className="inline-flex items-center gap-1.5"><I className="h-3.5 w-3.5" />{t}</span>)}
         {f.website && <a href={/^https?:/.test(f.website) ? f.website : `https://${f.website}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[#2563EB]"><Globe className="h-3.5 w-3.5" />Website →</a>}
       </div>
-      <FirmPhotosBox photos={f.media} canEdit onEdit={onEdit} />
-      <Sec icon={Tag} title="Services and fees">
-        {f.services.length ? <div className="divide-y divide-border rounded-md border border-border text-[13px]">{f.services.map((sv) => <div key={sv} className="flex justify-between gap-3 px-3 py-2"><span>{sv}</span><span className="text-muted-foreground">{f.fees.find((x) => x.service === sv)?.fee || "—"}</span></div>)}</div> : <p className="text-[13px] text-muted-foreground">None yet.</p>}
+      <FirmPhotosBox photos={f.media} firm={f.name} canEdit onEdit={onEdit} />
+      <Sec icon={Tag} title={tr("Services and fees") + ` · ${f.services.length}`}>
+        <div className="flex justify-end"><Button variant="unstyled" className="advisor-text-action" onClick={onEdit}>{tr("Edit services")}</Button></div>
+        {f.services.length ? <FirmServices services={f.services} fee={s => f.fees.find(x => x.service === s)?.fee} onAddFee={onEdit} /> : <p className="text-[13px] text-muted-foreground">{tr("No services yet.")}</p>}
       </Sec>
       <Sec icon={Briefcase} title="Sectors">
         {f.sectorAgnostic ? <p className="text-[13px]">Sector agnostic</p> : <div className="flex flex-wrap gap-1">{f.sectors.map((x) => <span key={x} className="rounded-full bg-muted px-2 py-0.5 text-[11.5px]">{x}</span>)}{!f.sectors.length && <span className="text-[13px] text-muted-foreground">—</span>}</div>}
       </Sec>
-      <Sec icon={Building2} title="Company">
-        <dl className="grid grid-cols-[150px_1fr] gap-y-1 text-[13px]">
-          {([["Legal name", f.legalName], ["Thai name", f.thaiName], ["Registration no.", f.registrationNo], ["Business address", f.address]] as const).map(([k, v]) => <><dt key={k} className="text-muted-foreground">{k}</dt><dd key={`${k}v`}>{v || "—"}</dd></>)}
+      <div className="advisor-admin-info-grid">
+      <Sec boxed icon={Building2} title="Company">
+        <dl>
+          {([["Legal name", f.legalName], ["Thai name", f.thaiName], ["Registration no.", f.registrationNo], ["Business address", f.address]] as const).map(([k, v]) => <div key={k} className="advisor-fact"><dt className="text-muted-foreground">{tr(k)}</dt><dd className="min-w-0 break-words text-right font-semibold">{v || "—"}</dd></div>)}
         </dl>
       </Sec>
-      <Sec icon={Users} title="Team">
+      <Sec boxed icon={Users} title="Team">
         {f.team.length ? <ul className="space-y-1 text-[13px]">{f.team.map((t, i) => <li key={i}><b className="font-medium">{t.name}</b>{t.role && ` · ${t.role}`}{t.email && <span className="text-muted-foreground"> · {t.email}</span>}</li>)}</ul> : <p className="text-[13px] text-muted-foreground">—</p>}
       </Sec>
-      <Sec icon={ShieldCheck} title="Licences and credentials">
+      <Sec boxed icon={ShieldCheck} title="Licences and credentials">
         {f.credentials.length ? <ul className="space-y-1.5 text-[13px]">{f.credentials.map((c) => <li key={c.id} className="flex items-center justify-between gap-3"><span>{licenceName(c, language === "th")}{c.note && <span className="text-muted-foreground"> · {c.note}</span>}</span><CredMark status={c.status} /></li>)}</ul> : <p className="text-[13px] text-muted-foreground">None added.</p>}
       </Sec>
-      <Sec icon={FileText} title="Documents">
+      <Sec boxed icon={FileText} title="Documents">
         {f.documents.length ? <ul className="space-y-1.5 text-[13px]">{f.documents.map((d) => <li key={d.id} className="flex items-center justify-between gap-3">{d.url ? <a href={d.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[#2563EB] hover:underline">{d.name}<ExternalLink className="h-3 w-3" /></a> : <span>{d.name}</span>}<DocMark checked={!!d.checkedAt} /></li>)}</ul> : <p className="text-[13px] text-muted-foreground">None added.</p>}
       </Sec>
-      <Sec icon={MessageSquare} title="Client feedback">
-        {f.reviews.length ? <ul className="space-y-2 text-[13px]">{f.reviews.map((r, i) => <li key={i}><span className="text-[#F59E0B]">{"★".repeat(r.stars)}</span> {r.comment}{r.role && <span className="text-muted-foreground"> · {r.role}</span>}</li>)}</ul> : <p className="text-[13px] text-muted-foreground">No feedback yet.</p>}
-      </Sec>
+      </div>
+      <ClientFeedback f={{ reviews: f.reviews.map((r, i) => ({ ...r, id: String(i), role: r.role === "buyer" ? "buyer" : "seller", detail: null, service: null })) }} />
       {f.v.state === "pending" && <p className="text-xs text-muted-foreground">Waiting {businessDays(f.v.requestedAt)} business day(s) · {chipKey(f.v) === "re_check" ? "re-check" : "first check"}</p>}
     </div>
   );

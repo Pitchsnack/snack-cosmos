@@ -11,16 +11,16 @@ import { isValidUrl } from "@/lib/seller-wizard";
 export const USD_THB_DISPLAY_RATE: number = rates.usd_thb_display_rate;
 
 export const ADVISOR_SERVICES: { name: string; icon: LucideIcon; line: string; fixed: string; own: string; pct: string }[] = [
-  { name: "M&A advisory", icon: Handshake, line: "Sell-side and buy-side mandates, buyer search and negotiation to signing.", fixed: "500,000", own: "e.g. Monthly retainer, then a success fee of 2–3%", pct: "2" },
-  { name: "Valuation", icon: Calculator, line: "Business valuations and fairness opinions for sales and fundraising.", fixed: "150,000", own: "e.g. Fixed fee from ฿150,000", pct: "2" },
-  { name: "Tax", icon: Percent, line: "Deal tax structuring, tax due diligence and BOI incentives.", fixed: "90,000", own: "e.g. From ฿90,000 per engagement", pct: "2" },
-  { name: "Legal", icon: Scale, line: "Share purchase agreements, legal due diligence and licences.", fixed: "50,000", own: "e.g. ฿5,500 an hour, or a fixed fee per agreement", pct: "2" },
-  { name: "Accounting & audit", icon: FileChartColumn, line: "Audited accounts, carve-out financials and closing statements.", fixed: "220,000", own: "e.g. Annual audit from ฿220,000", pct: "2" },
-  { name: "Financial due diligence", icon: Search, line: "Quality of earnings, net debt and working capital reviews.", fixed: "350,000", own: "e.g. From ฿350,000 per review", pct: "2" },
-  { name: "Debt & financing", icon: Banknote, line: "Acquisition finance, refinancing and lender introductions.", fixed: "200,000", own: "e.g. 1% of the facility arranged", pct: "1" },
-  { name: "Business broker", icon: Store, line: "Listing small businesses for sale and matching buyers.", fixed: "100,000", own: "e.g. 5–8% of the sale price, paid on completion", pct: "5" },
-  { name: "Restructuring", icon: RefreshCw, line: "Turnarounds, debt restructuring and distressed sales.", fixed: "300,000", own: "e.g. Fixed fee per case, agreed after a first review", pct: "2" },
-  { name: "ESG & sustainability", icon: Sprout, line: "Environmental and social due diligence and reporting.", fixed: "150,000", own: "e.g. From ฿150,000 per assessment", pct: "2" },
+  { name: "M&A advisory", icon: Handshake, line: "Help to sell or buy a company, up to signing.", fixed: "500,000", own: "e.g. Monthly retainer, then a success fee of 2–3%", pct: "2" },
+  { name: "Valuation", icon: Calculator, line: "What a company is worth, for a sale or funding.", fixed: "150,000", own: "e.g. Fixed fee from ฿150,000", pct: "2" },
+  { name: "Tax", icon: Percent, line: "Tax on the deal, tax checks and BOI benefits.", fixed: "90,000", own: "e.g. From ฿90,000 per engagement", pct: "2" },
+  { name: "Legal", icon: Scale, line: "Sale contracts, legal checks and licences.", fixed: "50,000", own: "e.g. ฿5,500 an hour, or a fixed fee per agreement", pct: "2" },
+  { name: "Accounting & audit", icon: FileChartColumn, line: "Audited accounts and closing statements.", fixed: "220,000", own: "e.g. Annual audit from ฿220,000", pct: "2" },
+  { name: "Financial due diligence", icon: Search, line: "Checks on profit, debt and working capital.", fixed: "350,000", own: "e.g. From ฿350,000 per review", pct: "2" },
+  { name: "Debt & financing", icon: Banknote, line: "Loans to fund a purchase, and refinancing.", fixed: "200,000", own: "e.g. 1% of the facility arranged", pct: "1" },
+  { name: "Business broker", icon: Store, line: "Selling small businesses and finding buyers.", fixed: "100,000", own: "e.g. 5–8% of the sale price, paid on completion", pct: "5" },
+  { name: "Restructuring", icon: RefreshCw, line: "Fixing a struggling company and its debts.", fixed: "300,000", own: "e.g. Fixed fee per case, agreed after a first review", pct: "2" },
+  { name: "ESG & sustainability", icon: Sprout, line: "Environmental and social checks and reports.", fixed: "150,000", own: "e.g. From ฿150,000 per assessment", pct: "2" },
 ];
 export const serviceOf = (n: string) => ADVISOR_SERVICES.find((s) => s.name === n) ?? ADVISOR_SERVICES[0];
 
