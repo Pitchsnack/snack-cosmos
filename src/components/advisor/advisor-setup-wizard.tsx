@@ -650,7 +650,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           {header(tr("Review & complete"), tr("Last step"), 100)}
           <div className="mt-[22px] sm:mt-[34px]">
             <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{tr("Check your profile and save it")}</h1>
-            <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{tr("Your answers and what Auto Enrich found are filled in. Change anything you need, and add your team, licences and documents.")}</p>
+            <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{tr("Your answers and what Auto Enrich found are below. Use Edit on a section to change it, or to add your team, licences and documents.")}</p>
             <FirmEditForm firm={liveFirm} initial={dirtyForm ? { ...dirtyForm, services: a.services, fees: Object.fromEntries(a.services.map((s) => [s, a.fees[s] ?? newFee()])) } : null}
               setup={{
                 sources,

@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ServiceTiles, useMyAdvisorFirms, ADVISOR_FIRMS_KEY } from "@/components/advisor/advisor-my-company";
 import { AddressBox, FeeControl, LogoRow, addrErrors, logoFileError, useLogoUpload, type Addr, type LogoState } from "@/components/advisor/advisor-firm-fields";
 import { createAdvisorFirmForAdmin, createAdvisorUploadUrl, saveAdvisorFirm } from "@/lib/advisor-firm.functions";
+import { SetupReview, setupMissing, focusReviewField, type ReviewSec } from "@/components/advisor/advisor-review-page";
 import {
   DEAL_BANDS, FIRM_TYPES, LANGUAGES, cityError, dealBandLabels, descError, emailError, feeWords, firmChecklist, mergeServiceOrder, nameError,
   newFee, phoneError, teamSizeError, webError, type AdvisorFirm, type EditSection, type FeeDetail,
@@ -147,6 +148,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   const [logoErr, setLogoErr] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [forced, setForced] = useState(false);
+  const [openSec, setOpenSec] = useState<ReviewSec | null>(null);
   const docInput = useRef<HTMLInputElement>(null);
   const set = <K extends keyof FirmForm>(k: K, v: FirmForm[K]) => setF((p) => ({ ...p, [k]: v }));
   const pop = useEditInfo();
@@ -218,6 +220,18 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   async function submit() {
     if (adminCreate && nameError(f.name)) { setForced(true); setTab("about"); setTimeout(() => document.getElementById("fe-name")?.focus(), 60); return; }
 
+    // Setup Review & complete: close any open section, then stop at the first missing answer.
+    if (setup) {
+      setOpenSec(null);
+      const miss = setupMissing(f, thai);
+      if (miss.length) {
+        setOpenSec(miss[0].sec);
+        setTimeout(() => focusReviewField(miss[0].fieldId, miss[0].sec), 60);
+        return;
+      }
+    }
+
+
     if (!adminCreate && firm?.status !== "draft" && !f.services.length) { toast.error("Pick at least one service."); return; }
     if (!adminCreate && firm?.status !== "draft" && firstBad) {
       setForced(true);
@@ -236,7 +250,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           description: f.description.trim() || f.descriptionTh.trim(), descriptionTh: f.descriptionTh.trim() || null, yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
           dealBand: f.dealBand || null, teamSize: f.teamSize ? Number(f.teamSize) : null, languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
-          ...(setup ? { legalName: f.legalName.trim() || f.name.trim() } : { englishName: nul(f.englishName ?? "") }), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
+          englishName: nul(f.englishName ?? ""), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
           addrStreet: nul(f.addr.street), addrUnit: nul(f.addr.unit), addrDistrict: thai ? nul(f.addr.district) : nul(f.city),
           addrProvince: nul(f.addr.province), addrPostal: nul(f.addr.postal),
           website: f.website.trim() ? normalizeUrl(f.website) : "", email: f.email.trim(), phone: f.phone.trim(),
@@ -424,7 +438,11 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
 
 </div>}
         {asAdmin && visible("admin") && <div className="space-y-4"><TabHead title={tr("Admin settings")} /><p className="text-sm text-muted-foreground">{setupText("Only Admin sees this tab.")}</p><CompactFields two><F label={setupText("Verification status")}><Input readOnly value={firm?.verification?.state ?? "unverified"} /></F><F label={setupText("Verified on")}><Input readOnly value={firm?.verifiedAt ?? "—"} /></F>{firm?.verification?.state === "declined" && <F label={setupText("Decline reason")}><Textarea readOnly value={firm.verification.reason ?? ""} /></F>}<F label={setupText("More information requested")}><Textarea readOnly value={firm?.verification?.note ?? ""} /></F></CompactFields><Button variant="link" onClick={() => { pop.requestClose(); void navigate({to:"/approvals",search:{tab:"advisors",adv:firm?.id} as never}); }}>{setupText("Change it in Approvals")}</Button></div>}
-      </> : <>      <Section id="firm" active={false} title={setupText("Firm")} setup={!!setup}>
+      </> : setup ? (
+        <SetupReview f={f} set={set} setF={setF} thai={thai} openSec={openSec} setOpenSec={setOpenSec}
+          onChangeServices={setup.onChangeServices} onLogo={onLogo} logoErr={logoErr} uploading={uploading}
+          onDoc={onDoc} docInput={docInput} changeCountry={changeCountry} />
+      ) : <>      <Section id="firm" active={false} title={setupText("Firm")} setup={!!setup}>
         <F label={tr("Logo and photos")} opt tag={f.logo.url ? (f.logo.source === "enrich" ? "Auto Enrich" : src.logo) : undefined}>
           <AttachmentCard value={f.media} onChange={(m) => set("media", m)} name={f.name || tr("Your firm")} sectorLine={[f.firmType, [f.city || f.addr.province, f.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
             intro={tr("Your firm's logo and up to 3 photos of your office, your team or your work.")} showGuidance={false} />
@@ -446,8 +464,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         </F>
       </Section>
 
-      <Section id="services" active={!setup && section === "services"} title={setupText("Services and fees")} setup={!!setup}
-        action={setup ? <button type="button" onClick={setup.onChangeServices} className="text-[13px] font-semibold text-[#1E2A4A] hover:underline dark:text-foreground">{setupText("Change services")}</button> : undefined}>
+      <Section id="services" active={!setup && section === "services"} title={setupText("Services and fees")} setup={!!setup}>
         {!setup && <ServiceTiles picked={f.services} onToggle={toggleService} />}
         {f.services.length === 0 && <p className="text-[13px] font-semibold text-[#B42318]">{setupText("Pick at least one service.")}</p>}
         {f.services.length > 0 && (
