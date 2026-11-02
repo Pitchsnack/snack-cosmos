@@ -1,0 +1,21 @@
+import { describe, expect, it } from 'vitest';
+import { SELLER_STEPS, STEP_KEYS, emptyDraft, sellerSkips, sellerValid, normalizeSellerStep, laterKey, foundedYearError, websiteFieldsAnswered } from '../../src/lib/seller-wizard';
+import { SELLER_SECTOR_EXAMPLES } from '../../src/lib/seller-sector-examples';
+import { SECTORS } from '../../src/lib/sectors';
+describe('seller setup replacement rules',()=>{
+ it('shows 13 steps including Review in the required order',()=>expect(STEP_KEYS).toEqual(['role','name','sector','web','founded','rev','lic','photos','deal','handover','price','founder','review']));
+ it('Website always shows after signup',()=>expect(sellerSkips({...emptyDraft(),web:'example.com'},['web']).has('web')).toBe(false));
+ it('combined founded/size skips only when both signup answers remain valid',()=>{expect(sellerSkips({...emptyDraft(),year:'2014',size:'11-50'},['year','size']).has('founded')).toBe(true);expect(sellerSkips({...emptyDraft(),year:'2014'},['year','size']).has('founded')).toBe(false);});
+ it('maps both legacy reached keys to founded',()=>{expect(normalizeSellerStep('year')).toBe('founded');expect(normalizeSellerStep('size')).toBe('founded');});
+ it('retains later reached progress',()=>expect(laterKey('review','founded')).toBe('review'));
+ it('recognizes 2549 as a Buddhist-era year',()=>expect(foundedYearError('2549',2026)).toBe('thai'));
+ it('requires four digits for 20',()=>expect(foundedYearError('20',2026)).toBe('digits'));
+ it('rejects 1700',()=>expect(foundedYearError('1700',2026)).toBe('range'));
+ it('requires year and size together',()=>{expect(sellerValid({...emptyDraft(),year:'2014'}).founded).toBe(false);expect(sellerValid({...emptyDraft(),year:'2014',size:'11-50'}).founded).toBe(true);});
+ it('requires at least one named founder',()=>{expect(sellerValid({...emptyDraft(),founders:[{full_name:' '}]}).founder).toBe(false);expect(sellerValid({...emptyDraft(),founders:[{full_name:'Test Founder'}]}).founder).toBe(true);});
+ it('keeps Market Tags optional',()=>expect(websiteFieldsAnswered({...emptyDraft(),shortDescription:'Description',longDescription:'Operations',productTags:['Packaging'],marketTags:[]})).toBe(true));
+ it('uses existing 500 and 5000 description limits',()=>{const d={...emptyDraft(),shortDescription:'x'.repeat(500),longDescription:'y'.repeat(5000),productTags:['Packaging']};expect(websiteFieldsAnswered(d)).toBe(true);expect(websiteFieldsAnswered({...d,shortDescription:'x'.repeat(501)})).toBe(false);expect(websiteFieldsAnswered({...d,longDescription:'y'.repeat(5001)})).toBe(false);});
+ it('accepts saved Thai descriptions and tags without translating them',()=>expect(websiteFieldsAnswered({...emptyDraft(),shortDescriptionTh:'คำอธิบาย',longDescriptionTh:'ธุรกิจ',productTags:[],productTagsTh:['บรรจุภัณฑ์']})).toBe(true));
+ it('covers every SET sector with six products and four customer types',()=>{expect(SELLER_SECTOR_EXAMPLES.map(x=>x.sector)).toEqual(SECTORS);for(const row of SELLER_SECTOR_EXAMPLES){expect(row.products).toHaveLength(6);expect(row.who).toHaveLength(4);}});
+ it('keeps tag examples within the existing 50 character limit',()=>{for(const row of SELLER_SECTOR_EXAMPLES) for(const pair of [...row.products,...row.who]) for(const tag of pair) expect(tag.length).toBeLessThanOrEqual(50);});
+});

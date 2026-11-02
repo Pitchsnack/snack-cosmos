@@ -382,7 +382,7 @@ export function SellerWizard({
   if (!q) return null;
 
   return (
-    <div className="wiz -m-4 min-h-[calc(100vh-54px)] bg-[#f5f6f8] text-[15px] text-[#111827] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+    <div className="wiz seller-setup -m-4 min-h-[calc(100vh-54px)] text-[15px] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       <div className="flex h-14 items-center gap-3 border-b border-[#e5e7eb] bg-white px-6">
         <span className="text-[14px] font-semibold">{setupText(title)}</span>
         <span className="ml-auto text-[13px] text-[#9ca3af]">{setupText(justSaved ? "Saved just now" : tr("All changes saved"))}</span>
@@ -398,14 +398,14 @@ export function SellerWizard({
             desktop={th ? `มี ${missed.length} คำถามที่ยังไม่ได้ตอบ กดวงกลมสีแดงเพื่อตอบ` : missed.length === 1 ? "1 question not answered. Click the red step to answer it." : `${missed.length} questions not answered. Click a red step to answer it.`}
             row={(n, f) => L(`Step ${n} · ${f} isn't answered yet`, `ขั้นที่ ${n} · ${f} ยังไม่ได้ตอบ`)} />
         </div>
-        <div className="rounded-[14px] border border-[#e5e7eb] bg-white px-6 pb-7 pt-8 sm:px-9 sm:pt-9">
+        <div className="seller-wizard-card rounded-[14px] border border-border px-6 pb-7 pt-8 sm:px-9 sm:pt-9">
           <div key={cur.id} ref={cardRef} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
             <h2 ref={titleRef} tabIndex={-1} className="mb-1.5 outline-none text-2xl font-bold leading-snug tracking-normal">{tr(q.t)}{(cur.id !== "web" || webExpanded && !reading && !readDone) && cur.id !== "lic" && <span aria-hidden className="ml-1 text-destructive">*</span>}</h2>
             {q.h && <p className="mb-6 text-[14.5px] leading-relaxed text-[#6b7280]">{tr(q.h)}</p>}
             {!q.h && <div className="mb-6" />}
             {q.body}
           </div>
-          <div className={cur.id === "web" ? `seller-website-actions ${canSkip ? "has-no-website" : ""}` : "mt-8 flex items-center gap-2.5"}>
+          <div className={cur.id === "web" ? `seller-website-actions ${!webExpanded ? "has-no-website" : ""}` : "seller-setup-actions mt-8 flex items-center gap-2.5"}>
             <Button variant="unstyled" size="unstyled" type="button" onClick={back}
               className={cur.id === "web" ? "seller-action seller-action-back" : "rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"}>{pos === 0 && full == null ? tr("Cancel") : tr("Back")}</Button>
             {canSkip && cur.id !== "web" && (

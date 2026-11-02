@@ -181,7 +181,7 @@ export function websiteFieldsAnswered(d: SellerDraft) {
   const short = d.shortDescription?.trim() || d.shortDescriptionTh?.trim() || "";
   const long = d.longDescription?.trim() || d.longDescriptionTh?.trim() || "";
   return !!short && short.length <= SELLER_DESCRIPTION_LIMITS.short && !!long && long.length <= SELLER_DESCRIPTION_LIMITS.long
-    && (d.productTags?.length ?? d.productTagsTh?.length ?? 0) > 0
+    && Math.max(d.productTags?.length ?? 0, d.productTagsTh?.length ?? 0) > 0
     && Math.max(d.productTags?.length ?? 0, d.productTagsTh?.length ?? 0) <= 5;
 }
 /** Legacy year and size both map to the combined question; other keys retain identity. */

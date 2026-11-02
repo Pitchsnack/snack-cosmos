@@ -120,7 +120,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       sb.from("startup_founders").select("id,full_name,position,linkedin_url,bio,bio_story,bio_th,bio_story_th,photo_url").eq("startup_id",data.id).order("display_order"),
     ]);
     if (!s) throw new Error("Business unavailable");
-    const {data:ownerRow} = await sb.from("users").select("full_name,title").eq("id",s.created_by ?? context.userId).maybeSingle();
+    const [{data:ownerRow},{data:ownerProfile}] = await Promise.all([sb.from("users").select("first_name,last_name").eq("id",s.created_by ?? context.userId).maybeSingle(),sb.from("user_profiles").select("title").eq("user_id",s.created_by ?? context.userId).maybeSingle()]);
     const paths = [s.logo_url, ...(med ?? []).map((m: any) => m.image_url)].filter((x: any): x is string => !!x && !/^https?:/.test(x));
     const signed = new Map<string, string>();
     if (paths.length) {
@@ -138,7 +138,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       tenantId: s.tenant_id,
       shortDescription:s.short_description ?? "",longDescription:s.long_description ?? "",productTags:s.product_tags ?? [],marketTags:s.market_tags ?? [],
       shortDescriptionTh:s.short_description_th ?? "",longDescriptionTh:s.long_description_th ?? "",productTagsTh:s.product_tags_th ?? [],marketTagsTh:s.market_tags_th ?? [],
-      founders:founders ?? [],owner:{fullName:ownerRow?.full_name ?? "",position:ownerRow?.title ?? ""},
+      founders:founders ?? [],owner:{fullName:[ownerRow?.first_name,ownerRow?.last_name].filter(Boolean).join(" "),position:ownerProfile?.title ?? ""},
       listing: {
         deal: DEALS.includes(hp?.deal_type) ? hp.deal_type : null, stays: hp?.owner_stays ?? null, months: hp?.handover_months ?? null,
         price: thbOf(hp), name: hp?.code_name && !/^project\b/i.test(hp.code_name) ? hp.code_name : "",

@@ -21,6 +21,7 @@
 @import "./styles/approval-banners.css";
 @import "./styles/approval-review.css";
 @import "./styles/advisor-compact.css";
+@import "./styles/seller-website-setup.css";
 @source "../src";
 @import "tw-animate-css";
 
