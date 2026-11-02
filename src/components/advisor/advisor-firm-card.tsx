@@ -189,7 +189,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
         <div className="advisor-card-figures @container rounded-[10px] border border-border bg-muted/30">
           <div className="grid grid-cols-1 divide-y divide-border @[260px]:grid-cols-[3fr_2fr] @[260px]:divide-x @[260px]:divide-y-0">
             <Fig label={tr("Typical deal size")} main={deal?.usd ?? tr("Not added")} sub={deal ? `(${deal.thb})` : null} />
-            <Fig label={tr("Team size")} main={f.teamSize ? String(f.teamSize) : tr("Not added")} sub={f.teamSize ? tr("people") : null} />
+            <Fig label={tr("Team size")} main={f.teamSize ? `${f.teamSize} ${tr("people")}` : tr("Not added")} sub={null} />
           </div>
           <LanguagesRow f={f} />
         </div>
