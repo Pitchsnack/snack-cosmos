@@ -5,6 +5,11 @@ const BAND_KEYS = DEAL_BANDS.map((b) => b.key) as [string, ...string[]];
 const FEE_TYPES = ["fixed", "hourly", "retainer", "success", "retainer_success", "quote", "other"] as const;
 const FeeIn = z.object({ type: z.enum(FEE_TYPES), amount: z.string().max(12).regex(/^\d*$/), pct: z.string().max(12), words: z.string().max(80), wordsTh: z.string().max(80).optional() });
 const s = (max: number) => z.string().trim().max(max).nullable().optional().transform((v) => (v ? v : null));
+/** Year founded: structural limits are static, the "not in the future" limit is checked at request time. */
+const YEAR_CEILING = 2100;
+const notFutureYear = (y: number) => y <= new Date().getFullYear();
+const yearMsg = "Year cannot be in the future";
+
 export const CompleteFirmInput = z.object({
   id: z.string().uuid().nullable(),
   name: z.string().trim().min(2).max(80),
