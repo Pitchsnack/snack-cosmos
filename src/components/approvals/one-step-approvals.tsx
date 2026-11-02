@@ -15,6 +15,8 @@ import { TabRow } from "@/components/common/edit-info-popup";
 import { StartupEditPopup } from "@/components/startups/startup-edit-popup";
 import { InvestorEditPopup } from "@/components/investors/investor-edit-popup";
 import { AdvisorEditPopup } from "@/components/advisor/advisor-edit-popup";
+import { licenceName } from "@/lib/advisor-licences";
+import { CredMark } from "@/components/advisor/advisor-verification";
 import type { OneStepItem, OneStepKind, ReviewRow } from "@/lib/one-step.server";
 import { approvalDate, approvalFullDate, approvalWaitingDays } from "@/lib/approval-date";
 import { useTranslation } from "@/i18n/language";
@@ -254,6 +256,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
         </tr>; })}</tbody></table>
         <div className="os-visual"><h4>{t("For a visual check")}</h4><div>{[["Name", r.personName || pName?.th || item.person], ["Position", r.personTitle || pTitle?.th], ["Email address", r.email], ["Contact number", r.phone]].map(([label, value]) => <div key={label}><span>{t(label ?? "")}</span><strong className={!value ? "os-muted" : ""}>{value || t("Not given")}</strong></div>)}</div></div>
       </section>
+      {item.kind === "advisor" && !!r.credentials?.length && <section><h3>{t("Licences and credentials")}</h3><ul className="divide-y divide-border">{r.credentials.map(c => <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 py-2 text-sm"><span className="min-w-0 break-words">{licenceName(c, language === "th")}{c.note && <span className="block text-xs text-muted-foreground">{c.note}</span>}</span><CredMark status={c.status} /></li>)}</ul></section>}
       <section><h3>{t(item.kind === "seller" ? "What buyers will see" : item.kind === "buyer" ? "What sellers will see" : "What sellers and buyers will see")}</h3><div className="os-previews"><Preview item={item} name={name} card={card} lang={lang} exclusive={false} />{item.kind !== "advisor" && <Preview item={item} name={name} card={card} lang={lang} exclusive />}</div></section>
     </div> : <div className="os-body">
       <section><div className="os-section-head"><div><h3 className="os-tr-title">{t("Translation")}</h3><p className="os-tr-intro">{fill("The company and contact details, the published headline and every text {first name} wrote, in English and in Thai.")} {fill(setupTh ? "{first name} set up their account in Thai, so the Thai is in their own words." : "{first name} set up their account in English, so the English is in their own words.")} {t(readers)}</p></div>
