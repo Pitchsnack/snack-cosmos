@@ -24,6 +24,7 @@ import { RatiosTable } from "@/components/financials/ratios-table";
 import { ValuationTab } from "@/components/financials/valuation-tab";
 import { CompanyRiskReport } from "@/components/financials/company-risk-report";
 import { FinancialsOverview } from "@/components/financials/financials-overview";
+import { ReportScroll } from "@/components/reports/report-scroll";
 import { FinancialsEdit } from "@/components/financials/financials-edit";
 import { FinIcon } from "@/components/financials/fin-icon";
 import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS, fmtCapital } from "@/lib/financials";
@@ -373,6 +374,7 @@ export function StartupFinancialsPage({
         </div>
       </div>
 
+      <ReportScroll>
       {isSample && !editing && (
         <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
           <span className="font-semibold">Demo data — not from the DBD Data Warehouse.</span> These
@@ -551,6 +553,7 @@ export function StartupFinancialsPage({
 
         </div>
       )}
+      </ReportScroll>
     </div>
   );
 }
