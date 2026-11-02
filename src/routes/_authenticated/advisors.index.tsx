@@ -233,7 +233,6 @@ function Logo({ f, size = 44 }: { f: AdminFirm; size?: number }) {
 function Bookmark({ on, onClick }: { on: boolean; onClick: () => void }) {
   return <button type="button" aria-label={on ? "Remove from favourites" : "Add to favourites"} onClick={(e) => { e.stopPropagation(); onClick(); }} className="grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted"><Star className={cn("h-4 w-4", on && "fill-accent text-accent")} /></button>;
 }
-const isNew = (f: AdminFirm) => Date.now() - +new Date(f.createdAt) < 14 * 86_400_000;
 
 function AdminFirmCover({ f, fav, onFav }: { f: AdminFirm; fav: boolean; onFav: () => void }) {
   const ownership = useOwnershipDir();

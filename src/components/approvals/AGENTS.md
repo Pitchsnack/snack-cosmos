@@ -1,1 +1,2 @@
 - Review Translation/Save uses saveOneStepReview: Thai twins always, English only where empty; unverified published values live in server-only review_draft so live listings never change before Verify and publish.
+- Handler regression tests use vitest.handlers.config.ts to bypass Start's SSR RPC transform; ordinary review tests retain the default config.
