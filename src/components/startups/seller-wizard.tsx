@@ -1,13 +1,17 @@
 import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, Lock, AlertTriangle, Check as CheckIcon, Sparkles, Globe } from "lucide-react";
+import { Lock, Check as CheckIcon, Sparkles, Loader2, Calendar, Users } from "lucide-react";
 import { StepBar, MissedNote, type StepItem } from "@/components/common/step-bar";
 import { Button } from "@/components/ui/button";
 import { WebsiteCheckLink } from "@/components/startups/website-check-link";
 import { useServerFn } from "@tanstack/react-start";
 import { checkWebsiteReachable } from "@/lib/website-check.functions";
-import { ConfirmWebsiteDialog } from "@/components/startups/confirm-website-dialog";
+import { SellerWebsiteFields, websiteMissing, type WebsiteField } from "./seller-website-fields";
+import { FounderEditor } from "./founder-editor";
+import { autoEnrichAdapter } from "@/lib/auto-enrich/auto-enrich-adapter";
+import { founderRevenueLabel } from "@/lib/founder-story";
+import { toast } from "sonner";
 import { SellerTypeQuestion } from "@/components/common/business-type-question";
 import type { SectorPick } from "@/lib/business-types";
 import { AddressBox } from "@/components/advisor/advisor-firm-fields";
@@ -17,26 +21,11 @@ import { bandInText, bandOf, fmtThb } from "@/lib/asking-price";
 import { addressLine, needCls, useFocusNeeded } from "@/components/common/need-fill";
 import {
   SELLER_RELATIONS, THB_REVENUE_BANDS, normRevBand, addrComplete, type SellerAddr, WIZARD_ISO, WIZARD_LICENCES, WIZARD_SIZES,
-  isValidUrl, normalizeUrl, sellerShown, sellerProgress, type SellerDraft,
+  isValidUrl, normalizeUrl, sellerShown, sellerProgress, type SellerDraft, SELLER_STEPS, foundedYearError, normalizeSellerStep,
   sellerValid, sellerAnswered, STEP_SHORT, STEP_FULL, stepIdx, laterKey, isMissed, joinNames, type StepKey,
 } from "@/lib/seller-wizard";
 
-const SECTIONS = ["About you", "About the company", "Financial & business profile", "Intangible assets", "Review", "Company images", "Your listing"];
-const STEPS = [
-  { id: "role", sec: 0 },
-  { id: "name", sec: 1 },
-  { id: "web", sec: 1 },
-  { id: "year", sec: 1 },
-  { id: "rev", sec: 2 },
-  { id: "size", sec: 2 },
-  { id: "sector", sec: 2 },
-  { id: "lic", sec: 3 },
-  { id: "photos", sec: 5 },
-  { id: "deal", sec: 6 },
-  { id: "handover", sec: 6 },
-  { id: "price", sec: 6 },
-  { id: "review", sec: 4 },
-] as const;
+const STEPS = [...SELLER_STEPS, { id: "review", sec: "Review" }] as const;
 const THIS_YEAR = new Date().getFullYear();
 
 const inp =
@@ -80,10 +69,11 @@ function Check({ on, label, onClick }: { on: boolean; label: string; onClick: ()
 }
 
 export function SellerWizard({
-  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, title = tr("Add my business"), media,
+  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, title = tr("Add my business"), media, owner,
 }: {
   /** Upload target for Logo and photos (the business exists). */
   media?: WizardMedia;
+  owner?: { fullName: string; position: string };
   userId: string;
   initial: SellerDraft;
   onExit: () => void;
@@ -97,7 +87,7 @@ export function SellerWizard({
 }) {
   const th = useTranslation().language === "th"; // re-render on language change
   const L = (en: string, t: string) => (th ? t : en);
-  const [d, setD] = useState<SellerDraft>(initial);
+  const [d, setD] = useState<SellerDraft>(() => ({...initial, reached: normalizeSellerStep(initial.reached), founders: initial.founders?.length ? initial.founders : [{full_name:owner?.fullName ?? "", position:owner?.position ?? null}]}));
   /** Step 1's wording in the current language; the stored answer is always the key. */
   const roleLabel = () => { const r = SELLER_RELATIONS.find((x) => x.value === d.role); return r ? L(...r.label) : ""; };
   const [otherLic, setOtherLic] = useState("");
@@ -111,21 +101,19 @@ export function SellerWizard({
   const titleRef = useRef<HTMLHeadingElement | null>(null);
   const webRef = useRef<HTMLInputElement | null>(null);
   const skipRef = useRef<HTMLButtonElement | null>(null);
-  const addWebRef = useRef<HTMLButtonElement | null>(null);
   const fwdRef = useRef<HTMLButtonElement | null>(null);
   const focusTitle = useRef(false);
-  const [skipAsk, setSkipAsk] = useState(false);
-  const [webAsk, setWebAsk] = useState(false);
-  const [revWeb, setRevWeb] = useState("");
-  const [revWebErr, setRevWebErr] = useState(false);
-  const [webAdded, setWebAdded] = useState(false);
-  const [webState, setWebState] = useState<"idle" | "checking" | "unreachable">("idle");
-  const checkWeb = useServerFn(checkWebsiteReachable);
+  const [webExpanded, setWebExpanded] = useState(false);
+  const [reading, setReading] = useState(false);
+  const [readDomain, setReadDomain] = useState("");
+  const [readDone, setReadDone] = useState(false);
+  const [marks, setMarks] = useState<Partial<Record<WebsiteField, boolean>>>({});
+  const readingRef = useRef(false);
   const timer = useRef<number | null>(null);
   const savedTimer = useRef<number | null>(null);
   const firstRun = useRef(true);
   const step = Math.min(d.step, STEPS.length - 1);
-  const cur = STEPS[step]!;
+  const cur = STEPS[step] ?? STEPS[0];
   const store = (x: SellerDraft) => persist?.(x);
   const shownOf = (x: SellerDraft, keep: number | null) => {
     const s = new Set(sellerShown(x, fromSignup));
@@ -148,15 +136,13 @@ export function SellerWizard({
     if (timer.current) window.clearTimeout(timer.current);
     if (savedTimer.current) window.clearTimeout(savedTimer.current);
   }, []);
-  useEffect(() => setWebState("idle"), [d.web]);
-  // Never carry a pending check into another question.
-  useEffect(() => { if (cur.id !== "web") setWebState("idle"); }, [cur.id]);
-
-
   const set = (patch: Partial<SellerDraft>) => setD((p) => ({ ...p, ...patch }));
   // The address's province answers "where is the company" (the business's City).
   const setAddr = (p: Partial<SellerAddr>) => setD((x) => { const addr = { ...x.addr, ...p }; return { ...x, addr, city: addr.province }; });
-  const go = (n: number) => set({ step: Math.max(0, Math.min(STEPS.length - 1, n)) });
+  const go = (n: number) => {
+    if (STEPS[n]?.id === "web") setWebExpanded(false);
+    set({ step: Math.max(0, Math.min(STEPS.length - 1, n)) });
+  };
   /** Step after `from`: back to Review when opened from it, else the next question that shows. */
   const nextOf = (x: SellerDraft, from: number) => {
     if (full != null) return STEPS.length - 1;
@@ -168,10 +154,11 @@ export function SellerWizard({
     setFull(null);
   };
   const back = () => {
+    if (cur.id === "web" && webExpanded) { setWebExpanded(false); return; }
     if (full != null) { setFull(null); go(STEPS.length - 1); return; }
     const list = shownOf(d, null);
     const prev = [...list].reverse().find((i) => i < step);
-    if (prev == null) onCancel(); else go(prev);
+    if (prev == null) onCancel(); else { go(prev); if(STEPS[prev]?.id === "web") setWebExpanded(true); }
   };
   const pick = (patch: Partial<SellerDraft>) => {
     set(patch);
@@ -182,14 +169,14 @@ export function SellerWizard({
   const ok = sellerValid(d);
   const answered = sellerAnswered(d);
   // Review moves on once Company, Revenue and Sector are answered.
-  const barNow = shownOf(d, null).map((i) => STEPS[i]!.id as StepKey);
-  const blockers = (["name", "rev", "sector", ...LISTING_KEYS.filter((k) => barNow.includes(k))] as StepKey[]).filter((k) => !ok[k]);
+  const barNow = shownOf(d, null).map((i) => STEPS[i]?.id as StepKey);
+  const blockers = barNow.filter(k => k !== "review" && k !== "lic" && !ok[k]);
   const valid: Record<string, boolean> = { ...ok, review: blockers.length === 0 };
-  const canSkip = (cur.id === "web" && !isValidUrl(d.web)) || (cur.id === "lic" && d.licences.length + d.iso.length === 0);
+  const canSkip = cur.id === "lic" && d.licences.length + d.iso.length === 0;
 
   // The step bar: questions that show, plus Review.
   const bar = shownOf(d, null);
-  const barKeys = bar.map((i) => STEPS[i]!.id as StepKey);
+  const barKeys = bar.map((i) => STEPS[i]?.id as StepKey);
   const inBar = bar.includes(step) && !(full != null && !shownOf(d, null).includes(full));
   const reached = d.reached ?? null;
   useEffect(() => {
@@ -219,11 +206,34 @@ export function SellerWizard({
   const privacy = (
     <p className="mt-3 flex items-start gap-2 text-[13px] text-[#434A5C]"><Lock className="mt-0.5 h-[15px] w-[15px] shrink-0" />{L("Buyers can't see your website until you approve their NDA.", "ผู้ซื้อจะไม่เห็นเว็บไซต์ของท่าน จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")}</p>
   );
-  function addReviewWeb() {
-    if (!isValidUrl(revWeb)) { setRevWebErr(true); return; }
-    set({ web: normalizeUrl(revWeb) }); setWebAdded(true);
-    window.setTimeout(() => (blockers.length ? document.getElementById("sw-web-added") : fwdRef.current)?.focus(), 40);
+  async function runEnrich() {
+    if (!isValidUrl(d.web) || readingRef.current) return;
+    readingRef.current = true; setReading(true); setWebExpanded(true); setReadDone(false);
+    const url = normalizeUrl(d.web); const domain = new URL(url).hostname.replace(/^www\./, ""); setReadDomain(domain);
+    const before = d; const wasAuto = {...marks};
+    try {
+      const r = await autoEnrichAdapter.enrichStartup({websiteUrl:url});
+      const nextMarks: Partial<Record<WebsiteField,boolean>> = {};
+      const patch: Partial<SellerDraft> = {web:url, enrichResult:r as Record<string,unknown>};
+      for (const key of ["shortDescription","longDescription","productTags","marketTags"] as WebsiteField[]) {
+        const target = th ? `${key}Th` : key;
+        const value = (before as unknown as Record<string,unknown>)[target];
+        const fallback = (before as unknown as Record<string,unknown>)[key];
+        const filled = Array.isArray(value) ? value.length > 0 : typeof value === "string" && !!value.trim();
+        const otherFilled = th && (Array.isArray(fallback) ? fallback.length > 0 : typeof fallback === "string" && !!fallback.trim());
+        const found = r[key];
+        if ((!filled && !otherFilled || wasAuto[key]) && found && (Array.isArray(found) ? found.length : found.trim())) {
+          (patch as Record<string,unknown>)[target] = Array.isArray(found) ? found.map(x => x.trim().slice(0,50)).filter(Boolean).filter((x,i,arr) => arr.findIndex(t => t.toLowerCase() === x.toLowerCase()) === i).slice(0,5) : found;
+          nextMarks[key] = true;
+        }
+      }
+      set(patch); setMarks(prev => ({...prev,...nextMarks})); setReadDone(true);
+      if (!Object.keys(nextMarks).length) toast.warning(L("Auto Enrich found nothing new. Fill in the remaining fields.", "Auto Enrich ไม่พบข้อมูลใหม่ กรุณากรอกช่องที่เหลือ"));
+    } catch(e) {toast.error(e instanceof Error ? e.message : L("Auto Enrich failed.","Auto Enrich อ่านเว็บไซต์ไม่ได้"));}
+    finally {readingRef.current = false; setReading(false);}
   }
+  const editWebsiteField = (key: WebsiteField) => setMarks(p => ({...p,[key]:false}));
+  const editRow = (n: number) => {setFull(n); focusTitle.current = true; go(n); if(STEPS[n]?.id === "web") setWebExpanded(true);};
   const allLic = [...WIZARD_LICENCES, ...d.licences.filter((l) => !WIZARD_LICENCES.some((w) => w.name === l.name))];
   const allIso = [...WIZARD_ISO, ...d.iso.filter((s) => !WIZARD_ISO.includes(s))];
 
@@ -249,54 +259,31 @@ export function SellerWizard({
           <p className="flex items-start gap-2 text-[13px] text-destructive"><Lock className="mt-0.5 h-3.5 w-3.5" />{tr("Your company identity stays confidential until you approve the buyer's NDA.")}</p>
         </div>
       ) },
-    web: { t: L("What is your company website?", "เว็บไซต์ของบริษัทคืออะไร"), h: L("Optional, but auto-fill needs it.", "ไม่บังคับ แต่การกรอกข้อมูลอัตโนมัติต้องใช้เว็บไซต์นี้"),
-      body: (
-        <div>
-          <label htmlFor="sw-web" className={fieldLbl}>{L("Company website", "เว็บไซต์บริษัท")}</label>
-          <div className="seller-web-field flex gap-2">
-            <input id="sw-web" ref={webRef} className={inp} value={d.web} autoFocus maxLength={2048} onChange={(e) => set({ web: e.target.value })}
-              onKeyDown={(e) => { if (e.key === "Enter" && ok.web) { e.preventDefault(); fwdRef.current?.click(); } }}
-              onBlur={() => set({ web: d.web.trim() })} placeholder="www.yourcompany.com" />
-            <WebsiteCheckLink valid={isValidUrl(d.web)} url={normalizeUrl(d.web)} label={L("Check website", "ตรวจสอบเว็บไซต์")}
-              hint={L("Checks whether the website link you entered opens correctly.", "ใช้เพื่อตรวจสอบว่าลิงก์เว็บไซต์ที่กรอกถูกต้องและเปิดใช้งานได้")} />
-          </div>
-          {d.web.trim() && !valid.web ? (
-            <p className="mt-1.5 text-[13px] text-destructive">{tr("Enter a valid website address, e.g. www.yourcompany.com")}</p>
-          ) : ok.web ? (
-            <p className="mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold text-[#15803D]"><CheckIcon className="h-3.5 w-3.5" />{L("Website found. Auto-fill will read it after Review.", "พบเว็บไซต์แล้ว ระบบจะอ่านข้อมูลหลังขั้นตรวจสอบ")}</p>
-          ) : null}
-          <div className="mt-[22px] rounded-[12px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4">
-            <p className="flex items-center gap-2 text-[14.5px] font-bold text-[#151A28]"><Sparkles className="h-[18px] w-[18px] text-[#2563EB]" />{L("Auto-fill reads your website", "ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์ของท่าน")}</p>
-            <ul className="mt-2.5 space-y-1.5">
-              {[L("Suggests your company description and corporate information", "แนะนำคำอธิบายบริษัทและข้อมูลบริษัทให้"), L("Takes a few seconds, and you can change anything later", "ใช้เวลาไม่กี่วินาที และท่านแก้ไขได้ทุกอย่างภายหลัง")].map((x) => (
-                <li key={x} className="flex items-start gap-2 text-[14px] text-[#434A5C]"><CheckIcon className="mt-[3px] h-3.5 w-3.5 shrink-0 text-[#2563EB]" />{x}</li>
-              ))}
-            </ul>
-            {privacy}
-          </div>
-          {webState === "unreachable" && (
-            <div className="mt-4 rounded-[10px] border border-[#fcd34d] bg-[#fffbeb] p-3.5">
-              <p className="flex items-start gap-2 text-[13.5px] font-medium text-[#92400e]">
-                <AlertTriangle className="mt-0.5 h-4 w-4 flex-none" />{setupText("We couldn't reach this website. Please check the address.")}
-              </p>
-              <div className="mt-3 flex gap-2">
-                <button type="button" className="rounded-[9px] border border-[#e5e7eb] bg-white px-3.5 py-2 text-[13px] font-semibold text-[#374151]"
-                  onClick={() => { setWebState("idle"); webRef.current?.focus(); }}>{tr("Edit address")}</button>
-                <button type="button" className="rounded-[9px] bg-[#1e2a4a] px-3.5 py-2 text-[13px] font-semibold text-white"
-                  onClick={() => advance({ web: normalizeUrl(d.web) })}>{tr("Continue anyway")}</button>
-              </div>
-            </div>
-          )}
+    web: { t: webExpanded ? reading ? L(`Reading ${readDomain}…`, `กำลังอ่าน ${readDomain}…`) : readDone ? L(`Check what we found on ${readDomain}`, `ตรวจสอบข้อมูลที่พบจาก ${readDomain}`) : L("Describe your business", "อธิบายธุรกิจของท่าน") : L("What is your company website?", "เว็บไซต์ของบริษัทคืออะไร"),
+      h: webExpanded ? reading ? L("Auto Enrich is reading your website. This takes a few seconds.", "Auto Enrich กำลังอ่านเว็บไซต์ของท่าน ใช้เวลาสักครู่") : readDone ? L("Auto Enrich read your website. Change anything that isn't right.", "Auto Enrich อ่านเว็บไซต์ของท่านแล้ว แก้ไขส่วนที่ไม่ถูกต้องได้") : L("You have no website, so auto-fill can't suggest these. Fill them in yourself.", "ท่านไม่มีเว็บไซต์ ระบบจึงแนะนำข้อมูลเหล่านี้ให้ไม่ได้ กรุณากรอกเอง") : L("Optional, but auto-fill needs it.", "ไม่บังคับ แต่การกรอกข้อมูลอัตโนมัติต้องใช้เว็บไซต์นี้"),
+      body: <div>
+        <label htmlFor="sw-web" className={fieldLbl}>{L("Company website","เว็บไซต์บริษัท")}</label>
+        <div className="seller-web-field flex gap-2">
+          <input id="sw-web" ref={webRef} className={inp} value={d.web} readOnly={reading} maxLength={2048} onChange={e => set({web:e.target.value})} onKeyDown={e => {if(e.key === "Enter" && isValidUrl(d.web)) {e.preventDefault(); void runEnrich();}}} placeholder="www.yourcompany.com"/>
+          {webExpanded ? <Button variant="unstyled" size="unstyled" className="seller-enrich-button" disabled={!isValidUrl(d.web) || reading} onClick={() => void runEnrich()}>{reading ? <Loader2 className="motion-safe:animate-spin" size={17}/> : <Sparkles size={17}/>} {reading ? L("Reading…","กำลังอ่าน…") : "Auto Enrich"}</Button> : <WebsiteCheckLink valid={isValidUrl(d.web)} url={normalizeUrl(d.web)} label={L("Check website","ตรวจสอบเว็บไซต์")} hint={L("Checks whether the website link you entered opens correctly.","ใช้เพื่อตรวจสอบว่าลิงก์เว็บไซต์ที่กรอกถูกต้องและเปิดใช้งานได้")}/>}
         </div>
-      ) },
-    year: { t: tr("What year was the company founded?"),
-      body: <div><input className={`${inp} max-w-[200px]`} inputMode="numeric" value={d.year} maxLength={4} autoFocus
-        onChange={(e) => set({ year: e.target.value.replace(/\D/g, "").slice(0, 4) })} placeholder={setupText(`e.g. ${THIS_YEAR - 10}`)} />
-        {d.year.length === 4 && !valid.year && <p className="mt-1.5 text-[13px] text-destructive">{setupText(`Enter a year between 1800 and ${THIS_YEAR}.`)}</p>}</div> },
+        {webExpanded ? <>
+          {!reading && !readDone && <p className="seller-field-hint">{L("Have a website after all? Type it and click Auto Enrich to fill these in.","มีเว็บไซต์ใช่ไหม? พิมพ์เว็บไซต์แล้วคลิก Auto Enrich เพื่อกรอกข้อมูลเหล่านี้ให้")}</p>}
+          <div className="seller-website-more"><SellerWebsiteFields d={d} set={set} marks={marks} edit={editWebsiteField} reading={reading} openSector={() => openStep("sector")}/></div>
+        </> : <div className="seller-autofill-info">
+          <p className="flex items-center gap-2 font-bold"><Sparkles size={18}/>{L("Auto-fill reads your website","ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์ของท่าน")}</p>
+          <ul className="mt-2.5 space-y-1.5">{[L("Suggests your company description and corporate information","แนะนำคำอธิบายบริษัทและข้อมูลบริษัทให้"),L("Takes a few seconds, and you can change anything later","ใช้เวลาไม่กี่วินาที และท่านแก้ไขได้ทุกอย่างภายหลัง")].map(x => <li key={x} className="flex gap-2"><CheckIcon size={15}/>{x}</li>)}</ul>{privacy}
+        </div>}
+      </div> },
+    founded: {t:L("When was your company founded, and how big is it?","บริษัทของท่านก่อตั้งเมื่อไร และมีขนาดเท่าไร"),h:L("The year it was registered or started trading, and how many people work there today.","ปีที่จดทะเบียนหรือเริ่มดำเนินธุรกิจ และจำนวนพนักงานในปัจจุบัน"),body:<div>
+      <div className="seller-founded-row">
+        <div><label htmlFor="sw-year" className={fieldLbl}>{L("Year founded","ปีที่ก่อตั้ง")} <span className="text-destructive">*</span></label><div className={`seller-founded-input ${touched.year && foundedYearError(d.year) ? "has-error" : ""}`}><Calendar size={18}/><input id="sw-year" inputMode="numeric" maxLength={4} value={d.year} onChange={e => set({year:e.target.value.replace(/\D/g,"").slice(0,4)})} onBlur={() => setTouched(p => ({...p,year:true}))} aria-invalid={!!touched.year && !!foundedYearError(d.year)} placeholder="e.g. 2014"/></div></div>
+        <div><label htmlFor="sw-size" className={fieldLbl}>{L("Company size (employees)","ขนาดบริษัท (พนักงาน)")} <span className="text-destructive">*</span></label><div className="seller-founded-input"><Users size={18}/><select id="sw-size" value={d.size ?? ""} onChange={e => set({size:e.target.value || null})}><option value="">{L("Choose a range","เลือกช่วงจำนวน")}</option>{WIZARD_SIZES.map(x => <option value={x.value} key={x.value}>{tr(x.label)}</option>)}</select></div></div>
+      </div>
+      {(touched.year || d.year.length === 4) && foundedYearError(d.year) && <p className="mt-2 text-[13.5px] text-destructive" role="alert">{foundedYearError(d.year) === "digits" ? L("Enter the year with 4 digits, for example 2014","กรุณากรอกปีเป็นตัวเลข 4 หลัก เช่น 2014") : foundedYearError(d.year) === "thai" ? L(`That looks like a Thai year (พ.ศ.). Enter it in ค.ศ.: ${Number(d.year)-543}`,`ดูเหมือนเป็นปี พ.ศ. กรุณากรอกเป็นปี ค.ศ.: ${Number(d.year)-543}`) : L(`Enter a year between 1800 and ${new Date().getFullYear()}`,`กรุณากรอกปีระหว่าง 1800 ถึง ${new Date().getFullYear()}`)}</p>}
+    </div>},
     rev: { t: tr("What was your company's revenue last year?"), h: tr("An approximate band is enough. Exact figures stay private."),
       body: <Radio list={THB_REVENUE_BANDS.map((b) => ({ value: b, label: b }))} value={normRevBand(d.rev)} onPick={(v) => pick({ rev: v })} /> },
-    size: { t: tr("What is the size of your company?"), h: tr("Number of employees."),
-      body: <Radio grid list={WIZARD_SIZES} value={d.size} onPick={(v) => pick({ size: v })} /> },
     sector: { t: tr("What does your business do?"), h: tr("Pick the closest match. We'll put you in the right sector for buyers."),
       body: <SellerTypeQuestion pick={(d.pick ?? null) as SectorPick | null} sector={d.sector} onChange={(p, s) => set({ pick: p, sector: s })} /> },
     lic: { t: tr("Licences and certifications"), h: tr("Select any that apply. This is optional."),
@@ -337,38 +324,27 @@ export function SellerWizard({
       body: <HandoverQ d={d} set={set} L={L} /> },
     price: { t: L("What is your estimated asking price?", "ราคาที่ท่านต้องการโดยประมาณคือเท่าใด"), h: L("An estimate is fine. You can change it later.", "ประมาณการได้ ท่านเปลี่ยนได้ภายหลัง"),
       body: <PriceQ d={d} set={set} L={L} th={th} /> },
+    founder: {t:L("Tell buyers about the founder","เล่าให้ผู้ซื้อรู้จักผู้ก่อตั้ง"),h:L("Buyers read this after you approve their NDA. Your name, the year founded and the sales are filled in from your answers: click a highlighted part to change it.","ผู้ซื้อจะอ่านส่วนนี้หลังจากท่านอนุมัติ NDA ชื่อของท่าน ปีที่ก่อตั้ง และยอดขาย กรอกไว้ให้จากคำตอบของท่าน คลิกส่วนที่ไฮไลต์เพื่อแก้ไข"),body:<>
+      <FounderEditor value={d.founders ?? []} onChange={founders => set({founders})} tenantId={media?.tenantId} startupId={media?.startupId} year={d.year} sales={founderRevenueLabel(d.rev ?? "",th ? "th":"en")} salesFor={lang => founderRevenueLabel(d.rev ?? "",lang)} requiredName keepOne/>
+      {!ok.founder && <p className="mt-2 text-[13px] text-destructive">{L("Add the founder's full name.","กรุณากรอกชื่อ-นามสกุลของผู้ก่อตั้ง")}</p>}
+      <p className="mt-3 text-[13px] text-muted-foreground">{L("PitchSnack checks the owner's name against your company's list of directors, and the year founded and the sales against your company's records.","PitchSnack ตรวจสอบชื่อเจ้าของกับรายชื่อกรรมการบริษัท และปีที่ก่อตั้งกับยอดขายตามข้อมูลบริษัทของท่าน")}</p>
+    </>},
     review: { t: tr("Review your answers"), h: tr("Next, we'll auto-fill the rest of your profile. You can edit everything afterwards."),
       body: (
         <div>
         <h3 className="mb-2 text-[14px] font-bold text-[#151A28]">{L("Your company", "บริษัทของท่าน")}</h3>
         <div className="overflow-hidden rounded-[10px] border border-[#e5e7eb]">
           {([
-            [tr("You are"), roleLabel(), 0],
-            [tr("Company name"), d.name, 1],
-            [tr("Registration no."), d.reg, 1],
-            [tr("Business address"), addressLine(d.addr), 1],
-            [L("Company website", "เว็บไซต์บริษัท"), isValidUrl(d.web) ? <a href={normalizeUrl(d.web)} target="_blank" rel="noopener noreferrer" className="text-[#1e2a4a] underline underline-offset-2">{d.web} ↗</a> : L("No company website", "ไม่มีเว็บไซต์บริษัท"), 2],
-            [tr("Year founded"), d.year, 3],
-            [tr("Revenue last year"), d.rev ? tr(normRevBand(d.rev)) : d.rev, 4],
-            [tr("Company size"), WIZARD_SIZES.find((s) => s.value === d.size)?.label, 5],
-            [tr("Sector"), d.sector, 6],
-            [tr("Licences & standards"), [...d.licences.map((l) => l.name), ...d.iso].join(", ") || L("None", "ไม่มี"), 7],
-          ] as [string, React.ReactNode, number][]).map(([k, v, n], ri) => {
-            const key = STEPS[n]!.id as StepKey;
-            const rowOk = [!!d.role, !!d.name.trim(), /^\d{13}$/.test(d.reg), addrComplete(d.addr), ok.web, ok.year, ok.rev, ok.size, ok.sector, ok.lic][ri];
-            const red = key !== "web" && key !== "lic" && !rowOk && barKeys.includes(key);
-            return (
-              <div key={k} className={`flex gap-3 border-b border-[#f0f1f3] px-4 py-3 text-sm last:border-0 ${red ? "bg-[#FEF2F2]" : ""}`}>
-                <span className="w-[170px] flex-none text-[#6b7280] max-[599px]:w-[110px]">{k}</span>
-                {red ? (
-                  <b className="flex flex-1 items-center gap-2 font-semibold text-[#B91C1C]"><span className="h-2 w-2 rounded-full bg-[#DC2626]" />{L("Not answered", "ยังไม่ได้ตอบ")}</b>
-                ) : (
-                  <b className={`min-w-0 flex-1 break-words font-semibold ${v ? "" : "font-normal text-[#9ca3af]"}`}>{v || tr("Not provided")}</b>
-                )}
-                <button type="button" className={`text-[13px] underline underline-offset-2 ${red ? "font-bold text-[#B91C1C]" : "font-semibold text-[#1e2a4a]"}`}
-                  onClick={() => { setFull(n); focusTitle.current = true; go(n); }}>{red ? L("Answer", "ตอบคำถาม") : tr("Edit")}</button>
-              </div>
-            );
+            ["role",tr("You are"),roleLabel()], ["name",tr("Company name"),d.name],
+            ["name",tr("Registration no."),d.reg], ["name",tr("Business address"),addressLine(d.addr)],
+            ["sector",tr("Sector"),tr(d.sector ?? "")],
+            ["web",L(...STEP_FULL.web),`${d.web || L("No company website","ไม่มีเว็บไซต์บริษัท")} · ${th ? d.shortDescriptionTh || d.shortDescription || "" : d.shortDescription || d.shortDescriptionTh || ""}`],
+            ["founded",L(...STEP_SHORT.founded),`${d.year} · ${tr(WIZARD_SIZES.find(x => x.value === d.size)?.label ?? "")} ${L("employees","คน")}`],
+            ["rev",tr("Revenue last year"),d.rev ? tr(normRevBand(d.rev)) : ""],
+            ["lic",tr("Licences & standards"),[...d.licences.map(l => l.name),...d.iso].join(", ") || L("None","ไม่มี")],
+          ] as [StepKey,string,React.ReactNode][]).map(([key,label,value],ri) => {
+            const n = STEPS.findIndex(x => x.id === key); const red = !answered[key] && key !== "lic" && barKeys.includes(key);
+            return <div key={`${key}-${ri}`} className="seller-review-row"><span>{label}</span><b className={red ? "text-destructive" : ""}>{red ? L("Not answered","ยังไม่ได้ตอบ") : value || tr("Not provided")}</b><Button variant="link" size="unstyled" onClick={() => editRow(n)}>{red ? L("Answer","ตอบคำถาม") : tr("Edit")}</Button></div>;
           })}
         </div>
         <h3 className="mb-2 mt-[22px] text-[14px] font-bold text-[#151A28]">{L("Your listing", "ประกาศของท่าน")}</h3>
@@ -389,32 +365,12 @@ export function SellerWizard({
                   <b className="flex flex-1 items-center gap-2 font-semibold text-[#B91C1C]"><span className="h-2 w-2 rounded-full bg-[#DC2626]" />{L("Not answered", "ยังไม่ได้ตอบ")}</b>
                 ) : <b className="min-w-0 flex-1 break-words font-semibold">{v}</b>}
                 <button type="button" className={`text-[13px] underline underline-offset-2 ${red ? "font-bold text-[#B91C1C]" : "font-semibold text-[#1e2a4a]"}`}
-                  onClick={() => { setFull(n); focusTitle.current = true; go(n); }}>{red ? L("Answer", "ตอบคำถาม") : tr("Edit")}</button>
+                  onClick={() => editRow(n)}>{red ? L("Answer", "ตอบคำถาม") : tr("Edit")}</button>
               </div>
             );
           })}
         </div>
-        {barKeys.includes("web") && (!ok.web || webAdded) && (
-          webAdded && ok.web ? (
-            <p tabIndex={-1} id="sw-web-added" className="mt-[18px] flex items-center gap-1.5 text-[13.5px] font-semibold text-[#15803D] outline-none">
-              <CheckIcon className="h-4 w-4" />{L(`Website added. Auto-fill will read ${d.web.replace(/^https?:\/\//i, "").replace(/\/$/, "")}.`, `เพิ่มเว็บไซต์แล้ว ระบบจะอ่านข้อมูลจาก ${d.web.replace(/^https?:\/\//i, "").replace(/\/$/, "")}`)}
-            </p>
-          ) : (
-            <div className="mt-[18px] rounded-[12px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4">
-              <p className="flex items-center gap-2 text-[14.5px] font-bold text-[#151A28]"><Sparkles className="h-[18px] w-[18px] text-[#2563EB]" />{L("Add your website to use auto-fill", "เพิ่มเว็บไซต์เพื่อใช้การกรอกข้อมูลอัตโนมัติ")}</p>
-              <p className="mt-1.5 text-[13.5px] text-[#434A5C]">{L("Auto-fill reads your website to suggest your company description and corporate information. Without it, you'll fill them in yourself.", "ระบบจะอ่านเว็บไซต์ของท่านเพื่อแนะนำคำอธิบายบริษัทและข้อมูลบริษัท หากไม่มีเว็บไซต์ ท่านจะต้องกรอกเอง")}</p>
-              <div className="mt-3 flex gap-2.5 max-[599px]:flex-col">
-                <input aria-label={L("Company website", "เว็บไซต์บริษัท")} value={revWeb} maxLength={2048} placeholder="www.yourcompany.com"
-                  onChange={(e) => { setRevWeb(e.target.value); setRevWebErr(false); }}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addReviewWeb(); } }}
-                  className={`h-11 min-w-0 flex-1 rounded-[10px] border bg-white px-3 text-[15px] outline-none ${revWebErr ? "border-[#B42318]" : "border-[#DCDFE5] focus:border-[#1e2a4a]"}`} />
-                <button type="button" onClick={addReviewWeb} className="h-11 rounded-[10px] bg-[#1e2a4a] px-4 text-[14.5px] font-semibold text-white">{L("Add website", "เพิ่มเว็บไซต์")}</button>
-              </div>
-              {revWebErr && <p className="mt-1.5 text-[13px] text-[#B42318]">{tr("Enter a valid website address, e.g. www.yourcompany.com")}</p>}
-              {privacy}
-            </div>
-          )
-        )}
+        <div className="seller-review-row mt-5"><span>{L(...STEP_FULL.founder)}</span><b className={ok.founder ? "" : "text-destructive"}>{d.founders?.filter(f => f.full_name.trim()).map(f => f.full_name).join(", ") || L("Not answered","ยังไม่ได้ตอบ")}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === "founder"))}>{ok.founder ? tr("Edit") : L("Answer","ตอบคำถาม")}</Button></div>
         {blockers.length > 0 && (
           <p className="mt-[18px] text-[13.5px] text-[#B91C1C]">{L(`Answer ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][0] : STEP_SHORT[k][0]), false)} before you continue.`, `กรุณาตอบ ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][1] : STEP_SHORT[k][1]), true)} ก่อนไปต่อ`)}</p>
         )}
@@ -422,7 +378,8 @@ export function SellerWizard({
       ) },
   };
   useFocusNeeded(cardRef, `${cur.id}:${full ?? ""}`);
-  const q = cur.id === "name" ? { ...Q.name!, body: Q.nameBody!.body } : Q[cur.id]!;
+  const q = cur.id === "name" ? { ...Q.name, body: Q.nameBody?.body } : Q[cur.id];
+  if (!q) return null;
 
   return (
     <div className="wiz -m-4 min-h-[calc(100vh-54px)] bg-[#f5f6f8] text-[15px] text-[#111827] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
@@ -430,9 +387,9 @@ export function SellerWizard({
         <span className="text-[14px] font-semibold">{setupText(title)}</span>
         <span className="ml-auto text-[13px] text-[#9ca3af]">{setupText(justSaved ? "Saved just now" : tr("All changes saved"))}</span>
       </div>
-      <div className={`mx-auto ${cur.id === "web" ? "max-w-[800px]" : "max-w-[680px]"} px-5 pb-16 pt-10`}>
+      <div className={`mx-auto ${cur.id === "web" ? "max-w-[800px]" : "max-w-[900px]"} px-5 pb-16 pt-10`}>
         <div className="mb-2.5 flex items-baseline justify-between text-[13px] text-[#6b7280]">
-          <b className="font-semibold text-[#111827]">{tr(SECTIONS[cur.sec])}</b>
+          <b className="font-semibold text-[#111827]">{tr(cur.sec)}</b>
           <span>{setupText(`Step ${pos + 1} of ${shown.length}`)}</span>
         </div>
         <div className="mb-6 mt-5">
@@ -443,7 +400,7 @@ export function SellerWizard({
         </div>
         <div className="rounded-[14px] border border-[#e5e7eb] bg-white px-6 pb-7 pt-8 sm:px-9 sm:pt-9">
           <div key={cur.id} ref={cardRef} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
-            <h2 ref={titleRef} tabIndex={-1} className="mb-1.5 outline-none text-2xl font-bold leading-snug tracking-[-0.015em]">{tr(q.t)}{cur.id !== "web" && cur.id !== "lic" && <span aria-hidden className="ml-1 text-destructive">*</span>}</h2>
+            <h2 ref={titleRef} tabIndex={-1} className="mb-1.5 outline-none text-2xl font-bold leading-snug tracking-normal">{tr(q.t)}{(cur.id !== "web" || webExpanded && !reading && !readDone) && cur.id !== "lic" && <span aria-hidden className="ml-1 text-destructive">*</span>}</h2>
             {q.h && <p className="mb-6 text-[14.5px] leading-relaxed text-[#6b7280]">{tr(q.h)}</p>}
             {!q.h && <div className="mb-6" />}
             {q.body}
@@ -453,69 +410,31 @@ export function SellerWizard({
               className={cur.id === "web" ? "seller-action seller-action-back" : "rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"}>{pos === 0 && full == null ? tr("Cancel") : tr("Back")}</Button>
             {canSkip && cur.id !== "web" && (
               <button type="button" className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"
-                ref={skipRef} onClick={() => advance()}>{cur.id === "lic" ? "Have no license" : tr("Skip")}</button>
+                ref={skipRef} onClick={() => advance()}>{cur.id === "lic" ? L("Have no license","ไม่มีใบอนุญาต") : tr("Skip")}</button>
             )}
             {cur.id === "web" && <>
               <span className="seller-actions-spacer" />
-              {canSkip && <Button variant="unstyled" size="unstyled" className="seller-action seller-action-no-website" ref={skipRef} onClick={() => setSkipAsk(true)}>{L("No company website", "ไม่มีเว็บไซต์บริษัท")}</Button>}
+              {!webExpanded && <Button variant="unstyled" size="unstyled" className="seller-action seller-action-no-website" ref={skipRef} onClick={() => {set({web:""}); setWebExpanded(true); setReadDone(false);}}>{L("No company website", "ไม่มีเว็บไซต์บริษัท")}</Button>}
             </>}
             <div className={cur.id === "web" ? "contents" : "ml-auto flex items-center gap-2.5"}>
               {pos > 0 && (
                 <Button variant="unstyled" size="unstyled" type="button" onClick={() => setConfirmExit(true)}
                   className={cur.id === "web" ? "seller-action" : "rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"}>{tr("Save & exit")}</Button>
               )}
-              <Button variant="unstyled" size="unstyled" type="button" ref={fwdRef} disabled={!valid[cur.id] || (cur.id === "web" && webState === "checking")}
+              <Button variant="unstyled" size="unstyled" type="button" ref={fwdRef} disabled={reading || (cur.id === "web" && !webExpanded ? !isValidUrl(d.web) : !valid[cur.id])}
                 onClick={async () => {
-                  if (cur.id === "review") {
-                    // A valid website typed in Review's box is saved first; an invalid one shows its error.
-                    if (revWeb.trim() && !ok.web) { if (!isValidUrl(revWeb)) { setRevWebErr(true); return; } set({ web: normalizeUrl(revWeb) }); setWebAdded(true); }
-                    setWebAsk(true); return;
-                  }
-                  if (cur.id === "web") {
-                    const url = normalizeUrl(d.web);
-                    setWebState("checking");
-                    let ok = false;
-                    try { ok = (await checkWeb({ data: { url } })).ok; } catch { ok = false; }
-                    if (!ok) { setWebState("unreachable"); return; }
-                    setWebState("idle");
-                    advance({ web: url });
-                    return;
-                  }
+                  if (cur.id === "review") {onFinish(d); return;}
+                  if (cur.id === "web" && !webExpanded) {void runEnrich(); return;}
                   advance();
                 }}
                 className={cur.id === "web" ? "seller-action seller-action-primary" : "rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]"}>
-                {setupText(cur.id === "review" ? tr("Continue to auto-fill") : cur.id === "web" && webState === "checking" ? "Checking…" : full != null ? tr("Back to review") : tr("Continue"))}
+                {setupText(cur.id === "review" ? tr("Continue to auto-fill") : reading ? L("Reading…","กำลังอ่าน…") : full != null ? tr("Back to review") : tr("Continue"))}
 
               </Button>
             </div>
           </div>
+          {cur.id === "web" && webExpanded && !reading && <p className="seller-website-left" aria-live="polite">{websiteMissing(d,th)}</p>}
         </div>
-        {webAsk && (
-          <ConfirmWebsiteDialog L={L} initial={revWeb.trim() && !ok.web && isValidUrl(revWeb) ? normalizeUrl(revWeb) : ok.web ? d.web : ""}
-            onCancel={() => { setWebAsk(false); fwdRef.current?.focus(); }}
-            onDone={(url) => { setWebAsk(false); const nd = { ...d, web: url || d.web }; if (url) set({ web: url }); onFinish(nd); }} />
-        )}
-        {skipAsk && (
-          <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(17,24,39,.45)] p-4" onClick={() => { setSkipAsk(false); skipRef.current?.focus(); }}>
-            <div role="dialog" aria-modal="true" aria-labelledby="sw-skip-t" aria-describedby="sw-skip-d"
-              className="w-full max-w-[440px] rounded-[16px] bg-white p-6 shadow-xl dark:bg-card" onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") { e.stopPropagation(); setSkipAsk(false); skipRef.current?.focus(); }
-                if (e.key === "Tab") { const b = Array.from(e.currentTarget.querySelectorAll("button")); const i = b.indexOf(document.activeElement as HTMLButtonElement); e.preventDefault(); b[(i + (e.shiftKey ? b.length - 1 : 1)) % b.length]?.focus(); }
-              }}>
-              <span className="grid h-11 w-11 place-items-center rounded-[12px] bg-[#F4F9FF] dark:bg-[#16283A]"><Globe className="h-[22px] w-[22px] text-[#2563EB] dark:text-[#8CBFF0]" /></span>
-              <h3 id="sw-skip-t" className="mt-3.5 text-[20px] font-bold" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{L("Skip your website?", "ข้ามเว็บไซต์ใช่ไหม")}</h3>
-              <p id="sw-skip-d" className="mt-2 text-[14.5px] leading-[1.55] text-[#434A5C] dark:text-muted-foreground">{L("Without your website, auto-fill can't suggest your company description or corporate information. You'll fill them in yourself after Review.", "หากไม่มีเว็บไซต์ ระบบกรอกข้อมูลอัตโนมัติจะแนะนำคำอธิบายบริษัทและข้อมูลบริษัทให้ไม่ได้ ท่านจะต้องกรอกเองหลังขั้นตรวจสอบ")}</p>
-              {privacy}
-              <div className="mt-[22px] flex justify-end gap-2.5 max-[599px]:flex-col-reverse">
-                <button type="button" onClick={() => { setSkipAsk(false); advance({ web: "" }); }}
-                  className="h-11 rounded-[10px] border border-[#DCDFE5] bg-white px-4 font-semibold text-[#374151] dark:border-border dark:bg-transparent dark:text-foreground">{L("Skip for now", "ข้ามไปก่อน")}</button>
-                <button type="button" ref={addWebRef} autoFocus onClick={() => { setSkipAsk(false); window.setTimeout(() => webRef.current?.focus(), 20); }}
-                  className="h-11 rounded-[10px] bg-[#1e2a4a] px-4 font-semibold text-white">{L("Add my website", "เพิ่มเว็บไซต์")}</button>
-              </div>
-            </div>
-          </div>
-        )}
         {confirmExit && (
           <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(17,24,39,.45)] p-4" onClick={() => setConfirmExit(false)}>
             <div role="dialog" aria-modal="true" className="w-full max-w-[400px] rounded-[14px] bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
