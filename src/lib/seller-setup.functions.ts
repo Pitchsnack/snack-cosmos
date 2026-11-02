@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { normalizeSellerStep, laterKey, websiteFieldsAnswered } from "./seller-wizard";
+import { FounderStorySchema, composeFounderBio } from "./founder-story";
+import type { SellerFounder } from "./seller-wizard";
 
 /** Seller setup wizard on a real Draft business (read/write scoped to the caller's own business). */
 async function admin() {
@@ -14,6 +17,9 @@ export type SellerSetup = {
   role: "owner" | "family_owner" | "agent" | null; fromSignup: string[]; setupDoneAt: string | null; reached: string | null;
   addr: { street: string; unit: string; district: string; province: string; postal: string };
   tenantId: string;
+  shortDescription: string; longDescription: string; productTags: string[]; marketTags: string[];
+  shortDescriptionTh: string; longDescriptionTh: string; productTagsTh: string[]; marketTagsTh: string[];
+  founders: SellerFounder[]; owner: { fullName: string; position: string };
   /** The listing's answers (empty until the listing exists). */
   listing: { deal: string | null; stays: "yes" | "no" | null; months: number | null; price: number | null; name: string };
   media: { logoPath: string | null; logoUrl: string | null; slots: { slot: number; path: string; url: string | null }[] };
@@ -30,6 +36,44 @@ function addrPatch(a: AddrT) {
     address_line1: a.street.trim() || null, address_line2: a.unit.trim() || null, address_city_district: a.district.trim() || null,
     address_province_state: a.province || null, postal_code: a.postal || null, business_address: line || null,
   };
+}
+
+const SetupFounder = z.object({
+  id:z.string().uuid().optional(), full_name:z.string().max(255), position:z.string().max(255).nullable().optional(),
+  linkedin_url:z.string().max(2048).nullable().optional(), bio:z.string().max(5000).nullable().optional(),
+  bio_story:FounderStorySchema.nullable().optional(), bio_th:z.string().max(5000).nullable().optional(),
+  bio_story_th:FounderStorySchema.nullable().optional(), photo_url:z.string().max(2048).nullable().optional(),
+});
+const WebsiteInput = {
+  shortDescription:z.string().max(500).optional(), longDescription:z.string().max(5000).optional(),
+  productTags:z.array(z.string().min(1).max(50)).max(5).optional(), marketTags:z.array(z.string().min(1).max(50)).max(5).optional(),
+  shortDescriptionTh:z.string().max(500).optional(), longDescriptionTh:z.string().max(5000).optional(),
+  productTagsTh:z.array(z.string().min(1).max(50)).max(5).optional(), marketTagsTh:z.array(z.string().min(1).max(50)).max(5).optional(),
+  founders:z.array(SetupFounder).max(20).optional(),
+};
+async function saveWizardFounders(sb:any, id:string, userId:string, founders:z.infer<typeof SetupFounder>[]) {
+  // Reuse Edit information's founder projection; never carry IDs between businesses.
+  const {data:st,error:stError} = await sb.from("startups").select("tenant_id").eq("id",id).single();
+  if(stError || !st) throw new Error(stError?.message ?? "Business unavailable");
+  const {data:old,error:readError} = await sb.from("startup_founders").select("id").eq("startup_id",id);
+  if(readError) throw new Error(readError.message);
+  const ids = new Set((old ?? []).map((f:any) => f.id)); const keep = new Set<string>();
+  for(const [i,f] of founders.entries()) {
+    // Empty new cards are unsaved UI drafts; named founders use the existing private table.
+    if(!f.full_name.trim()) continue;
+    const patch={startup_id:id,tenant_id:st.tenant_id,full_name:f.full_name.trim(),position:f.position ?? null,linkedin_url:f.linkedin_url ?? null,
+      bio:f.bio_story?.mode === "lines" ? composeFounderBio(f.bio_story):f.bio ?? null,bio_story:f.bio_story ?? null,
+      bio_th:f.bio_story_th?.mode === "lines" ? composeFounderBio(f.bio_story_th):f.bio_th ?? null,bio_story_th:f.bio_story_th ?? null,
+      photo_url:f.photo_url ?? null,display_order:i};
+    if(f.id && ids.has(f.id)) {const {error}=await sb.from("startup_founders").update(patch).eq("id",f.id).eq("startup_id",id);if(error) throw new Error(error.message);keep.add(f.id);}
+    else {const {data:r,error}=await sb.from("startup_founders").insert(patch).select("id").single();if(error) throw new Error(error.message);if(r) keep.add(r.id);}
+  }
+  const remove=(old ?? []).map((f:any)=>f.id).filter((id:string)=>!keep.has(id));
+  if(remove.length) {const {error}=await sb.from("startup_founders").delete().eq("startup_id",id).in("id",remove);if(error) throw new Error(error.message);}
+}
+function websitePatch(data:Record<string,unknown>) {
+  const cols:Record<string,string>={shortDescription:"short_description",longDescription:"long_description",productTags:"product_tags",marketTags:"market_tags",shortDescriptionTh:"short_description_th",longDescriptionTh:"long_description_th",productTagsTh:"product_tags_th",marketTagsTh:"market_tags_th"};
+  return Object.fromEntries(Object.entries(cols).filter(([key])=>data[key] !== undefined).map(([key,col])=>[col,data[key]]));
 }
 
 const ListingInput = z.object({
@@ -68,12 +112,15 @@ export const getSellerSetup = createServerFn({ method: "GET" })
     const { assertCanSetup } = await import("./seller-setup.server");
     const sb = await admin();
     await assertCanSetup(sb, context.supabase, context.userId, data.id);
-    const [{ data: s }, { data: o }, { data: hp }, { data: med }] = await Promise.all([
+    const [{ data: s }, { data: o }, { data: hp }, { data: med }, {data:founders}] = await Promise.all([
       sb.from("startups").select("*").eq("id", data.id).single(),
       sb.from("startup_ownership").select("seller_relation").eq("startup_id", data.id).maybeSingle(),
       sb.from("hidden_profiles").select("deal_type, owner_stays, handover_months, asking_price, asking_price_thb, code_name").eq("startup_id", data.id).maybeSingle(),
       sb.from("startup_media").select("slot, image_url").eq("startup_id", data.id).order("slot"),
+      sb.from("startup_founders").select("id,full_name,position,linkedin_url,bio,bio_story,bio_th,bio_story_th,photo_url").eq("startup_id",data.id).order("display_order"),
     ]);
+    if (!s) throw new Error("Business unavailable");
+    const {data:ownerRow} = await sb.from("users").select("full_name,title").eq("id",s.created_by ?? context.userId).maybeSingle();
     const paths = [s.logo_url, ...(med ?? []).map((m: any) => m.image_url)].filter((x: any): x is string => !!x && !/^https?:/.test(x));
     const signed = new Map<string, string>();
     if (paths.length) {
@@ -87,8 +134,11 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       year: s.year_founded ? String(s.year_founded) : "", city: s.city ?? "", rev: s.last_year_revenue ?? null,
       size: s.company_size ?? null, sector: s.sector ?? null, pick: (s.sector_pick ?? null) as { type: string; kind?: string } | null, licences: s.regulatory_licenses ?? [], iso: s.iso_standards ?? [],
       addr: { street: s.address_line1 ?? "", unit: s.address_line2 ?? "", district: s.address_city_district ?? "", province: s.address_province_state ?? s.city ?? "", postal: s.postal_code ?? "" },
-      role: o?.seller_relation ?? null, fromSignup: s.setup_from_signup ?? [], setupDoneAt: s.setup_done_at ?? null, reached: s.setup_reached ?? null,
+      role: o?.seller_relation ?? null, fromSignup: s.setup_from_signup ?? [], setupDoneAt: s.setup_done_at ?? null, reached: normalizeSellerStep(s.setup_reached),
       tenantId: s.tenant_id,
+      shortDescription:s.short_description ?? "",longDescription:s.long_description ?? "",productTags:s.product_tags ?? [],marketTags:s.market_tags ?? [],
+      shortDescriptionTh:s.short_description_th ?? "",longDescriptionTh:s.long_description_th ?? "",productTagsTh:s.product_tags_th ?? [],marketTagsTh:s.market_tags_th ?? [],
+      founders:founders ?? [],owner:{fullName:ownerRow?.full_name ?? "",position:ownerRow?.title ?? ""},
       listing: {
         deal: DEALS.includes(hp?.deal_type) ? hp.deal_type : null, stays: hp?.owner_stays ?? null, months: hp?.handover_months ?? null,
         price: thbOf(hp), name: hp?.code_name && !/^project\b/i.test(hp.code_name) ? hp.code_name : "",
@@ -104,6 +154,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({
     id: z.string().uuid(),
+    ...WebsiteInput,
     role: z.enum(["owner", "family_owner", "agent"]).nullable(),
     name: z.string().max(255), reg: z.string().max(13), web: z.string().max(2048), year: z.string().max(4),
     city: z.string().max(100), rev: z.string().max(60).nullable(), size: z.string().max(30).nullable(), sector: z.string().max(100).nullable(),
@@ -112,7 +163,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     iso: z.array(z.string().max(80)).max(20),
     addr: AddrInput.optional(),
     done: z.boolean().optional(),
-    reached: z.enum(["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "review"]).nullable().optional(),
+    reached: z.enum(["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "founded", "founder", "review"]).nullable().optional(),
     listing: ListingInput.optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
@@ -121,6 +172,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     await assertCanSetup(sb, context.supabase, context.userId, data.id);
     const y = /^\d{4}$/.test(data.year) ? Number(data.year) : null;
     const patch: Record<string, unknown> = {
+      ...websitePatch(data),
       registered_number: data.reg || null, website_url: data.web.trim() || null, year_founded: y,
       city: data.city || null, headquarters: "Thailand", last_year_revenue: data.rev, company_size: data.size, sector: data.sector, sector_pick: data.pick ?? null,
       regulatory_licenses: data.licences, iso_standards: data.iso, updated_by: context.userId, updated_at: new Date().toISOString(),
@@ -128,14 +180,15 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     if (data.addr) { Object.assign(patch, addrPatch(data.addr)); if (data.addr.province) patch.city = data.addr.province; }
     if (data.name.trim()) patch.startup_name = data.name.trim();
     if (data.done) patch.setup_done_at = new Date().toISOString();
+    if (data.done && (!websiteFieldsAnswered(data as never) || !data.founders?.some(f=>f.full_name.trim()))) throw new Error("Complete your business descriptions, product tags and founder name before finishing.");
     if (data.reached) {
-      // Never moves back.
-      const order = ["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "review"];
       const { data: cur } = await sb.from("startups").select("setup_reached").eq("id", data.id).single();
-      if (order.indexOf(data.reached) > order.indexOf(cur?.setup_reached ?? "")) patch.setup_reached = data.reached;
+      const key=laterKey(cur?.setup_reached,data.reached);
+      if(key && key !== cur?.setup_reached) patch.setup_reached=key;
     }
     const { error } = await sb.from("startups").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
+    if(data.founders) await saveWizardFounders(sb,data.id,context.userId,data.founders);
     if (data.role) await sb.from("startup_ownership").update({ seller_relation: data.role }).eq("startup_id", data.id);
     if (data.listing) await saveListingAnswers(context.supabase, data.id, context.userId, data.listing);
     return { ok: true };
@@ -205,8 +258,11 @@ export const applySellerEnrich = createServerFn({ method: "POST" })
     const put = (col: string, v: unknown) => { if (!empty(v) && empty(s[col])) patch[col] = v; };
     put("registered_name", r.registeredName?.trim()); put("year_founded", r.yearFounded); put("email", r.email?.trim());
     put("city", r.city?.trim()); put("linkedin_url", r.linkedinUrl?.trim());
-    put("short_description", r.shortDescription?.trim()); put("long_description", r.longDescription?.trim());
-    put("product_tags", r.productTags?.slice(0, 5)); put("market_tags", r.marketTags?.slice(0, 5));
+    const websiteDone=websiteFieldsAnswered({shortDescription:s.short_description,longDescription:s.long_description,productTags:s.product_tags,shortDescriptionTh:s.short_description_th,longDescriptionTh:s.long_description_th,productTagsTh:s.product_tags_th} as never);
+    if(!websiteDone) {
+      put("short_description", r.shortDescription?.trim()); put("long_description", r.longDescription?.trim());
+      put("product_tags", r.productTags?.slice(0, 5)); put("market_tags", r.marketTags?.slice(0, 5));
+    }
     // Licences and standards add to the wizard's answers, never replace them.
     if (r.isoStandards?.length) { const cur: string[] = s.iso_standards ?? []; const add = r.isoStandards.filter((x) => !cur.includes(x)); if (add.length) patch.iso_standards = [...cur, ...add]; }
     if (r.regulatoryLicenses?.length) {

@@ -5,8 +5,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SellerWizard } from "@/components/startups/seller-wizard";
-import { getSellerSetup, saveSellerSetup, type SellerSetup } from "@/lib/seller-setup.functions";
-import { emptyDraft, firstUnanswered, listingPayload, SELLER_STEPS, type SellerDraft } from "@/lib/seller-wizard";
+import { getSellerSetup, saveSellerSetup, applySellerEnrich, type SellerSetup } from "@/lib/seller-setup.functions";
+import { emptyDraft, firstUnanswered, listingPayload, SELLER_STEPS, normalizeSellerStep, type SellerDraft } from "@/lib/seller-wizard";
 import { z } from "zod";
 import { useSessionContext } from "@/hooks/use-session-context";
 
@@ -32,12 +32,14 @@ function toDraft(s: SellerSetup, open?: string): SellerDraft {
     ...emptyDraft(), role: s.role, name: s.name, reg: s.reg, web: s.web, year: s.year, city: s.city,
     rev: s.rev, size: s.size, sector: s.sector, pick: s.pick, licences: s.licences as SellerDraft["licences"], iso: s.iso, addr: s.addr,
     reached: s.reached,
+    shortDescription:s.shortDescription,longDescription:s.longDescription,productTags:s.productTags,marketTags:s.marketTags,
+    shortDescriptionTh:s.shortDescriptionTh,longDescriptionTh:s.longDescriptionTh,productTagsTh:s.productTagsTh,marketTagsTh:s.marketTagsTh,founders:s.founders,
     hasLogo: !!s.media.logoPath, photos: s.media.slots.length,
     deal: s.listing.deal, stays: s.listing.stays, months: s.listing.months, price: s.listing.price,
     listingName: s.listing.name, nameOk: s.listing.name ? true : undefined,
   };
   // Opens the step asked for, else the first question without an answer (skipped included), else Review.
-  const key = open && [...SELLER_STEPS.map((x) => x.id), "review"].includes(open as never) ? open : firstUnanswered(d, s.fromSignup);
+  const key = normalizeSellerStep(open) ?? firstUnanswered(d, s.fromSignup);
   const i = SELLER_STEPS.findIndex((x) => x.id === key);
   return { ...d, step: i < 0 ? SELLER_STEPS.length : i };
 }
@@ -50,11 +52,14 @@ function Page() {
   const { data: session } = useSessionContext();
   const fetchFn = useServerFn(getSellerSetup);
   const saveFn = useServerFn(saveSellerSetup);
+  const applyFn = useServerFn(applySellerEnrich);
   const { data, error } = useQuery({ queryKey: sellerSetupKey(id), queryFn: () => fetchFn({ data: { id } }), staleTime: 0 });
   const initial = useMemo(() => (data ? toDraft(data, openAt) : null), [data]); // eslint-disable-line react-hooks/exhaustive-deps
   const timer = useRef<number | null>(null);
   const [fill, setFill] = useState<string | null>(null);
   const payload = (d: SellerDraft, done?: boolean) => ({
+    shortDescription:d.shortDescription,longDescription:d.longDescription,productTags:d.productTags,marketTags:d.marketTags,
+    shortDescriptionTh:d.shortDescriptionTh,longDescriptionTh:d.longDescriptionTh,productTagsTh:d.productTagsTh,marketTagsTh:d.marketTagsTh,founders:d.founders,
     id, role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size,
     sector: d.sector, pick: (d.pick ?? null) as never, licences: d.licences, iso: d.iso, addr: d.addr, done, reached: (d.reached ?? null) as never, listing: listingPayload(d),
   });
@@ -71,6 +76,7 @@ function Page() {
     <SellerWizard
       userId={session.user.id}
       initial={initial}
+      owner={data.owner}
       fromSignup={data.fromSignup}
       persist={persist}
       media={{ startupId: id, tenantId: data.tenantId, initial: data.media, facts: { name: data.name, web: data.web } }}
@@ -80,7 +86,8 @@ function Page() {
       onFinish={async (d) => {
         if (timer.current) window.clearTimeout(timer.current);
         try { await saveFn({ data: payload(d, true) }); } catch (e) { toast.error((e as Error).message); return; }
-        if (d.web.trim()) { setFill(d.web); return; }
+        if(d.enrichResult) {try { await applyFn({data:{id,r:d.enrichResult as never}}); } catch(e) {toast.error(e instanceof Error ? e.message : "Could not save website findings");}}
+        else if (d.web.trim()) { setFill(d.web); return; }
         void qc.invalidateQueries();
         navigate({ to: "/my-startups", search:{panel:id,edit:"startup",view:"private",tab:"images"} });
       }}
