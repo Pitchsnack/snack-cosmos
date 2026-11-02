@@ -44,7 +44,7 @@ export type AdminFirm = {
   };
   fees: { service: string; fee: string }[];
   team: { name: string; role: string | null; email: string | null }[];
-  credentials: { id: string; name: string; note: string | null; status: "pending" | "verified" | "rejected"; checkedAt: string | null }[];
+  credentials: { id: string; licenceKey?: string; name: string; note: string | null; status: "pending" | "verified" | "rejected"; checkedAt: string | null }[];
   documents: { id: string; name: string; type: string | null; checkedAt: string | null; url: string | null }[];
   reviews: { stars: number; comment: string | null; role: string | null; at: string }[];
 };
@@ -93,7 +93,7 @@ async function loadFirms(sb: any, ids?: string[]): Promise<{ firms: AdminFirm[];
     },
     fees: of(fees.data ?? [], r.id).filter((f) => (r.services ?? []).includes(f.service)).map((f) => ({ service: f.service, fee: f.fee })),
     team: of(team.data ?? [], r.id).sort((a, b) => a.sort_order - b.sort_order).map((t) => ({ name: t.name, role: t.role, email: t.email })),
-    credentials: of(creds.data ?? [], r.id).sort((a, b) => a.sort_order - b.sort_order).map((c) => ({ id: c.id, name: c.name, note: c.note, status: c.status, checkedAt: c.checked_at })),
+    credentials: of(creds.data ?? [], r.id).sort((a, b) => a.sort_order - b.sort_order).map((c) => ({ id: c.id, licenceKey: c.licence_key ?? "other", name: c.name, note: c.note, status: c.status, checkedAt: c.checked_at })),
     documents: of(docs.data ?? [], r.id).map((d) => ({ id: d.id, name: d.name, type: d.doc_type, checkedAt: d.checked_at, url: urls[d.file_path] ?? null })),
     reviews: of(reviews.data ?? [], r.id).map((v) => ({ stars: v.stars, comment: v.comment, role: v.client_role, at: v.created_at })),
   }));
@@ -127,7 +127,7 @@ async function log(sb: any, firm: any, action: string, actor: string, note?: str
 
 async function snapshot(sb: any, f: any) {
   const [{ data: c }, { data: d }] = await Promise.all([
-    sb.from("advisor_firm_credentials").select("id, name, note").eq("firm_id", f.id),
+    sb.from("advisor_firm_credentials").select("id, licence_key, name, note").eq("firm_id", f.id),
     sb.from("advisor_firm_documents").select("id, name, file_path").eq("firm_id", f.id),
   ]);
   return { company_name: f.name, legal_name: f.legal_name, registration_no: f.registration_no, credentials: c ?? [], documents: d ?? [] };

@@ -1,3 +1,5 @@
+import { AdvisorLicenceField } from "./advisor-licence-field";
+import { licenceName } from "@/lib/advisor-licences";
 import { setupText, tr, useTranslation } from "@/i18n/language";
 import { useTextLang } from "@/components/common/text-lang";
 import { useRef } from "react";
@@ -149,7 +151,7 @@ function Sec({ id, name, miss, open, onEdit, onDone, headerExtra, rows, children
   );
 }
 
-export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeServices, onLogo, logoErr, uploading, onDoc, docInput, changeCountry }: {
+export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeServices, onLogo, logoErr, uploading, onDoc, docInput, changeCountry, licenceErrors, clearLicenceError }: {
   f: FirmForm;
   set: <K extends keyof FirmForm>(k: K, v: FirmForm[K]) => void;
   setF: React.Dispatch<React.SetStateAction<FirmForm>>;
@@ -163,6 +165,7 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
   onDoc: (file: File | undefined) => void;
   docInput: React.RefObject<HTMLInputElement | null>;
   changeCountry: (c: string) => void;
+  licenceErrors: Record<number, "choice" | "name">; clearLicenceError: (index: number) => void;
 }) {
   const { language } = useTranslation();
   const { lang: tl, switchable: tlSw } = useTextLang();
@@ -179,7 +182,6 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
   const open = (sec: ReviewSec, fieldId?: string) => { setOpenSec(sec); window.setTimeout(() => focusReviewField(fieldId, sec), 60); };
   const done = (sec: ReviewSec) => {
     if (sec === "team") set("team", f.team.filter((t) => t.name.trim() || t.role.trim() || (t.roleTh ?? "").trim() || t.email.trim()));
-    if (sec === "licences") set("credentials", f.credentials.filter((c) => c.name.trim() || (c.nameTh ?? "").trim() || c.note.trim() || (c.noteTh ?? "").trim()));
     setOpenSec(null);
     window.setTimeout(() => document.getElementById(`edit-${sec}`)?.focus(), 60);
   };
@@ -449,7 +451,7 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
         rows={<>
           {f.credentials.length === 0 && <p className="py-2 text-[14px] text-[#9CA3AF]">{setupText("No licences or credentials yet. Add the ones your firm holds; Admin checks each one before it shows as Verified.")}</p>}
           {f.credentials.map((c, i) => (
-            <Row key={i} label={pick(c.name, c.nameTh) || tr("Licence or credential")} strong value={
+            <Row key={i} label={licenceName(c, language === "th") || tr("Licence or credential")} strong value={
               <span className="flex flex-wrap items-center gap-2">
                 {pick(c.note, c.noteTh)}
                 <span className={cn("rounded-full border px-2 py-0.5 text-[11.5px] font-semibold", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
@@ -461,8 +463,8 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
         </>}>
         <div className="space-y-2">
           {f.credentials.map((c, i) => (
-            <div key={i} className="grid items-end gap-2 sm:grid-cols-[1fr_1.4fr_auto_auto]">
-              <CF label={tr("Licence or credential")} req><Input className={inpC} lang={tl} value={tl === "th" ? pick(c.name, c.nameTh) : c.name} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "nameTh" : "name"]: e.target.value, ...(tl === "th" && !x.name ? { name: e.target.value } : {}), status: "pending" } : x)))} /></CF>
+            <div key={i} className="grid items-start gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto]">
+              <AdvisorLicenceField compact row={c} rows={f.credentials} index={i} error={licenceErrors[i]} onChange={patch => { set("credentials", f.credentials.map((x, j) => j === i ? { ...x, ...patch } : x)); clearLicenceError(i); }} />
               <CF label={tr("Note")}><Input className={inpC} lang={tl} value={pick(c.note, c.noteTh)} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "noteTh" : "note"]: e.target.value, status: "pending" } : x)))} /></CF>
               <span className={cn("mb-2 rounded-full border px-2 py-0.5 text-[11.5px] font-semibold", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
                 {c.status === "verified" ? "✓ Verified" : tr("Pending check")}
@@ -470,7 +472,7 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
               <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove credential")} onClick={() => set("credentials", f.credentials.filter((_, j) => j !== i))}><X className="h-4 w-4" /></Button>
             </div>
           ))}
-          <button type="button" onClick={() => set("credentials", [...f.credentials, { name: "", note: "", status: "pending" }])}
+          <button type="button" onClick={() => set("credentials", [...f.credentials, { licenceKey: "", name: "", note: "", status: "pending" }])}
             className="inline-flex cursor-pointer items-center gap-1 text-[13.5px] font-semibold text-[#2563EB]">
             <Plus className="h-[15px] w-[15px]" />{tr("Add licence or credential")}
           </button>

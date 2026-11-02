@@ -1,3 +1,4 @@
+import { licenceName } from "@/lib/advisor-licences";
 import { setupText, useTranslation } from "@/i18n/language";
 import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
 import { sectorChips } from "@/lib/business-types";
@@ -333,6 +334,7 @@ function RowTile({ icon, title, sub, right }: { icon: React.ReactNode; title: st
 export type ClientView = { headerRight: React.ReactNode; top?: React.ReactNode; tileAction: (service: string) => React.ReactNode };
 
 export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm; client?: ClientView; views?: number; onDeletedDraft?: () => void }) {
+  const { language } = useTranslation();
   const qc = useQueryClient();
   const openEdit = useOpenEdit();
   const setStatusFn = useServerFn(setAdvisorFirmStatus);
@@ -456,7 +458,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
           {f.verifiedAt ? (
             <>
               <strong className="text-[#15803D]">{setupText("✓ Verified by PitchSnack on")} {fmtDate(f.verifiedAt)}.</strong>{" "}
-              {pending.length > 0 && <>{pending.map((c) => c.name).join(", ")} {pending.length > 1 ? "are" : "is"}{setupText("still waiting for a check.")} </>}{setupText("A change to your legal name, registration number, licences or documents goes back to PitchSnack for a check.")}
+              {pending.length > 0 && <>{pending.map((c) => licenceName(c, language === "th")).join(", ")} {pending.length > 1 ? "are" : "is"}{setupText("still waiting for a check.")} </>}{setupText("A change to your legal name, registration number, licences or documents goes back to PitchSnack for a check.")}
             </>
           ) : "PitchSnack hasn't verified your firm yet. Admin checks your licences and documents."}
         </p>
@@ -526,7 +528,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
             {f.credentials.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">{setupText("No licences or credentials yet. Admin checks each one you add.")}</p> : f.credentials.map((c, i) => (
               <RowTile key={c.id ?? i}
                 icon={<span className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] bg-[#F3F4F6] text-muted-foreground"><ShieldCheck className="h-4 w-4" /></span>}
-                title={c.name} sub={c.note || (c.status === "pending" ? "Waiting for a check by PitchSnack" : null)}
+                title={licenceName(c, language === "th")} sub={c.note || (c.status === "pending" ? "Waiting for a check by PitchSnack" : null)}
                 right={c.status === "verified"
                   ? <span className="shrink-0 rounded-full border border-[#BBF7D0] bg-[#ECFDF3] px-2 py-0.5 text-[11.5px] font-semibold text-[#15803D]">{setupText("✓ Verified")}</span>
                   : c.status === "rejected" ? <span className="shrink-0 rounded-full border border-[#FECACA] bg-[#FEF2F2] px-2 py-0.5 text-[11.5px] font-semibold text-[#B91C1C]">{setupText("Can't verify")}</span>

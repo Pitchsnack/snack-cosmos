@@ -1,3 +1,5 @@
+import { licenceName } from "@/lib/advisor-licences";
+import { useTranslation } from "@/i18n/language";
 import { HandoverReviewBox } from "@/components/handover/ownership";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
@@ -103,6 +105,7 @@ function KV({ rows }: { rows: [string, React.ReactNode][] }) {
 const CHECKLIST = ["The registration matches the legal name and address", "Each regulated service has a fitting licence", "The documents open and can be read", "The website, email and phone reach the firm"];
 
 function Review({ f, me, onBack, onAssign }: { f: AdminFirm; me?: string; onBack: () => void; onAssign: () => void }) {
+  const { language } = useTranslation();
   const qc = useQueryClient();
   const mark = useServerFn(markAdvisorItem);
   const saveCl = useServerFn(saveAdvisorChecklist);
@@ -128,14 +131,14 @@ function Review({ f, me, onBack, onAssign }: { f: AdminFirm; me?: string; onBack
     if (snap.company_name !== undefined) ch("Company name", snap.company_name, f.name); ch("Registration no.", snap.registration_no, f.registrationNo);
     for (const c of f.credentials) {
       const o = sc.get(c.id);
-      if (!o) out.push(["Licence", <span className="font-semibold text-[#6D28D9]">+ {c.name}</span>]);
-      else if (o.name !== c.name || (o.note ?? null) !== (c.note ?? null)) out.push(["Licence", <><s className="text-[#9CA3AF]">{o.name}{o.note ? ` · ${o.note}` : ""}</s> {c.name}{c.note ? ` · ${c.note}` : ""}</>]);
+      if (!o) out.push(["Licence", <span className="font-semibold text-[#6D28D9]">+ {licenceName(c, language === "th")}</span>]);
+      else if ((o.licence_key ?? "other") !== (c.licenceKey ?? "other") || o.name !== c.name || (o.note ?? null) !== (c.note ?? null)) out.push(["Licence", <><s className="text-[#9CA3AF]">{licenceName(o, language === "th")}{o.note ? ` · ${o.note}` : ""}</s> {licenceName(c, language === "th")}{c.note ? ` · ${c.note}` : ""}</>]);
     }
-    for (const [id, o] of sc) if (!f.credentials.some((c) => c.id === id)) out.push(["Licence", <s className="text-[#9CA3AF]">− {o.name}</s>]);
+    for (const [id, o] of sc) if (!f.credentials.some((c) => c.id === id)) out.push(["Licence", <s className="text-[#9CA3AF]">− {licenceName(o, language === "th")}</s>]);
     for (const d of f.documents) if (!sd.has(d.id)) out.push(["Document", <span className="font-semibold text-[#6D28D9]">+ {d.name}</span>]);
     for (const [id, o] of sd) if (!f.documents.some((d) => d.id === id)) out.push(["Document", <s className="text-[#9CA3AF]">− {o.name}</s>]);
     return out;
-  }, [f, isRe]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [f, isRe, language]); // eslint-disable-line react-hooks/exhaustive-deps
   const New = () => <span className="ml-1.5 rounded bg-[#F5F3FF] px-1.5 py-px text-[10px] font-bold text-[#6D28D9]">New</span>;
   const emailDomain = (f.email ?? "").split("@")[1]?.toLowerCase() ?? "";
   const siteDomain = (f.website ?? "").replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0]!.toLowerCase();
@@ -205,7 +208,7 @@ function Review({ f, me, onBack, onAssign }: { f: AdminFirm; me?: string; onBack
                 <ul className="divide-y divide-border">{f.credentials.map((c) => (
                   <li key={c.id} className="flex flex-wrap items-center gap-2.5 py-2 text-[13px]">
                     <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-muted"><ShieldCheck className="h-4 w-4" /></span>
-                    <span className="min-w-0 flex-1"><b className="font-medium">{c.name}</b>{isRe && !sc.has(c.id) && <New />}{c.note && <span className="block text-[12px] text-muted-foreground">{c.note}</span>}</span>
+                    <span className="min-w-0 flex-1"><b className="font-medium">{licenceName(c, language === "th")}</b>{isRe && !sc.has(c.id) && <New />}{c.note && <span className="block text-[12px] text-muted-foreground">{c.note}</span>}</span>
                     {c.status === "pending" ? <><Button size="sm" variant="outline" className="h-8" onClick={() => doMark("credential", c.id, "verified")}><Check className="mr-1 h-3.5 w-3.5" />Mark verified</Button><Button size="sm" variant="outline" className="h-8 border-[#FECACA] text-[#B91C1C]" onClick={() => doMark("credential", c.id, "rejected")}>Can't verify</Button></>
                       : <><CredMark status={c.status} /><button type="button" className="text-[12px] font-semibold text-[#2563EB] hover:underline" onClick={() => doMark("credential", c.id, "pending")}>Undo</button></>}
                   </li>))}</ul>
@@ -255,6 +258,7 @@ function Err({ children }: { children: React.ReactNode }) {
 }
 
 function DecisionDialog({ kind, f, regWarn, onClose, onDone }: { kind: "verify" | "more" | "decline"; f: AdminFirm; regWarn: boolean; onClose: () => void; onDone: () => void }) {
+  const { language } = useTranslation();
   const decide = useServerFn(decideAdvisor);
   const [note, setNote] = useState(kind === "more" ? f.v.moreInfoNote ?? "" : "");
   const [fields, setFields] = useState<string[]>(kind === "more" ? f.v.moreInfoFields : []);
@@ -262,8 +266,8 @@ function DecisionDialog({ kind, f, regWarn, onClose, onDone }: { kind: "verify" 
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const owner = f.ownerName;
-  const rejected = f.credentials.filter((c) => c.status === "rejected").map((c) => c.name);
-  const waiting = f.credentials.filter((c) => c.status === "pending").map((c) => c.name);
+  const rejected = f.credentials.filter((c) => c.status === "rejected").map((c) => licenceName(c, language === "th"));
+  const waiting = f.credentials.filter((c) => c.status === "pending").map((c) => licenceName(c, language === "th"));
   const other = reason === "Another reason";
   const errs = kind === "more" ? { note: !note.trim() && "Write what the firm should fix.", fields: !fields.length && "Pick at least one field to fix." }
     : kind === "decline" ? { reason: !reason && "Choose a reason.", note: other && !note.trim() && "Write the reason in the note." } : {};
