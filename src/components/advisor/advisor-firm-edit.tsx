@@ -199,7 +199,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
     ["year", yearError(f.yearFounded)],
     ["desc", descError(f.description || f.descriptionTh)],
     ["teamSize", teamSizeError(f.teamSize)],
-    ["legalName", !setup || f.legalName.trim() ? null : "Add your firm's legal name."],
+    ["legalName", null],
     ["reg", thai && !/^\d{13}$/.test(f.registrationNo) ? "The registration number has 13 digits." : null],
     ["web", webError(f.website)],
     ["email", emailError(f.email)],
@@ -236,7 +236,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           description: f.description.trim() || f.descriptionTh.trim(), descriptionTh: f.descriptionTh.trim() || null, yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
           dealBand: f.dealBand || null, teamSize: f.teamSize ? Number(f.teamSize) : null, languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
-          ...(setup ? { legalName: f.legalName.trim() } : { englishName: nul(f.englishName ?? "") }), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
+          ...(setup ? { legalName: f.legalName.trim() || f.name.trim() } : { englishName: nul(f.englishName ?? "") }), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
           addrStreet: nul(f.addr.street), addrUnit: nul(f.addr.unit), addrDistrict: thai ? nul(f.addr.district) : nul(f.city),
           addrProvince: nul(f.addr.province), addrPostal: nul(f.addr.postal),
           website: f.website.trim() ? normalizeUrl(f.website) : "", email: f.email.trim(), phone: f.phone.trim(),
@@ -349,9 +349,9 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} lang={tl} value={descV} onBlur={blur("desc")} onChange={(e) => setDesc(e.target.value)} />
         </F>
 </EditSec>}
-        {visible("address") && <EditSec id="company" active={section === "company"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Address")} />{!setup ? <CompanyNameFields name={f.name} nameLabel="Company name" thaiName={f.thaiName} englishName={f.englishName ?? ""} onThaiName={v => set("thaiName", v)} onEnglishName={v => set("englishName", v)} onChangeCompany={() => { setTab("about"); setNameFocus(true); setTimeout(() => document.getElementById("fe-name")?.focus(), 100); }} /> : <CompactFields two>          <F label={setupText("Legal name")} req tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
+        {visible("address") && <EditSec id="company" active={section === "company"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Address")} />{!setup ? <CompanyNameFields name={f.name} nameLabel="Company name" thaiName={f.thaiName} englishName={f.englishName ?? ""} onThaiName={v => set("thaiName", v)} onEnglishName={v => set("englishName", v)} onChangeCompany={() => { setTab("about"); setNameFocus(true); setTimeout(() => document.getElementById("fe-name")?.focus(), 100); }} /> : <CompactFields two>          <F label={setupText("Legal name")} opt tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
             hint={firm?.verifiedAt ? "Changing this sends your firm back to Admin for a check." : undefined}>
-            <Input id="fe-legalName" aria-required className={cn(inp, show("legalName") && errB)} maxLength={200} placeholder={setupText("e.g. Acme Advisory Co., Ltd.")} value={f.legalName} onBlur={blur("legalName")} onChange={(e) => set("legalName", e.target.value)} />
+            <Input id="fe-legalName" aria-required className={cn(inp, show("legalName") && errB)} maxLength={200} placeholder={f.name || setupText("e.g. Acme Advisory Co., Ltd.")} value={f.legalName} onBlur={blur("legalName")} onChange={(e) => set("legalName", e.target.value)} />
           </F>
           <F label={setupText("Thai name")} opt={!thai} tag={f.thaiName ? src.thaiName : undefined}><Input className={inp} maxLength={200} placeholder="บริษัท … จำกัด" value={f.thaiName} onChange={(e) => set("thaiName", e.target.value)} /></F>
 </CompactFields>}<CompactFields two>
@@ -495,9 +495,9 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
 
       <Section id="company" active={!setup && section === "company"} title={setupText("Company")} setup={!!setup}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <F label={setupText("Legal name")} req tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
+          <F label={setupText("Legal name")} opt tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
             hint={firm?.verifiedAt ? "Changing this sends your firm back to Admin for a check." : undefined}>
-            <Input id="fe-legalName" aria-required className={cn(inp, show("legalName") && errB)} maxLength={200} placeholder={setupText("e.g. Acme Advisory Co., Ltd.")} value={f.legalName} onBlur={blur("legalName")} onChange={(e) => set("legalName", e.target.value)} />
+            <Input id="fe-legalName" aria-required className={cn(inp, show("legalName") && errB)} maxLength={200} placeholder={f.name || setupText("e.g. Acme Advisory Co., Ltd.")} value={f.legalName} onBlur={blur("legalName")} onChange={(e) => set("legalName", e.target.value)} />
           </F>
           <F label={setupText("Thai name")} opt={!thai} tag={f.thaiName ? src.thaiName : undefined}><Input className={inp} maxLength={200} placeholder="บริษัท … จำกัด" value={f.thaiName} onChange={(e) => set("thaiName", e.target.value)} /></F>
           <F label={thai ? "Registration no. (เลขทะเบียนนิติบุคคล)" : "Registration no."} req={thai} opt={!thai} tag={f.registrationNo ? src.registrationNo : undefined} err={show("reg")} htmlFor="fe-reg">
