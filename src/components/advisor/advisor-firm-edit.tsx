@@ -1,7 +1,6 @@
 import { AdvisorLicenceField } from "./advisor-licence-field";
 import { licenceError } from "@/lib/advisor-licences";
 import { setupText } from "@/i18n/language";
-import { companyNameHelp } from "@/lib/company-name";
 import { CompanyNameFields } from "@/components/common/company-name-fields";
 import { tr, useTranslation } from "@/i18n/language";
 import { LangTag, useTextLang } from "@/components/common/text-lang";
@@ -321,7 +320,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {visible("about") && <EditSec id={section === "work" ? "work" : "firm"} active={section === "work" || section === "firm"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Info")} /><CompactFields>          <F label={setupText("Year founded")} req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
             <Input id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder={setupText("e.g. 2014")} value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
           </F>
-          <EditSec id="company-name" tone="buyer" active={nameFocus}><F label={setupText(setup ? "Firm name" : "Company name")} req tag={src.name} err={show("name")} hint={!setup ? companyNameHelp(language === "th") : undefined} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && (adminCreate && forced ? "creation-invalid" : errB))} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F></EditSec>
+          <EditSec id="company-name" tone="buyer" active={nameFocus}><F label={setupText(setup ? "Firm name" : "Company name")} req tag={src.name} err={show("name")} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && (adminCreate && forced ? "creation-invalid" : errB))} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F></EditSec>
           <F label={thai ? "Registration no. (เลขทะเบียนนิติบุคคล)" : "Registration no."} req={thai} opt={!thai} tag={f.registrationNo ? src.registrationNo : undefined} err={show("reg")} htmlFor="fe-reg">
             <Input id="fe-reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? setupText("13 digits") : undefined}
               className={cn(inp, thai && "border-[#93C5FD] bg-[#EFF6FF] dark:border-[#1E40AF] dark:bg-[#172554]", show("reg") && errB)}
