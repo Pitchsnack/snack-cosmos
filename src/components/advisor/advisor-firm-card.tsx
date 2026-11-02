@@ -67,7 +67,7 @@ export function ServiceChip({ name }: { name: string }) {
 }
 
 /** 150px cover: the logo whole (up to 96 × 240px), centred 12px above the bottom, under the badge. */
-function Cover({ f, noStatus }: { f: AdvisorFirm; noStatus?: boolean }) {
+export function FirmCover({ f, noStatus }: { f: Pick<AdvisorFirm, "name" | "logoUrl" | "refNo" | "city" | "verifiedAt" | "managed" | "status">; noStatus?: boolean }) {
   const pills = (
     <div className="advisor-cover-top">
       <div className="shrink-0">{f.verifiedAt && <VerifiedAdvisorChip />}</div>
@@ -170,7 +170,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
       )}
       style={selected ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}` } : undefined}
     >
-      <Cover f={f} noStatus={noStatus} />
+      <FirmCover f={f} noStatus={noStatus} />
       <div className="advisor-card-body flex-1 space-y-2.5 p-4">
         <div>
           <div className="min-w-0">

@@ -177,6 +177,7 @@ export const decideAdvisor = createServerFn({ method: "POST" })
         alert: data.action === "verify" ? "approved" : data.action === "more_info" ? "changes_requested" : "declined",
         role: "advisor", userIds: [f.owner_user_id],
         vars: { firm: f.name, fields: (data.fields ?? []).join(", "), reason: other ? (data.note ?? "") : (data.reason ?? "") },
+        ...(data.action === "verify" ? { details: [["Verified", new Date(now).toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })] as [string, string]] } : {}),
         quote: data.action === "verify" ? null : other ? null : data.note ?? null,
         refKey: `advisor:${f.id}:${act}:${now}`,
       });

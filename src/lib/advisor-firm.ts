@@ -212,6 +212,10 @@ export const SERVICE_COLS: Record<number, number> = { 1: 1, 2: 2, 3: 3, 4: 2, 5:
 /* ------------------------------ Shared checks ----------------------------- */
 
 export const nameError = (v: string) => (v.trim().length >= 2 ? null : "Add your firm's name.");
+/** Registration keeps setup completion, but advisors have no separate listing name or headline. */
+export function advisorRegistrationMissing(f: { setup_done_at?: string | null }) {
+  return f.setup_done_at ? [] : ["finish setup"];
+}
 export const cityError = (v: string, country: string) => (v.trim().length >= 2 || (country === "Thailand" && v) ? null : country === "Thailand" ? "Choose your province." : "Add your city.");
 export const webError = (v: string) => (isValidUrl(v) ? null : "Enter a valid website address, e.g. www.yourfirm.com");
 export const emailError = (v: string) => (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) ? null : "Enter a valid email, e.g. hello@yourfirm.com");

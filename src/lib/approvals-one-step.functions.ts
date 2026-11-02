@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { advisorRegistrationMissing } from "./advisor-firm";
 import { z } from "zod";
 import { buyerApprovalTextMissing, buyerListingName, buyerRegistrationMissing } from "./buyer-listing-identity";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -638,9 +639,7 @@ export const registerAdvisorFirm = createServerFn({ method: "POST" })
     if (!f) throw new Error("Firm not found");
     if (f.owner_user_id !== context.userId) throw new Error("Not your firm");
     if (f.advisor_verification === "pending") return { ok: true, already: true };
-    const missing = [
-      !f.setup_done_at && "finish setup",
-    ].filter(Boolean);
+    const missing = advisorRegistrationMissing(f);
     if (missing.length) throw new Error(`Add ${missing.join(", ")} before registering.`);
     const now = new Date().toISOString();
     const { error } = await sb.from("advisor_firms").update({
