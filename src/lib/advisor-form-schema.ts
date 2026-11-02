@@ -5,6 +5,11 @@ const BAND_KEYS = DEAL_BANDS.map((b) => b.key) as [string, ...string[]];
 const FEE_TYPES = ["fixed", "hourly", "retainer", "success", "retainer_success", "quote", "other"] as const;
 const FeeIn = z.object({ type: z.enum(FEE_TYPES), amount: z.string().max(12).regex(/^\d*$/), pct: z.string().max(12), words: z.string().max(80), wordsTh: z.string().max(80).optional() });
 const s = (max: number) => z.string().trim().max(max).nullable().optional().transform((v) => (v ? v : null));
+/** Year founded: structural limits are static, the "not in the future" limit is checked at request time. */
+const YEAR_CEILING = 2100;
+const notFutureYear = (y: number) => y <= new Date().getFullYear();
+const yearMsg = "Year cannot be in the future";
+
 export const CompleteFirmInput = z.object({
   id: z.string().uuid().nullable(),
   name: z.string().trim().min(2).max(80),
@@ -14,7 +19,7 @@ export const CompleteFirmInput = z.object({
   media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(300) })).max(3).optional(),
   description: z.string().trim().min(30).max(300),
   descriptionTh: z.string().trim().max(300).nullable().optional(),
-  yearFounded: z.number().int().min(1800).max(new Date().getFullYear()),
+  yearFounded: z.number().int().min(1800).max(YEAR_CEILING).refine(notFutureYear, { message: yearMsg }),
   city: z.string().trim().min(2).max(100),
   country: z.string().trim().min(1).max(100),
   services: z.array(z.string().max(60)).min(1).max(10),
@@ -39,7 +44,7 @@ export const CompleteFirmInput = z.object({
 /** Structural limits always apply; required completeness is only checked outside Draft. */
 export const DraftFirmInput = CompleteFirmInput.innerType().extend({
   name: z.string().trim().max(80), firmType: z.string().trim().max(60),
-  description: z.string().trim().max(300), yearFounded: z.number().int().min(1800).max(new Date().getFullYear()).nullable(),
+  description: z.string().trim().max(300), yearFounded: z.number().int().min(1800).max(YEAR_CEILING).nullable(),
   city: z.string().trim().max(100), country: z.string().trim().max(100),
   services: z.array(z.string().max(60)).max(10), teamSize: z.number().int().min(1).max(99999).nullable(),
   legalName: z.string().trim().max(200), website: z.string().trim().max(200),
