@@ -1,10 +1,10 @@
 # Decisions
 - Businesses Wanted DTOs own privacy/access; scoped filters and `.bw-form` own layout, public input styles stay under `.bw` to avoid collisions. Cover pills/personas use tokens; browser-safe defaults own sector wording.
 - Marketplace Contacts shares role UI; list/card reads recheck active NDA and owner/view access before shared projection, keeping Admin access separate.
-- Admin contacts use a dedicated Control+Admin-authorized directory and separate admin_contact_notes, keyed by user ID; lazy company DTOs adapt shared cards without viewer controls, and profile/status/sign-in/NDA projections serve both Admin entry points without changing marketplace privacy.
+- Admin contacts use Control+Admin directory access and user-keyed admin_contact_notes; lazy company DTOs adapt shared cards without viewer controls. Shared Admin projections preserve marketplace privacy.
 - Seller founders use a browser-safe structured story helper and the existing founder bio plus nullable bio_story; existing startup authorization/saving and bio display gates remain authoritative.
 - Pipeline chat uses the Messages Chat in a lazy locked presentation inside the existing ProfileBox dialog; Pipeline-parent in-memory drafts preserve unsent content without new storage or authorization paths.
-- Pipeline full-profile dialogs reuse invitationPrivateProfile's selected-deal gate, the seller InvestorDetailPanel body and shared company identity/section/pill parts; only All deals/watchlist opt in so other profile viewers stay unchanged.
+- Pipeline full-profile dialogs reuse invitationPrivateProfile's selected-deal gate, InvestorDetailPanel and shared identity parts; only All deals/watchlist opt in, preserving other viewers.
 - Shared Pipeline card company chips use an own-organisation DTO sourced from each deal's startup or linked buyer firm; counterparty privacy fields and page-selected organisations are not chip sources, so pending/ended cards retain correct identity without changing NDA gates.
 - Discovery Grid and Split-list cards share StandardBrowseCard through listing/investor adapters; watchlist wrappers own view state and existing DTO gates own privacy, so panels and List rows remain independent.
 - Seller Connect flight is browser-only presentation using the stored invitation ID, shared Pipeline opening signal and public investor cover markers; invitation writes and authorization remain in the existing server function.
@@ -48,7 +48,7 @@
 
 - Company verification: whitelisted DTOs; selected-deal NDA + entitlement on buyer reads; DB-enforced quotas and six-check badge.
 
-- Seller/buyer Pipeline uses shared workspace-page/cards and six child routes; invitations and counts share existing authenticated DTOs, and watchlist keys the stable pipeline ID so NDA approval preserves stars. Pipeline › Reports embeds the shared ReportsHub (buyer or per-buyer seller mode) behind a deal selector in workspace-reports.tsx — never a table; per-buyer extras there are gated by the pipelinePage prop so /my-reports and the pop-up stay unchanged.
+- Seller/buyer Pipeline shares workspace-page/cards and six child routes; authenticated DTOs own invitations/counts, stable pipeline IDs own watchlist stars. workspace-reports embeds ReportsHub behind a deal selector, never a table; pipelinePage gates per-buyer extras, preserving /my-reports and pop-ups.
 - Invitation dialogs reuse extracted watchlist profile bodies; no route-module component imports and no private profile payload before a valid approved NDA.
 - NDA Invitations: one row per NDA (linked requests show only on the invitation row); Invite again (invite_count ≤ 2) via inviteAgain; approval boxes come from nda-approval.tsx and the buyer's box shows once via deal_pipelines.buyer_approval_seen_at.
 - Pipeline Investor/Seller profile box is read-only from getProfileBox (profile-box.functions.ts): private person/firm facts only while the NDA is approved and valid, else the public investor profile; nothing is stored.
@@ -59,7 +59,8 @@
 - Buyer texts use shared changed-only counting/Admin bypass and StandardInvestorCard. Buyer identity/readiness helpers omit retired suggestion writes and allow missing suggestions; seller fields stay unchanged.
 
 - DBD fetch-once store: dbd_company_records (per registration number) is the only source of DBD facts; writes only via DB functions dbd_store_save/dbd_store_delete/dbd_apply_edit (Control-checked, trigger-guarded); seller report tables are materialised copies and analyst edits re-apply after refresh.
-- Read nested AGENTS.md before edits.
+- Read nested AGENTS.md first.
 - Buyer/advisor setup shares validity helpers and seller StepBar; authorised saves and monotonic setup_reached align progress.
 
 - CompanyNameFields shares live locked names and optional twins; omit legacy second-name writes, preserve setup schemas and profile authorization.
+- Advisor compact sections share presentation only; existing DTOs and separate Admin checks retain access. Read subdirectory AGENTS.md for details.

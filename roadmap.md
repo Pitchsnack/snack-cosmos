@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Compact advisor panels
+- [x] Compact shared Browse/My Company and separate Admin sections; accessible photo viewer, scoped hover and section-specific edits.
+- [x] Ten exact EN/TH service lines updated throughout app and Partners; saved data and fee words elsewhere unchanged.
+- [x] Admin and seller/buyer/advisor view switches checked; 1440/1024/390 without overflow; EN/TH, hover/focus, dark tokens, 0/1/3-photo browser-only cases and 20 focused tests passed. Separate role-account sessions and populated feedback remain unverified.
+
 ## Advisor licence dropdown
 - [x] Shared grouped picker, issuer lines, Other, duplicate prevention and validation.
 - [x] Persist keys, preserve legacy credentials, localize displays and snapshots, including active one-step review.
@@ -15,5 +20,5 @@
 - [x] 8. Firm card: 150px cover, logo ≤96x240, Languages row in box, foot = last login + Show more, Send enquiry inside Show more
 - [x] 9. i18n: 4 last-login lines EN/TH + tooltips
 - [x] 10. Tests: step thresholds pass; tsgo clean
-- [ ] 11. Playwright visual check (advisor Browse marketplace EN/TH, Browse investors/listings, firm card opened) — NOT YET RUN
-- [ ] Note: test/architecture baseline failures are pre-existing (tree has 479 direct calls vs frozen 243 baseline); baseline left untouched
+- [x] 11. Advisor Browse EN/TH and opened firm checked; investor/listing cards unchanged by compact advisor work.
+- Architecture baseline remains untouched (479 direct calls versus frozen 243); not part of this task.

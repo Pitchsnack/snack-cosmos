@@ -1,5 +1,6 @@
 import { licenceName } from "@/lib/advisor-licences";
 import { setupText, useTranslation } from "@/i18n/language";
+import { FirmServices } from "@/components/advisor/firm-services";
 import { FirmPhotosBox } from "@/components/advisor/firm-photos-box";
 import { sectorChips } from "@/lib/business-types";
 import { OwnerHandoverBox } from "@/components/handover/owner-check";
@@ -36,7 +37,7 @@ import { FirmCard, FirmLogo, ServiceChip, Stars, VerifiedAdvisorChip } from "@/c
 import { myFirmViews } from "@/lib/advisor-enquiries.functions";
 import { createAdvisorDraft, getMapsEmbedKey, listMyAdvisorFirms, saveAdvisorServices, setAdvisorFirmStatus } from "@/lib/advisor-firm.functions";
 import {
-  ADVISOR_SERVICES, SERVICE_COLS, dealBandLabels, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, serviceOf, advisorSetupProgress, advisorSkipsFor,
+  ADVISOR_SERVICES, dealBandLabels, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, advisorSetupProgress, advisorSkipsFor,
   type AdvisorFirm, type EditSection,
 } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
@@ -298,10 +299,10 @@ function ChecklistPill({ f, onItem }: { f: AdvisorFirm; onItem: (s: EditSection)
 
 function Box({ title, action, onAction, children }: { title: string; action?: string; onAction?: () => void; children: React.ReactNode }) {
   return (
-    <div className="rounded-[12px] border border-[#E5E7EB] bg-card p-4 dark:border-border">
-      <div className="mb-2 flex items-center justify-between">
+    <div className="advisor-info-box advisor-hover-box">
+      <div className="advisor-caption">
         <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{setupText(title)}</div>
-        {action && <button type="button" onClick={onAction} className="text-[13px] font-semibold text-[#0F766E] hover:underline">{setupText(action)}</button>}
+        {action && <Button variant="unstyled" onClick={onAction} className="advisor-text-action">{setupText(action)}</Button>}
       </div>
       {children}
     </div>
@@ -310,7 +311,7 @@ function Box({ title, action, onAction, children }: { title: string; action?: st
 
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-[#F0F1F3] py-2 text-[13.5px] last:border-0 dark:border-border">
+    <div className="advisor-fact">
       <span className="shrink-0 text-[#6A7181]">{setupText(label)}</span>
       <span className="min-w-0 text-right font-semibold text-[#111827] dark:text-foreground">{children || <span className="font-normal text-[#6F7B88]">{setupText("Not set")}</span>}</span>
     </div>
@@ -319,11 +320,11 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
 
 function RowTile({ icon, title, sub, right }: { icon: React.ReactNode; title: string; sub?: string | null; right?: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 border-b border-[#F0F1F3] py-2.5 last:border-0 dark:border-border">
+    <div className="advisor-detail-row">
       {icon}
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[14px] font-semibold">{title}</div>
-        {sub && <div className="truncate text-[12.5px] text-[#6A7181]">{sub}</div>}
+        <div className="break-words text-[13px] font-semibold">{title}</div>
+        {sub && <div className="break-words text-[12px] text-muted-foreground">{sub}</div>}
       </div>
       {right}
     </div>
@@ -379,7 +380,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
   const declined = f.verification?.state === "declined";
   const pending = f.credentials.filter((c) => c.status === "pending");
   const addr = fullAddress(f);
-  const cols = SERVICE_COLS[f.services.length] ?? 2;
+  
   const edit = (s: EditSection) => openEdit(f.id, s);
   const navigate = useNavigate();
   const inSetup = !f.setupDoneAt;
@@ -398,19 +399,22 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
 
   return (
     <div className="overflow-hidden rounded-[14px] border border-border bg-card shadow-card">
-      <div className="px-5 pt-5 empty:hidden"><OwnerHandoverBox kind="firm" id={f.id} onEdit={(x) => edit((x.edit.section ?? "firm") as EditSection)} /></div>
+      {!client && <div className="px-5 pt-5 empty:hidden"><OwnerHandoverBox kind="firm" id={f.id} onEdit={(x) => edit((x.edit.section ?? "firm") as EditSection)} /></div>}
       {/* Header */}
-      <div className="flex flex-wrap items-start gap-4 border-b border-border p-5">
-        <FirmLogo f={f} ring={false} />
-        <div className="min-w-0 flex-1 max-sm:min-w-[180px]">
-          <div className="flex flex-wrap items-center gap-2">
+      <div className={cn("flex flex-wrap items-start gap-4 border-b border-border p-5", client && "advisor-client-header")}>
+        <FirmLogo f={f} size={client ? 48 : 52} radius={client ? 11 : 13} ring={false} />
+        <div className={cn("min-w-0 flex-1", !client && "max-sm:min-w-[180px]")}>
+          {client ? <>
+            <div className="advisor-client-name"><h2>{f.name || tr("New firm profile")}</h2>{f.verifiedAt ? <VerifiedAdvisorChip small /> : <span className="inline-flex h-5 items-center rounded-full border border-border bg-muted px-2 text-[11px] font-semibold text-muted-foreground">{tr("Not verified yet")}</span>}{f.managed && <ManagedBadge size="sm" shadow align="left" />}</div>
+            <div className="advisor-client-meta">{[f.refNo, tr(f.firmType), f.city].filter(Boolean).join(" · ")}{f.yearFounded ? ` · ${tr("since")} ${f.yearFounded}` : ""}</div>
+          </> : <>          <div className="flex flex-wrap items-center gap-2">
             {!client && <span className="inline-flex min-h-5 items-center rounded-[6px] bg-[#E0F5F2] px-2 py-0.5 text-[10.5px] font-bold uppercase leading-normal tracking-[.06em] text-[#0F766E]">{setupText("Open to sellers and buyers")}</span>}
             {f.verifiedAt ? <VerifiedAdvisorChip small /> : client && <span className="inline-flex h-5 items-center rounded-full border border-border bg-muted px-2 text-[11px] font-semibold text-muted-foreground">{tr("Not verified yet")}</span>}{client && f.managed && <ManagedBadge size="sm" shadow align="left" />}
           </div>
           <h2 className="mt-1 text-[21px] font-bold leading-tight">{f.name || "New firm profile"}</h2>
-          <div className="text-[13px] text-[#6A7181]">{[f.refNo, f.firmType, f.city].filter(Boolean).join(" · ")}</div>
+          <div className="text-[13px] text-[#6A7181]">{[f.refNo, f.firmType, f.city].filter(Boolean).join(" · ")}</div></>}
         </div>
-        {client ? <div className="flex items-center">{client.headerRight}</div> : <div className="flex items-center">
+        {client ? <div className="advisor-client-header-action">{client.headerRight}</div> : <div className="flex items-center">
           {!inSetup && <ChecklistPill f={f} onItem={edit} />}
           <CompanyMenu name={f.name || "New firm profile"} onEdit={() => edit("firm")}
             deleteDraft={{ kind: "advisor_firm", id: f.id, invalidate: [ADVISOR_FIRMS_KEY], onDeleted: onDeletedDraft }}>
@@ -434,8 +438,9 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
         </div>
       ) : <>
 
-      <div className="space-y-5 p-5">
+      <div className={cn("advisor-panel-body", client && "advisor-client-body")}>
         {client?.top}
+        {client && <FirmPhotosBox photos={f.media} firm={f.name} canEdit={false} />}
         {client && f.description && <section><div className="mb-1.5 text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{tr("About")}</div><p className="whitespace-pre-line text-[14px] leading-relaxed">{f.description}</p></section>}
         {client && <ClientFacts f={f} />}
         {!client && <>
@@ -464,7 +469,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
         </p>
         </>}
 
-        <FirmPhotosBox photos={f.media} canEdit={!client} onEdit={() => edit("firm")} />
+        {!client && <FirmPhotosBox photos={f.media} firm={f.name} canEdit onEdit={() => edit("logo")} />}
 
         {/* Services and fees */}
         <section>
@@ -475,28 +480,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
           {f.services.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">{setupText("No services yet.")}</p>
           ) : (
-            <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-              {f.services.map((s) => {
-                const def = serviceOf(s);
-                const fee = f.fees[s];
-                return (
-                  <div key={s} className="flex flex-col rounded-[12px] border border-[#CFEAE5] bg-[#F2FAF8] px-3.5 py-3 dark:bg-muted/40">
-                    <div className="grid h-[34px] w-[34px] place-items-center rounded-[9px] border border-[#CFEAE5] bg-white text-[#0F766E]"><def.icon className="h-4 w-4" /></div>
-                    <div className="mt-2 text-[14px] font-semibold">{tr(s)}</div>
-                    <div className="text-[12.5px] text-[#6A7181]">{setupText(def.line)}</div>
-                    <div className="mt-auto pt-2.5">
-                      <div className="border-t border-[#D3ECE7] pt-2">
-                        <div className="text-[10.5px] font-bold uppercase text-[#6A7181]">{setupText("Fee")}</div>
-                        {fee ? <div className="text-[13px] font-semibold text-[#111827] dark:text-foreground">{fee === "Request a Price Quote" ? tr(fee) : fee}</div> : client ? <div className="text-[13px] text-[#6F7B88]">{tr("Request a Price Quote")}</div> : (
-                          <div className="text-[13px]"><span className="text-[#6F7B88]">{setupText("Not set yet")}</span> · <button type="button" onClick={() => edit("services")} className="font-semibold text-[#0F766E] hover:underline">{setupText("Add a fee")}</button></div>
-                        )}
-                        {client && <div className="mt-1.5 text-[12.5px]">{client.tileAction(s)}</div>}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <FirmServices services={f.services} fee={s => f.fees[s]} detail={s => f.feeDetails[s]} action={client?.tileAction} onAddFee={client ? undefined : () => edit("services")} />
           )}
         </section>
 
@@ -520,7 +504,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
           <Box title={`Team · ${f.team.length}`} action={client ? undefined : "Edit"} onAction={() => edit("team")}>
             {f.team.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">{setupText("No one added yet.")}</p> : f.team.map((t, i) => (
               <RowTile key={t.id ?? i}
-                icon={<span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#E0F5F2] text-[12px] font-bold text-[#0F766E]">{t.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>}
+                icon={<span className="advisor-team-avatar">{t.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>}
                 title={t.name} sub={[t.role, t.email].filter(Boolean).join(" · ")} />
             ))}
           </Box>
@@ -741,24 +725,18 @@ function AddressDialog({ f, open, onOpenChange }: { f: AdvisorFirm; open: boolea
 
 function ClientFacts({ f }: { f: AdvisorFirm }) {
   const band = dealBandLabels(f.dealBand);
-  const sectors = f.sectorAgnostic ? [tr("Sector agnostic")] : sectorChips(f.sectors, f.sectorPicks);
-  const cell = (label: string, v: React.ReactNode) => (
-    <div className="min-w-0 border-[#E9EBF0] p-3 dark:border-border max-[640px]:border-b [&:not(:last-child)]:min-[641px]:border-r">
-      <div className="text-[11.5px] text-[#6B7280]">{tr(label)}</div>
-      <div className="mt-0.5 text-[13.5px] font-semibold">{v || "—"}</div>
-    </div>
-  );
-  return (
-    <div className="grid overflow-hidden rounded-[12px] border border-[#E9EBF0] dark:border-border min-[641px]:grid-cols-4">
-      {cell("Typical deal size", band ? <>{band.usd}<div className="text-[12px] font-normal text-muted-foreground">({band.thb})</div></> : null)}
-      {cell("Team size", f.teamSize ? `${f.teamSize} ${tr("people")}` : null)}
-      {cell("Languages", f.languages.join(", "))}
-      {cell("Sectors", sectors.length > 2 ? `${sectors.slice(0, 2).join(", ")} +${sectors.length - 2}` : sectors.join(", "))}
-    </div>
-  );
+  const sectors = f.sectorAgnostic || !f.sectors.length ? [tr("Sector agnostic")] : f.sectors.map(tr);
+  const cell = (label: string, value: React.ReactNode, className = "") => <div className={className}><span>{tr(label)}</span><strong>{value || "—"}</strong></div>;
+  return <div className="advisor-client-facts advisor-hover-box">
+    {cell("Typical deal size", band ? <>{band.usd}<small>({band.thb})</small></> : null)}
+    {cell("Team size", f.teamSize ? `${f.teamSize} ${tr("people")}` : null)}
+    {cell("Languages", f.languages.map(tr).join(", "), "advisor-facts-languages")}
+    {cell("Sectors", sectors.join(", "), "advisor-facts-sectors")}
+  </div>;
 }
 
-function ClientFeedback({ f, client }: { f: AdvisorFirm; client?: boolean }) {
+export function ClientFeedback({ f, client }: { f: Pick<AdvisorFirm, "reviews">; client?: boolean }) {
+  const { language } = useTranslation();
   const [all, setAll] = useState(false);
   const { n, avg, counts } = reviewStats(f.reviews);
   const shown = all ? f.reviews : f.reviews.slice(0, 3);
@@ -766,23 +744,23 @@ function ClientFeedback({ f, client }: { f: AdvisorFirm; client?: boolean }) {
     <section>
       <div className="mb-2.5 flex items-center justify-between">
         <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{setupText("Client feedback")}</div>
-        {n > 3 && <button type="button" onClick={() => setAll((v) => !v)} className="text-[13px] font-semibold text-[#0F766E] hover:underline">{all ? "Show the latest 3" : `Show all ${n} reviews`}</button>}
+        {n > 3 && <Button variant="unstyled" onClick={() => setAll(v => !v)} className="advisor-text-action">{all ? tr("Show the latest 3") : tr("Show all {n} reviews").replace("{n}", String(n))}</Button>}
       </div>
       {n === 0 ? (
         <p className="text-[13.5px] text-muted-foreground"><strong className="text-foreground">{tr("No reviews yet.")}</strong> {client ? tr("Only sellers and buyers who engaged this firm through PitchSnack can rate it, once the work is done.") : tr("Sellers and buyers who engage you through PitchSnack can rate you once the work is done.")}</p>
       ) : (
         <>
-          <div className="grid gap-7 rounded-[12px] border border-[#F3E4C2] bg-[#FFFBF2] px-5 py-4 sm:grid-cols-[220px_1fr] dark:bg-muted/30">
+          <div className="advisor-feedback-score advisor-hover-box">
             <div>
-              <div><span className="text-[34px] font-bold">{avg.toFixed(1)}</span> <span className="text-[14px] text-[#6A7181]">{setupText("out of 5")}</span></div>
-              <Stars value={avg} size={20} gap={4} />
-              <div className="mt-1 text-[12.5px] text-[#6A7181]">{n}{setupText("review")}{n === 1 ? "" : "s"}{setupText("from PitchSnack clients")}</div>
+              <div><span className="text-[22px] font-bold">{avg.toFixed(1)}</span> <span className="text-[14px] text-[#6A7181]">{setupText("out of 5")}</span></div>
+              <div className="mt-[5px]"><Stars value={avg} size={14} gap={1} /></div>
+              <div className="advisor-review-count">{tr("{n} reviews from PitchSnack clients").replace("{n}", String(n))}</div>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-0.5">
               {[5, 4, 3, 2, 1].map((lvl) => (
-                <div key={lvl} className="flex items-center gap-2 text-[12.5px]">
+                <div key={lvl} className="advisor-review-bar">
                   <span className="w-7 shrink-0">{lvl} <span className="text-[#F59E0B]">★</span></span>
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#EFE8D8]"><div className="h-full rounded-full bg-[#F59E0B]" style={{ width: `${(counts[lvl - 1] / n) * 100}%` }} /></div>
+                  <div className="advisor-review-track"><div className="advisor-review-fill" style={{ width: `${(counts[lvl - 1] / n) * 100}%` }} /></div>
                   <span className="w-6 shrink-0 text-right">{counts[lvl - 1]}</span>
                 </div>
               ))}
@@ -790,20 +768,16 @@ function ClientFeedback({ f, client }: { f: AdvisorFirm; client?: boolean }) {
           </div>
           <div className="mt-2">
             {shown.map((r) => (
-              <div key={r.id} className="border-b border-[#F0F1F3] py-3 dark:border-border">
-                <div className="flex items-center gap-2">
-                  <Stars value={r.stars} />
-                  <span className="text-[12.5px] text-[#6A7181]">{fmtMonth(r.at)}</span>
-                  {r.service && <span className="ml-auto"><ServiceChip name={r.service} /></span>}
-                </div>
-                {r.comment && <p className="mt-1.5 text-[14px] text-[#1F2937] dark:text-foreground">“{r.comment}”</p>}
-                <div className="mt-1 text-[12.5px] text-[#6A7181]">
-                  {r.role === "seller" ? "Seller" : "Buyer"}{r.detail ? ` · ${r.detail}` : ""} <span className="ml-2 font-semibold text-[#15803D]">{setupText("✓ PitchSnack client")}</span>
+              <div key={r.id} className="advisor-review-row">
+                {r.comment && <p>“{r.comment}”</p>}
+                <div className="advisor-review-by"><Stars value={r.stars} size={12} gap={1} />
+                  <span>{new Date(r.at).toLocaleDateString(language === "th" ? "th-TH" : "en-GB", { month: "short", year: "numeric" })} · {tr(r.role === "seller" ? "Seller" : "Buyer")}{r.detail ? ` · ${r.detail}` : ""}{r.service ? ` · ${tr(r.service)}` : ""}</span>
+                  <span className="advisor-review-client"><Check size={12} />{tr("PitchSnack client")}</span>
                 </div>
               </div>
             ))}
           </div>
-          <p className="mt-2 text-[12.5px] text-[#6A7181]">{setupText("Only sellers and buyers who engaged you through PitchSnack can rate you, once the work is done. Reviews show the client's role and sector, never their name, and you can't edit them.")}</p>
+          <p className="advisor-review-note">{setupText("Only sellers and buyers who engaged you through PitchSnack can rate you, once the work is done. Reviews show the client's role and sector, never their name, and you can't edit them.")}</p>
         </>
       )}
     </section>

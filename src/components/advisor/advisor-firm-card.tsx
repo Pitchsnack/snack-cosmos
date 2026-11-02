@@ -151,16 +151,21 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
   return (
     <div
       onClick={onClick}
+      role={noStatus && onClick ? "button" : undefined}
+      tabIndex={noStatus && onClick ? 0 : undefined}
+      aria-label={noStatus && onClick ? f.name : undefined}
+      onKeyDown={e => { if (e.target === e.currentTarget && onClick && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onClick(); } }}
       className={cn(
         "group flex flex-col overflow-hidden rounded-[14px] border bg-card text-left transition-all",
         selected ? "" : "border-border",
         onClick && "cursor-pointer hover:-translate-y-0.5",
+        noStatus && "advisor-browse-card",
         className,
       )}
       style={selected ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}` } : undefined}
     >
       <Cover f={f} noStatus={noStatus} />
-      <div className="flex-1 space-y-2.5 p-4">
+      <div className="advisor-card-body flex-1 space-y-2.5 p-4">
         <div>
           <div className="flex items-start justify-between gap-3">
             <h3 className="line-clamp-2 min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.publishedListingName?.trim() || f.name.trim() || tr("New firm profile")}</h3>
@@ -181,7 +186,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
           ? <p className={cn("text-[13.5px] leading-[1.5] text-[#374151] dark:text-foreground/80", (!showMore || preview) && "line-clamp-3")}>{f.description}</p>
           : <p className="text-[13.5px] text-[#9CA3AF]">{tr("No description yet.")}</p>}
         {f.services.length > 0 && <div className="flex flex-wrap gap-1.5">{f.services.map((s) => <ServiceChip key={s} name={s} />)}</div>}
-        <div className="@container rounded-[10px] border border-border bg-muted/30">
+        <div className="advisor-card-figures @container rounded-[10px] border border-border bg-muted/30">
           <div className="grid grid-cols-1 divide-y divide-border @[260px]:grid-cols-[3fr_2fr] @[260px]:divide-x @[260px]:divide-y-0">
             <Fig label={tr("Typical deal size")} main={deal?.usd ?? tr("Not added")} sub={deal ? `(${deal.thb})` : null} />
             <Fig label={tr("Team size")} main={f.teamSize ? String(f.teamSize) : tr("Not added")} sub={f.teamSize ? tr("people") : null} />
@@ -197,14 +202,14 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
         )}
       </div>
       {lastLogin ? (
-        <div className="flex items-center justify-between gap-2.5 px-4 pb-3 pt-1">
+        <div className="advisor-card-foot flex items-center justify-between gap-2.5 px-4 pb-3 pt-1">
           <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap text-[12px] leading-4 text-[#6B7280]" title={`${tr(LAST_LOGIN_LABEL[lastLogin])} — ${tr("When the advisor last logged in to PitchSnack")}`}>
             <LogIn className="h-[13px] w-[13px] shrink-0" /><span className="min-w-0 truncate">{tr(LAST_LOGIN_LABEL[lastLogin])}</span>
           </span>
           {toggle(false)}
         </div>
       ) : (
-        !wide && !preview && <div className="px-4 pb-3 pt-1">{toggle(true)}</div>
+        !wide && !preview && <div className="advisor-card-foot px-4 pb-3 pt-1">{toggle(true)}</div>
       )}
     </div>
   );

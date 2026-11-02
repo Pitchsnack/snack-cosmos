@@ -1,0 +1,127 @@
+:root {
+  --advisor-hover: #EFF6FF;
+  --advisor-line: #E9EBF0;
+  --advisor-service-bg: #F2FAF8;
+  --advisor-service-line: #CFEAE5;
+  --advisor-service-ink: #0F766E;
+  --advisor-thumb-bg: #F3F4F6;
+  --advisor-thumb-line: #E3E6EB;
+  --advisor-score-bg: #FFFBF2;
+  --advisor-score-line: #F3E4C2;
+  --advisor-review-track: #EFE8D8;
+  --advisor-star: #F59E0B;
+  --advisor-client: #15803D;
+  --advisor-viewer-shade: rgba(12,16,28,.82);
+  --advisor-viewer-ink: #FFFFFF;
+  --advisor-viewer-caption: #E5E7EB;
+  --advisor-viewer-control: rgba(255,255,255,.14);
+  --advisor-viewer-control-hover: rgba(255,255,255,.26);
+}
+.dark {
+  --advisor-hover: var(--sidebar-accent);
+  --advisor-line: var(--border);
+  --advisor-service-bg: color-mix(in srgb, var(--plan-advisor) 12%, var(--card));
+  --advisor-service-line: var(--border);
+  --advisor-service-ink: var(--success);
+  --advisor-thumb-bg: var(--muted);
+  --advisor-thumb-line: var(--border);
+  --advisor-score-bg: color-mix(in srgb, var(--advisor-star) 8%, var(--card));
+  --advisor-score-line: var(--border);
+  --advisor-review-track: var(--muted);
+  --advisor-client: var(--success);
+}
+.advisor-panel-body { padding:20px; display:flex; flex-direction:column; gap:14px; }
+.advisor-client-body { padding:14px 18px 18px; }
+.advisor-client-header { position:sticky; top:0; z-index:20; background:var(--card); padding:14px 18px; align-items:center; }
+.advisor-client-name { display:flex; flex-wrap:wrap; gap:4px 10px; align-items:center; }
+.advisor-client-name h2 { font-family:var(--font-heading); font-size:19px; font-weight:700; overflow-wrap:anywhere; }
+.advisor-client-meta { margin-top:2px; font-size:12.5px; color:var(--muted-foreground); }
+.advisor-client-header-action { display:flex; align-items:center; }
+.advisor-caption { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; color:var(--muted-foreground); font-size:11px; font-weight:700; text-transform:uppercase; }
+.advisor-text-action { color:var(--advisor-service-ink); font-size:13px; font-weight:600; text-transform:none; }
+.advisor-text-action:hover { text-decoration:underline; }
+.advisor-thumbnails { display:flex; gap:8px; }
+.advisor-thumbnail { width:120px; height:80px; border:1px solid var(--advisor-thumb-line); background:var(--advisor-thumb-bg); border-radius:8px; overflow:hidden; padding:0; flex:none; }
+.advisor-thumbnail img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .2s; }
+.advisor-photo-shade { position:fixed; inset:0; background:var(--advisor-viewer-shade); z-index:100; }
+.advisor-photo-viewer { position:fixed; inset:0; z-index:101; display:flex; align-items:center; justify-content:center; padding:max(24px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); outline:none; }
+.advisor-photo-viewer figure { margin:0; max-width:min(960px,100%); display:flex; flex-direction:column; align-items:center; gap:10px; }
+.advisor-photo-viewer figure img { max-width:100%; max-height:calc(100dvh - 140px); object-fit:contain; border-radius:12px; }
+.advisor-photo-viewer figcaption { font-size:13px; color:var(--advisor-viewer-caption); }
+.advisor-photo-control { position:absolute; display:grid; place-items:center; width:44px; height:44px; border-radius:50%; background:var(--advisor-viewer-control); color:var(--advisor-viewer-ink); }
+.advisor-photo-control:hover { background:var(--advisor-viewer-control-hover); }
+.advisor-photo-close { top:max(16px,env(safe-area-inset-top)); right:max(16px,env(safe-area-inset-right)); width:40px; height:40px; }
+.advisor-photo-prev,.advisor-photo-next { top:50%; transform:translateY(-50%); }
+.advisor-photo-prev { left:max(16px,env(safe-area-inset-left)); }
+.advisor-photo-next { right:max(16px,env(safe-area-inset-right)); }
+.advisor-client-facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border:1px solid var(--advisor-line); border-radius:12px; overflow:hidden; }
+.advisor-client-facts > div { min-width:0; padding:8px 12px; border-left:1px solid var(--advisor-line); }
+.advisor-client-facts > div:first-child { border-left:0; }
+.advisor-client-facts span { display:block; font-size:11.5px; color:var(--muted-foreground); }
+.advisor-client-facts strong { display:block; margin-top:2px; font-size:13px; font-weight:600; overflow-wrap:anywhere; }
+.advisor-client-facts small { display:block; font-size:11.5px; font-weight:400; color:var(--muted-foreground); }
+.advisor-client-facts .advisor-facts-sectors { grid-column:1/-1; border-left:0; border-top:1px solid var(--advisor-line); }
+.advisor-services { border:1px solid var(--advisor-service-line); border-radius:12px; background:var(--advisor-service-bg); overflow:hidden; }
+.advisor-service-row { display:grid; grid-template-columns:28px minmax(0,1fr) fit-content(45%); gap:4px 12px; padding:10px 14px; align-items:center; border-top:1px solid var(--advisor-service-line); }
+.advisor-service-row:first-child { border-top:0; }
+.advisor-service-icon { width:28px; height:28px; display:grid; place-items:center; border-radius:8px; border:1px solid var(--advisor-service-line); background:var(--card); color:var(--advisor-service-ink); }
+.advisor-service-name,.advisor-service-fee { min-width:0; }
+.advisor-service-name strong { display:block; font-size:14px; font-weight:600; }
+.advisor-service-name > span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font-size:12.5px; color:var(--muted-foreground); }
+.advisor-service-fee { text-align:right; font-size:13px; }
+.advisor-service-fee strong { display:block; font-weight:600; text-wrap:balance; overflow-wrap:break-word; }
+.advisor-fee-line { display:block; white-space:nowrap; }
+.advisor-service-action { margin-top:4px; font-size:12.5px; }
+.advisor-info-box { min-width:0; border:1px solid var(--advisor-line); border-radius:12px; background:var(--card); padding:12px 14px 6px; }
+.advisor-info-box .advisor-caption { margin-bottom:4px; }
+.advisor-fact { display:flex; justify-content:space-between; align-items:start; gap:14px; padding:7px 0; border-bottom:1px solid var(--advisor-line); font-size:13px; }
+.advisor-fact:last-child { border-bottom:0; }
+.advisor-fact > :last-child { overflow-wrap:anywhere; }
+.advisor-detail-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--advisor-line); font-size:13px; }
+.advisor-detail-row:last-child { border-bottom:0; }
+.advisor-team-avatar { width:28px; height:28px; flex:none; display:grid; place-items:center; border-radius:50%; background:var(--advisor-service-bg); color:var(--advisor-service-ink); font-size:11px; font-weight:700; }
+.advisor-feedback-score { display:grid; grid-template-columns:auto minmax(0,1fr); gap:24px; align-items:center; padding:10px 14px; border:1px solid var(--advisor-score-line); border-radius:12px; background:var(--advisor-score-bg); }
+.advisor-review-count { margin-top:3px; max-width:150px; font-size:12px; color:var(--muted-foreground); }
+.advisor-review-bar { display:grid; grid-template-columns:26px minmax(0,1fr) 20px; align-items:center; gap:8px; height:14px; font-size:12px; }
+.advisor-review-bar > span:first-child { width:auto; }
+.advisor-review-bar > span:last-child { width:auto; }
+.advisor-review-track { height:6px; border-radius:999px; overflow:hidden; background:var(--advisor-review-track); }
+.advisor-review-fill { height:100%; border-radius:999px; background:var(--advisor-star); }
+.advisor-review-row { padding:8px 0; border-top:1px solid var(--advisor-line); }
+.advisor-review-row p { font-size:13px; }
+.advisor-review-by { margin-top:3px; display:flex; flex-wrap:wrap; gap:2px 8px; align-items:center; font-size:12px; color:var(--muted-foreground); }
+.advisor-review-client { display:inline-flex; align-items:center; gap:4px; color:var(--advisor-client); font-weight:600; }
+.advisor-review-note { margin-top:4px; font-size:12px; color:var(--muted-foreground); }
+.advisor-admin-panel { display:flex; flex-direction:column; gap:14px; }
+.advisor-admin-info-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.advisor-admin-box h3 { margin-bottom:4px; }
+.advisor-admin-box ul { margin:0; }
+.advisor-admin-box li { padding:7px 0; border-bottom:1px solid var(--advisor-line); overflow-wrap:anywhere; }
+.advisor-admin-box li:last-child { border-bottom:0; }
+.advisor-admin-box li > :first-child { min-width:0; }
+.advisor-hover-box,.advisor-card-body,.advisor-card-foot,.advisor-card-figures { transition:background-color .15s; }
+.advisor-browse-card:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
+.advisor-browse-card:focus-visible .advisor-card-body,.advisor-browse-card:focus-visible .advisor-card-foot,.advisor-browse-card:focus-visible .advisor-card-figures { background:var(--advisor-hover); }
+.advisor-browse-card:has(:focus-visible) .advisor-card-body,.advisor-browse-card:has(:focus-visible) .advisor-card-foot,.advisor-browse-card:has(:focus-visible) .advisor-card-figures { background:var(--advisor-hover); }
+@media (hover:hover) {
+  .advisor-thumbnail:hover img { transform:scale(1.04); }
+  .advisor-hover-box:hover { background:var(--advisor-hover); }
+  .advisor-browse-card:hover .advisor-card-body,.advisor-browse-card:hover .advisor-card-foot,.advisor-browse-card:hover .advisor-card-figures { background:var(--advisor-hover); }
+}
+@media (max-width:640px) {
+  .advisor-client-header-action { width:100%; justify-content:center; }
+  .advisor-client-header-action > * { width:100%; justify-content:center; }
+  .advisor-thumbnail { width:calc((100% - 16px)/3); height:auto; aspect-ratio:3/2; }
+  .advisor-client-facts { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .advisor-client-facts .advisor-facts-languages { grid-column:1/-1; border-left:0; border-top:1px solid var(--advisor-line); }
+  .advisor-service-row { grid-template-columns:28px minmax(0,1fr); }
+  .advisor-service-fee { grid-column:2; text-align:left; margin-top:4px; }
+  .advisor-service-fee .advisor-fee-line { font-size:12px; }
+  .advisor-feedback-score,.advisor-admin-info-grid { grid-template-columns:minmax(0,1fr); gap:10px; }
+  .advisor-panel-body { padding:14px; }
+  .advisor-fact { gap:8px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .advisor-hover-box,.advisor-card-body,.advisor-card-foot,.advisor-card-figures,.advisor-thumbnail img { transition:none; }
+  .advisor-thumbnail:hover img { transform:none; }
+}
