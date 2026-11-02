@@ -54,7 +54,7 @@ export const getMyApprovalNotice = createServerFn({ method: "GET" })
     const [{ data: bp }, { data: hps }, { data: firms }, { data: me }] = await Promise.all([
       sb.from("buyer_profiles").select("user_id, ref_no, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline, investors(investor_type)").eq("user_id", uid).maybeSingle(),
       sb.from("hidden_profiles").select("id, ref_no, approval_status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, code_name, startups!inner(startup_users!inner(user_id))").eq("startups.startup_users.user_id", uid),
-      sb.from("advisor_firms").select("id, ref_no, advisor_verification, status, verification_requested_at, more_info_at, more_info_note, more_info_fields, declined_at, decline_note, decline_reason, verified_at, suggested_listing_name, suggested_headline, published_listing_name, published_headline").eq("owner_user_id", uid),
+      sb.from("advisor_firms").select("id, ref_no, name, advisor_verification, status, verification_requested_at, more_info_at, more_info_note, more_info_fields, declined_at, decline_note, decline_reason, verified_at").eq("owner_user_id", uid),
       sb.from("users").select("first_name, email").eq("id", uid).maybeSingle(),
     ]);
 
@@ -111,9 +111,9 @@ export const getMyApprovalNotice = createServerFn({ method: "GET" })
         decidedAt: f.advisor_verification === "more_info" ? f.more_info_at : f.advisor_verification === "declined" ? f.declined_at : f.verified_at,
         decisionNote: f.advisor_verification === "more_info" ? f.more_info_note : f.advisor_verification === "declined" ? f.decline_note : null,
         reasons: f.advisor_verification === "more_info" ? (f.more_info_fields ?? []) : f.advisor_verification === "declined" && f.decline_reason ? [f.decline_reason] : [],
-        suggestedName: f.suggested_listing_name, suggestedHeadline: f.suggested_headline,
-        publishedName: f.published_listing_name, publishedHeadline: f.published_headline,
-        adminRewrote: diff(f.suggested_listing_name, f.published_listing_name) || diff(f.suggested_headline, f.published_headline),
+        suggestedName: null, suggestedHeadline: null,
+        publishedName: f.name, publishedHeadline: null,
+        adminRewrote: false,
         activity: (f.advisor_verification === "more_info" ? f.more_info_at : f.advisor_verification === "declined" ? f.declined_at : f.verified_at) ?? f.verification_requested_at,
       });
     }

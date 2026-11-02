@@ -357,9 +357,10 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
     onError: (e: Error) => setFailures([e.message]),
   });
   const reviewData: ReviewCompanyData = {
-    suggestedName: f.suggestedListingName ?? null,
-    suggestedHeadline: f.suggestedHeadline ?? null,
+    suggestedName: null,
+    suggestedHeadline: null,
     listingRows: [
+      ["Company name", f.name],
       ["Reference", [f.refNo,f.firmType,f.city ?? f.country].filter(Boolean).join(" · ")],
       ["Firm type", f.firmType || ""], ["Team size", f.teamSize ? String(f.teamSize) : ""],
       ["Typical deal size", dealBandLabels(f.dealBand)?.thb ?? ""],

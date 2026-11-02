@@ -200,14 +200,13 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
         decisionNote: f.more_info_note,
         sentBackAt: f.advisor_verification === "more_info" ? f.more_info_at : null,
         chip: f.advisor_verification === "more_info" ? "sent_back" : "waiting",
-        suggestedName: f.suggested_listing_name, suggestedHeadline: f.suggested_headline,
-        publishedName: f.published_listing_name, publishedHeadline: f.published_headline, review,
-        ...extras({ person: f.owner_user_id ? uBy.get(f.owner_user_id) : null, draft: f.review_draft, savedAt: f.review_saved_at, suggestedTh: f.suggested_headline_th, publishedTh: f.published_headline_th, descriptionTh: f.description_th,
+        suggestedName: null, suggestedHeadline: null,
+        publishedName: f.name, publishedHeadline: null, review,
+        ...extras({ person: f.owner_user_id ? uBy.get(f.owner_user_id) : null, draft: null, savedAt: f.review_saved_at, suggestedTh: null, publishedTh: null, descriptionTh: f.description_th,
           rows: [
             tr("company_name", "company", "Firm name", f.name, f.name_th),
             tr("address", "company", "Address", review.card.address, f.address_th, { multiline: true, enLocked: !!review.card.address }),
             ...(f.owner_user_id ? personRows(uBy.get(f.owner_user_id)) : []),
-            ...headlineRows(f.review_draft, f.suggested_headline, f.published_headline, f.published_headline_th, f.suggested_headline_th),
             tr("description", "texts", "Description", f.description, f.description_th, { multiline: true }),
           ] }),
       });
@@ -251,10 +250,10 @@ export const decideOneStep = createServerFn({ method: "POST" })
     const sb = await admin();
     const now = new Date().toISOString();
 
-    if (data.action === "approve") {
+    if (data.action === "approve" && data.kind !== "advisor") {
       const missingText = buyerApprovalTextMissing(data.publishedName, data.publishedHeadline, data.kind);
       if (missingText) throw new Error(missingText);
-    } else {
+    } else if (data.action !== "approve") {
       if (!data.reasons?.length) throw new Error("Choose at least one reason.");
     }
 
@@ -402,20 +401,19 @@ export const decideOneStep = createServerFn({ method: "POST" })
         advisor_verification: "verified", verification_reason: null, verified_at: now, verified_by: context.userId,
         assigned_admin_id: null, more_info_note: null, more_info_fields: [], review_checklist: [],
         status: "live", live_since: f.live_since ?? now,
-        published_listing_name: (data.publishedName ?? "").trim(), published_headline: (data.publishedHeadline ?? "").trim(),
-        published_headline_th: data.publishedHeadlineTh?.trim() || null, review_draft: null, review_saved_at: null,
+        review_draft: null, review_saved_at: null,
         updated_at: now,
       }).eq("id", f.id);
       if (error) throw new Error(error.message);
       await resetApprovalNotice(sb, f.owner_user_id, "advisor", f.id, now);
       await logEvent({ item_type: "advisor", item_id: f.id, subject_user_id: f.owner_user_id, action: "approve", actor_id: context.userId, ...(await dbdStamp(f.registration_no)) });
-      await notify(f.owner_user_id, "Your profile is approved", `Sellers and buyers can now find ${data.publishedName} in Browse advisors.`, "/marketplace/my-company");
+      await notify(f.owner_user_id, "Your profile is approved", `Admin verified your firm and published your profile. Sellers and buyers can now find ${f.name} in Browse advisors.`, "/marketplace/my-company");
       if (f.owner_user_id) {
         const { sendAlert } = await import("./email-alerts.server");
         await sendAlert({
           alert: "approved", role: "advisor", userIds: [f.owner_user_id],
-          vars: { firm: f.name, "listing name": (data.publishedName ?? ""), ref: f.ref_no, rewrote: (f.suggested_listing_name ?? "").trim() !== (data.publishedName ?? "").trim() || (f.suggested_headline ?? "").trim() !== (data.publishedHeadline ?? "").trim() ? " PitchSnack rewrote your listing name and headline." : "" },
-          details: [["Listing name", (data.publishedName ?? "")], ["Headline", (data.publishedHeadline ?? "")], ["Verified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })]],
+          vars: { firm: f.name, ref: f.ref_no },
+          details: [["Verified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })]],
           refKey: `advisor:${f.id}:approved:${now}`,
         });
       }
@@ -528,10 +526,9 @@ export const saveOneStepReview = createServerFn({ method: "POST" })
       for (const t of data.texts) {
         if (t.key === "company_name") await put("advisor_firms", ["id", f.id], "name", "name_th", t);
         if (t.key === "address") await put("advisor_firms", ["id", f.id], "addr_street", "address_th", t);
-        if (t.key === "suggested_headline") await put("advisor_firms", ["id", f.id], "suggested_headline", "suggested_headline_th", t);
         if (t.key === "description") await put("advisor_firms", ["id", f.id], "description", "description_th", t);
       }
-      const { error } = await sb.from("advisor_firms").update({ review_draft: draft, review_saved_at: now }).eq("id", f.id);
+      const { error } = await sb.from("advisor_firms").update({ review_saved_at: now }).eq("id", f.id);
       if (error) throw new Error(error.message);
     }
     if (userId) {
@@ -637,14 +634,12 @@ export const registerAdvisorFirm = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ firmId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = await admin();
-    const { data: f } = await sb.from("advisor_firms").select("id, owner_user_id, name, setup_done_at, advisor_verification, suggested_listing_name, suggested_headline").eq("id", data.firmId).maybeSingle();
+    const { data: f } = await sb.from("advisor_firms").select("id, owner_user_id, name, setup_done_at, advisor_verification").eq("id", data.firmId).maybeSingle();
     if (!f) throw new Error("Firm not found");
     if (f.owner_user_id !== context.userId) throw new Error("Not your firm");
     if (f.advisor_verification === "pending") return { ok: true, already: true };
     const missing = [
       !f.setup_done_at && "finish setup",
-      !f.suggested_listing_name?.trim() && "a listing name",
-      !f.suggested_headline?.trim() && "a headline",
     ].filter(Boolean);
     if (missing.length) throw new Error(`Add ${missing.join(", ")} before registering.`);
     const now = new Date().toISOString();
