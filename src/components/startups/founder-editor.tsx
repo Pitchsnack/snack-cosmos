@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FounderStoryEditor } from "./founder-story-editor";
 import { LangTag, useTextLang } from "@/components/common/text-lang";
-import { type FounderStory } from "@/lib/founder-story";
+import { type FounderStory, initialFounderStory, composeFounderBio } from "@/lib/founder-story";
 import { useTranslation } from "@/i18n/language";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,6 +36,8 @@ interface Props {
   /** Sales label in a given language (each story language starts with its own). */
   salesFor?: (lang: "en" | "th") => string;
   addOnOpen?: boolean;
+  requiredName?: boolean;
+  keepOne?: boolean;
 }
 
 const POSITION_OPTIONS = [
@@ -240,13 +242,26 @@ function PositionMultiSelect({
   );
 }
 
-export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", salesFor, addOnOpen }: Props) {
+export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", salesFor, addOnOpen, requiredName, keepOne }: Props) {
   const {language} = useTranslation();
   const tr = (en: string, th: string) => (language === "th" ? th : en);
   const { lang: textLang, switchable } = useTextLang();
   const root = useRef<HTMLDivElement>(null);
   const added = useRef(false);
   const focusIndex = useRef<number | null>(null);
+  useEffect(() => {
+    if(!requiredName) return;
+    const next=value.map(f=>{
+      const hydrate=(bio:string|null|undefined,story:FounderStory|null|undefined,lang:"en"|"th")=>{
+        const initial=initialFounderStory(bio,story,lang,year,salesFor?.(lang) ?? sales);
+        const parts={...initial.parts,year:initial.parts.year || year,sales:initial.parts.sales || (salesFor?.(lang) ?? sales)};
+        return {...initial,parts};
+      };
+      const en=hydrate(f.bio,f.bio_story,"en"),thai=hydrate(f.bio_th,f.bio_story_th,"th");
+      return {...f,bio_story:en,bio_story_th:thai,bio:en.mode === "lines" ? composeFounderBio(en):f.bio,bio_th:thai.mode === "lines" ? composeFounderBio(thai):f.bio_th};
+    });
+    if(JSON.stringify(next)!==JSON.stringify(value)) onChange(next);
+  },[requiredName,year,sales,value]);
   const add = () => {
     focusIndex.current = value.length;
     onChange([...value, {full_name:"", bio_story:null}]);
@@ -277,7 +292,10 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
                   data-founder-name
                   data-edit-focus={addOnOpen && i === value.length - 1 ? "" : undefined}
                   aria-label={language === "th" ? "ชื่อผู้ก่อตั้ง" : "Founder name"}
-                  placeholder="Full name *"
+                  placeholder={tr("Full name *","ชื่อ-นามสกุล *")}
+                  aria-required={requiredName}
+                  aria-invalid={requiredName && i === 0 && !value.some(f => f.full_name.trim())}
+                  className={requiredName && i === 0 && !value.some(f => f.full_name.trim()) ? "border-destructive" : undefined}
                   value={f.full_name}
                   onChange={(e) => update(i, { full_name: e.target.value })}
                 />
@@ -286,7 +304,7 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
                   onChange={(next) => update(i, { position: next.join(", ") || null })}
                 />
                 <Input
-                  placeholder="LinkedIn URL"
+                  placeholder={tr("LinkedIn URL (optional)","LinkedIn URL (ไม่บังคับ)")}
                   value={f.linkedin_url ?? ""}
                   onChange={(e) => update(i, { linkedin_url: e.target.value })}
                 />
@@ -295,16 +313,16 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
                 ? <FounderStoryEditor lang="th" bio={f.bio_th} story={f.bio_story_th} year={year} sales={salesFor?.("th") ?? sales} onChange={patch => update(i, {bio_th: patch.bio, bio_story_th: patch.bio_story})} />
                 : <FounderStoryEditor lang="en" bio={f.bio} story={f.bio_story} year={year} sales={salesFor?.("en") ?? sales} onChange={patch => update(i, patch)} />}
               {switchable && <div className="-mt-1"><LangTag className="!ml-0" /></div>}
-              <div className="flex justify-end">
+              {(!keepOne || value.length > 1) && <div className="flex justify-end">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => onChange(value.filter((_, idx) => idx !== i))}
                 >
-                  <Trash2 className="h-4 w-4 mr-1" /> Remove
+                  <Trash2 className="h-4 w-4 mr-1" /> {tr("Remove","ลบ")}
                 </Button>
-              </div>
+              </div>}
             </div>
           </div>
         </div>

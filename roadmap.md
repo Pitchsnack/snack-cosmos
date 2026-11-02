@@ -1,5 +1,11 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Seller website and founder setup
+- [x] Reorder seller steps, migrate legacy progress on read/save, combine founded/size, require Website descriptions/tags, and reuse founders.
+- [x] Expand Website with real enrichment and bilingual sector examples; preserve manual fields and later auto-fill safeguards.
+- [x] Verify setup saving/read-back, EN/TH, dark and 1440/1024/390 views; deliver full bilingual sector table and change inventory.
+- [ ] Populated live enrichment success: tested website yielded no readable text; no invented results used. Edit information populated read-back and final publication/new-business end-to-end remain unverified.
+
 ## Advisor company name
 - [x] Use Company name on firm cards; move ref/city and managed hat onto cover.
 - [x] Remove advisor name/headline inputs and checks from editing, registration, review and notices without changing legacy data or other roles.
