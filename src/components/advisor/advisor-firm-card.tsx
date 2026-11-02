@@ -98,7 +98,7 @@ function Cover({ f, noStatus }: { f: AdvisorFirm; noStatus?: boolean }) {
 function Fig({ label, main, sub }: { label: string; main: string; sub: string | null }) {
   return (
     <div className="min-w-0 whitespace-nowrap px-3 py-2.5">
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-[#6B7280]">{label}</div>
+      <div className="text-[12px] text-[#6B7280]">{label}</div>
       <div className={cn("mt-0.5 text-[15px] font-bold", sub == null && main === tr("Not added") ? "font-medium text-[#9CA3AF]" : "text-[#111827] dark:text-foreground")}>{main}</div>
       {sub && <div className="text-[12px] text-[#6B7280]">{sub}</div>}
     </div>
@@ -112,8 +112,8 @@ function LanguagesRow({ f }: { f: AdvisorFirm }) {
   const extra = langs.length - 2;
   return (
     <div className="flex items-center gap-2.5 border-t border-border px-3 py-2" title={langs.length ? langs.join(" · ") : undefined}>
-      <span className="shrink-0 text-[11.5px] text-[#6B7280]">{tr("Languages")}</span>
-      <span className="min-w-0 flex-1 truncate text-right text-[13px] font-semibold text-[#111827] dark:text-foreground">{shown || tr("Not added")}</span>
+      <span className="shrink-0 text-[12px] text-[#6B7280]">{tr("Languages")}</span>
+      <span className="min-w-0 truncate text-[13px] font-semibold text-[#111827] dark:text-foreground">{shown || tr("Not added")}</span>
       {extra > 0 && <span className="shrink-0 rounded-full bg-[#F1F2F5] px-1.5 text-[11px] font-semibold leading-[18px] text-[#4B5563] dark:bg-muted dark:text-muted-foreground">+{extra}</span>}
     </div>
   );
@@ -143,7 +143,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
-      className={cn("inline-flex items-center gap-1 text-[14px] font-semibold text-[#374151] hover:text-foreground dark:text-foreground/80", centred && "w-full justify-center py-1")}
+      className={cn("inline-flex flex-none items-center gap-1 whitespace-nowrap text-[14px] font-semibold text-[#374151] hover:text-foreground dark:text-foreground/80", centred && "w-full justify-center py-1")}
     >
       {open ? <>{tr("Show less")} <ChevronUp className="h-4 w-4" /></> : <>{tr("Show more")} <ChevronDown className="h-4 w-4" /></>}
     </button>
@@ -163,8 +163,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
       <div className="flex-1 space-y-2.5 p-4">
         <div>
           <div className="flex items-start justify-between gap-3">
-            <h3 className="min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.publishedListingName?.trim() || f.name.trim() || tr("New firm profile")}</h3>
-            {f.publishedHeadline?.trim() && <p className="mt-0.5 min-w-0 text-[13px] font-semibold leading-snug text-[#374151] dark:text-foreground/85">{f.publishedHeadline}</p>}
+            <h3 className="line-clamp-2 min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.publishedListingName?.trim() || f.name.trim() || tr("New firm profile")}</h3>
             <span className="shrink-0 whitespace-nowrap pt-0.5 text-[13px] text-[#6B7280]">
               {f.refNo}{f.city && <> · <span className="font-medium text-[#4B5563]">{f.city}</span></>}
             </span>
@@ -199,8 +198,8 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
       </div>
       {lastLogin ? (
         <div className="flex items-center justify-between gap-2.5 px-4 pb-3 pt-1">
-          <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap text-[12px] leading-4 text-[#6B7280]" title={tr("When the advisor last logged in to PitchSnack")}>
-            <LogIn className="h-[13px] w-[13px] shrink-0" />{tr(LAST_LOGIN_LABEL[lastLogin])}
+          <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap text-[12px] leading-4 text-[#6B7280]" title={`${tr(LAST_LOGIN_LABEL[lastLogin])} — ${tr("When the advisor last logged in to PitchSnack")}`}>
+            <LogIn className="h-[13px] w-[13px] shrink-0" /><span className="min-w-0 truncate">{tr(LAST_LOGIN_LABEL[lastLogin])}</span>
           </span>
           {toggle(false)}
         </div>
