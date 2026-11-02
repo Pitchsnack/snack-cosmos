@@ -55,7 +55,7 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
         </div>
         <div className="ap-db overflow-y-auto">
           {/* 1 · Listing name and headline */}
-          {role !== "buyer" && <section>
+          {role === "seller" && <section>
             <div className="ap-dbh">
               <span className="ap-stepn" aria-hidden>1</span>
               <span className="ap-cap">{t("Listing name and headline")} · {t("your suggestion")}</span>
@@ -77,7 +77,7 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
           {/* 2 · Listing view */}
           <section>
             <div className="ap-dbh">
-              <span className="ap-stepn" aria-hidden>{role === "buyer" ? 1 : 2}</span>
+              <span className="ap-stepn" aria-hidden>{role === "seller" ? 2 : 1}</span>
               <span className="ap-cap">{t("Listing view")} · {seeLabel}</span>
               <button type="button" onClick={() => onEdit("description")}>{t("Edit")}</button>
             </div>
@@ -103,10 +103,10 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
           {/* 3 · Exclusive view */}
           <section>
             <div className="ap-dbh">
-              <span className="ap-stepn" aria-hidden>{role === "buyer" ? 2 : 3}</span>
+              <span className="ap-stepn" aria-hidden>{role === "seller" ? 3 : 2}</span>
               <span className="ap-cap" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                 {role === "advisor" ? <ShieldCheck className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
-                {role === "advisor" ? t("What PitchSnack checks") : <>{t("Exclusive view")} · {t("what PitchSnack checks")}</>}
+                <>{t("Exclusive view")} · {t("what PitchSnack checks")}</>
               </span>
               <button type="button" onClick={() => onEdit("company")}>{t("Edit")}</button>
             </div>

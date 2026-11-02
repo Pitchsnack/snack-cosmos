@@ -69,11 +69,17 @@ export function ServiceChip({ name }: { name: string }) {
 /** 150px cover: the logo whole (up to 96 × 240px), centred 12px above the bottom, under the badge. */
 function Cover({ f, noStatus }: { f: AdvisorFirm; noStatus?: boolean }) {
   const pills = (
-    <>
-      {f.verifiedAt && <div className="absolute left-3 top-3"><VerifiedAdvisorChip /></div>}
-      {!noStatus && <div className="absolute right-3 top-3 flex items-center gap-1.5">{f.managed && <ManagedBadge size="sm" />}<StatusPill status={f.status} /></div>}
-      {noStatus && f.managed && <div className="absolute right-3 top-3"><ManagedBadge size="sm" shadow /></div>}
-    </>
+    <div className="advisor-cover-top">
+      <div className="shrink-0">{f.verifiedAt && <VerifiedAdvisorChip />}</div>
+      <div className="advisor-cover-right">
+        {f.managed && <ManagedBadge size="sm" hatOnly shadow className="advisor-cover-hat" />}
+        <span className="advisor-cover-ref" title={[f.refNo, f.city].filter(Boolean).join(" · ")}>
+          <span className="shrink-0">{f.refNo}</span>
+          {f.city && <><span className="shrink-0"> · </span><span className="min-w-0 truncate">{f.city}</span></>}
+        </span>
+      </div>
+      {!noStatus && <div className="absolute right-0 top-8"><StatusPill status={f.status} /></div>}
+    </div>
   );
   if (f.logoUrl) {
     return (
@@ -167,11 +173,8 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
       <Cover f={f} noStatus={noStatus} />
       <div className="advisor-card-body flex-1 space-y-2.5 p-4">
         <div>
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="line-clamp-2 min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.publishedListingName?.trim() || f.name.trim() || tr("New firm profile")}</h3>
-            <span className="shrink-0 whitespace-nowrap pt-0.5 text-[13px] text-[#6B7280]">
-              {f.refNo}{f.city && <> · <span className="font-medium text-[#4B5563]">{f.city}</span></>}
-            </span>
+          <div className="min-w-0">
+            <h3 className="line-clamp-2 min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.name.trim() || tr("New firm profile")}</h3>
           </div>
           <div className="mt-[3px] text-[13px] text-[#6B7280]">{tr(f.firmType ?? "")}{f.yearFounded ? ` · ${tr("since")} ${f.yearFounded}` : ""}</div>
           {n > 0 && (

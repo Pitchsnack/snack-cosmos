@@ -45,8 +45,6 @@ export type FirmForm = {
   team: { id?: string; name: string; role: string; roleTh?: string; email: string }[];
   credentials: { id?: string; licenceKey?: string; name: string; nameTh?: string; note: string; noteTh?: string; status?: string }[];
   documents: { id?: string; path: string; name: string; type: string; checked?: boolean }[];
-  /** One-step approval: the advisor's suggested listing name and headline. */
-  suggestedListingName: string; suggestedHeadline: string;
 };
 export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry";
 export type SetupMode = {
@@ -75,7 +73,6 @@ export const toFirmForm = (f: AdvisorFirm | null): FirmForm => ({
   team: (f?.team ?? []).map((t) => ({ id: t.id, name: t.name, role: t.role ?? "", roleTh: t.roleTh ?? "", email: t.email ?? "" })),
   credentials: (f?.credentials ?? []).map((c) => ({ id: c.id, licenceKey: c.licenceKey ?? "other", name: c.name, nameTh: c.nameTh ?? "", note: c.note ?? "", noteTh: c.noteTh ?? "", status: c.status })),
   documents: (f?.documents ?? []).map((d) => ({ id: d.id, path: d.path, name: d.name, type: d.type ?? "", checked: !!d.checkedAt })),
-  suggestedListingName: f?.suggestedListingName ?? "", suggestedHeadline: f?.suggestedHeadline ?? "",
 });
 
 const extOf = (n: string) => (n.split(".").pop() ?? "").toLowerCase();
@@ -268,7 +265,6 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           team: f.team.filter((t) => t.name.trim()).map((t) => ({ id: t.id, name: t.name, role: nul(t.role), roleTh: nul(t.roleTh ?? ""), email: nul(t.email) })),
           credentials: f.credentials.filter((c) => c.name.trim()).map((c) => ({ id: c.id, licenceKey: c.licenceKey ?? "other", name: c.name, nameTh: nul(c.nameTh ?? ""), note: nul(c.note), noteTh: nul(c.noteTh ?? "") })),
           documents: f.documents.map((d) => ({ id: d.id, path: d.path, name: d.name || "Document", type: nul(d.type) })),
-          suggested_listing_name: nul(f.suggestedListingName), suggested_headline: nul(f.suggestedHeadline),
         },
       });
       await qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY });
@@ -361,15 +357,6 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           limitMsg="Pick up to 5 sectors, or Sector agnostic."
           agnostic={{ on: f.sectorAgnostic, onToggle: (on) => set("sectorAgnostic", on), line: "I work with companies in every industry",
             summary: <>{setupText("Sellers and buyers see")} <b className="text-foreground">{setupText("Sector agnostic")}</b>{setupText("on your card.")}</> }} /></F>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <F label={setupText("Listing name")} hint={`${f.suggestedListingName.length} / 120`} htmlFor="fe-sug-name">
-            <Input id="fe-sug-name" maxLength={120} value={f.suggestedListingName} onChange={(e) => set("suggestedListingName", e.target.value)} placeholder={f.name || ""} />
-          </F>
-          <F label={setupText("Headline")} hint={`${f.suggestedHeadline.length} / 120`} htmlFor="fe-sug-head">
-            <Input id="fe-sug-head" maxLength={120} value={f.suggestedHeadline} onChange={(e) => set("suggestedHeadline", e.target.value)} />
-          </F>
-        </div>
-        <p className="-mt-2 flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.")}</p>
         <F label={<>{setupText("Description")}<LangTag /></>} req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={setupText(`${descV.length} / 300 · your card shows 3 lines`)} htmlFor="fe-desc">
           <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} lang={tl} value={descV} onBlur={blur("desc")} onChange={(e) => setDesc(e.target.value)} />
         </F>
