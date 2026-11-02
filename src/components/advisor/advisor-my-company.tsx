@@ -37,7 +37,7 @@ import { FirmCard, FirmLogo, ServiceChip, Stars, VerifiedAdvisorChip } from "@/c
 import { myFirmViews } from "@/lib/advisor-enquiries.functions";
 import { createAdvisorDraft, getMapsEmbedKey, listMyAdvisorFirms, saveAdvisorServices, setAdvisorFirmStatus } from "@/lib/advisor-firm.functions";
 import {
-  ADVISOR_SERVICES, SERVICE_COLS, dealBandLabels, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, serviceOf, advisorSetupProgress, advisorSkipsFor,
+  ADVISOR_SERVICES, dealBandLabels, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, advisorSetupProgress, advisorSkipsFor,
   type AdvisorFirm, type EditSection,
 } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
@@ -403,7 +403,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
       {/* Header */}
       <div className={cn("flex flex-wrap items-start gap-4 border-b border-border p-5", client && "advisor-client-header")}>
         <FirmLogo f={f} size={client ? 48 : 52} radius={client ? 11 : 13} ring={false} />
-        <div className="min-w-0 flex-1 max-sm:min-w-[180px]">
+        <div className={cn("min-w-0 flex-1", !client && "max-sm:min-w-[180px]")}>
           {client ? <>
             <div className="advisor-client-name"><h2>{f.name || tr("New firm profile")}</h2>{f.verifiedAt ? <VerifiedAdvisorChip small /> : <span className="inline-flex h-5 items-center rounded-full border border-border bg-muted px-2 text-[11px] font-semibold text-muted-foreground">{tr("Not verified yet")}</span>}{f.managed && <ManagedBadge size="sm" shadow align="left" />}</div>
             <div className="advisor-client-meta">{[f.refNo, tr(f.firmType), f.city].filter(Boolean).join(" · ")}{f.yearFounded ? ` · ${tr("since")} ${f.yearFounded}` : ""}</div>

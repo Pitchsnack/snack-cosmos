@@ -30,6 +30,7 @@ import { CredMark, DocMark, FirmStatusPill, VerificationBox, VerificationChip, c
 import { listAdminAdvisorFirms, decideAdvisor, type AdminFirm } from "@/lib/advisor-admin.functions";
 import { createAdvisorFirmForAdmin, getAdvisorFirmForAdmin } from "@/lib/advisor-firm.functions";
 import { ADVISOR_SERVICES, FIRM_TYPES, dealBandLabels, initials } from "@/lib/advisor-firm";
+import type { EditSection } from "@/lib/advisor-firm";
 import { SECTOR_GROUPS } from "@/lib/sectors";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,7 @@ function AdvisorsDirectory() {
   const view: ViewMode = s.view ?? "split";
   const set = (p: Partial<typeof s>) => navigate({ search: (prev: typeof s) => ({ ...prev, ...p }) });
   const [editing, setEditing] = useState<string | null>(null);
+  const [editSection, setEditSection] = useState<EditSection | undefined>();
   const [createdId,setCreatedId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [runBy, setRunBy] = useState<RunByFilter>("all");
@@ -201,11 +203,11 @@ function AdvisorsDirectory() {
             {items.map((f) => <CreatedDirectoryRow key={f.id} active={createdId === f.id} onEdit={()=>setEditing(f.id)}><SplitCard f={f} selected={selected?.id === f.id} fav={favs.has(f.id)} onFav={() => toggleFav(f.id)} onSelect={() => set({ selected: f.id })} /><div className="px-2 pt-1"><Under f={f} /></div></CreatedDirectoryRow>)}
           </div>
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4">
-            {selected ? <Panel f={selected} fav={favs.has(selected.id)} onFav={() => toggleFav(selected.id)} onEdit={() => setEditing(selected.id)} /> : <p className="text-sm text-muted-foreground">Pick a firm to see its profile.</p>}
+            {selected ? <Panel f={selected} fav={favs.has(selected.id)} onFav={() => toggleFav(selected.id)} onEdit={(section) => { setEditSection(section); setEditing(selected.id); }} /> : <p className="text-sm text-muted-foreground">Pick a firm to see its profile.</p>}
           </div>
         </div>
       )}
-      {editing && <AdvisorEditPopup id={editing} onClose={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["advisors-admin"] }); }} />}
+      {editing && <AdvisorEditPopup id={editing} section={editSection} onClose={() => { setEditing(null); setEditSection(undefined); qc.invalidateQueries({ queryKey: ["advisors-admin"] }); }} />}
       {adding && <AddAdvisorDialog onClose={() => setAdding(false)} onCreated={(id) => { setAdding(false); qc.invalidateQueries({ queryKey: ["advisors-admin"] }); setCreatedId(id);setRunBy("all");void navigate({search:{view:"split",selected:id,sort:"newest"},replace:true}); }} />}
     </div>
     </OwnershipProvider>
@@ -276,16 +278,16 @@ function Under({ f }: { f: AdminFirm }) {
   return <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground"><span>Verification:</span><VerificationChip v={f.v} /><span className="ml-auto"><FirmStatusPill status={f.status} /></span></div>;
 }
 
-function Sec({ icon: I, title, children, boxed = false }: { icon: typeof Tag; title: string; children: React.ReactNode; boxed?: boolean }) {
+function Sec({ icon: I, title, children, boxed = false, action }: { icon: typeof Tag; title: string; children: React.ReactNode; boxed?: boolean; action?: React.ReactNode }) {
   return (
     <section className={boxed ? "advisor-info-box advisor-admin-box advisor-hover-box" : "space-y-2"}>
-      <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground"><I className="h-3.5 w-3.5" />{tr(title)}</h3>
+      <div className="flex items-center justify-between gap-2"><h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground"><I className="h-3.5 w-3.5" />{tr(title)}</h3>{action}</div>
       {children}
     </section>
   );
 }
 
-function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: () => void; onEdit: () => void }) {
+function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: () => void; onEdit: (section?: EditSection) => void }) {
   const { language } = useTranslation();
   const qc = useQueryClient();
   const decide = useServerFn(decideAdvisor);
@@ -314,12 +316,12 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
         </div>
         <div className="flex items-center gap-1.5">
           {["pending", "more_info"].includes(f.v.state) && <Button size="sm" variant="outline" asChild><Link to="/approvals" search={{ tab: "advisors", adv: f.id } as never}>Review in Approvals</Link></Button>}
-          <Button size="sm" variant="outline" onClick={onEdit}>Edit</Button>
+          <Button size="sm" variant="outline" onClick={() => onEdit()}>Edit</Button>
           <Bookmark on={fav} onClick={onFav} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild><button type="button" aria-label="More" className="grid h-8 w-8 place-items-center rounded-md hover:bg-muted"><MoreVertical className="h-4 w-4" /></button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => onEdit()}>Edit</DropdownMenuItem>
               {f.v.state === "unverified" && <DropdownMenuItem onSelect={() => act("send")}>Send to verification</DropdownMenuItem>}
               {f.v.state === "declined" && <DropdownMenuItem onSelect={() => act("reopen")}>Reopen verification</DropdownMenuItem>}
               <OwnershipMenuItem id={f.id} />
@@ -335,10 +337,9 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
         {facts.filter(([, t]) => t).map(([I, t]) => <span key={t} className="inline-flex items-center gap-1.5"><I className="h-3.5 w-3.5" />{t}</span>)}
         {f.website && <a href={/^https?:/.test(f.website) ? f.website : `https://${f.website}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[#2563EB]"><Globe className="h-3.5 w-3.5" />Website →</a>}
       </div>
-      <FirmPhotosBox photos={f.media} firm={f.name} canEdit onEdit={onEdit} />
-      <Sec icon={Tag} title={tr("Services and fees") + ` · ${f.services.length}`}>
-        <div className="flex justify-end"><Button variant="unstyled" className="advisor-text-action" onClick={onEdit}>{tr("Edit services")}</Button></div>
-        {f.services.length ? <FirmServices services={f.services} fee={s => f.fees.find(x => x.service === s)?.fee} onAddFee={onEdit} /> : <p className="text-[13px] text-muted-foreground">{tr("No services yet.")}</p>}
+      <FirmPhotosBox photos={f.media} firm={f.name} canEdit onEdit={() => onEdit("firm")} />
+      <Sec icon={Tag} title={tr("Services and fees") + ` · ${f.services.length}`} action={<Button variant="unstyled" className="advisor-text-action" onClick={() => onEdit("services")}>{tr("Edit services")}</Button>}>
+        {f.services.length ? <FirmServices services={f.services} fee={s => f.fees.find(x => x.service === s)?.fee} onAddFee={() => onEdit("services")} /> : <p className="text-[13px] text-muted-foreground">{tr("No services yet.")}</p>}
       </Sec>
       <Sec icon={Briefcase} title="Sectors">
         {f.sectorAgnostic ? <p className="text-[13px]">Sector agnostic</p> : <div className="flex flex-wrap gap-1">{f.sectors.map((x) => <span key={x} className="rounded-full bg-muted px-2 py-0.5 text-[11.5px]">{x}</span>)}{!f.sectors.length && <span className="text-[13px] text-muted-foreground">—</span>}</div>}

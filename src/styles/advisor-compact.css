@@ -32,7 +32,7 @@
 }
 .advisor-panel-body { padding:20px; display:flex; flex-direction:column; gap:14px; }
 .advisor-client-body { padding:14px 18px 18px; }
-.advisor-client-header { padding:14px 18px; align-items:center; }
+.advisor-client-header { position:sticky; top:0; z-index:20; background:var(--card); padding:14px 18px; align-items:center; }
 .advisor-client-name { display:flex; flex-wrap:wrap; gap:4px 10px; align-items:center; }
 .advisor-client-name h2 { font-family:var(--font-heading); font-size:19px; font-weight:700; overflow-wrap:anywhere; }
 .advisor-client-meta { margin-top:2px; font-size:12.5px; color:var(--muted-foreground); }
@@ -102,6 +102,7 @@
 .advisor-hover-box,.advisor-card-body,.advisor-card-foot,.advisor-card-figures { transition:background-color .15s; }
 .advisor-browse-card:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
 .advisor-browse-card:focus-visible .advisor-card-body,.advisor-browse-card:focus-visible .advisor-card-foot,.advisor-browse-card:focus-visible .advisor-card-figures { background:var(--advisor-hover); }
+.advisor-browse-card:has(:focus-visible) .advisor-card-body,.advisor-browse-card:has(:focus-visible) .advisor-card-foot,.advisor-browse-card:has(:focus-visible) .advisor-card-figures { background:var(--advisor-hover); }
 @media (hover:hover) {
   .advisor-thumbnail:hover img { transform:scale(1.04); }
   .advisor-hover-box:hover { background:var(--advisor-hover); }

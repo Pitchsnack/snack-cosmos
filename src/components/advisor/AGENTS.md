@@ -1,4 +1,5 @@
 # Advisor decisions
+- Compact panels reuse photo viewer/services/feedback across existing authorized projections; Admin keeps separate identity and check sections. Panel fee splitting never alters saved words or other surfaces.
 - Advisor credentials share a browser-safe catalogue and picker; stable keys persist with canonical English names, reader-language labels derive from the catalogue, and existing authorized saves/triggers retain re-check ownership.
 
 - Advisor My Company: firm profiles live in advisor_firms (+ fees/team/credentials/documents/reviews), read/written only via advisor-firm.functions.ts; verification and check statuses are Admin-only, enforced by DB triggers.

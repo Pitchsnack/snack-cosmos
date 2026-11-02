@@ -17,10 +17,10 @@ export const Route = createFileRoute("/_authenticated/marketplace/my-company/")(
   }),
   head: () => ({
     meta: [
-      { title: "My Company (investor profile) — PitchSnack" },
-      { name: "description", content: "Manage your investor profile: the public seller preview and the private details shared after NDA." },
-      { property: "og:title", content: "My Company (investor profile) — PitchSnack" },
-      { property: "og:description", content: "Your investor profile on the PitchSnack Marketplace." },
+      { title: "My Company — PitchSnack Marketplace" },
+      { name: "description", content: "Manage your company profile, advisor services and investor information on PitchSnack." },
+      { property: "og:title", content: "My Company — PitchSnack Marketplace" },
+      { property: "og:description", content: "Manage your company profile, advisor services and investor information on PitchSnack." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
