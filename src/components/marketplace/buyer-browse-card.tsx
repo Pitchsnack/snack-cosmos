@@ -173,9 +173,8 @@ function CardBody({ i, empty, desc, oneRow, onPart }: { i: CardInvestor; empty: 
       </div>
       {i.publishedHeadline && <div className="mt-0.5 text-[13.5px] font-semibold leading-snug text-[#374151] dark:text-foreground/85">{i.publishedHeadline}</div>}
       {i.publishedListingName && <div className="mt-0.5 text-[12.5px] text-muted-foreground">{tr(typeName(i.type, i.actsFor))}</div>}
-      {(i.verified || i.proofOfFunds) && (
+      {i.proofOfFunds && (
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {i.verified && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />{setupText("Verified investor")}</Pill>}
           {i.proofOfFunds && <Pill tone="ok"><BadgeCheck className="h-3 w-3" />{setupText("Proof of funds")}</Pill>}
         </div>
       )}
