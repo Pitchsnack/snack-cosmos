@@ -182,14 +182,12 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
           ? <p className={cn("text-[13.5px] leading-[1.5] text-[#374151] dark:text-foreground/80", (!showMore || preview) && "line-clamp-3")}>{f.description}</p>
           : <p className="text-[13.5px] text-[#9CA3AF]">{tr("No description yet.")}</p>}
         {f.services.length > 0 && <div className="flex flex-wrap gap-1.5">{f.services.map((s) => <ServiceChip key={s} name={s} />)}</div>}
-        <div className="@container">
-          <div className="grid grid-cols-1 divide-y divide-border rounded-[10px] border border-border bg-muted/30 @[260px]:grid-cols-[3fr_2fr] @[260px]:divide-x @[260px]:divide-y-0">
+        <div className="@container rounded-[10px] border border-border bg-muted/30">
+          <div className="grid grid-cols-1 divide-y divide-border @[260px]:grid-cols-[3fr_2fr] @[260px]:divide-x @[260px]:divide-y-0">
             <Fig label={tr("Typical deal size")} main={deal?.usd ?? tr("Not added")} sub={deal ? `(${deal.thb})` : null} />
             <Fig label={tr("Team size")} main={f.teamSize ? String(f.teamSize) : tr("Not added")} sub={f.teamSize ? tr("people") : null} />
           </div>
-          <div className="rounded-b-[10px] border-x border-b border-border bg-muted/30 -mt-px">
-            <LanguagesRow f={f} />
-          </div>
+          <LanguagesRow f={f} />
         </div>
         {showMore && !preview && (
           <div className="space-y-2.5">
