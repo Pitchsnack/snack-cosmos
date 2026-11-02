@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { lastLoginStepOf, LAST_LOGIN_LABEL } from '../src/lib/last-login';
 
 const DAY = 86_400_000;
