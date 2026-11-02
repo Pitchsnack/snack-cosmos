@@ -182,7 +182,7 @@ export const STEP_FULL: Record<StepKey, [string, string]> = {
   price: ["Asking price (Estimate)", "ราคาที่ต้องการ (ประมาณการ)"],
   review: ["Review your answers", "ตรวจสอบข้อมูล"],
 };
-const YEAR_NOW = new Date().getFullYear();
+/** The current year is read when the check runs: module load can happen with a frozen clock. */
 /** The checks each question's Continue uses. */
 export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
   const y = Number(d.year);
