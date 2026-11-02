@@ -19,7 +19,7 @@ export const CompleteFirmInput = z.object({
   media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(300) })).max(3).optional(),
   description: z.string().trim().min(30).max(300),
   descriptionTh: z.string().trim().max(300).nullable().optional(),
-  yearFounded: z.number().int().min(1800).max(new Date().getFullYear()),
+  yearFounded: z.number().int().min(1800).max(YEAR_CEILING).refine(notFutureYear, { message: yearMsg }),
   city: z.string().trim().min(2).max(100),
   country: z.string().trim().min(1).max(100),
   services: z.array(z.string().max(60)).min(1).max(10),
