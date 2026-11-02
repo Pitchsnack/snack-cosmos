@@ -73,7 +73,7 @@ function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: an
     verification: { state: r.advisor_verification ?? "unverified", note: r.more_info_note ?? null, fields: r.more_info_fields ?? [], reason: r.decline_reason ?? null, declineNote: r.decline_note ?? null },
     setupReached: r.setup_reached ?? null, setupAnswered: r.setup_answered ?? [], setupDoneAt: r.setup_done_at ?? null, wizard: r.wizard_state ?? {},
     team: mine(kids.team).sort((a, b) => a.sort_order - b.sort_order).map((t) => ({ id: t.id, name: t.name, role: t.role, roleTh: t.role_th ?? null, email: t.email })),
-    credentials: mine(kids.creds).sort((a, b) => a.sort_order - b.sort_order).map((c) => ({ id: c.id, name: c.name, nameTh: c.name_th ?? null, note: c.note, noteTh: c.note_th ?? null, status: c.status, checkedAt: c.checked_at })),
+    credentials: mine(kids.creds).sort((a, b) => a.sort_order - b.sort_order).map((c) => ({ id: c.id, licenceKey: c.licence_key ?? "other", name: c.name, nameTh: c.name_th ?? null, note: c.note, noteTh: c.note_th ?? null, status: c.status, checkedAt: c.checked_at })),
     documents: mine(kids.docs).map((d) => ({ id: d.id, path: d.file_path, name: d.name, type: d.doc_type, checkedAt: d.checked_at, validUntil: d.valid_until, url: urls.get(d.file_path) ?? null })),
     reviews: mine(kids.reviews).sort((a, b) => b.created_at.localeCompare(a.created_at)).map((v) => ({ id: v.id, role: v.client_role, detail: v.client_detail, service: v.service, stars: v.stars, comment: v.comment, at: v.created_at })),
   };
@@ -310,8 +310,8 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
     const dropC = (oldCreds ?? []).map((c: any) => c.id).filter((x: string) => !keepC.has(x));
     if (dropC.length) await sb.from("advisor_firm_credentials").delete().in("id", dropC);
     for (const [i, c] of data.credentials.entries()) {
-      if (c.id) await sb.from("advisor_firm_credentials").update({ name: c.name, note: c.note, name_th: c.nameTh || null, note_th: c.noteTh || null, sort_order: i }).eq("id", c.id).eq("firm_id", id);
-      else { const { error } = await sb.from("advisor_firm_credentials").insert({ firm_id: id, name: c.name, note: c.note, name_th: c.nameTh || null, note_th: c.noteTh || null, sort_order: i }); if (error) throw new Error(error.message); }
+      if (c.id) { const { error } = await sb.from("advisor_firm_credentials").update({ licence_key: c.licenceKey, name: c.name, note: c.note, name_th: c.nameTh || null, note_th: c.noteTh || null, sort_order: i }).eq("id", c.id).eq("firm_id", id); if (error) throw new Error(error.message); }
+      else { const { error } = await sb.from("advisor_firm_credentials").insert({ firm_id: id, licence_key: c.licenceKey, name: c.name, note: c.note, name_th: c.nameTh || null, note_th: c.noteTh || null, sort_order: i }); if (error) throw new Error(error.message); }
     }
     // documents
     const { data: oldDocs } = await sb.from("advisor_firm_documents").select("id").eq("firm_id", id);
@@ -332,7 +332,7 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
       const { data: f } = await sb.from("advisor_firms").select("verified_snapshot, name, legal_name, registration_no").eq("id", id).single();
       if (f?.verified_snapshot) {
         const [{ data: c }, { data: d }] = await Promise.all([
-          sb.from("advisor_firm_credentials").select("id, name, note").eq("firm_id", id),
+          sb.from("advisor_firm_credentials").select("id, licence_key, name, note").eq("firm_id", id),
           sb.from("advisor_firm_documents").select("id, name, file_path").eq("firm_id", id),
         ]);
         await sb.from("advisor_firms").update({ verified_snapshot: { company_name: f.name, legal_name: f.legal_name, registration_no: f.registration_no, credentials: c ?? [], documents: d ?? [] } }).eq("id", id);
