@@ -1,6 +1,7 @@
 import { FinIcon } from "@/components/financials/fin-icon";
 import { EMPTY, fmtAmount, fmtCompact, fmtMillions, fmtMillionsOnly, fmtNumber, pctChange } from "@/lib/financials";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
+import { useTranslation } from "@/i18n/language";
 
 /* Palette from the Financial Overview design spec. */
 const C = {
@@ -187,7 +188,7 @@ function KpiCard({
             {label}
           </div>
           <div
-            className="whitespace-nowrap text-[19px] font-bold tabular-nums"
+            className="whitespace-nowrap text-[14px] font-bold tabular-nums"
             style={{ color: C.ink, letterSpacing: "-0.01em", lineHeight: 1.2 }}
             title={title}
           >
@@ -240,6 +241,8 @@ export function FinancialsOverview({
   ratios: RatioItem[];
   year?: number;
 }) {
+  const { language } = useTranslation();
+  const th = language === "th";
   const sorted = [...years].sort((a, b) => a - b);
   const latest = year !== undefined && sorted.includes(year) ? year : sorted[sorted.length - 1];
   const idx = sorted.indexOf(latest);
