@@ -424,7 +424,11 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
 
 </div>}
         {asAdmin && visible("admin") && <div className="space-y-4"><TabHead title={tr("Admin settings")} /><p className="text-sm text-muted-foreground">{setupText("Only Admin sees this tab.")}</p><CompactFields two><F label={setupText("Verification status")}><Input readOnly value={firm?.verification?.state ?? "unverified"} /></F><F label={setupText("Verified on")}><Input readOnly value={firm?.verifiedAt ?? "—"} /></F>{firm?.verification?.state === "declined" && <F label={setupText("Decline reason")}><Textarea readOnly value={firm.verification.reason ?? ""} /></F>}<F label={setupText("More information requested")}><Textarea readOnly value={firm?.verification?.note ?? ""} /></F></CompactFields><Button variant="link" onClick={() => { pop.requestClose(); void navigate({to:"/approvals",search:{tab:"advisors",adv:firm?.id} as never}); }}>{setupText("Change it in Approvals")}</Button></div>}
-      </> : <>      <Section id="firm" active={false} title={setupText("Firm")} setup={!!setup}>
+      </> : setup ? (
+        <SetupReview f={f} set={set} setF={setF} thai={thai} openSec={openSec} setOpenSec={setOpenSec}
+          onChangeServices={setup.onChangeServices} onLogo={onLogo} logoErr={logoErr} uploading={uploading}
+          onDoc={onDoc} docInput={docInput} changeCountry={changeCountry} />
+      ) : <>      <Section id="firm" active={false} title={setupText("Firm")} setup={!!setup}>
         <F label={tr("Logo and photos")} opt tag={f.logo.url ? (f.logo.source === "enrich" ? "Auto Enrich" : src.logo) : undefined}>
           <AttachmentCard value={f.media} onChange={(m) => set("media", m)} name={f.name || tr("Your firm")} sectorLine={[f.firmType, [f.city || f.addr.province, f.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
             intro={tr("Your firm's logo and up to 3 photos of your office, your team or your work.")} showGuidance={false} />
