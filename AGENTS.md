@@ -59,7 +59,7 @@
 - Buyer texts use shared changed-only counting/Admin bypass and StandardInvestorCard. Buyer identity/readiness helpers omit retired suggestion writes and allow missing suggestions; seller fields stay unchanged.
 
 - DBD fetch-once store: dbd_company_records (per registration number) is the only source of DBD facts; writes only via DB functions dbd_store_save/dbd_store_delete/dbd_apply_edit (Control-checked, trigger-guarded); seller report tables are materialised copies and analyst edits re-apply after refresh.
-- Read nested AGENTS.md before edits.
+- Read nested AGENTS.md first.
 - Buyer/advisor setup shares validity helpers and seller StepBar; authorised saves and monotonic setup_reached align progress.
 
 - CompanyNameFields shares live locked names and optional twins; omit legacy second-name writes, preserve setup schemas and profile authorization.
