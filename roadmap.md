@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Advisor licence dropdown
+- [ ] Shared grouped picker, issuer lines, Other, duplicate prevention and validation.
+- [ ] Persist keys, preserve legacy credentials, localize all displays and snapshots.
+- [ ] Regression and authenticated desktop/mobile EN/TH light/dark checks; legacy matching report.
+
 - [x] 1. DB: user_activity table (last_active_at), RLS own-row read, touch_last_active() RPC (15-min throttle), backfill from auth.users.last_sign_in_at
 - [x] 2. Server: last-login step helpers + touchLastActive server fn
 - [x] 3. DTOs: lastLoginStep on listings, investors, firms; never send timestamps
