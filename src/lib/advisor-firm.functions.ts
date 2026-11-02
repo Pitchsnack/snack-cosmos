@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { CompleteFirmInput, DraftFirmInput, advisorNeedsCompleteSave } from "@/lib/advisor-form-schema";
 import { DEAL_BANDS, feeWords, parsePct, type AdvisorFirm, type FeeDetail, type FeeType } from "@/lib/advisor-firm";
+import { shouldProtectSetupDone } from "@/lib/advisor-setup-completion";
 
 /**
  * Advisor › My Company. Owners (and Control) read and edit their firm
