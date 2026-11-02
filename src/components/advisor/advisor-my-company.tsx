@@ -408,8 +408,9 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
           {client ? <>
             <div className="advisor-client-name"><h2>{f.name || tr("New firm profile")}</h2>{f.verifiedAt ? <VerifiedAdvisorChip small /> : <span className="inline-flex h-5 items-center rounded-full border border-border bg-muted px-2 text-[11px] font-semibold text-muted-foreground">{tr("Not verified yet")}</span>}{f.managed && <ManagedBadge size="sm" shadow align="left" />}</div>
             <div className="advisor-client-meta">{[f.refNo, tr(f.firmType), f.city].filter(Boolean).join(" · ")}{f.yearFounded ? ` · ${tr("since")} ${f.yearFounded}` : ""}</div>
-          </> : <>          <div className="flex flex-wrap items-center gap-2">
+          </> : <>          <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
             {!client && <span className="inline-flex min-h-5 items-center rounded-[6px] bg-[#E0F5F2] px-2 py-0.5 text-[10.5px] font-bold uppercase leading-normal tracking-[.06em] text-[#0F766E]">{setupText("Open to sellers and buyers")}</span>}
+            {!client && <HeaderStatusPill status={f.status} label={setupText(statusLine)} />}
             {f.verifiedAt ? <VerifiedAdvisorChip small /> : client && <span className="inline-flex h-5 items-center rounded-full border border-border bg-muted px-2 text-[11px] font-semibold text-muted-foreground">{tr("Not verified yet")}</span>}{client && f.managed && <ManagedBadge size="sm" shadow align="left" />}
           </div>
           <h2 className="mt-1 text-[21px] font-bold leading-tight">{f.name || "New firm profile"}</h2>
@@ -442,7 +443,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
       <div className={cn("advisor-panel-body", client && "advisor-client-body")}>
         {client?.top}
         {client && <FirmPhotosBox photos={f.media} firm={f.name} canEdit={false} />}
-        {client && f.description && <section><div className="mb-1.5 text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{tr("About")}</div><p className="whitespace-pre-line text-[14px] leading-relaxed">{f.description}</p></section>}
+        {client && f.description && <AboutSection f={f} />}
         {client && <ClientFacts f={f} />}
         {!client && <>
         {f.verification?.state === "more_info" && <FirmNotice state="more_info" note={f.verification.note} fields={f.verification.fields} />}
@@ -451,14 +452,6 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
           tag={setupText("Who sees your profile")}
           sentence={<>{setupText("Everything on your profile is")} <strong>{setupText("open to sellers and buyers")}</strong>{setupText("in Browse advisors, so they can compare firms and choose one: your services and fees, team and contacts, licences and documents.")}</>}
         />
-
-        <div className="rounded-[14px] bg-[#EEF0F4] p-3.5 dark:bg-muted/50">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{setupText("Your card in Browse advisors")}</span>
-            <StatusPill status={f.status}>{setupText(statusLine)}</StatusPill>
-          </div>
-          <FirmCard f={f} wide />
-        </div>
 
         <p className="text-[13px] text-[#4B5563] dark:text-muted-foreground">
           {f.verifiedAt ? (
@@ -471,6 +464,9 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
         </>}
 
         {!client && <FirmPhotosBox photos={f.media} firm={f.name} canEdit onEdit={() => edit("logo")} />}
+
+        {!client && <AboutSection f={f} onEdit={() => edit("firm")} />}
+        {!client && <ClientFacts f={f} />}
 
         {/* Services and fees */}
         <section>
@@ -723,6 +719,31 @@ function AddressDialog({ f, open, onOpenChange }: { f: AdvisorFirm; open: boolea
 }
 
 /* ---------------------------- Client feedback ----------------------------- */
+
+/** Header status pill: follows the profile's status and changes at once with it. */
+function HeaderStatusPill({ status, label }: { status: AdvisorFirm["status"]; label: string }) {
+  return (
+    <span className="advisor-status-pill" data-status={status}>
+      <span className="advisor-status-dot" aria-hidden />
+      {label}
+    </span>
+  );
+}
+
+/** About: the firm's description, shared by Browse advisors' panel and My Company (which adds Edit). */
+function AboutSection({ f, onEdit }: { f: AdvisorFirm; onEdit?: () => void }) {
+  return (
+    <section>
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{tr("About")}</div>
+        {onEdit && <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={onEdit}><Pencil className="h-3.5 w-3.5" />{setupText("Edit")}</Button>}
+      </div>
+      {f.description
+        ? <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#374151] dark:text-foreground/80">{f.description}</p>
+        : <p className="text-[14px] text-[#9CA3AF]">{tr("No description yet.")}</p>}
+    </section>
+  );
+}
 
 function ClientFacts({ f }: { f: AdvisorFirm }) {
   const band = dealBandLabels(f.dealBand);

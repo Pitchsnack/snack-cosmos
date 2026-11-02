@@ -147,3 +147,13 @@
 @media (prefers-reduced-motion:reduce) {
   .intro-fold-sentence { transition:none; }
 }
+
+/* Advisor My Company header status pill (Draft/Live/Paused) */
+.advisor-status-pill { display:inline-flex; align-items:center; height:20px; padding:0 8px; border-radius:999px; font-size:11.5px; font-weight:600; white-space:nowrap; }
+.advisor-status-dot { width:6px; height:6px; flex:none; border-radius:50%; margin-right:6px; }
+.advisor-status-pill[data-status="draft"] { background:#FFF4E0; color:#B45309; }
+.advisor-status-pill[data-status="draft"] .advisor-status-dot { background:#F59E0B; }
+.advisor-status-pill[data-status="live"] { background:#E9F6EE; color:#15803D; }
+.advisor-status-pill[data-status="live"] .advisor-status-dot { background:#22C55E; }
+.advisor-status-pill[data-status="paused"] { background:#F1F2F5; color:#4B5563; }
+.advisor-status-pill[data-status="paused"] .advisor-status-dot { background:#9CA3AF; }
