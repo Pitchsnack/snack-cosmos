@@ -38,15 +38,15 @@ function Radio({ list, value, onPick, grid }: {
         const sel = value === o.value;
         return (
           <button key={o.value} type="button" onClick={() => onPick(o.value)}
-            className={`flex items-center gap-3.5 rounded-[10px] border px-4 py-[13px] text-left transition-colors ${grid ? "justify-center" : ""} ${sel ? "border-[#1e2a4a] bg-[#eef1f7]" : "border-[#e5e7eb] bg-white hover:border-[#c5cbd8]"}`}>
+            className={`flex items-center gap-3.5 rounded-[10px] border px-4 py-[13px] text-left transition-colors ${grid ? "justify-center" : ""} ${sel ? "border-primary bg-secondary" : "border-border bg-card hover:border-input"}`}>
             {!grid && (
-              <span className={`grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-[1.5px] ${sel ? "border-[#1e2a4a]" : "border-[#c5cbd8]"}`}>
-                {sel && <span className="h-2 w-2 rounded-full bg-[#1e2a4a]" />}
+              <span className={`grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-[1.5px] ${sel ? "border-primary" : "border-input"}`}>
+                {sel && <span className="h-2 w-2 rounded-full bg-primary" />}
               </span>
             )}
             <span>
               <b className="block text-[15px] font-semibold">{tr(o.label)}</b>
-              {o.hint && <small className="mt-0.5 block text-[13.5px] text-[#6b7280]">{tr(o.hint)}</small>}
+              {o.hint && <small className="mt-0.5 block text-[13.5px] text-muted-foreground">{tr(o.hint)}</small>}
             </span>
           </button>
         );
@@ -58,8 +58,8 @@ function Radio({ list, value, onPick, grid }: {
 function Check({ on, label, onClick }: { on: boolean; label: string; onClick: () => void }): React.ReactElement {
   return (
     <button type="button" onClick={onClick}
-      className={`flex items-center gap-2.5 rounded-[9px] border px-3 py-2.5 text-left text-[13.5px] ${on ? "border-[#1e2a4a] bg-[#eef1f7] text-[#111827]" : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#c5cbd8]"}`}>
-      <span className={`grid h-4 w-4 flex-none place-items-center rounded border-[1.5px] text-[10px] text-white ${on ? "border-[#1e2a4a] bg-[#1e2a4a]" : "border-[#c5cbd8]"}`}>{on ? "✓" : ""}</span>
+      className={`flex items-center gap-2.5 rounded-[9px] border px-3 py-2.5 text-left text-[13.5px] ${on ? "border-primary bg-secondary text-foreground" : "border-border bg-card text-foreground hover:border-input"}`}>
+      <span className={`grid h-4 w-4 flex-none place-items-center rounded border-[1.5px] text-[10px] text-primary-foreground ${on ? "border-primary bg-primary" : "border-input"}`}>{on ? "✓" : ""}</span>
       {label}
     </button>
   );
@@ -201,7 +201,7 @@ export function SellerWizard({
   const stepWord = (n: number) => L(`Step ${n}`, `ขั้นที่ ${n}`);
 
   const privacy = (
-    <p className="mt-3 flex items-start gap-2 text-[13px] text-[#434A5C]"><Lock className="mt-0.5 h-[15px] w-[15px] shrink-0" />{L("Buyers can't see your website until you approve their NDA.", "ผู้ซื้อจะไม่เห็นเว็บไซต์ของท่าน จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")}</p>
+    <p className="mt-3 flex items-start gap-2 text-[13px] text-muted-foreground"><Lock className="mt-0.5 h-[15px] w-[15px] shrink-0" />{L("Buyers can't see your website until you approve their NDA.", "ผู้ซื้อจะไม่เห็นเว็บไซต์ของท่าน จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")}</p>
   );
   async function runEnrich() {
     if (!isValidUrl(d.web) || readingRef.current) return;
@@ -234,7 +234,7 @@ export function SellerWizard({
           <div><label className={fieldLbl}>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}</label>
             <input className={`${inp} ${needCls(!/^\d{13}$/.test(d.reg))}`} data-need={!/^\d{13}$/.test(d.reg) ? "1" : undefined} aria-required inputMode="numeric" value={d.reg} maxLength={13}
               onChange={(e) => set({ reg: e.target.value.replace(/\D/g, "").slice(0, 13) })} placeholder={setupText("13 digits")} />
-            <p className="mt-1.5 text-[13px] text-[#6b7280]">{setupText("Used to verify your company.")}{d.reg && d.reg.length !== 13 ? L(` ${d.reg.length}/13 digits.`, ` ${d.reg.length}/13 หลัก`) : ""}</p></div>
+            <p className="mt-1.5 text-[13px] text-muted-foreground">{setupText("Used to verify your company.")}{d.reg && d.reg.length !== 13 ? L(` ${d.reg.length}/13 digits.`, ` ${d.reg.length}/13 หลัก`) : ""}</p></div>
           <div className="pt-2">
             <AddressBox a={d.addr} thai city={d.addr.district} onChange={setAddr} need stars={false}
               show={(k) => (touched[k] ? ({ street: !d.addr.street.trim() ? "Add the number and street." : null, district: !d.addr.district.trim() ? "Add the city or district." : null, province: !d.addr.province ? "Choose the province or state." : null, postal: !d.addr.postal ? "Add the postal code." : /^\d{5}$/.test(d.addr.postal) ? null : tr("The postal code has 5 digits."), unit: null } as Record<string, string | null>)[k] ?? null : null)}
@@ -283,8 +283,8 @@ export function SellerWizard({
               })}
             </div>
             <div className="mt-2 flex gap-2">
-              <input className="flex-1 rounded-[9px] border border-[#e5e7eb] px-3 py-2 text-[13.5px] outline-none" maxLength={120} placeholder={tr("Other licence")} value={otherLic} onChange={(e) => setOtherLic(e.target.value)} />
-              <button type="button" className="rounded-[9px] border border-[#e5e7eb] bg-white px-3.5 text-[13px] font-semibold text-[#374151]"
+              <input className="flex-1 rounded-[9px] border border-border px-3 py-2 text-[13.5px] outline-none" maxLength={120} placeholder={tr("Other licence")} value={otherLic} onChange={(e) => setOtherLic(e.target.value)} />
+              <button type="button" className="rounded-[9px] border border-border bg-card px-3.5 text-[13px] font-semibold text-foreground"
                 onClick={() => { const n = otherLic.trim(); if (n && !d.licences.some((x) => x.name.toLowerCase() === n.toLowerCase())) set({ licences: [...d.licences, { category: "Business", name: n }] }); setOtherLic(""); }}>{setupText("Add")}</button>
             </div></div>
           <div><h4 className="text-[14.5px] font-semibold">{tr("ISO and standards")}</h4>
@@ -295,8 +295,8 @@ export function SellerWizard({
               })}
             </div>
             <div className="mt-2 flex gap-2">
-              <input className="flex-1 rounded-[9px] border border-[#e5e7eb] px-3 py-2 text-[13.5px] outline-none" maxLength={60} placeholder={tr("Other standard")} value={otherIso} onChange={(e) => setOtherIso(e.target.value)} />
-              <button type="button" className="rounded-[9px] border border-[#e5e7eb] bg-white px-3.5 text-[13px] font-semibold text-[#374151]"
+              <input className="flex-1 rounded-[9px] border border-border px-3 py-2 text-[13.5px] outline-none" maxLength={60} placeholder={tr("Other standard")} value={otherIso} onChange={(e) => setOtherIso(e.target.value)} />
+              <button type="button" className="rounded-[9px] border border-border bg-card px-3.5 text-[13px] font-semibold text-foreground"
                 onClick={() => { const n = otherIso.trim(); if (n && !d.iso.includes(n)) set({ iso: [...d.iso, n] }); setOtherIso(""); }}>{setupText("Add")}</button>
             </div></div>
         </div>
@@ -317,8 +317,8 @@ export function SellerWizard({
     review: { t: tr("Review your answers"), h: tr("Next, we'll auto-fill the rest of your profile. You can edit everything afterwards."),
       body: (
         <div>
-        <h3 className="mb-2 text-[14px] font-bold text-[#151A28]">{L("Your company", "บริษัทของท่าน")}</h3>
-        <div className="overflow-hidden rounded-[10px] border border-[#e5e7eb]">
+        <h3 className="mb-2 text-[14px] font-bold text-foreground">{L("Your company", "บริษัทของท่าน")}</h3>
+        <div className="overflow-hidden rounded-[10px] border border-border">
           {([
             ["role",tr("You are"),roleLabel()], ["name",tr("Company name"),d.name],
             ["name",tr("Registration no."),d.reg], ["name",tr("Business address"),addressLine(d.addr)],
@@ -332,24 +332,24 @@ export function SellerWizard({
             return <div key={`${key}-${ri}`} className="seller-review-row"><span>{label}</span><b className={red ? "text-destructive" : ""}>{red ? L("Not answered","ยังไม่ได้ตอบ") : value || tr("Not provided")}</b><Button variant="link" size="unstyled" onClick={() => editRow(n)}>{red ? L("Answer","ตอบคำถาม") : tr("Edit")}</Button></div>;
           })}
         </div>
-        <h3 className="mb-2 mt-[22px] text-[14px] font-bold text-[#151A28]">{L("Your listing", "ประกาศของท่าน")}</h3>
-        <div className="overflow-hidden rounded-[10px] border border-[#e5e7eb]">
+        <h3 className="mb-2 mt-[22px] text-[14px] font-bold text-foreground">{L("Your listing", "ประกาศของท่าน")}</h3>
+        <div className="overflow-hidden rounded-[10px] border border-border">
           {LISTING_KEYS.filter((k) => barKeys.includes(k)).map((k) => {
             const n = STEPS.findIndex((x) => x.id === k);
             const band = bandOf(d.price ?? null);
             const v: React.ReactNode = k === "photos" ? L(`Logo and ${d.photos ?? 0} photo${(d.photos ?? 0) === 1 ? "" : "s"}`, `โลโก้และรูปภาพ ${d.photos ?? 0} รูป`)
               : k === "deal" ? (d.deal ? tr(d.deal) : "")
               : k === "handover" ? (d.stays === "yes" ? L(`Yes, for ${d.months ?? 6} month${(d.months ?? 6) === 1 ? "" : "s"} after the sale`, `ใช่ อยู่ต่อ ${d.months ?? 6} เดือนหลังการขาย`) : d.stays === "no" ? L("No, the owner leaves at completion", "ไม่ เจ้าของออกเมื่อการขายเสร็จสิ้น") : "")
-              : k === "price" ? (d.price ? <span>{fmtThb(d.price)}<span className="mt-px block text-[12.5px] font-normal text-[#6B7280]">{L(`Buyers see ${bandInText(band?.label ?? "")} until you approve their NDA`, `ผู้ซื้อจะเห็น ${band?.th ?? ""} จนกว่าท่านจะอนุมัติ NDA`)}</span></span> : "")
+              : k === "price" ? (d.price ? <span>{fmtThb(d.price)}<span className="mt-px block text-[12.5px] font-normal text-muted-foreground">{L(`Buyers see ${bandInText(band?.label ?? "")} until you approve their NDA`, `ผู้ซื้อจะเห็น ${band?.th ?? ""} จนกว่าท่านจะอนุมัติ NDA`)}</span></span> : "")
               : d.listingName ?? "";
             const red = !ok[k];
             return (
-              <div key={k} className={`flex gap-3 border-b border-[#f0f1f3] px-4 py-3 text-sm last:border-0 ${red ? "bg-[#FEF2F2]" : ""}`}>
-                <span className="w-[170px] flex-none text-[#6b7280] max-[599px]:w-[110px]">{L(...STEP_FULL[k])}</span>
+              <div key={k} className={`flex gap-3 border-b border-border px-4 py-3 text-sm last:border-0 ${red ? "bg-destructive/10" : ""}`}>
+                <span className="w-[170px] flex-none text-muted-foreground max-[599px]:w-[110px]">{L(...STEP_FULL[k])}</span>
                 {red ? (
-                  <b className="flex flex-1 items-center gap-2 font-semibold text-[#B91C1C]"><span className="h-2 w-2 rounded-full bg-[#DC2626]" />{L("Not answered", "ยังไม่ได้ตอบ")}</b>
+                  <b className="flex flex-1 items-center gap-2 font-semibold text-destructive"><span className="h-2 w-2 rounded-full bg-destructive" />{L("Not answered", "ยังไม่ได้ตอบ")}</b>
                 ) : <b className="min-w-0 flex-1 break-words font-semibold">{v}</b>}
-                <button type="button" className={`text-[13px] underline underline-offset-2 ${red ? "font-bold text-[#B91C1C]" : "font-semibold text-[#1e2a4a]"}`}
+                <button type="button" className={`text-[13px] underline underline-offset-2 ${red ? "font-bold text-destructive" : "font-semibold text-link"}`}
                   onClick={() => editRow(n)}>{red ? L("Answer", "ตอบคำถาม") : tr("Edit")}</button>
               </div>
             );
@@ -357,7 +357,7 @@ export function SellerWizard({
         </div>
         <div className="seller-review-row mt-5"><span>{L(...STEP_FULL.founder)}</span><b className={ok.founder ? "" : "text-destructive"}>{d.founders?.filter(f => f.full_name.trim()).map(f => f.full_name).join(", ") || L("Not answered","ยังไม่ได้ตอบ")}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === "founder"))}>{ok.founder ? tr("Edit") : L("Answer","ตอบคำถาม")}</Button></div>
         {blockers.length > 0 && (
-          <p className="mt-[18px] text-[13.5px] text-[#B91C1C]">{L(`Answer ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][0] : STEP_SHORT[k][0]), false)} before you continue.`, `กรุณาตอบ ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][1] : STEP_SHORT[k][1]), true)} ก่อนไปต่อ`)}</p>
+          <p className="mt-[18px] text-[13.5px] text-destructive">{L(`Answer ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][0] : STEP_SHORT[k][0]), false)} before you continue.`, `กรุณาตอบ ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][1] : STEP_SHORT[k][1]), true)} ก่อนไปต่อ`)}</p>
         )}
         </div>
       ) },
@@ -370,10 +370,10 @@ export function SellerWizard({
     <div className="wiz seller-setup -m-4 min-h-[calc(100vh-54px)] text-[15px] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       <div className="flex h-14 items-center gap-3 border-b border-border bg-card px-6">
         <span className="text-[14px] font-semibold">{setupText(title)}</span>
-        <span className="ml-auto text-[13px] text-[#9ca3af]">{setupText(justSaved ? "Saved just now" : tr("All changes saved"))}</span>
+        <span className="ml-auto text-[13px] text-muted-foreground">{setupText(justSaved ? "Saved just now" : tr("All changes saved"))}</span>
       </div>
       <div className={`mx-auto ${cur.id === "web" ? "max-w-[800px]" : "max-w-[900px]"} px-5 pb-16 pt-10`}>
-        <div className="mb-2.5 flex items-baseline justify-between text-[13px] text-[#6b7280]">
+        <div className="mb-2.5 flex items-baseline justify-between text-[13px] text-muted-foreground">
           <b className="font-semibold text-foreground">{tr(cur.sec)}</b>
           <span>{setupText(`Step ${pos + 1} of ${shown.length}`)}</span>
         </div>
@@ -392,9 +392,9 @@ export function SellerWizard({
           </div>
           <div className={cur.id === "web" ? `seller-website-actions ${!webExpanded ? "has-no-website" : ""}` : "seller-setup-actions mt-8 flex items-center gap-2.5"}>
             <Button variant="unstyled" size="unstyled" type="button" onClick={back}
-              className={cur.id === "web" ? "seller-action seller-action-back" : "rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"}>{pos === 0 && full == null ? tr("Cancel") : tr("Back")}</Button>
+              className={cur.id === "web" ? "seller-action seller-action-back" : "rounded-[10px] border border-border bg-card px-[18px] py-[11px] font-semibold text-foreground"}>{pos === 0 && full == null ? tr("Cancel") : tr("Back")}</Button>
             {canSkip && (
-              <button type="button" className="rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"
+              <button type="button" className="rounded-[10px] border border-border bg-card px-[18px] py-[11px] font-semibold text-foreground"
                 ref={skipRef} onClick={() => advance()}>{cur.id === "lic" ? L("Have no license","ไม่มีใบอนุญาต") : tr("Skip")}</button>
             )}
             {cur.id === "web" && <>
@@ -404,7 +404,7 @@ export function SellerWizard({
             <div className={cur.id === "web" ? "contents" : "ml-auto flex items-center gap-2.5"}>
               {pos > 0 && (
                 <Button variant="unstyled" size="unstyled" type="button" onClick={() => setConfirmExit(true)}
-                  className={cur.id === "web" ? "seller-action" : "rounded-[10px] border border-[#e5e7eb] bg-white px-[18px] py-[11px] font-semibold text-[#374151]"}>{tr("Save & exit")}</Button>
+                  className={cur.id === "web" ? "seller-action" : "rounded-[10px] border border-border bg-card px-[18px] py-[11px] font-semibold text-foreground"}>{tr("Save & exit")}</Button>
               )}
               <Button variant="unstyled" size="unstyled" type="button" ref={fwdRef} disabled={reading || (cur.id === "web" && !webExpanded ? !isValidUrl(d.web) : !valid[cur.id])}
                 onClick={async () => {
@@ -412,7 +412,7 @@ export function SellerWizard({
                   if (cur.id === "web" && !webExpanded) {void runEnrich(); return;}
                   advance();
                 }}
-                className={cur.id === "web" ? "seller-action seller-action-primary" : "rounded-[10px] bg-[#1e2a4a] px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#c9ced9]"}>
+                className={cur.id === "web" ? "seller-action seller-action-primary" : "rounded-[10px] bg-primary px-6 py-3 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted"}>
                 {setupText(cur.id === "review" ? tr("Continue to auto-fill") : reading ? L("Reading…","กำลังอ่าน…") : full != null ? tr("Back to review") : tr("Continue"))}
 
               </Button>
@@ -422,21 +422,21 @@ export function SellerWizard({
         </div>
         {confirmExit && (
           <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(17,24,39,.45)] p-4" onClick={() => setConfirmExit(false)}>
-            <div role="dialog" aria-modal="true" className="w-full max-w-[400px] rounded-[14px] bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div role="dialog" aria-modal="true" className="w-full max-w-[400px] rounded-[14px] bg-card p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-lg font-bold">{tr("Save and finish later?")}</h3>
-              <p className="mt-1 text-[14px] text-[#6b7280]">{tr("Your answers are saved. You can continue setup from My Business.")}</p>
-              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#e5e7eb]">
-                <i className="block h-full bg-[#1e2a4a]" style={{ width: `${Math.round((sellerProgress(d, fromSignup).n / sellerProgress(d, fromSignup).N) * 100)}%` }} />
+              <p className="mt-1 text-[14px] text-muted-foreground">{tr("Your answers are saved. You can continue setup from My Business.")}</p>
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted">
+                <i className="block h-full bg-primary" style={{ width: `${Math.round((sellerProgress(d, fromSignup).n / sellerProgress(d, fromSignup).N) * 100)}%` }} />
               </div>
-              <p className="mt-2 text-[13px] text-[#6b7280]">{setupText(`${sellerProgress(d, fromSignup).n} of ${sellerProgress(d, fromSignup).N} questions answered`)}</p>
+              <p className="mt-2 text-[13px] text-muted-foreground">{setupText(`${sellerProgress(d, fromSignup).n} of ${sellerProgress(d, fromSignup).N} questions answered`)}</p>
               <div className="mt-5 flex justify-end gap-2">
-                <button type="button" onClick={() => setConfirmExit(false)} className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-semibold text-[#374151]">{tr("Keep going")}</button>
-                <button type="button" onClick={() => { store(d); onExit(); }} className="rounded-[10px] bg-[#1e2a4a] px-4 py-2.5 text-sm font-semibold text-white">{tr("Save & exit")}</button>
+                <button type="button" onClick={() => setConfirmExit(false)} className="rounded-[10px] border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground">{tr("Keep going")}</button>
+                <button type="button" onClick={() => { store(d); onExit(); }} className="rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">{tr("Save & exit")}</button>
               </div>
             </div>
           </div>
         )}
-        <p className="mt-[18px] text-center text-[12.5px] text-[#9ca3af]">{L("Your company name, website, logo, photos and exact figures stay private until you approve a buyer's NDA.", "ชื่อบริษัท เว็บไซต์ โลโก้ รูปภาพ และตัวเลขที่แท้จริงของท่านจะถูกเก็บเป็นความลับ จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")}</p>
+        <p className="mt-[18px] text-center text-[12.5px] text-muted-foreground">{L("Your company name, website, logo, photos and exact figures stay private until you approve a buyer's NDA.", "ชื่อบริษัท เว็บไซต์ โลโก้ รูปภาพ และตัวเลขที่แท้จริงของท่านจะถูกเก็บเป็นความลับ จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")}</p>
       </div>
     </div>
   );
