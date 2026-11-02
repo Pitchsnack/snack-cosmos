@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Seller website and founder setup
+- [ ] Reorder seller steps, migrate legacy progress on read/save, combine founded/size, require Website descriptions/tags, and reuse founders.
+- [ ] Expand Website with real enrichment and bilingual sector examples; preserve manual fields and later auto-fill safeguards.
+- [ ] Verify saving/read-back, EN/TH, dark and 1440/1024/390 views; deliver full bilingual sector table and change inventory.
+
 ## Advisor company name
 - [x] Use Company name on firm cards; move ref/city and managed hat onto cover.
 - [x] Remove advisor name/headline inputs and checks from editing, registration, review and notices without changing legacy data or other roles.
