@@ -98,6 +98,8 @@ export function SellerWizard({
   const th = useTranslation().language === "th"; // re-render on language change
   const L = (en: string, t: string) => (th ? t : en);
   const [d, setD] = useState<SellerDraft>(initial);
+  /** Step 1's wording in the current language; the stored answer is always the key. */
+  const roleLabel = () => { const r = SELLER_RELATIONS.find((x) => x.value === d.role); return r ? L(...r.label) : ""; };
   const [otherLic, setOtherLic] = useState("");
   const [otherIso, setOtherIso] = useState("");
   const [justSaved, setJustSaved] = useState(false);
