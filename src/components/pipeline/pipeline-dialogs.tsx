@@ -13,6 +13,7 @@ import { ProfileBox } from "./profile-box";
 import { STEPS, currentStep } from "@/lib/pipeline-state";
 import type { SampleReportData } from "@/lib/sample-report";
 import { FinancialsOverview } from "@/components/financials/financials-overview";
+import { ReportScroll } from "@/components/reports/report-scroll";
 import { StatementTable } from "@/components/financials/statement-table";
 import { RatiosTable } from "@/components/financials/ratios-table";
 import { CASH_FLOW_SECTIONS, INCOME_ROWS, POSITION_ROWS } from "@/lib/financials";
@@ -191,7 +192,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                 </div>
               </div>
               {!sample && data.full && finTab === "overview" && (
-                <div className="pt-3"><FinancialsOverview years={years} currency="THB" income={data.full.income} position={data.full.position} ratios={data.full.ratios} /></div>
+                <div className="pt-3"><ReportScroll><FinancialsOverview years={years} currency="THB" income={data.full.income} position={data.full.position} ratios={data.full.ratios} /></ReportScroll></div>
               )}
               {!sample && data.full && finTab === "statements" && (
                 <div className="space-y-5 pt-3">

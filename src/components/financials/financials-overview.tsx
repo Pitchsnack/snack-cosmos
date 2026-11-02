@@ -1,6 +1,7 @@
 import { FinIcon } from "@/components/financials/fin-icon";
 import { EMPTY, fmtAmount, fmtCompact, fmtMillions, fmtMillionsOnly, fmtNumber, pctChange } from "@/lib/financials";
 import type { RatioItem, StatementItem } from "@/lib/financials.functions";
+import { useTranslation } from "@/i18n/language";
 
 /* Palette from the Financial Overview design spec. */
 const C = {
@@ -187,7 +188,7 @@ function KpiCard({
             {label}
           </div>
           <div
-            className="whitespace-nowrap text-[19px] font-bold tabular-nums"
+            className="whitespace-nowrap text-[14px] font-bold tabular-nums"
             style={{ color: C.ink, letterSpacing: "-0.01em", lineHeight: 1.2 }}
             title={title}
           >
@@ -240,6 +241,8 @@ export function FinancialsOverview({
   ratios: RatioItem[];
   year?: number;
 }) {
+  const { language } = useTranslation();
+  const th = language === "th";
   const sorted = [...years].sort((a, b) => a - b);
   const latest = year !== undefined && sorted.includes(year) ? year : sorted[sorted.length - 1];
   const idx = sorted.indexOf(latest);
@@ -433,9 +436,9 @@ export function FinancialsOverview({
       <div className="grid items-stretch gap-[11px] grid-cols-1 xl:h-[512px] xl:[grid-template-columns:1.06fr_0.94fr_1.20fr]">
         {/* A */}
         <section className="flex min-h-0 min-w-0 flex-col gap-3 overflow-visible rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
-          <h2 className="flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
+          <h2 className="flex items-center gap-2 whitespace-nowrap text-[14px] font-bold" style={{ color: C.navy }}>
             A) Income Highlights{" "}
-            <span className="font-medium" style={{ color: C.muted }}>
+            <span className="text-[12.5px] font-medium" style={{ color: C.muted }}>
               ({prev ?? EMPTY} vs {latest ?? EMPTY})
             </span>
           </h2>
@@ -577,9 +580,9 @@ export function FinancialsOverview({
 
         {/* B */}
         <section className="flex min-h-0 min-w-0 flex-col overflow-visible rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
-          <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
+          <h2 className="mb-2 flex items-center gap-2 whitespace-nowrap text-[14px] font-bold" style={{ color: C.navy }}>
             B) Financial Position{" "}
-            <span className="font-medium" style={{ color: C.muted }}>
+            <span className="text-[12.5px] font-medium" style={{ color: C.muted }}>
               (as of {latest ?? EMPTY})
             </span>
           </h2>
@@ -653,17 +656,15 @@ export function FinancialsOverview({
               className="flex items-center gap-[10px] rounded-[10px] px-[15px] py-[13px]"
               style={{ background: C.blueBg }}
             >
-              <FinIcon name="scale" className="h-[22px] w-[22px] shrink-0" style={{ color: C.navy }} />
-              <div className="min-w-0">
-                <div
-                  className="whitespace-nowrap text-[12.5px] font-semibold"
-                  style={{ color: C.navy }}
-                >
-                  Total Assets = Total Liabilities &amp; Equity
-                </div>
-                <div className="mt-0.5 text-[14.5px] font-bold tabular-nums" style={{ color: C.navy }}>
-                  <span title={fmtAmount(totalAssets)}>{fmtMillions(totalAssets)}</span> {currency}
-                </div>
+              <div className="min-w-0 whitespace-nowrap text-[12.5px]" style={{ color: C.navy }}>
+                <span className="font-semibold tabular-nums" title={fmtAmount(totalAssets)}>
+                  {th
+                    ? `สินทรัพย์รวม = ${fmtMillions(totalAssets)} บาท`
+                    : `Total Assets = ${fmtMillions(totalAssets)} ${currency}`}
+                </span>{" "}
+                <span className="font-normal" style={{ color: C.muted }}>
+                  {th ? "(หนี้สิน + ส่วนของผู้ถือหุ้น)" : "(Liability + Equity)"}
+                </span>
               </div>
             </div>
           </div>
@@ -671,9 +672,9 @@ export function FinancialsOverview({
 
         {/* C */}
         <section className="flex min-h-0 min-w-0 flex-col overflow-visible rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
-          <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
+          <h2 className="mb-2 flex items-center gap-2 whitespace-nowrap text-[14px] font-bold" style={{ color: C.navy }}>
             C) Key Ratio Snapshot{" "}
-            <span className="font-medium" style={{ color: C.muted }}>
+            <span className="text-[12.5px] font-medium" style={{ color: C.muted }}>
               ({latest ?? EMPTY})
             </span>
           </h2>
@@ -711,9 +712,9 @@ export function FinancialsOverview({
       {/* Bottom row */}
       <div className="grid items-stretch gap-[11px] grid-cols-1 lg:[grid-template-columns:1.15fr_1fr]">
         <section className="flex min-w-0 flex-col rounded-xl bg-white p-[15px_17px]" style={cardStyle}>
-          <h2 className="mb-2 flex items-center gap-2 text-sm font-bold" style={{ color: C.navy }}>
+          <h2 className="mb-2 flex items-center gap-2 whitespace-nowrap text-[14px] font-bold" style={{ color: C.navy }}>
             Key Financial Summary{" "}
-            <span className="font-medium" style={{ color: C.muted }}>
+            <span className="text-[12.5px] font-medium" style={{ color: C.muted }}>
               ({currency})
             </span>
           </h2>
