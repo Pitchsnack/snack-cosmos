@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { CompleteFirmInput, DraftFirmInput, advisorNeedsCompleteSave } from "@/lib/advisor-form-schema";
 import { DEAL_BANDS, feeWords, parsePct, type AdvisorFirm, type FeeDetail, type FeeType } from "@/lib/advisor-firm";
+import { shouldProtectSetupDone } from "@/lib/advisor-setup-completion";
 
 /**
  * Advisor › My Company. Owners (and Control) read and edit their firm
@@ -277,7 +278,12 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
       ...(data.suggested_headline !== undefined ? { suggested_headline: data.suggested_headline || null } : {}),
       ...(completeSchema.safeParse(data).success ? { setup_done_at: new Date().toISOString() } : {}),
     };
-    if (data.id) { const { data: ctl0 } = await sb.rpc("is_control", { _user_id: context.userId }); if (ctl0) delete (row as Record<string, unknown>).setup_done_at; }
+    // Control may edit anyone's firm, but must not mark someone else's draft as setup-complete.
+    // Editing your own firm still stamps setup_done_at.
+    if (data.id && shouldProtectSetupDone(current?.owner_user_id, context.userId)) {
+      const { data: ctl0 } = await sb.rpc("is_control", { _user_id: context.userId });
+      if (ctl0) delete (row as Record<string, unknown>).setup_done_at;
+    }
     let id = data.id;
     if (id) {
       const { error } = await sb.from("advisor_firms").update(row).eq("id", id);
