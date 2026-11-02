@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Check, Circle, Loader2, Plus, Sparkles, X } from 'lucide-react';
+import { Loader2, Plus, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SELLER_DESCRIPTION_LIMITS, type SellerDraft } from '@/lib/seller-wizard';
 import { SELLER_SECTOR_EXAMPLES } from '@/lib/seller-sector-examples';
@@ -18,7 +18,7 @@ function Tags({ label, required, value, onChange, examples, who, where, sector, 
   onChange([...value, tag]); setInput('');
   requestAnimationFrame(() => {
    if (value.length === 4) { const buttons = root.current?.querySelectorAll<HTMLButtonElement>('[data-remove-tag]'); buttons?.[buttons.length - 1]?.focus(); }
-   else if (example) { const target = root.current?.querySelector<HTMLElement>('[data-example], input'); target?.focus(); }
+   else if (example) { const target = root.current?.querySelector<HTMLElement>('[data-example]') ?? root.current?.querySelector<HTMLElement>('input'); target?.focus(); }
   });
  };
  const ex = (list: string[]) => available(list).map(x => <Button key={x} data-example variant="unstyled" size="unstyled" className="seller-tag-example" aria-label={L(`Add ${x}`, `เพิ่ม ${x}`)} onClick={() => add(x, true)}><Plus size={13}/>{x}</Button>);

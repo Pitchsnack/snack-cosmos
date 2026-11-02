@@ -5,8 +5,6 @@ import { Lock, Check as CheckIcon, Sparkles, Loader2, Calendar, Users } from "lu
 import { StepBar, MissedNote, type StepItem } from "@/components/common/step-bar";
 import { Button } from "@/components/ui/button";
 import { WebsiteCheckLink } from "@/components/startups/website-check-link";
-import { useServerFn } from "@tanstack/react-start";
-import { checkWebsiteReachable } from "@/lib/website-check.functions";
 import { SellerWebsiteFields, websiteMissing, type WebsiteField } from "./seller-website-fields";
 import { FounderEditor } from "./founder-editor";
 import { autoEnrichAdapter } from "@/lib/auto-enrich/auto-enrich-adapter";
@@ -26,11 +24,9 @@ import {
 } from "@/lib/seller-wizard";
 
 const STEPS = [...SELLER_STEPS, { id: "review", sec: "Review" }] as const;
-const THIS_YEAR = new Date().getFullYear();
 
-const inp =
-  "w-full rounded-[10px] border border-[#d1d5db] bg-white px-3.5 py-3 text-[15.5px] text-[#111827] outline-none focus:border-[#1e2a4a] focus:shadow-[0_0_0_3px_#e3e8f2]";
-const fieldLbl = "mb-[7px] block text-[13px] font-semibold text-[#374151]";
+const inp = "w-full rounded-[10px] border border-input bg-card px-3.5 py-3 text-[15.5px] text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const fieldLbl = "mb-[7px] block text-[13px] font-semibold text-foreground";
 
 function Radio({ list, value, onPick, grid }: {
     list: { value: string; label: string; hint?: string }[]; value: string | null; onPick: (v: string) => void; grid?: boolean;
@@ -154,7 +150,7 @@ export function SellerWizard({
     setFull(null);
   };
   const back = () => {
-    if (cur.id === "web" && webExpanded) { setWebExpanded(false); return; }
+    if (cur.id === "web" && webExpanded) { if (!reading) setWebExpanded(false); return; }
     if (full != null) { setFull(null); go(STEPS.length - 1); return; }
     const list = shownOf(d, null);
     const prev = [...list].reverse().find((i) => i < step);

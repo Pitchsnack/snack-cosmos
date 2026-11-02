@@ -182,7 +182,10 @@ export function websiteFieldsAnswered(d: SellerDraft) {
   const long = d.longDescription?.trim() || d.longDescriptionTh?.trim() || "";
   return !!short && short.length <= SELLER_DESCRIPTION_LIMITS.short && !!long && long.length <= SELLER_DESCRIPTION_LIMITS.long
     && Math.max(d.productTags?.length ?? 0, d.productTagsTh?.length ?? 0) > 0
-    && Math.max(d.productTags?.length ?? 0, d.productTagsTh?.length ?? 0) <= 5;
+    && Math.max(d.productTags?.length ?? 0, d.productTagsTh?.length ?? 0) <= 5
+    && [d.shortDescription, d.shortDescriptionTh].every(v => (v?.length ?? 0) <= 500)
+    && [d.longDescription, d.longDescriptionTh].every(v => (v?.length ?? 0) <= 5000)
+    && [...(d.productTags ?? []), ...(d.productTagsTh ?? [])].every(v => !!v.trim() && v.length <= 50);
 }
 /** Legacy year and size both map to the combined question; other keys retain identity. */
 export function normalizeSellerStep(k: string | null | undefined): StepKey | null {
