@@ -118,7 +118,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
   const browse = item.kind === "seller" ? "Browse listings" : item.kind === "buyer" ? "Browse investors" : "Browse advisors";
   const badge = item.kind === "seller" ? "Certified" : item.kind === "buyer" ? "Verified investor" : "Verified advisor";
   const email = item.kind === "seller" ? "Your listing is approved" : "Your profile is approved";
-  const rewritten = name.trim() !== (item.suggestedName ?? "").trim() || headline.trim() !== (item.suggestedHeadline ?? "").trim() || headlineTh.trim() !== (item.suggestedHeadlineTh ?? "").trim() && !!(item.suggestedHeadlineTh ?? "").trim();
+  const rewritten = item.kind !== "advisor" && (name.trim() !== (item.suggestedName ?? "").trim() || headline.trim() !== (item.suggestedHeadline ?? "").trim() || headlineTh.trim() !== (item.suggestedHeadlineTh ?? "").trim() && !!(item.suggestedHeadlineTh ?? "").trim());
   const matches = r.verification.filter(v => v.result === "match" || v.result === "by_hand" && v.checked).length;
   const manual = r.verification.filter(v => v.result === "by_hand" && !v.checked).length;
   const differing = r.verification.filter(v => v.result === "differs" || v.result === "not_given").length;
