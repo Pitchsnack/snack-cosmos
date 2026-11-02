@@ -191,7 +191,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
                 </div>
               </div>
               {!sample && data.full && finTab === "overview" && (
-                <div className="pt-3"><FinancialsOverview years={years} currency="THB" income={data.full.income} position={data.full.position} ratios={data.full.ratios} /></div>
+                <div className="pt-3"><ReportScroll><FinancialsOverview years={years} currency="THB" income={data.full.income} position={data.full.position} ratios={data.full.ratios} /></ReportScroll></div>
               )}
               {!sample && data.full && finTab === "statements" && (
                 <div className="space-y-5 pt-3">
