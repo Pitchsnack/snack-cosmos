@@ -423,7 +423,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         <Button type="button" variant="outline" size="sm" onClick={() => set("credentials", [...f.credentials, { name: "", note: "", status: "pending" }])}><Plus className="mr-1.5 h-4 w-4" />{setupText("Add licence or credential")}</Button>
       </Section>
 
-      <Section id="documents" active={!setup && section === "documents"} title={setupText("Documents")} setup={!!setup}>
+      <Section id="documents" active={!setup && section === "documents"} title={setupText("Documents (Optional)")} setup={!!setup}>
         {f.documents.length === 0 && <p className="text-[13px] text-muted-foreground">{setupText("No documents yet. Upload your company certificate and licences: PDF, DOCX or an image.")}</p>}
         {f.documents.map((d, i) => (
           <div key={d.id ?? d.path} className="grid items-end gap-3 sm:grid-cols-[1.4fr_auto_auto]">
@@ -563,7 +563,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         <Button type="button" variant="outline" size="sm" onClick={() => set("credentials", [...f.credentials, { name: "", note: "", status: "pending" }])}><Plus className="mr-1.5 h-4 w-4" />{setupText("Add licence or credential")}</Button>
       </Section>
 
-      <Section id="documents" active={!setup && section === "documents"} title={setupText("Documents")} setup={!!setup}>
+      <Section id="documents" active={!setup && section === "documents"} title={setupText("Documents (Optional)")} setup={!!setup}>
         {f.documents.length === 0 && <p className="text-[13px] text-muted-foreground">{setupText("No documents yet. Upload your company certificate and licences: PDF, DOCX or an image.")}</p>}
         {f.documents.map((d, i) => (
           <div key={d.id ?? d.path} className="grid items-end gap-3 sm:grid-cols-[1.4fr_auto_auto]">
