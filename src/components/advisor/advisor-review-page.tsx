@@ -203,7 +203,7 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
     : `${tr("{n} required answers are missing").replace("{n}", String(missing.length))}: ${names}${dot} ${tr("Add them before you save.")}`;
 
   const setSlot = (i: number, patch: Partial<FirmForm["media"]["slots"][number]>) =>
-    set("media", { ...f.media, slots: f.media.slots.map((s, j) => (j === i ? { ...s, ...patch } : s)) });
+    set("media", { ...f.media, slots: f.media.slots.map((s, j) => (j === i ? { ...s, ...patch } : s)) as FirmForm["media"]["slots"] });
 
   const grid = "grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4";
 

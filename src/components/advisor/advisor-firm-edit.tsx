@@ -464,8 +464,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         </F>
       </Section>
 
-      <Section id="services" active={!setup && section === "services"} title={setupText("Services and fees")} setup={!!setup}
-        action={setup ? <button type="button" onClick={setup.onChangeServices} className="text-[13px] font-semibold text-[#1E2A4A] hover:underline dark:text-foreground">{setupText("Change services")}</button> : undefined}>
+      <Section id="services" active={!setup && section === "services"} title={setupText("Services and fees")} setup={!!setup}>
         {!setup && <ServiceTiles picked={f.services} onToggle={toggleService} />}
         {f.services.length === 0 && <p className="text-[13px] font-semibold text-[#B42318]">{setupText("Pick at least one service.")}</p>}
         {f.services.length > 0 && (
