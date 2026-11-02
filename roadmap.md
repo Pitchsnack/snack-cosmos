@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Advisor company name
+- [ ] Use Company name on firm cards; move ref/city and managed hat onto cover.
+- [ ] Remove advisor name/headline inputs and checks from editing, registration, review and notices without changing legacy data or other roles.
+- [ ] Test registration/approval and clean up new test firm through Admin; check EN/TH and narrow layouts; provide screenshots.
+
 ## Compact advisor panels
 - [x] Compact shared Browse/My Company and separate Admin sections; accessible photo viewer, scoped hover and section-specific edits.
 - [x] Ten exact EN/TH service lines updated throughout app and Partners; saved data and fee words elsewhere unchanged.
