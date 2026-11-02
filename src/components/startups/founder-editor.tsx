@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FounderStoryEditor } from "./founder-story-editor";
 import { LangTag, useTextLang } from "@/components/common/text-lang";
-import { type FounderStory } from "@/lib/founder-story";
+import { type FounderStory, initialFounderStory, composeFounderBio } from "@/lib/founder-story";
 import { useTranslation } from "@/i18n/language";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -249,6 +249,19 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
   const root = useRef<HTMLDivElement>(null);
   const added = useRef(false);
   const focusIndex = useRef<number | null>(null);
+  useEffect(() => {
+    if(!requiredName) return;
+    const next=value.map(f=>{
+      const hydrate=(bio:string|null|undefined,story:FounderStory|null|undefined,lang:"en"|"th")=>{
+        const initial=initialFounderStory(bio,story,lang,year,salesFor?.(lang) ?? sales);
+        const parts={...initial.parts,year:initial.parts.year || year,sales:initial.parts.sales || (salesFor?.(lang) ?? sales)};
+        return {...initial,parts};
+      };
+      const en=hydrate(f.bio,f.bio_story,"en"),thai=hydrate(f.bio_th,f.bio_story_th,"th");
+      return {...f,bio_story:en,bio_story_th:thai,bio:en.mode === "lines" ? composeFounderBio(en):f.bio,bio_th:thai.mode === "lines" ? composeFounderBio(thai):f.bio_th};
+    });
+    if(JSON.stringify(next)!==JSON.stringify(value)) onChange(next);
+  },[requiredName,year,sales,value]);
   const add = () => {
     focusIndex.current = value.length;
     onChange([...value, {full_name:"", bio_story:null}]);

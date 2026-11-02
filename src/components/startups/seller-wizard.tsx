@@ -10,6 +10,7 @@ import { FounderEditor } from "./founder-editor";
 import { autoEnrichAdapter } from "@/lib/auto-enrich/auto-enrich-adapter";
 import { founderRevenueLabel } from "@/lib/founder-story";
 import { toast } from "sonner";
+import { mergeWebsiteEnrich } from "@/lib/seller-website-enrich";
 import { SellerTypeQuestion } from "@/components/common/business-type-question";
 import type { SectorPick } from "@/lib/business-types";
 import { AddressBox } from "@/components/advisor/advisor-firm-fields";
@@ -165,15 +166,15 @@ export function SellerWizard({
   const ok = sellerValid(d);
   const answered = sellerAnswered(d);
   // Review moves on once Company, Revenue and Sector are answered.
-  const barNow = shownOf(d, null).map((i) => STEPS[i]?.id as StepKey);
+  const barNow = shownOf(d, full ?? step).map((i) => STEPS[i]?.id as StepKey);
   const blockers = barNow.filter(k => k !== "review" && k !== "lic" && !ok[k]);
   const valid: Record<string, boolean> = { ...ok, review: blockers.length === 0 };
   const canSkip = cur.id === "lic" && d.licences.length + d.iso.length === 0;
 
   // The step bar: questions that show, plus Review.
-  const bar = shownOf(d, null);
+  const bar = shownOf(d, full ?? step);
   const barKeys = bar.map((i) => STEPS[i]?.id as StepKey);
-  const inBar = bar.includes(step) && !(full != null && !shownOf(d, null).includes(full));
+  const inBar = bar.includes(step);
   const reached = d.reached ?? null;
   useEffect(() => {
     if (!inBar) return;
@@ -209,20 +210,8 @@ export function SellerWizard({
     const before = d; const wasAuto = {...marks};
     try {
       const r = await autoEnrichAdapter.enrichStartup({websiteUrl:url});
-      const nextMarks: Partial<Record<WebsiteField,boolean>> = {};
-      const patch: Partial<SellerDraft> = {web:url, enrichResult:r as Record<string,unknown>};
-      for (const key of ["shortDescription","longDescription","productTags","marketTags"] as WebsiteField[]) {
-        const target = th ? `${key}Th` : key;
-        const value = (before as unknown as Record<string,unknown>)[target];
-        const fallback = (before as unknown as Record<string,unknown>)[key];
-        const filled = Array.isArray(value) ? value.length > 0 : typeof value === "string" && !!value.trim();
-        const otherFilled = th && (Array.isArray(fallback) ? fallback.length > 0 : typeof fallback === "string" && !!fallback.trim());
-        const found = r[key];
-        if ((!filled && !otherFilled || wasAuto[key]) && found && (Array.isArray(found) ? found.length : found.trim())) {
-          (patch as Record<string,unknown>)[target] = Array.isArray(found) ? found.map(x => x.trim().slice(0,50)).filter(Boolean).filter((x,i,arr) => arr.findIndex(t => t.toLowerCase() === x.toLowerCase()) === i).slice(0,5) : found;
-          nextMarks[key] = true;
-        }
-      }
+      const merged = mergeWebsiteEnrich(before,r as Record<string,unknown>,wasAuto,th);
+      const nextMarks=merged.marks; const patch={...merged.patch,web:url};
       set(patch); setMarks(prev => ({...prev,...nextMarks})); setReadDone(true);
       if (!Object.keys(nextMarks).length) toast.warning(L("Auto Enrich found nothing new. Fill in the remaining fields.", "Auto Enrich ไม่พบข้อมูลใหม่ กรุณากรอกช่องที่เหลือ"));
     } catch(e) {toast.error(e instanceof Error ? e.message : L("Auto Enrich failed.","Auto Enrich อ่านเว็บไซต์ไม่ได้"));}
@@ -379,13 +368,13 @@ export function SellerWizard({
 
   return (
     <div className="wiz seller-setup -m-4 min-h-[calc(100vh-54px)] text-[15px] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
-      <div className="flex h-14 items-center gap-3 border-b border-[#e5e7eb] bg-white px-6">
+      <div className="flex h-14 items-center gap-3 border-b border-border bg-card px-6">
         <span className="text-[14px] font-semibold">{setupText(title)}</span>
         <span className="ml-auto text-[13px] text-[#9ca3af]">{setupText(justSaved ? "Saved just now" : tr("All changes saved"))}</span>
       </div>
       <div className={`mx-auto ${cur.id === "web" ? "max-w-[800px]" : "max-w-[900px]"} px-5 pb-16 pt-10`}>
         <div className="mb-2.5 flex items-baseline justify-between text-[13px] text-[#6b7280]">
-          <b className="font-semibold text-[#111827]">{tr(cur.sec)}</b>
+          <b className="font-semibold text-foreground">{tr(cur.sec)}</b>
           <span>{setupText(`Step ${pos + 1} of ${shown.length}`)}</span>
         </div>
         <div className="mb-6 mt-5">
@@ -396,8 +385,8 @@ export function SellerWizard({
         </div>
         <div className="seller-wizard-card rounded-[14px] border border-border px-6 pb-7 pt-8 sm:px-9 sm:pt-9">
           <div key={cur.id} ref={cardRef} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
-            <h2 ref={titleRef} tabIndex={-1} className="mb-1.5 outline-none text-2xl font-bold leading-snug tracking-normal">{tr(q.t)}{(cur.id !== "web" || webExpanded && !reading && !readDone) && cur.id !== "lic" && <span aria-hidden className="ml-1 text-destructive">*</span>}</h2>
-            {q.h && <p className="mb-6 text-[14.5px] leading-relaxed text-[#6b7280]">{tr(q.h)}</p>}
+            <h2 ref={titleRef} tabIndex={-1} className="mb-1.5 outline-none text-2xl font-bold leading-snug tracking-normal text-foreground">{tr(q.t)}{(cur.id !== "web" || webExpanded && !reading && !readDone) && cur.id !== "lic" && <span aria-hidden className="ml-1 text-destructive">*</span>}</h2>
+            {q.h && <p className="mb-6 text-[14.5px] leading-relaxed text-muted-foreground">{tr(q.h)}</p>}
             {!q.h && <div className="mb-6" />}
             {q.body}
           </div>
