@@ -261,6 +261,7 @@ export const TH_COMPANY_SETUP: Record<string, string> = {
   "Everything on your profile is": "ข้อมูลทั้งหมดในโปรไฟล์ของท่าน",
   "open to sellers and buyers": "เปิดให้ผู้ขายและผู้ซื้อ",
   "in Browse advisors, so they can compare firms and choose one: your services and fees, team and contacts, licences and documents.": "ในหน้าดูที่ปรึกษา เพื่อเปรียบเทียบและเลือกบริษัท ได้แก่ บริการและค่าธรรมเนียม ทีมและข้อมูลติดต่อ ใบอนุญาตและเอกสารของท่าน",
+  "Who sees your profile": "ใครเห็นโปรไฟล์ของท่าน",
   "✓ Verified by PitchSnack on": "✓ ตรวจสอบโดย PitchSnack เมื่อ",
   "still waiting for a check.": "ยังรอการตรวจสอบ",
   "A change to your legal name, registration number, licences or documents goes back to PitchSnack for a check.": "การเปลี่ยนชื่อนิติบุคคล เลขทะเบียน ใบอนุญาต หรือเอกสารจะส่งกลับให้ PitchSnack ตรวจสอบ",
