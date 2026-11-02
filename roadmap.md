@@ -1,9 +1,9 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
 ## Advisor licence dropdown
-- [ ] Shared grouped picker, issuer lines, Other, duplicate prevention and validation.
-- [ ] Persist keys, preserve legacy credentials, localize all displays and snapshots.
-- [ ] Regression and authenticated desktop/mobile EN/TH light/dark checks; legacy matching report.
+- [x] Shared grouped picker, issuer lines, Other, duplicate prevention and validation.
+- [x] Persist keys, preserve legacy credentials, localize displays and snapshots, including active one-step review.
+- [x] 64 relevant tests; authenticated Admin save/read-back on ADV-1009; eight desktop/mobile EN/TH light/dark checks. Legacy ADV-1014 “test”: “accoutning” remains Other, possible CPA match (note “2 CPA”).
 
 - [x] 1. DB: user_activity table (last_active_at), RLS own-row read, touch_last_active() RPC (15-min throttle), backfill from auth.users.last_sign_in_at
 - [x] 2. Server: last-login step helpers + touchLastActive server fn
