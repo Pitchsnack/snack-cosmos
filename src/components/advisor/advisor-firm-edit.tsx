@@ -89,15 +89,15 @@ export function AdvisorFirmEdit({ firmId, section }: { firmId: string | null; se
   return <FirmEditForm key={firm?.id ?? "new"} firm={firm} section={section} />;
 }
 
-function Section({ id, title, action, setup, active, children }: { id: EditSection; title: string; action?: React.ReactNode; setup?: boolean; active?: boolean; children: React.ReactNode }) {
+function Section({ id, title, action, setup, active, children, noTitle }: { id: EditSection; title: string; action?: React.ReactNode; setup?: boolean; active?: boolean; children: React.ReactNode; noTitle?: boolean }) {
   const pop = useEditInfo();
   return (
     <section id={`sec-${id}`} className={pop ? "scroll-mt-6" : "scroll-mt-6 rounded-[14px] border border-border bg-card p-5 shadow-card"}>
       <EditSec id={id} tone="buyer" active={active}>
-        <div className="mb-4 flex items-center justify-between gap-3">
+        {!(noTitle && pop && !action) && <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className={setup ? "text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]" : "text-[16px] font-semibold"}>{setupText(title)}</h2>
           {action}
-        </div>
+        </div>}
         <div className="space-y-4">{children}</div>
       </EditSec>
     </section>
@@ -405,7 +405,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       </Section>
 
 </div>}
-        {visible("team") && <div className="space-y-4"><TabHead title={tr("Team")} />      <Section id="team" active={!setup && section === "team"} title={setupText("Team")} setup={!!setup}>
+        {visible("team") && <div className="space-y-4"><TabHead title={tr("Team")} />      <Section id="team" active={!setup && section === "team"} title={setupText("Team")} setup={!!setup} noTitle>
         <p className="text-[12.5px] text-muted-foreground">{tr("Your name is checked against your firm's list of directors.")}</p>
         {f.team.map((t, i) => (
           <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
