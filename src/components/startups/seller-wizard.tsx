@@ -227,7 +227,7 @@ export function SellerWizard({
 
   const Q: Record<string, { t: string; h?: string; body: React.ReactNode }> = {
     role: { t: tr("Which best describes you?"), h: tr("This determines who approves buyer requests for this listing."),
-      body: <Radio list={SELLER_RELATIONS} value={d.role} onPick={(v) => pick({ role: v as SellerDraft["role"] })} /> },
+      body: <Radio list={SELLER_RELATIONS.map((r) => ({ value: r.value, label: L(...r.label), hint: L(...r.hint) }))} value={d.role} onPick={(v) => pick({ role: v as SellerDraft["role"] })} /> },
     name: { t: tr("What is your company's name, registration number and business address?"), h: tr("Check that the name matches your company registration."), body: null as unknown as React.ReactNode },
     nameBody: { t: "",
       body: (
@@ -341,7 +341,7 @@ export function SellerWizard({
         <h3 className="mb-2 text-[14px] font-bold text-[#151A28]">{L("Your company", "บริษัทของท่าน")}</h3>
         <div className="overflow-hidden rounded-[10px] border border-[#e5e7eb]">
           {([
-            [tr("You are"), SELLER_RELATIONS.find((r) => r.value === d.role)?.label, 0],
+            [tr("You are"), roleLabel(), 0],
             [tr("Company name"), d.name, 1],
             [tr("Registration no."), d.reg, 1],
             [tr("Business address"), addressLine(d.addr), 1],
