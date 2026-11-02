@@ -7,10 +7,11 @@ import type { RegulatoryLicence } from "@/lib/compliance";
 
 export type SellerRelation = "owner" | "family_owner" | "agent";
 
-export const SELLER_RELATIONS: { value: SellerRelation; label: string; hint: string }[] = [
-  { value: "owner", label: "เจ้าของกิจการ", hint: "ฉันเป็นเจ้าของกิจการและกำลังขายบริษัทของตนเอง" },
-  { value: "family_owner", label: "เจ้าของธุรกิจครอบครัว", hint: "ฉันเป็นเจ้าของธุรกิจครอบครัว และกำลังขายหรืออยู่ระหว่างพิจารณาขายกิจการ" },
-  { value: "agent", label: "ผู้แทนที่ได้รับมอบอำนาจ (ตัวแทน)", hint: "ฉันดำเนินการแทนเจ้าของกิจการตามที่ได้รับมอบหมาย" },
+/** Step 1 choices, bilingual [EN, TH]; the stored value is the key, never the wording. */
+export const SELLER_RELATIONS: { value: SellerRelation; label: [string, string]; hint: [string, string] }[] = [
+  { value: "owner", label: ["Business owner", "เจ้าของกิจการ"], hint: ["I am the business owner and selling my own company", "ฉันเป็นเจ้าของกิจการและกำลังขายบริษัทของตนเอง"] },
+  { value: "family_owner", label: ["Family business owner", "เจ้าของธุรกิจครอบครัว"], hint: ["I am a family business owner, selling or considering the sale of the business", "ฉันเป็นเจ้าของธุรกิจครอบครัว และกำลังขายหรืออยู่ระหว่างพิจารณาขายกิจการ"] },
+  { value: "agent", label: ["Authorized representative (agent)", "ผู้แทนที่ได้รับมอบอำนาจ (ตัวแทน)"], hint: ["I am acting on behalf of the business owner as authorised", "ฉันดำเนินการแทนเจ้าของกิจการตามที่ได้รับมอบหมาย"] },
 ];
 
 /** Stored exactly as selected (THB bands) — never converted. */
