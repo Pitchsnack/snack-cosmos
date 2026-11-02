@@ -61,3 +61,18 @@
 .hub-deal-tile{flex:none;width:34px;height:34px;display:grid;place-items:center;border-radius:9px;background:var(--hub-active-soft);color:var(--hub-active);font-size:12px;font-weight:700;text-transform:uppercase}
 .hub-one-buyer-note{font-size:13.5px;color:var(--muted-foreground);margin:10px 0}
 @media(max-width:600px){.hub-deal-selector{align-items:stretch}.hub-deal-btn{width:100%;min-width:0}.hub-deal-list{left:0;right:0;width:100%}}
+
+/* ReportScroll: a report never squeezes; below its minimum width the body scrolls sideways inside its own box */
+.rs-wrap{min-width:0}
+.rs-note{display:flex;align-items:center;gap:6px;margin:0 0 8px;font-size:12.5px;color:var(--muted-foreground)}
+.rs-box{position:relative}
+.rs{overflow-x:auto;scrollbar-width:thin;scrollbar-color:#C9CED8 transparent;padding-bottom:6px}
+.rs::-webkit-scrollbar{height:8px}
+.rs::-webkit-scrollbar-thumb{background:#C9CED8;border-radius:8px}
+.rs::-webkit-scrollbar-track{background:transparent}
+.rs-body{min-width:1040px}
+.rs-fade{position:absolute;top:0;bottom:6px;width:24px;pointer-events:none;opacity:0;transition:opacity .2s}
+.rs-fade-r{right:0;background:linear-gradient(90deg,transparent,var(--card))}
+.rs-fade-l{left:0;background:linear-gradient(270deg,transparent,var(--card))}
+.rs-fade.on{opacity:1}
+@media print{.rs{overflow-x:visible}.rs-body{min-width:0}.rs-fade,.rs-note{display:none}}
