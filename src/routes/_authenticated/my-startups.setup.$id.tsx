@@ -10,7 +10,7 @@ import { SellerWizard } from "@/components/startups/seller-wizard";
 import { getSellerSetup, saveSellerSetup, applySellerEnrich, type SellerSetup } from "@/lib/seller-setup.functions";
 import { emptyDraft, firstUnanswered, listingPayload, SELLER_STEPS, normalizeSellerStep, type SellerDraft } from "@/lib/seller-wizard";
 import { z } from "zod";
-import { useSessionContext } from "@/hooks/use-session-context";
+import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 
 export const Route = createFileRoute("/_authenticated/my-startups/setup/$id")({
   head: () => ({
@@ -52,6 +52,7 @@ function Page() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: session } = useSessionContext();
+  const { isControl } = usePermissions();
   const fetchFn = useServerFn(getSellerSetup);
   const saveFn = useServerFn(saveSellerSetup);
   const fetchListings = useServerFn(listHiddenProfiles);
@@ -73,7 +74,7 @@ function Page() {
   const completed = async () => {
     // Re-read after enrichment so the test matches the values the editor actually displays.
     let missing = true;
-    try { const rows = await fetchListings(); const row = rows.find(r => r.startup_id === id) ?? null; missing = needsSellerIdentityTour(row, session?.user?.accountRole === "admin"); }
+    try { const rows = await fetchListings(); const row = rows.find(r => r.startup_id === id) ?? null; missing = needsSellerIdentityTour(row, isControl); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Could not read listing information"); }
     void qc.invalidateQueries();
     navigate({ to: "/my-startups", search: missing ? { panel:id, edit:"startup", view:"public", tab:"identity", tour:"seller-identity" } : { panel:id, edit:"startup", view:"private", tab:"images" } });

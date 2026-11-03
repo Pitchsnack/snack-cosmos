@@ -30,7 +30,17 @@ export const listHiddenProfiles = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase.from("hidden_profiles").select(COLS);
     if (error) throw new Error(error.message);
-    return (data ?? []) as unknown as HiddenProfileRow[];
+    // Suggestions are owner/Admin editor values, never a public listing projection.
+    const { data: control } = await context.supabase.rpc("is_control", { _user_id: context.userId });
+    if (control) return (data ?? []) as unknown as HiddenProfileRow[];
+    const { data: memberships, error: membershipError } = await context.supabase.from("startup_users").select("startup_id").eq("user_id", context.userId);
+    if (membershipError) throw new Error(membershipError.message);
+    const owned = new Set((memberships ?? []).map(m => m.startup_id));
+    return (data ?? []).map(row => {
+      if (owned.has(row.startup_id)) return row;
+      const { suggested_listing_name: _name, suggested_headline: _headline, ...publicRow } = row;
+      return publicRow;
+    }) as unknown as HiddenProfileRow[];
   });
 
 async function loadFacts(sb: Sb, startupId: string): Promise<EntryFacts & { tenant_id: string }> {
