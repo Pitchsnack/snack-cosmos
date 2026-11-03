@@ -400,7 +400,7 @@ function SuggestedNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: strin
 
 function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string }) {
   const tr = useTr();
-  const { d } = pd;
+  const { d, setD } = pd;
   const { lang } = useTextLang();
   const [tip, setTip] = useState(false);
   const tipId = useId();
@@ -433,6 +433,7 @@ function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string 
       <div className="relative">
         <Input id="hp-code_name" value={d.code_name} placeholder={tr("e.g. Established Regional Logistics Network", "เช่น เครือข่ายโลจิสติกส์ระดับภูมิภาคที่ก่อตั้งมายาวนาน")}
           aria-describedby={cn(tipId, taken && errId)} aria-invalid={taken || undefined}
+          onChange={(e) => setD((p) => ({ ...p, code_name: singleLineSellerWording(e.target.value) }))}
           className={cn(BOX, shown && "pr-[110px]", border)} />
         {shown && <span className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-[5px] text-[13px] font-semibold text-[#15803D]"><CircleCheck className="h-[15px] w-[15px]" strokeWidth={2} />{tr("Available", "ใช้ได้")}</span>}
       </div>
