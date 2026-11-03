@@ -9,6 +9,8 @@ export const displayedStrengths = (d: Pick<SellerDraft, 'highlights' | 'highligh
   return own.map((text, i) => text.trim() ? text : other[i] ?? '');
 };
 export const strengthCount = (d: Pick<SellerDraft, 'highlights' | 'highlightsTh'>, requiredOnly = false) => displayedStrengths(d, false).slice(0, requiredOnly ? 3 : 4).filter(text => text.trim()).length;
+/** Automatic editor opening must not add English over existing Thai strengths. */
+export const prefillStrengthRows = (en:string[],th:string[]|undefined,ideas:string[]) => en.map((text,i)=>text.trim() || th?.[i]?.trim() ? text : i<3 ? ideas[i] ?? text : text);
 
 /** Use the existing anonymous suggestion builder; no website fetch, AI or new storage. */
 export function wizardStrengthIdeas(d: SellerDraft, th: boolean): string[] {

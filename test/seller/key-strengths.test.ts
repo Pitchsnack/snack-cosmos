@@ -1,6 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import {emptyDraft,websiteFieldsAnswered,isMissed} from '../../src/lib/seller-wizard';
-import {displayedStrengths,fillEmptyStrengths,strengthCount,strengthRows,wizardStrengthIdeas} from '../../src/lib/seller-strengths';
+import {displayedStrengths,fillEmptyStrengths,strengthCount,strengthRows,wizardStrengthIdeas,prefillStrengthRows} from '../../src/lib/seller-strengths';
 import {mergeWebsiteEnrich} from '../../src/lib/seller-website-enrich';
 const d=()=>({...emptyDraft(),name:'Test business',sector:'Packaging',year:'2006',shortDescription:'Packaging products',longDescription:'Packaging for food brands',productTags:['Flexible packaging'],marketTags:['Food brands','ASEAN']});
 describe('seller Website key strengths',()=>{
@@ -42,5 +42,7 @@ describe('seller Website key strengths',()=>{
   const result=mergeWebsiteEnrich(d(),{productTags:['Flexible packaging'],marketTags:['Food brands']},{},true);
   expect(result.patch.highlightsTh?.[0]).toBe('ดำเนินธุรกิจตั้งแต่ทศวรรษ 2000');expect(result.patch).not.toHaveProperty('highlights');
  });
+ it('Thai identity scrubbing never leaves an unfinished decade phrase',()=>expect(wizardStrengthIdeas({...d(),year:'2000'},true)[0]).not.toMatch(/ทศวรรษ$/));
  it('normalizes exactly four rows without dropping empty positions',()=>expect(strengthRows(['One','','Three'])).toEqual(['One','','Three','']));
+ it('opening Listing Identity keeps Thai strengths and the optional fourth untouched',()=>expect(prefillStrengthRows(['','','',''],['หนึ่ง','สอง','สาม',''],['One','Two','Three'])).toEqual(['','','','']));
 });

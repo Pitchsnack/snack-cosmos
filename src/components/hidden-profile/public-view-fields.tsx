@@ -1,4 +1,5 @@
 import { AfterWizardTour } from '@/components/common/after-wizard-tour';
+import { prefillStrengthRows } from '@/lib/seller-strengths';
 import { SellerWordingCount, SellerWordingInput, SellerWordingMessage } from './seller-wording-field';
 import { sellerWordingChangedError, singleLineSellerWording } from '@/lib/seller-listing-wording';
 import { FieldRow, AutoFillTabButton } from "@/components/common/listing-editor-fields";
@@ -75,7 +76,7 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
         code_name: p.code_name,
         headline: skipIdentityPrefill ? p.headline : p.headline.trim() ? p.headline : headlineIdea,
         description: p.description.trim() ? p.description : descIdea,
-        highlights: p.highlights.map((h, i) => (h.trim() ? h : (highlightIdeas[i] ?? h))),
+        highlights: prefillStrengthRows(p.highlights,p.highlights_th,highlightIdeas),
         customers_summary: p.customers_summary.trim() ? p.customers_summary : customersIdea,
       };
       setBaseline(JSON.stringify(next));
