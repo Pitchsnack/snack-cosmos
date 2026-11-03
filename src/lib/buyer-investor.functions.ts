@@ -325,8 +325,8 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       (descriptionChanged(data.description, r.p.description) && data.description && (descriptionError(data.description) ||
         (descriptionLeaks(data.description, data.investor_name, data.website_url ?? "").length ? "Your description mentions names, websites or contact details." : null))) ||
       (descriptionChanged(data.description_th, r.p.description_th) && data.description_th && (descriptionError(data.description_th) || (descriptionLeaks(data.description_th, data.investor_name, data.website_url ?? "").length ? "Your Thai description mentions names, websites or contact details." : null))) ||
-      (descriptionChanged(data.suggested_headline, r.p.suggested_headline) && data.suggested_headline && descriptionLeaks(data.suggested_headline, data.investor_name, data.website_url ?? "").length && "What you want to buy mentions names, websites or contact details.") ||
-      (descriptionChanged(data.suggested_headline_th, r.p.suggested_headline_th) && data.suggested_headline_th && descriptionLeaks(data.suggested_headline_th, data.investor_name, data.website_url ?? "").length && "Your Thai What you want to buy mentions names, websites or contact details.") ||
+      (descriptionChanged(data.suggested_headline ?? undefined, r.p.suggested_headline) && data.suggested_headline && descriptionLeaks(data.suggested_headline, data.investor_name, data.website_url ?? "").length && "What you want to buy mentions names, websites or contact details.") ||
+      (descriptionChanged(data.suggested_headline_th ?? undefined, r.p.suggested_headline_th) && data.suggested_headline_th && descriptionLeaks(data.suggested_headline_th, data.investor_name, data.website_url ?? "").length && "Your Thai What you want to buy mentions names, websites or contact details.") ||
       (relation !== "individual" && regError(data.registration_no ?? "", data.country ?? "")) ||
       buyerAboutError(data.short_description, stored?.short_description) ||
       buyerAboutError(data.short_description_th, stored?.short_description_th) ||

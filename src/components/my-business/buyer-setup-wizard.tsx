@@ -865,7 +865,7 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
 }
 
 function Complete({ invId, header, enrich, answered, onBack, onSaved }: {
-  invId: string; header: HeaderFn; enrich: EnrichInvestorResult | null; answered: A; onBack: () => void; onSaved: (msg: string) => void;
+  invId: string; header: HeaderFn; enrich: EnrichInvestorResult | null; answered: A; onBack: () => void; onSaved: (msg: string, wantEmpty?: boolean) => void;
 }) {
   const qc = useQueryClient();
   const data = qc.getQueryData<{ ok: boolean; data: Data | null }>(buyerInvestorKey(invId))?.data ?? null;
