@@ -1,9 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
 ## Seller after-wizard listing identity
-- [ ] Add completion navigation and one-time shared pop-up.
-- [ ] Apply bilingual wording limits, growing fields and registration checks without changing records.
-- [ ] Run focused tests, check test-account previews and report legacy over-limit refs and verification gaps.
+- [x] Add completion navigation and one-time shared pop-up.
+- [x] Apply bilingual wording limits, growing fields and registration checks without direct database edits.
+- [x] 39 focused tests passed; test-seller EN/TH pop-up, 1440/1024/390, errors and dismissal verified. No saved over-limit refs found.
+- [ ] Full wizard completion and Control Seller-tab click-through: available test seller has incomplete required setup; no completion or publication performed.
 
 ## Seller website and founder setup
 - [x] Reorder seller steps, migrate legacy progress on read/save, combine founded/size, require Website descriptions/tags, and reuse founders.
