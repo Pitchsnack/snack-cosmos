@@ -69,7 +69,7 @@ function ExtraProfile({ id, open }: { id: string; open: boolean }) {
   const d = r.data;
   const iv = d.investor;
   const rel = (d.buyer.relation ?? null) as BuyerRelation | null;
-  const prog = buyerProgressFor(rel, iv, d.buyer);
+  const prog = buyerProgressFor(rel, iv, d.buyer, d.people);
   const individual = rel === "individual";
   const nm = iv.investor_name || (iv.investor_type ? typeName(iv.investor_type) : tr("New investor profile"));
   const openWizard = () => void navigate({ to: "/buyer/company/$id/setup", params: { id }, search: {} });
