@@ -380,7 +380,6 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
   const checklist = firmChecklist(f);
   const complete = checklist.every((i) => i.done);
   const declined = f.verification?.state === "declined";
-  const pending = f.credentials.filter((c) => c.status === "pending");
   const addr = fullAddress(f);
   
   const edit = (s: EditSection) => openEdit(f.id, s);
@@ -454,14 +453,6 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
           sentence={<>{setupText("Everything on your profile is")} <strong>{setupText("open to sellers and buyers")}</strong>{setupText("in Browse advisors, so they can compare firms and choose one: your services and fees, team and contacts, licences and documents.")}</>}
         />
 
-        <p className="text-[13px] text-[#4B5563] dark:text-muted-foreground">
-          {f.verifiedAt ? (
-            <>
-              <strong className="text-[#15803D]">{setupText("✓ Verified by PitchSnack on")} {fmtDate(f.verifiedAt)}.</strong>{" "}
-              {pending.length > 0 && <>{pending.map((c) => licenceName(c, language === "th")).join(", ")} {pending.length > 1 ? "are" : "is"}{setupText("still waiting for a check.")} </>}{setupText("A change to your legal name, registration number, licences or documents goes back to PitchSnack for a check.")}
-            </>
-          ) : "PitchSnack hasn't verified your firm yet. Admin checks your licences and documents."}
-        </p>
         </>}
 
         {!client && <FirmPhotosBox photos={f.media} firm={f.name} canEdit onEdit={() => edit("logo")} />}
