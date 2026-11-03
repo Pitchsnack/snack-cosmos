@@ -15,10 +15,15 @@ export function SellerWordingInput({ id, value, onChange, kind, language, placeh
   useEffect(() => {
     const el = ref.current; if (!el) return;
     const measure = () => {
-      // Measure the actual placeholder too, without putting it into React state or a save payload.
-      const text = el.value; if (!text) el.value = placeholder;
-      el.style.height = 'auto'; const height = el.scrollHeight;
-      el.value = text; el.style.height = `${height}px`;
+      // A detached-value twin measures wrapping without changing the controlled input.
+      const twin = el.cloneNode(false) as HTMLTextAreaElement;
+      twin.removeAttribute('id'); twin.setAttribute('aria-hidden', 'true'); twin.tabIndex = -1;
+      twin.style.position = 'absolute'; twin.style.visibility = 'hidden'; twin.style.pointerEvents = 'none';
+      twin.style.width = `${el.getBoundingClientRect().width}px`; twin.style.height = 'auto';
+      twin.value = value || placeholder;
+      el.parentElement?.appendChild(twin);
+      const height = twin.scrollHeight; twin.remove();
+      el.style.height = `${height}px`;
     };
     measure(); window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);

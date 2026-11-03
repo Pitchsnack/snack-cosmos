@@ -1,5 +1,3 @@
-import { listHiddenProfiles } from '@/lib/hidden-profiles.functions';
-import { needsSellerIdentityTour } from '@/lib/seller-listing-wording';
 import { useMemo, useRef, useState } from "react";
 import { SellerAutoFill } from "@/components/startups/seller-auto-fill";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -7,10 +5,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SellerWizard } from "@/components/startups/seller-wizard";
-import { getSellerSetup, saveSellerSetup, applySellerEnrich, type SellerSetup } from "@/lib/seller-setup.functions";
+import { getSellerSetup, getSellerIdentityReadiness, saveSellerSetup, applySellerEnrich, type SellerSetup } from "@/lib/seller-setup.functions";
 import { emptyDraft, firstUnanswered, listingPayload, SELLER_STEPS, normalizeSellerStep, type SellerDraft } from "@/lib/seller-wizard";
 import { z } from "zod";
-import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
+import { useSessionContext } from "@/hooks/use-session-context";
 
 export const Route = createFileRoute("/_authenticated/my-startups/setup/$id")({
   head: () => ({
@@ -52,10 +50,9 @@ function Page() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: session } = useSessionContext();
-  const { isControl } = usePermissions();
   const fetchFn = useServerFn(getSellerSetup);
   const saveFn = useServerFn(saveSellerSetup);
-  const fetchListings = useServerFn(listHiddenProfiles);
+  const fetchReadiness = useServerFn(getSellerIdentityReadiness);
   const applyFn = useServerFn(applySellerEnrich);
   const { data, error } = useQuery({ queryKey: sellerSetupKey(id), queryFn: () => fetchFn({ data: { id } }), staleTime: 0 });
   const initial = useMemo(() => (data ? toDraft(data, openAt) : null), [data]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -74,7 +71,7 @@ function Page() {
   const completed = async () => {
     // Re-read after enrichment so the test matches the values the editor actually displays.
     let missing = true;
-    try { const rows = await fetchListings(); const row = rows.find(r => r.startup_id === id) ?? null; missing = needsSellerIdentityTour(row, isControl); }
+    try { missing = (await fetchReadiness({ data: { id } })).missing; }
     catch (e) { toast.error(e instanceof Error ? e.message : "Could not read listing information"); }
     void qc.invalidateQueries();
     navigate({ to: "/my-startups", search: missing ? { panel:id, edit:"startup", view:"public", tab:"identity", tour:"seller-identity" } : { panel:id, edit:"startup", view:"private", tab:"images" } });

@@ -4,6 +4,22 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { normalizeSellerStep, laterKey, websiteFieldsAnswered } from "./seller-wizard";
 import { FounderStorySchema, composeFounderBio } from "./founder-story";
 import type { SellerFounder } from "./seller-wizard";
+import { needsSellerIdentityTour } from './seller-listing-wording';
+
+/** Read only completion readiness, through the setup's existing access gate. */
+export const getSellerIdentityReadiness = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { assertCanSetup } = await import('./seller-setup.server');
+    const sb = await admin();
+    await assertCanSetup(sb, context.supabase, context.userId, data.id);
+    const { data: row, error } = await sb.from('hidden_profiles').select('code_name,suggested_listing_name,headline,headline_th').eq('startup_id', data.id).maybeSingle();
+    if (error) throw new Error(error.message);
+    const { data: control, error: controlError } = await context.supabase.rpc('is_control', { _user_id: context.userId });
+    if (controlError) throw new Error(controlError.message);
+    return { missing: needsSellerIdentityTour(row, !!control) };
+  });
 
 /** Seller setup wizard on a real Draft business (read/write scoped to the caller's own business). */
 async function admin() {
