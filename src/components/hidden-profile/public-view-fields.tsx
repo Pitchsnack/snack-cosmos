@@ -1,3 +1,6 @@
+import { AfterWizardTour } from '@/components/common/after-wizard-tour';
+import { SellerWordingCount, SellerWordingInput, SellerWordingMessage } from './seller-wording-field';
+import { sellerWordingChangedError, singleLineSellerWording } from '@/lib/seller-listing-wording';
 import { FieldRow, AutoFillTabButton } from "@/components/common/listing-editor-fields";
 import { Lock } from "lucide-react";
 import { bandOf, bandInText, fmtThb, thbWords, thbWordsTh } from "@/lib/asking-price";
@@ -41,7 +44,7 @@ const DEAL_TH: Record<string, string> = {
 
 type NameState = "idle" | "checking" | "available" | "taken";
 
-export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts | undefined, source: ListingSource | undefined) {
+export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts | undefined, source: ListingSource | undefined, skipIdentityPrefill = false) {
   // Only Admin sets or changes a listing name; sellers see it read-only (or the ref).
   const canName = usePermissions().isControl;
   const base = useMemo(() => ({ ...pickDraft(row ?? {}), suggested_listing_name: ((row as any)?.suggested_listing_name ?? "") as string }) as HiddenDraft & { suggested_listing_name: string }, [row?.id, row?.updated_at]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -71,7 +74,7 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
       const next = {
         ...p,
         code_name: p.code_name,
-        headline: p.headline.trim() ? p.headline : headlineIdea,
+        headline: skipIdentityPrefill ? p.headline : p.headline.trim() ? p.headline : headlineIdea,
         description: p.description.trim() ? p.description : descIdea,
         highlights: p.highlights.map((h, i) => (h.trim() ? h : (highlightIdeas[i] ?? h))),
         customers_summary: p.customers_summary.trim() ? p.customers_summary : customersIdea,
@@ -79,7 +82,7 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
       setBaseline(JSON.stringify(next));
       return next;
     });
-  }, [row, source, headlineIdea, descIdea, highlightIdeas, codeIdeas, customersIdea]);
+  }, [row, source, headlineIdea, descIdea, highlightIdeas, codeIdeas, customersIdea, skipIdentityPrefill]);
 
   const fillAll = () => setD((p) => ({
     ...p,
@@ -110,14 +113,20 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
 
   const findings = useMemo(() => (facts ? runIdentityCheck(d, facts) : []), [d, facts]);
   const counts: Record<PublicTab, number> = {
-    identity: (d.headline.trim() || d.headline_th?.trim() ? 0 : 1) + (d.description.trim() || d.description_th?.trim() ? 0 : 1) + ([0, 1, 2].every((i) => d.highlights[i]?.trim() || d.highlights_th?.[i]?.trim()) ? 0 : 1),
+    identity: ((canName ? d.code_name : d.suggested_listing_name)?.trim() ? 0 : 1) + (d.headline.trim() || d.headline_th?.trim() ? 0 : 1) + (d.description.trim() || d.description_th?.trim() ? 0 : 1) + ([0, 1, 2].every((i) => d.highlights[i]?.trim() || d.highlights_th?.[i]?.trim()) ? 0 : 1),
     deal: ((DEAL_TYPES as readonly string[]).includes(d.deal_type ?? "") ? 0 : 1) + (d.owner_stays ? 0 : 1),
   };
   const dirty = !!row && JSON.stringify(d) !== baseline;
   const changedFromRow = !!row && JSON.stringify(pickDraft(row)) !== JSON.stringify(d);
   // The seller's headline doubles as their suggested headline; the name suggestion is its own field.
   const payload = { ...d, highlights: d.highlights.map((h) => h.trim()), handover_months: d.owner_stays === "yes" ? (d.handover_months ?? 6) : null, suggested_listing_name: (d.suggested_listing_name ?? "").trim() || null, suggested_headline: d.headline.trim() || null };
+  const wordingErrors = [
+    { field: canName ? 'code_name' : 'suggested_listing_name', id: canName ? 'hp-code_name' : 'hp-suggested-name', kind: 'name' as const },
+    { field: 'headline', id: 'hp-headline', kind: 'headline' as const },
+    { field: 'headline_th', id: 'hp-headline', kind: 'headline' as const },
+  ].filter(x => sellerWordingChangedError(d[x.field as keyof typeof d] as string, base[x.field as keyof typeof base] as string, x.kind));
   return {
+    wordingErrors,
     d, setD, ideas: { codeIdeas, headlineIdea, descIdea, highlightIdeas, customersIdea }, moreNames: () => setSeed((s) => s + 1),
     fillAll, findings, counts, dirty, changedFromRow, payload, nameState, nameTaken: canName && nameState === "taken", canName,
   };
@@ -147,14 +156,15 @@ function FlagMsg({ pd, k }: { pd: PublicDraftState; k: HiddenTextField }) {
   return <p className="mt-1 text-[11.5px] text-destructive">Could name the company: {hits.map((f) => `"${f.term}" (${f.reason.toLowerCase()})`).join(", ")}</p>;
 }
 
-export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, refNo }: {
+export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, refNo, tour }: {
   tab: PublicTab; pd: PublicDraftState; sector: string | null;
   /** The listing's saved public image (cover rule). */
   pickedImage: string | null | undefined;
-  section?: string; source?: ListingSource; refNo?: string;
+  section?: string; source?: ListingSource; refNo?: string; tour?: { open: boolean; close: (focus: boolean) => void };
 }) {
   const tr = useTr();
   const { d, setD, ideas } = pd;
+  const [tourAnchor, setTourAnchor] = useState<HTMLDivElement | null>(null);
   const set = <K extends keyof HiddenDraft>(k: K, v: HiddenDraft[K]) => setD((p) => ({ ...p, [k]: v }));
   const flag = (k: HiddenTextField) => (pd.findings.some((f) => f.field === k) ? "border-destructive" : "");
   // Bilingual texts: the picked text language edits `{field}` or `{field}_th`.
@@ -182,15 +192,22 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
         <div className="mt-4 grid grid-cols-[260px_minmax(0,1fr)] items-start gap-7 max-sm:grid-cols-1 max-sm:gap-4">
           <BuyerPreview d={d} sector={sector} pickedImage={pickedImage} source={source} refNo={refNo} />
           <div className="min-w-0 space-y-[22px]">
+            <div className="seller-identity-pair">
+            <div ref={setTourAnchor} className="seller-identity-anchor">
             <EditSec id="codename" tone="seller" active={section === "codename"}>
               {pd.canName ? <ListingNameField pd={pd} refNo={refNo} /> : <SuggestedNameField pd={pd} refNo={refNo} />}
             </EditSec>
             <EditSec id="headline" tone="seller" active={section === "headline"}>
-              <FieldRow label={tr("Headline", "หัวข้อ")} after={<LangTag />} htmlFor="hp-headline" missing={!both("headline")} right={`${tv("headline").length}/120`} suggest={ideas.headlineIdea ? () => tset("headline", ideas.headlineIdea) : undefined}>
-                <Input id="hp-headline" lang={lang} maxLength={120} value={tv("headline")} placeholder={tph("headline", ideas.headlineIdea)} onChange={(e) => tset("headline", e.target.value)} className={cn(BOX, !both("headline") && MISS_BOX, flag("headline"))} />
+              <FieldRow label={tr("Headline", "หัวข้อ")} after={<LangTag />} htmlFor="hp-headline" missing={!both("headline")} right={<SellerWordingCount value={tv("headline")} kind="headline" language={lang} />} suggest={ideas.headlineIdea ? () => tset("headline", ideas.headlineIdea) : undefined}>
+                <SellerWordingInput id="hp-headline" language={lang} kind="headline" value={tv("headline")} placeholder={tr("e.g. Profitable logistics firm with its own fleet and warehouses in five main cities", "เช่น บริษัทโลจิสติกส์ที่มีกำไร มีรถขนส่งและคลังสินค้าของตนเองในห้าเมืองหลัก")} onChange={v => tset("headline", v)} />
+                <SellerWordingMessage value={tv("headline")} kind="headline" language={lang} />
               </FieldRow>
               <FlagMsg pd={pd} k="headline" />
             </EditSec>
+            </div>
+            <p className={`seller-wording-note ${tour?.open ? 'tour-hidden' : ''}`}><Pencil size={14} aria-hidden />{tr("PitchSnack may refine your wording before publishing to make it clear and professional, while ensuring it does not reveal your company’s identity.", "PitchSnack อาจปรับถ้อยคำของท่านก่อนเผยแพร่ให้ชัดเจนและเป็นมืออาชีพ โดยจะไม่เปิดเผยว่าเป็นบริษัทของท่าน")}</p>
+            {tour?.open && <AfterWizardTour tone="seller" anchor={tourAnchor} onClose={tour.close} title={tr("Last step: Listing name and headline", "ขั้นตอนสุดท้าย: ชื่อประกาศและพาดหัว")} text={tr("Describe your business without naming it. Buyers see your listing name and headline first, and use them to decide whether to request an NDA.", "อธิบายธุรกิจของท่านโดยไม่เปิดเผยชื่อบริษัท ผู้ซื้อจะเห็นชื่อประกาศและพาดหัวของท่านเป็นอันดับแรก และใช้ข้อมูลนี้ตัดสินใจว่าจะส่งคำขอ NDA หรือไม่")} />}
+            </div>
             <EditSec id="description" tone="seller" active={section === "description"}>
               <FieldRow label={tr("Description", "คำอธิบาย")} after={<LangTag />} htmlFor="hp-description" missing={!both("description")} right={`${tv("description").length}/420`} suggest={ideas.descIdea ? () => tset("description", ideas.descIdea) : undefined}>
                 <Textarea id="hp-description" lang={lang} maxLength={420} value={tv("description")} placeholder={tph("description", ideas.descIdea)} onChange={(e) => tset("description", e.target.value)} className={cn(AREA, "h-[112px] min-h-[112px] resize-y", !both("description") && MISS_BOX, flag("description"))} />
@@ -368,15 +385,15 @@ function ListingNameRow({ name, refNo }: { name: string; refNo?: string }) {
 function SuggestedNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string }) {
   const tr = useTr();
   const { d, setD } = pd;
+  const { lang } = useTextLang();
   const published = d.code_name.trim();
   const val = d.suggested_listing_name ?? "";
   return (
     <div className="space-y-4">
       {published ? <ListingNameRow name={published} refNo={refNo} /> : null}
-      <FieldRow label={tr("Listing name", "ชื่อประกาศ")} htmlFor="hp-suggested-name" right={`${val.length}/120`}>
-        <Input id="hp-suggested-name" maxLength={120} value={val} placeholder={refNo || ""}
-          onChange={(e) => setD((p) => ({ ...p, suggested_listing_name: e.target.value }))} className={BOX} />
-        <p className="mt-1 flex gap-1.5 text-[12.5px] text-muted-foreground"><Pencil size={14} />{tr("Your suggestion. We adjusted your listing name and headline to reduce duplication and make your listing easier to distinguish.", "ข้อเสนอของท่าน เราได้ปรับชื่อประกาศและหัวข้อของท่าน เพื่อลดความซ้ำซ้อนและให้ประกาศของท่านแยกแยะได้ง่ายขึ้น")}</p>
+      <FieldRow label={tr("Listing name", "ชื่อประกาศ")} htmlFor="hp-suggested-name" missing={!val.trim()} right={<SellerWordingCount value={val} kind="name" language={lang} />}>
+        <SellerWordingInput id="hp-suggested-name" value={val} kind="name" language={lang} placeholder={tr("e.g. Established Regional Logistics Network", "เช่น เครือข่ายโลจิสติกส์ระดับภูมิภาคที่ก่อตั้งมายาวนาน")} onChange={v => setD(p => ({ ...p, suggested_listing_name: v }))} />
+        <SellerWordingMessage value={val} kind="name" language={lang} />
       </FieldRow>
     </div>
   );
@@ -385,6 +402,7 @@ function SuggestedNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: strin
 function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string }) {
   const tr = useTr();
   const { d, setD, ideas } = pd;
+  const { lang } = useTextLang();
   const [open, setOpen] = useState(false);
   const [tip, setTip] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
@@ -423,19 +441,21 @@ function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string 
           </span>
         </span>
   
+        <span className="ml-auto text-[12px]"><SellerWordingCount value={d.code_name} kind="name" language={lang} /></span>
       </div>
       <div className="relative">
-        <Input id="hp-code_name" ref={input} value={d.code_name} placeholder={tr("Type a name or pick a suggestion", "พิมพ์ชื่อหรือเลือกจากชื่อที่แนะนำ")}
+        <Input id="hp-code_name" ref={input} value={d.code_name} placeholder={tr("e.g. Established Regional Logistics Network", "เช่น เครือข่ายโลจิสติกส์ระดับภูมิภาคที่ก่อตั้งมายาวนาน")}
           aria-describedby={cn(tipId, taken && errId)} aria-invalid={taken || undefined} aria-expanded={open} aria-haspopup="listbox"
           onMouseDown={() => setOpen(true)}
           onKeyDown={(e) => { if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); requestAnimationFrame(() => wrap.current?.querySelector<HTMLElement>("[data-name-opt]")?.focus()); } if (e.key === "Escape") setOpen(false); }}
-          onChange={(e) => setD((p) => ({ ...p, code_name: e.target.value }))}
+          onChange={(e) => setD((p) => ({ ...p, code_name: singleLineSellerWording(e.target.value) }))}
           className={cn(BOX, "pr-[136px]", border)} />
         <span aria-hidden className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-3">
           {pd.nameState === "available" && !empty && <span className="flex items-center gap-[5px] text-[13px] font-semibold text-[#15803D]"><CircleCheck className="h-[15px] w-[15px]" strokeWidth={2} />{tr("Available", "ใช้ได้")}</span>}
           <ChevronDown className={cn("h-[18px] w-[18px] transition-transform", open ? "rotate-180 text-[#6D28D9]" : "text-[#6A7181]")} strokeWidth={2} />
         </span>
       </div>
+      <SellerWordingMessage value={d.code_name} kind="name" language={lang} />
       {empty && !taken && <p className="mt-[6px] text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{tr(`No listing name yet. Buyers will see ${refNo || "the ref"}.`, `ยังไม่มีชื่อประกาศ ผู้ซื้อจะเห็น ${refNo || "เลขอ้างอิง"}`)}</p>}
       {taken && (
         <p id={errId} role="alert" className="mt-[6px] text-[12.5px] font-medium text-[#B42318]">
@@ -483,14 +503,14 @@ function BuyerPreview({ d, sector, pickedImage, source, refNo }: { d: HiddenDraf
   const { lang } = useTextLang();
   const appLang = appTr("en", "th");
   const tr = (en: string, th: string) => (lang === "th" ? th : en);
-  const name = d.code_name.trim();
+  const name = ((d as HiddenDraft & { suggested_listing_name?: string }).suggested_listing_name || d.code_name).trim();
   const head = (lang === "th" ? d.headline_th?.trim() || d.headline.trim() : d.headline.trim() || d.headline_th?.trim() || "");
   const city = source?.city || source?.headquarters || "";
   const products = (d.product_tags ?? source?.product_tags ?? []).slice(0, 3).join(", ");
   const markets = (d.market_tags ?? source?.market_tags ?? []).slice(0, 3).join(", ");
   const rev = (source?.last_year_revenue ? founderRevenueLabel(source.last_year_revenue, lang) : null) ?? revenueBand(source?.last_year_revenue) ?? "—";
   const caption = <div className="mb-2 flex items-center gap-[6px] text-[12.5px] font-semibold text-[#4338CA]"><Eye className="h-[14px] w-[14px]" strokeWidth={2} />{appTr("Buyer preview", "ตัวอย่างที่ผู้ซื้อเห็น")}{lang !== appLang && <span className={cn("lang-tag", lang === "th" ? "lang-tag-th" : "lang-tag-en")}>{lang === "th" ? "ไทย" : "English"}</span>}</div>;
-  const nameEl = <div className={cn("text-[14px] font-bold text-[#151A28] dark:text-foreground", !name && "font-semibold text-[#8A90A0]")}>{name || refNo || tr("Your listing name", "ชื่อประกาศของท่าน")}</div>;
+  const nameEl = <div className={cn("text-[14px] font-bold text-[#151A28] dark:text-foreground", !name && "font-semibold text-[#8A90A0]")}>{name || tr("Your listing name", "ชื่อประกาศของท่าน")}</div>;
   const headEl = (cls: string) => <div className={cn("text-[12px] text-[#4B5563] dark:text-muted-foreground", cls, !head && "font-semibold text-[#8A90A0]")}>{head || tr("Your headline", "หัวข้อของท่าน")}</div>;
   return (
     <div aria-hidden className="pointer-events-none sm:sticky sm:top-4">
