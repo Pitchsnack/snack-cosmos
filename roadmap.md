@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Seller Website key business strengths
+- [x] Read the supplied brief and try the HTML reference's typing, Enter and empty-row Suggest.
+- [ ] Add four bilingual shared Highlights rows, three required, with protected Suggest/enrichment and Review count; awaiting approval if prerequisite reading states are missing.
+- [ ] Verify saved read-back, completion rules, Thai output and desktop/mobile/dark views using test identities.
+
 ## Seller after-wizard listing identity
 - [x] Add completion navigation and one-time shared pop-up.
 - [x] Apply bilingual wording limits, growing fields and registration checks without direct database edits.
