@@ -237,6 +237,8 @@ const GEO_ADJ = (geo: string | null) =>
 export interface SuggestOpts {
   /** Opt-in native Thai strengths; existing Listing Identity callers remain English. */
   language?: 'en' | 'th';
+  /** Wizard suggestions must not infer repeat customers or in-house capabilities. */
+  factsOnly?: boolean;
   geo?: string | null;
   guard?: { term: string; reason: string }[];
 }
@@ -367,10 +369,10 @@ export function suggestHighlights(s: ListingSource, o?: SuggestOpts): string[] {
     ? `${listOf(a.certs)} ${a.role === "Manufacturer" ? "certified production" : "certified operations"}${a.products.length ? ` of ${listOf(a.products.map(lower))}` : ""}`
     : a.products.length
       ? `${titleCase(a.role)} of ${listOf(a.products.map(lower))}`
-      : `${a.noun} with in-house capability`;
+      : o?.factsOnly ? `Operations in ${s.sector || a.core}` : `${a.noun} with in-house capability`;
 
   const three = [
-    buyers.length ? `Serving ${listOf(buyers)} customers` : `Serving a repeat customer base`,
+    buyers.length ? `Serving ${listOf(buyers)} customers` : o?.factsOnly ? `Products and services in ${s.sector || a.core}` : `Serving a repeat customer base`,
     reach.length ? `across ${listOf(reach)} markets` : a.geo ? `in ${a.geo}` : "",
   ].filter(Boolean).join(" ");
 

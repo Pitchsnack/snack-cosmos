@@ -27,7 +27,7 @@ export function wizardStrengthIdeas(d: SellerDraft, th: boolean): string[] {
     registered_name: typeof r.registeredName === 'string' ? r.registeredName : null,
     email: typeof r.email === 'string' ? r.email : null,
   };
-  return suggestHighlights(source, { language: th ? 'th' : 'en' }).map(text => text.trim().slice(0, STRENGTH_MAX)).filter(Boolean);
+  return suggestHighlights(source, { language: th ? 'th' : 'en', factsOnly:true }).map(text => text.trim().slice(0, STRENGTH_MAX)).filter(Boolean);
 }
 
 /** Blank means blank in both languages; preserve all entered rows and optional row four. */
