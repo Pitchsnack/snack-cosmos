@@ -5,6 +5,7 @@
  */
 import { findTermsIn, identityTerms, type EntryFacts } from "@/lib/hidden-profile";
 import type { LastLoginStep } from "@/lib/last-login";
+import { SELLER_SECTOR_EXAMPLES } from './seller-sector-examples';
 
 export interface ListingSource {
   startup_name: string;
@@ -234,6 +235,10 @@ const GEO_ADJ = (geo: string | null) =>
  * guard: extra identity terms the generated text must never contain.
  */
 export interface SuggestOpts {
+  /** Opt-in native Thai strengths; existing Listing Identity callers remain English. */
+  language?: 'en' | 'th';
+  /** Wizard suggestions must not infer repeat customers or in-house capabilities. */
+  factsOnly?: boolean;
   geo?: string | null;
   guard?: { term: string; reason: string }[];
 }
@@ -341,6 +346,18 @@ export function suggestHighlights(s: ListingSource, o?: SuggestOpts): string[] {
   const buyers = a.markets.filter((m) => !GEO_RE.test(m)).slice(0, 3).map(lower);
   const reach = a.markets.filter((m) => GEO_RE.test(m)).slice(0, 2).map(lower);
 
+  if (o?.language === 'th') {
+    const examples = SELLER_SECTOR_EXAMPLES.find(row => row.sector === s.sector);
+    const pairs = SELLER_SECTOR_EXAMPLES.flatMap(row => [...row.products, ...row.who]);
+    const thaiTag = (text: string) => /[\u0E00-\u0E7F]/.test(text) ? text : pairs.find(pair => pair[0].toLowerCase() === text.toLowerCase())?.[1] ?? '';
+    const products = a.products.map(thaiTag).filter(Boolean);
+    const markets = a.markets.map(text => ({ Thailand:'ประเทศไทย', ASEAN:'อาเซียน', Worldwide:'ทั่วโลก' }[text as 'Thailand' | 'ASEAN' | 'Worldwide'] ?? thaiTag(text))).filter(Boolean);
+    const one = a.decade ? `ดำเนินธุรกิจตั้งแต่ทศวรรษ ${a.decade.replace('s','')}` : `ดำเนินธุรกิจในกลุ่ม${examples?.thai ?? 'ธุรกิจทั่วไป'}`;
+    const two = products.length ? `สินค้าและบริการ ได้แก่ ${products.join(' และ ')}` : `ดำเนินงานในกลุ่ม${examples?.thai ?? 'ธุรกิจทั่วไป'}`;
+    const three = markets.length ? `ให้บริการตลาดและกลุ่มลูกค้า ได้แก่ ${markets.join(' และ ')}` : `ให้บริการด้าน${products[0] ?? examples?.thai ?? 'ธุรกิจ'}ในประเทศไทย`;
+    return [one, two, three].map(text => scrub(text, terms));
+  }
+
   const one = [
     a.decade ? `Operating since the ${a.decade}` : `Established ${a.noun.toLowerCase()}`,
     a.employees ? `with ${a.employees.toLowerCase()}` : "",
@@ -352,10 +369,10 @@ export function suggestHighlights(s: ListingSource, o?: SuggestOpts): string[] {
     ? `${listOf(a.certs)} ${a.role === "Manufacturer" ? "certified production" : "certified operations"}${a.products.length ? ` of ${listOf(a.products.map(lower))}` : ""}`
     : a.products.length
       ? `${titleCase(a.role)} of ${listOf(a.products.map(lower))}`
-      : `${a.noun} with in-house capability`;
+      : o?.factsOnly ? `Operations in ${s.sector || a.core}` : `${a.noun} with in-house capability`;
 
   const three = [
-    buyers.length ? `Serving ${listOf(buyers)} customers` : `Serving a repeat customer base`,
+    buyers.length ? `Serving ${listOf(buyers)} customers` : o?.factsOnly ? `Products and services in ${s.sector || a.core}` : `Serving a repeat customer base`,
     reach.length ? `across ${listOf(reach)} markets` : a.geo ? `in ${a.geo}` : "",
   ].filter(Boolean).join(" ");
 

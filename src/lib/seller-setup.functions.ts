@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { normalizeSellerStep, laterKey, websiteFieldsAnswered } from "./seller-wizard";
+import { normalizeSellerStep, laterKey, websiteFieldsAnswered, websiteDescriptionFieldsAnswered } from "./seller-wizard";
+import { strengthRows } from './seller-strengths';
 import { FounderStorySchema, composeFounderBio } from "./founder-story";
 import type { SellerFounder } from "./seller-wizard";
 import { needsSellerIdentityTour } from './seller-listing-wording';
@@ -35,6 +36,7 @@ export type SellerSetup = {
   tenantId: string;
   shortDescription: string; longDescription: string; productTags: string[]; marketTags: string[];
   shortDescriptionTh: string; longDescriptionTh: string; productTagsTh: string[]; marketTagsTh: string[];
+  highlights: string[]; highlightsTh: string[];
   founders: SellerFounder[]; owner: { fullName: string; position: string };
   /** The listing's answers (empty until the listing exists). */
   listing: { deal: string | null; stays: "yes" | "no" | null; months: number | null; price: number | null; name: string };
@@ -66,6 +68,8 @@ const WebsiteInput = {
   shortDescriptionTh:z.string().max(500).optional(), longDescriptionTh:z.string().max(5000).optional(),
   productTagsTh:z.array(z.string().min(1).max(50)).max(5).optional(), marketTagsTh:z.array(z.string().min(1).max(50)).max(5).optional(),
   founders:z.array(SetupFounder).max(20).optional(),
+  highlights:z.array(z.string().trim().max(200)).max(4).optional(),
+  highlightsTh:z.array(z.string().trim().max(200)).max(4).optional(),
 };
 async function saveWizardFounders(sb:any, id:string, userId:string, founders:z.infer<typeof SetupFounder>[]) {
   // Reuse Edit information's founder projection; never carry IDs between businesses.
@@ -103,14 +107,18 @@ const ListingInput = z.object({
 });
 
 /** The listing questions save to the business's listing (made here if it isn't there yet), as the seller. */
-async function saveListingAnswers(userSb: any, startupId: string, userId: string, l: z.infer<typeof ListingInput>) {
-  const { data: cur } = await userSb.from("hidden_profiles").select("id").eq("startup_id", startupId).maybeSingle();
-  const patch: Record<string, unknown> = {
+async function saveListingAnswers(userSb: any, startupId: string, userId: string, l?: z.infer<typeof ListingInput>, strengths?: {highlights?:string[];highlightsTh?:string[]}) {
+  const { data: cur, error: readError } = await userSb.from("hidden_profiles").select("id").eq("startup_id", startupId).maybeSingle();
+  if(readError) throw new Error(readError.message);
+  const patch: Record<string, unknown> = l ? {
     deal_type: l.deal, owner_stays: l.stays, handover_months: l.stays === "yes" ? l.months ?? 6 : null,
     asking_price_thb: l.price, updated_by: userId,
-  };
+  } : {updated_by:userId};
+  if(strengths?.highlights !== undefined) patch.highlights=strengthRows(strengths.highlights).map(text=>text.trim());
+  if(strengths?.highlightsTh !== undefined) patch.highlights_th=strengthRows(strengths.highlightsTh).map(text=>text.trim());
   if (!cur) {
-    const { data: st } = await userSb.from("startups").select("tenant_id, city").eq("id", startupId).single();
+    const { data: st, error: startupError } = await userSb.from("startups").select("tenant_id, city").eq("id", startupId).single();
+    if(startupError || !st) throw new Error(startupError?.message ?? 'Business unavailable');
     const { error } = await userSb.from("hidden_profiles").insert({
       startup_id: startupId, tenant_id: st.tenant_id, region: st.city ?? null, open_to: ["Private equity", "Family office", "Corporate"], nda_approver: "admin",
       created_by: userId, ...patch,
@@ -132,7 +140,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
     const [{ data: s }, { data: o }, { data: hp }, { data: med }, {data:founders}] = await Promise.all([
       sb.from("startups").select("*").eq("id", data.id).single(),
       sb.from("startup_ownership").select("seller_relation").eq("startup_id", data.id).maybeSingle(),
-      sb.from("hidden_profiles").select("deal_type, owner_stays, handover_months, asking_price, asking_price_thb, code_name").eq("startup_id", data.id).maybeSingle(),
+      sb.from("hidden_profiles").select("deal_type, owner_stays, handover_months, asking_price, asking_price_thb, code_name, highlights, highlights_th").eq("startup_id", data.id).maybeSingle(),
       sb.from("startup_media").select("slot, image_url").eq("startup_id", data.id).order("slot"),
       sb.from("startup_founders").select("id,full_name,position,linkedin_url,bio,bio_story,bio_th,bio_story_th,photo_url").eq("startup_id",data.id).order("display_order"),
     ]);
@@ -155,6 +163,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       tenantId: s.tenant_id,
       shortDescription:s.short_description ?? "",longDescription:s.long_description ?? "",productTags:s.product_tags ?? [],marketTags:s.market_tags ?? [],
       shortDescriptionTh:s.short_description_th ?? "",longDescriptionTh:s.long_description_th ?? "",productTagsTh:s.product_tags_th ?? [],marketTagsTh:s.market_tags_th ?? [],
+      highlights:strengthRows(hp?.highlights),highlightsTh:strengthRows(hp?.highlights_th),
       founders:founders ?? [],owner:{fullName:[ownerRow?.first_name,ownerRow?.last_name].filter(Boolean).join(" "),position:ownerProfile?.title ?? ""},
       listing: {
         deal: DEALS.includes(hp?.deal_type) ? hp.deal_type : null, stays: hp?.owner_stays ?? null, months: hp?.handover_months ?? null,
@@ -197,17 +206,17 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     if (data.addr) { Object.assign(patch, addrPatch(data.addr)); if (data.addr.province) patch.city = data.addr.province; }
     if (data.name.trim()) patch.startup_name = data.name.trim();
     if (data.done) patch.setup_done_at = new Date().toISOString();
-    if (data.done && (!websiteFieldsAnswered(data as never) || !data.founders?.some(f=>f.full_name.trim()))) throw new Error("Complete your business descriptions, product tags and founder name before finishing.");
+    if (data.done && (!websiteFieldsAnswered(data as never) || !data.founders?.some(f=>f.full_name.trim()))) throw new Error("Complete your business descriptions, product tags, three key business strengths and founder name before finishing.");
     if (data.reached) {
       const { data: cur } = await sb.from("startups").select("setup_reached").eq("id", data.id).single();
       const key=laterKey(cur?.setup_reached,data.reached);
       if(key && key !== cur?.setup_reached) patch.setup_reached=key;
     }
+    if (data.listing || data.highlights !== undefined || data.highlightsTh !== undefined) await saveListingAnswers(context.supabase, data.id, context.userId, data.listing, data);
     const { error } = await sb.from("startups").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     if(data.founders) await saveWizardFounders(sb,data.id,context.userId,data.founders);
     if (data.role) await sb.from("startup_ownership").update({ seller_relation: data.role }).eq("startup_id", data.id);
-    if (data.listing) await saveListingAnswers(context.supabase, data.id, context.userId, data.listing);
     return { ok: true };
   });
 
@@ -215,6 +224,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
 export const createMyBusiness = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({
+    ...WebsiteInput,
     role: z.enum(["owner", "family_owner", "agent"]).nullable(),
     name: z.string().trim().min(1).max(255), reg: z.string().max(13), web: z.string().max(2048), year: z.string().max(4),
     city: z.string().max(100), rev: z.string().max(60).nullable(), size: z.string().max(30).nullable(), sector: z.string().max(100).nullable(),
@@ -234,7 +244,10 @@ export const createMyBusiness = createServerFn({ method: "POST" })
       licences: data.licences, iso: data.iso, setupDone: true,
     });
     if (data.addr) await sb.from("startups").update({ sector_pick: data.pick ?? null, ...addrPatch(data.addr), ...(data.addr.province ? { city: data.addr.province } : {}) }).eq("id", id);
-    if (data.listing) await saveListingAnswers(context.supabase, id, context.userId, data.listing);
+    const {error:websiteError}=await sb.from('startups').update(websitePatch(data)).eq('id',id);
+    if(websiteError) throw new Error(websiteError.message);
+    if(data.founders) await saveWizardFounders(sb,id,context.userId,data.founders);
+    if (data.listing || data.highlights !== undefined || data.highlightsTh !== undefined) await saveListingAnswers(context.supabase, id, context.userId, data.listing, data);
     return { id };
   });
 
@@ -275,7 +288,7 @@ export const applySellerEnrich = createServerFn({ method: "POST" })
     const put = (col: string, v: unknown) => { if (!empty(v) && empty(s[col])) patch[col] = v; };
     put("registered_name", r.registeredName?.trim()); put("year_founded", r.yearFounded); put("email", r.email?.trim());
     put("city", r.city?.trim()); put("linkedin_url", r.linkedinUrl?.trim());
-    const websiteDone=websiteFieldsAnswered({shortDescription:s.short_description,longDescription:s.long_description,productTags:s.product_tags,shortDescriptionTh:s.short_description_th,longDescriptionTh:s.long_description_th,productTagsTh:s.product_tags_th} as never);
+    const websiteDone=websiteDescriptionFieldsAnswered({shortDescription:s.short_description,longDescription:s.long_description,productTags:s.product_tags,shortDescriptionTh:s.short_description_th,longDescriptionTh:s.long_description_th,productTagsTh:s.product_tags_th} as never);
     if(!websiteDone) {
       put("short_description", r.shortDescription?.trim()); put("long_description", r.longDescription?.trim());
       put("product_tags", r.productTags?.slice(0, 5)); put("market_tags", r.marketTags?.slice(0, 5));

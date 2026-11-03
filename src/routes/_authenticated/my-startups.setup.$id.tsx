@@ -34,6 +34,7 @@ function toDraft(s: SellerSetup, open?: string): SellerDraft {
     reached: s.reached,
     shortDescription:s.shortDescription,longDescription:s.longDescription,productTags:s.productTags,marketTags:s.marketTags,
     shortDescriptionTh:s.shortDescriptionTh,longDescriptionTh:s.longDescriptionTh,productTagsTh:s.productTagsTh,marketTagsTh:s.marketTagsTh,founders:s.founders,
+    highlights:s.highlights,highlightsTh:s.highlightsTh,
     hasLogo: !!s.media.logoPath, photos: s.media.slots.length,
     deal: s.listing.deal, stays: s.listing.stays, months: s.listing.months, price: s.listing.price,
     listingName: s.listing.name, nameOk: s.listing.name ? true : undefined,
@@ -61,6 +62,7 @@ function Page() {
   const payload = (d: SellerDraft, done?: boolean) => ({
     shortDescription:d.shortDescription,longDescription:d.longDescription,productTags:d.productTags,marketTags:d.marketTags,
     shortDescriptionTh:d.shortDescriptionTh,longDescriptionTh:d.longDescriptionTh,productTagsTh:d.productTagsTh,marketTagsTh:d.marketTagsTh,founders:d.founders,
+    highlights:d.highlights,highlightsTh:d.highlightsTh,
     id, role: d.role, name: d.name, reg: d.reg, web: d.web, year: d.year, city: d.city, rev: d.rev, size: d.size,
     sector: d.sector, pick: (d.pick ?? null) as never, licences: d.licences, iso: d.iso, addr: d.addr, done, reached: (d.reached ?? null) as never, listing: listingPayload(d),
   });

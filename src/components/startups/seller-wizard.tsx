@@ -5,7 +5,8 @@ import { Lock, Check as CheckIcon, Sparkles, Loader2, Calendar, Users } from "lu
 import { StepBar, MissedNote, type StepItem } from "@/components/common/step-bar";
 import { Button } from "@/components/ui/button";
 import { WebsiteCheckLink } from "@/components/startups/website-check-link";
-import { SellerWebsiteFields, websiteMissing, type WebsiteField } from "./seller-website-fields";
+import { SellerWebsiteFields, websiteMissing, type WebsiteField, type ReadingState } from "./seller-website-fields";
+import { strengthCount } from '@/lib/seller-strengths';
 import { FounderEditor } from "./founder-editor";
 import { autoEnrichAdapter } from "@/lib/auto-enrich/auto-enrich-adapter";
 import { founderRevenueLabel } from "@/lib/founder-story";
@@ -102,6 +103,7 @@ export function SellerWizard({
   const focusTitle = useRef(false);
   const [webExpanded, setWebExpanded] = useState(false);
   const [reading, setReading] = useState(false);
+  const [readingStates,setReadingStates] = useState<ReadingState[]>(['reading','waiting','waiting','waiting','waiting']);
   const [readDomain, setReadDomain] = useState("");
   const [readDone, setReadDone] = useState(false);
   const [marks, setMarks] = useState<Partial<Record<WebsiteField, boolean>>>({});
@@ -206,12 +208,24 @@ export function SellerWizard({
   async function runEnrich() {
     if (!isValidUrl(d.web) || readingRef.current) return;
     readingRef.current = true; setReading(true); setWebExpanded(true); setReadDone(false);
+    setReadingStates(['reading','waiting','waiting','waiting','waiting']);
     const url = normalizeUrl(d.web); const domain = new URL(url).hostname.replace(/^www\./, ""); setReadDomain(domain);
     const before = d; const wasAuto = {...marks};
     try {
       const r = await autoEnrichAdapter.enrichStartup({websiteUrl:url});
       const merged = mergeWebsiteEnrich(before,r as Record<string,unknown>,wasAuto,th);
       const nextMarks=merged.marks; const patch={...merged.patch,web:url};
+      const keys: WebsiteField[]=['shortDescription','longDescription','productTags','marketTags','highlights'];
+      const states:ReadingState[]=keys.map(key=>nextMarks[key] ? 'found' : 'empty');
+      const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if(!reduced) {
+        for(let i=0;i<keys.length;i++) {
+          setReadingStates(states.map((state,j)=>j<i ? state : j===i ? 'reading' : 'waiting'));
+          await new Promise(resolve=>window.setTimeout(resolve,220));
+        }
+        setReadingStates(states);
+        await new Promise(resolve=>window.setTimeout(resolve,250));
+      }
       set(patch); setMarks(prev => ({...prev,...nextMarks})); setReadDone(true);
       if (!Object.keys(nextMarks).length) toast.warning(L("Auto Enrich found nothing new. Fill in the remaining fields.", "Auto Enrich ไม่พบข้อมูลใหม่ กรุณากรอกช่องที่เหลือ"));
     } catch(e) {toast.error(e instanceof Error ? e.message : L("Auto Enrich failed.","Auto Enrich อ่านเว็บไซต์ไม่ได้"));}
@@ -254,7 +268,7 @@ export function SellerWizard({
         </div>
         {webExpanded ? <>
           {!reading && !readDone && <p className="seller-field-hint">{L("Have a website after all? Type it and click Auto Enrich to fill these in.","มีเว็บไซต์ใช่ไหม? พิมพ์เว็บไซต์แล้วคลิก Auto Enrich เพื่อกรอกข้อมูลเหล่านี้ให้")}</p>}
-          <div className="seller-website-more"><SellerWebsiteFields d={d} set={set} marks={marks} edit={editWebsiteField} reading={reading} openSector={() => openStep("sector")}/></div>
+          <div className="seller-website-more"><SellerWebsiteFields d={d} set={set} marks={marks} edit={editWebsiteField} reading={reading} readingStates={readingStates} openSector={() => openStep("sector")}/></div>
         </> : <div className="seller-autofill-info">
           <p className="flex items-center gap-2 font-bold"><Sparkles size={18}/>{L("Auto-fill reads your website","ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์ของท่าน")}</p>
           <ul className="mt-2.5 space-y-1.5">{[L("Suggests your company description and corporate information","แนะนำคำอธิบายบริษัทและข้อมูลบริษัทให้"),L("Takes a few seconds, and you can change anything later","ใช้เวลาไม่กี่วินาที และท่านแก้ไขได้ทุกอย่างภายหลัง")].map(x => <li key={x} className="flex gap-2"><CheckIcon size={15}/>{x}</li>)}</ul>{privacy}
@@ -323,7 +337,7 @@ export function SellerWizard({
             ["role",tr("You are"),roleLabel()], ["name",tr("Company name"),d.name],
             ["name",tr("Registration no."),d.reg], ["name",tr("Business address"),addressLine(d.addr)],
             ["sector",tr("Sector"),tr(d.sector ?? "")],
-            ["web",L(...STEP_FULL.web),`${d.web || L("No company website","ไม่มีเว็บไซต์บริษัท")} · ${th ? d.shortDescriptionTh || d.shortDescription || "" : d.shortDescription || d.shortDescriptionTh || ""}`],
+            ["web",L(...STEP_FULL.web),`${d.web || L("No company website","ไม่มีเว็บไซต์บริษัท")} · ${L(`${strengthCount(d)} key business strengths`,`จุดแข็งหลักของธุรกิจ ${strengthCount(d)} ข้อ`)} · ${th ? d.shortDescriptionTh || d.shortDescription || "" : d.shortDescription || d.shortDescriptionTh || ""}`],
             ["founded",L(...STEP_SHORT.founded),`${d.year} · ${tr(WIZARD_SIZES.find(x => x.value === d.size)?.label ?? "")} ${L("employees","คน")}`],
             ["rev",tr("Revenue last year"),d.rev ? tr(normRevBand(d.rev)) : ""],
             ["lic",tr("Licences & standards"),[...d.licences.map(l => l.name),...d.iso].join(", ") || L("None","ไม่มี")],

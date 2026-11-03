@@ -2,7 +2,7 @@
 - Businesses Wanted DTOs own privacy/access; scoped filters and `.bw-form` own layout, public input styles stay under `.bw` to avoid collisions. Cover pills/personas use tokens; browser-safe defaults own sector wording.
 - Marketplace Contacts shares role UI; list/card reads recheck active NDA and owner/view access before shared projection, keeping Admin access separate.
 - Admin contacts use Control+Admin directory access and user-keyed admin_contact_notes; lazy company DTOs adapt shared cards without viewer controls. Shared Admin projections preserve marketplace privacy.
-- Seller setup shares legacy-normalized keys, existing bilingual fields and FounderEditor; preserve founder IDs, access gates and completed Website fields during later enrichment; retain bio/bio_story.
+- Seller setup shares bilingual fields, FounderEditor and hidden-profile Highlights; helpers own strength validity/Thai generation. Preserve access, founder IDs/bios and Website answers; read src/lib/AGENTS.md.
 - Pipeline chat lazily reuses Messages Chat inside ProfileBox; parent-held drafts preserve unsent content without new storage/auth paths.
 - Pipeline full-profile dialogs reuse invitationPrivateProfile's selected-deal gate, InvestorDetailPanel and shared identity parts; only All deals/watchlist opt in, preserving other viewers.
 - Pipeline company chips use own-organisation DTOs from the deal's startup/linked buyer firm, never counterparty or page-selected organisations; pending/ended identity and NDA gates stay unchanged.
