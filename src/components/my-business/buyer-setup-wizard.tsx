@@ -4,13 +4,14 @@ import { furthestStep, setupStepState } from "@/lib/setup-step-state";
 import { buyerProgressFor } from "@/lib/buyer-wizard";
 import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
-import { descriptionWords, singleLineDescription } from '@/lib/buyer-description';
+import { buyerAboutError, descriptionSentences, descriptionWords, singleLineDescription } from '@/lib/buyer-description';
 import { useFocusNeeded } from "@/components/common/need-fill";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ExternalLink, Info, Loader2, Lock, ShieldCheck, X, AlertTriangle } from "lucide-react";
+import { Check, ExternalLink, Info, Loader2, Lock, ShieldCheck, X, AlertTriangle, Sparkles, Trash2, Plus, UserRound } from "lucide-react";
+import { AutoFilled } from "@/components/startups/seller-website-fields";
 import { toast } from "sonner";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { ManyTypeQuestion, buyerWords, manyError, useL } from "@/components/common/business-type-question";
@@ -29,7 +30,7 @@ import {
   type Band,
 } from "@/lib/investor-bands";
 import { isCorporateBuyer } from "@/lib/investor-browse";
-import { stepsFor, buyerSkips, buyerHiddenFields, buyerProgress, type BuyerRelation, type QId } from "@/lib/buyer-wizard";
+import { stepsFor, buyerSkips, buyerHiddenFields, buyerProgress, normalizeBuyerReached, teamHasName, type BuyerRelation, type QId } from "@/lib/buyer-wizard";
 
 type A = {
   role: BuyerRelation | null; type: string; country: string; city: string; name: string; year: string; reg: string; web: string;
@@ -37,7 +38,22 @@ type A = {
   /** A representative's investor types (list order; the first is Investor Classification). */
   acts: string[];
   addr: Addr;
+  /** About Company (the long description sellers see after an NDA). */
+  about: string;
+  /** Edit information › Team members. */
+  people: Person[];
 };
+type Person = { name: string; role: string; role_th?: string; email: string; phone: string };
+
+/** Auto Enrich's text cut to the short description's limits: up to 2 sentences and 25 words. */
+function shortFrom(bio: string): string {
+  const parts = bio.replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+/u).filter(Boolean);
+  let out = parts.slice(0, 2).join(" ");
+  if (descriptionWords(out) > 25) out = parts[0] ?? out;
+  if (descriptionWords(out) > 25) out = out.split(/\s+/).slice(0, 25).join(" ").replace(/[,;:]$/, "") + ".";
+  return out;
+}
+const capWords = (t: string, n: number) => { const w = t.replace(/\s+/g, " ").trim().split(" "); return w.length > n ? w.slice(0, n).join(" ") : w.join(" "); };
 
 const ROLES: { value: BuyerRelation; label: string; hint: string }[] = [
   { value: "individual", label: "Individual Investor", hint: "I am a sophisticated investor. I invest my own money." },
@@ -64,6 +80,8 @@ function fromData(d: Data): A {
       const prov = (iv.address_province_state as string) || "";
       return { street: (iv.address_line1 as string) ?? "", unit: (iv.address_line2 as string) ?? "", district: (iv.address_city_district as string) ?? "", province: prov || ((inv.country ?? "Thailand") === "Thailand" && inv.city ? inv.city : ""), postal: (iv.postal_code as string) ?? "" };
     })(),
+    about: inv.short_description ?? "",
+    people: d.people.length ? d.people : [{ name: d.account.name, role: d.account.title, email: (d.account as { email?: string }).email ?? "", phone: "" }],
     acts: d.buyer.relation === "agent" ? sortActsFor(inv.acts_for_types?.length ? inv.acts_for_types : inv.investor_type ? [inv.investor_type] : []) : [],
   };
 }
@@ -156,7 +174,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const live = data.buyer.status === "live";
   const setupDone = !!data.investor.setup_done_at;
   const [a, setA] = useState<A>(() => fromData(data));
-  const [reached, setReached] = useState<string | null>(data.investor.setup_reached);
+  const [reached, setReached] = useState<string | null>(normalizeBuyerReached(data.buyer.relation, data.investor.setup_reached));
   const reachedRef = useRef(reached);
   const [answered, setAnswered] = useState<string[]>(data.investor.wizard?.answered ?? []);
   const [peTicked, setPeTicked] = useState(!!data.investor.wizard?.pe_ticked);
@@ -170,10 +188,13 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   // A question opened from Review shows all its fields under its full title.
   const [full, setFull] = useState<QId | null>(null);
   const stepsAll = useMemo(() => stepsFor(a.role), [a.role]);
+  // Firm buyers answer the Description on the Website step.
+  const profileStep: QId = data.buyer.relation === "individual" ? "desc" : "web";
   const [cur, setCur] = useState<QId>(() => {
     if (startAt === "deal") return "rev";
+    if (startAt === "desc" && profileStep === "web") return "web";
     if (startAt && stepsAll.some((s) => s.id === startAt)) return startAt as QId;
-    return buyerProgressFor(data.buyer.relation, data.investor, data.buyer).first;
+    return buyerProgressFor(data.buyer.relation, data.investor, data.buyer, data.people).first;
   });
   const steps = stepsAll.filter((s) => !skipSet.has(s.id) || s.id === full || s.id === cur);
   const hiddenF = full === "name" ? new Set<string>() : buyerHiddenFields(fromSignup, { role: a.role, type: a.type, web: a.web, year: a.year, name: a.name });
@@ -185,6 +206,12 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   };
   const [fromReview, setFromReview] = useState(false);
   const [fromProfile] = useState(startAt === "desc" && setupDone);
+  // Website step: the card shows more (short and long description) once Continue runs Auto Enrich.
+  const [webOpen, setWebOpen] = useState(startAt === "desc" && profileStep === "web");
+  const [reading, setReading] = useState(false);
+  const [readFailed, setReadFailed] = useState(false);
+  const [marks, setMarks] = useState<{ desc?: boolean; about?: boolean }>({});
+  const readingRef = useRef(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [forced, setForced] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState<"idle" | "saving" | "saved">("idle");
@@ -239,13 +266,15 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     stages: !stagesShown || a.stages.length ? null : tr("Pick at least one stage."),
     sectors: manyError(a.picks, a.sectors.includes(SECTOR_AGNOSTIC), L),
     desc: descErr || (leaks.length ? "leak" : null),
+    about: buyerAboutError(a.about, data.investor.short_description) ? L("Keep it to 80 words.", "โปรดเขียนไม่เกิน 80 คำ") : null,
+    team: teamHasName(a.people) ? null : L("Add at least one team member's full name.", "กรุณากรอกชื่อ-นามสกุลของสมาชิกในทีมอย่างน้อย 1 คน"),
     photos: med.logo && med.photos > 0 ? null : tr("Both are needed to continue."),
   };  const qRef = useRef<HTMLDivElement>(null);
   useFocusNeeded(qRef, `${phase}:${cur}`);
 
   const fieldsOf: Record<QId, string[]> = {
-    role: ["role"], type: ["type"], name: ["country", "name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: ["web"], aum: ["aum"], ticket: ["ticket"],
-    rev: ["rev"], deals: ["deals", "stages"], sectors: ["sectors"], photos: ["photos"], desc: ["desc"], review: [],
+    role: ["role"], type: ["type"], name: ["country", "name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: individual ? ["web"] : ["web", "desc", "about"], aum: ["aum"], ticket: ["ticket"],
+    rev: ["rev"], deals: ["deals", "stages"], sectors: ["sectors"], photos: ["photos"], desc: ["desc"], team: ["team"], review: [],
   };
   const qValid = (id: QId) => fieldsOf[id].every((k) => !errors[k]);
   const show = (k: string) => (touched[k] || forced[k]) && errors[k] && errors[k] !== "leak" ? errors[k] : null;
@@ -283,6 +312,24 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     queue(server);
   };
 
+  async function runEnrich() {
+    if (!isValidUrl(a.web) || readingRef.current) return;
+    readingRef.current = true; setReading(true); setWebOpen(true); setReadFailed(false);
+    const before = a;
+    try {
+      const r = await investorEnrichAdapter.enrichInvestor({ websiteUrl: normalizeUrl(a.web) });
+      const bio = r?.bio?.trim() ?? "";
+      if (!bio) { setReadFailed(true); return; }
+      const patch: Partial<A> = {}; const server: Record<string, unknown> = {}; const m = { ...marks };
+      // Fill a field only while it's empty or still Auto-filled; typed text is kept.
+      if (!before.desc.trim() || marks.desc) { patch.desc = singleLineDescription(shortFrom(bio)); server.description = patch.desc; m.desc = true; }
+      if (!before.about.trim() || marks.about) { patch.about = capWords(bio, 80); server.short_description = patch.about; m.about = true; }
+      if (Object.keys(patch).length) { setA((p) => ({ ...p, ...patch })); queue(server); }
+      setMarks(m);
+    } catch { setReadFailed(true); }
+    finally { readingRef.current = false; setReading(false); }
+  }
+
   const markAnswered = (id: QId) => {
     if (id === "review" || answered.includes(id)) return answered;
     const n = [...answered, id];
@@ -300,7 +347,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const pickStep = (key: string) => { const id = steps.find(s => s.id === key)?.id; if (id) { setFromReview(false); setFull(null); goTo(id); } };
   const advance = (from: QId) => {
     markAnswered(from);
-    if (fromProfile && from === "desc") { void flush().then(() => setPhase("complete")); return; }
+    if (from === "team") queue({ people: a.people });
+    if (fromProfile && from === profileStep) { void flush().then(() => setPhase("complete")); return; }
     if (fromReview) { setFromReview(false); setFull(null); goTo("review"); return; }
     const nxt = nextAfter(a, from);
     // Private equity pre-ticks, the first time it reaches deals.
@@ -318,6 +366,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   };
   const tryContinue = () => {
     if (cur === "review") { if (allValid) void flush().then(() => setPhase("enrich")); return; }
+    if (cur === "web" && !individual && !webOpen) { if (isValidUrl(a.web)) void runEnrich(); return; }
     if (!qValid(cur)) { setForced(Object.fromEntries(fieldsOf[cur].map((k) => [k, true]))); return; }
     advance(cur);
   };
@@ -335,7 +384,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     if (cur === "desc") set({ desc: "" }, { description: "" });
     advance(cur);
   };
-  const back = () => { if (idx > 0) goTo(steps[idx - 1]?.id ?? "review"); };
+  const back = () => { if (cur === "web" && webOpen) { if (!reading) setWebOpen(false); return; } if (idx > 0) goTo(steps[idx - 1]?.id ?? "review"); };
   const [exiting, setExiting] = useState(false);
   const saveExit = async () => {
     if (exiting) return;
@@ -366,6 +415,71 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
 
   const tName = typeName(individual ? INDIVIDUAL_TYPE : a.type, agent ? a.acts : null);
   const corp = isCorporateBuyer(a.type);
+
+  const webDomain = normalizeUrl(a.web).replace(/^https?:\/\//, "").split("/")[0];
+  const webRow = (open: boolean) => (
+    <div>
+      <label className={lbl} htmlFor="w-web">{L("Firm website", "เว็บไซต์บริษัท")}{!open && <Req />}</label>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input id="w-web" aria-required autoFocus={!open} readOnly={reading} className={`${inp} ${(a.web.trim() || forced.web) && errors.web ? errCls : ""}`} value={a.web} maxLength={500} placeholder="www.yourfirm.com"
+          onKeyDown={(e) => { if (e.key === "Enter" && !individual && isValidUrl(a.web)) { e.preventDefault(); e.stopPropagation(); void runEnrich(); } }}
+          onChange={(e) => { setWebOpened(false); set({ web: e.target.value }, isValidUrl(e.target.value) ? { website_url: normalizeUrl(e.target.value) } : {}); }} />
+        {open ? (
+          <button type="button" className="seller-enrich-button" disabled={!!errors.web || reading} onClick={() => void runEnrich()}>
+            {reading ? <Loader2 className="motion-safe:animate-spin" size={17} /> : <Sparkles size={17} />} {reading ? L("Reading…", "กำลังอ่าน…") : "Auto Enrich"}
+          </button>
+        ) : (
+          <button type="button" disabled={!!errors.web}
+            onClick={() => { window.open(normalizeUrl(a.web), "_blank", "noopener,noreferrer"); setWebOpened(true); }}
+            className="inline-flex h-[50px] flex-none items-center justify-center gap-1.5 rounded-[12px] border border-[#DCDFE5] bg-white px-4 text-[15px] font-semibold text-[#1E2A4A] hover:border-[#1E2A4A] disabled:cursor-not-allowed disabled:text-[#C7CBD6] dark:border-border dark:bg-background dark:text-foreground">
+            <ExternalLink className="h-4 w-4" />{setupText("Check website")}
+          </button>
+        )}
+      </div>
+      {(a.web.trim() || forced.web) && errors.web ? <Err m={errors.web} />
+        : open ? null
+        : webOpened ? <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[#15803D]"><Check className="h-4 w-4" />{setupText("Opened")} {webDomain}{setupText("in a new tab. Make sure it is your firm.")}</p>
+        : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Click Check website to open it in a new tab and make sure it is your firm.")}</p>}
+    </div>
+  );
+  const setPeople = (people: Person[]) => set({ people }, { people });
+  const teamRef = useRef<HTMLDivElement>(null);
+  const initials = (n: string) => n.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+  const teamBody = (
+    <div ref={teamRef}>
+      <div className="rounded-[12px] border border-[#E9EBF0] bg-[#FBFBFD] p-4 dark:border-border dark:bg-muted/30">
+        <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">{setupText("For verification · also visible to Admin")}</div>
+        <div className="mb-3 text-[14px] font-semibold">{tr("Team members")}</div>
+        <div className="space-y-3">
+          {a.people.map((p, i) => {
+            const bad = i === 0 && forced.team && !!errors.team;
+            const upd = (k: keyof Person, v: string) => setPeople(a.people.map((x, j) => (j === i ? { ...x, [k]: v } : x)));
+            return (
+              <div key={i} className="flex items-start gap-3 rounded-[12px] border border-[#E9EBF0] bg-white p-3 dark:border-border dark:bg-card">
+                <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-[#EEF1F7] text-[14px] font-semibold text-[#1E2A4A] dark:bg-muted dark:text-foreground">{p.name.trim() ? initials(p.name) : <UserRound className="h-5 w-5" />}</span>
+                <div className="grid min-w-0 flex-1 gap-2 min-[600px]:grid-cols-2">
+                  <input data-team-name aria-label={L("Full name", "ชื่อ-นามสกุล")} aria-required className={`${inp} !h-[44px] ${bad ? errCls : ""}`} placeholder={L("Full name *", "ชื่อ-นามสกุล *")} value={p.name} maxLength={120} onChange={(e) => upd("name", e.target.value)} />
+                  <input aria-label={L("Position", "ตำแหน่ง")} className={`${inp} !h-[44px]`} placeholder={L("Position", "ตำแหน่ง")} value={p.role} maxLength={120} onChange={(e) => upd("role", e.target.value)} />
+                  <input aria-label={L("Email", "อีเมล")} type="email" className={`${inp} !h-[44px]`} placeholder={L("Email", "อีเมล")} value={p.email} maxLength={200} onChange={(e) => upd("email", e.target.value)} />
+                  <input aria-label={L("Phone (optional)", "โทรศัพท์ (ไม่บังคับ)")} className={`${inp} !h-[44px]`} placeholder={L("Phone (optional)", "โทรศัพท์ (ไม่บังคับ)")} value={p.phone} maxLength={60} onChange={(e) => upd("phone", e.target.value)} />
+                </div>
+                {a.people.length > 1 && (
+                  <button type="button" aria-label={L(`Remove ${p.name.trim() || "team member"}`, `ลบ ${p.name.trim() || "สมาชิก"}`)} onClick={() => setPeople(a.people.filter((_, j) => j !== i))}
+                    className="grid h-9 w-9 flex-none place-items-center rounded-[10px] text-[#6B7280] hover:bg-[#F6F7F9] hover:text-[#B42318] dark:hover:bg-muted"><Trash2 className="h-4 w-4" /></button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <button type="button" disabled={a.people.length >= 20}
+          onClick={() => { setPeople([...a.people, { name: "", role: "", email: "", phone: "" }]); requestAnimationFrame(() => { const all = teamRef.current?.querySelectorAll<HTMLInputElement>("[data-team-name]"); all?.[all.length - 1]?.focus(); }); }}
+          className="mt-3 inline-flex h-10 items-center gap-1.5 rounded-[10px] border border-[#DCDFE5] bg-white px-3.5 text-[14px] font-semibold text-[#1E2A4A] hover:border-[#1E2A4A] disabled:opacity-40 dark:border-border dark:bg-background dark:text-foreground">
+          <Plus className="h-4 w-4" />{tr("Add team member")}
+        </button>
+      </div>
+      {forced.team && errors.team && <p className="mt-2 text-[13px] text-[#DC2626]">{errors.team}</p>}
+    </div>
+  );
 
   // ---------------- questions ----------------
   const Q: Record<QId, { t: React.ReactNode; h: React.ReactNode; body: React.ReactNode; req: boolean }> = {
@@ -444,24 +558,34 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           <p className="flex items-start gap-2 text-[13px] font-medium text-[#B42318]"><Lock className="mt-0.5 h-[15px] w-[15px] flex-none" />{tr("Your firm's identity stays confidential until a seller approves your NDA.")}</p>
         </div>
       ) },
-    web: { req: true, t: tr("What is your firm's website?"), h: tr("We use it to auto-fill your profile."),
-      body: (
-        <div>
-          <label className={lbl} htmlFor="w-web">{tr("Website URL")}<Req /></label>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <input id="w-web" aria-required autoFocus className={`${inp} ${(a.web.trim() || forced.web) && errors.web ? errCls : ""}`} value={a.web} maxLength={500} placeholder="https://www.yourfirm.com"
-              onChange={(e) => { setWebOpened(false); set({ web: e.target.value }, isValidUrl(e.target.value) ? { website_url: normalizeUrl(e.target.value) } : {}); }} />
-            <button type="button" disabled={!!errors.web}
-              onClick={() => { window.open(normalizeUrl(a.web), "_blank", "noopener,noreferrer"); setWebOpened(true); }}
-              className="inline-flex h-[50px] flex-none items-center justify-center gap-1.5 rounded-[12px] border border-[#DCDFE5] bg-white px-4 text-[15px] font-semibold text-[#1E2A4A] hover:border-[#1E2A4A] disabled:cursor-not-allowed disabled:text-[#C7CBD6] dark:border-border dark:bg-background dark:text-foreground">
-              <ExternalLink className="h-4 w-4" />{setupText("Check website")}
-            </button>
+    web: individual ? { req: true, t: tr("What is your firm's website?"), h: L("Auto-fill reads it to fill in your firm's description.", "ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์เพื่อกรอกคำอธิบายบริษัทของท่าน"), body: webRow(false) } : !webOpen
+      ? { req: true, t: tr("What is your firm's website?"), h: L("Auto-fill reads it to fill in your firm's description.", "ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์เพื่อกรอกคำอธิบายบริษัทของท่าน"), body: webRow(false) }
+      : { req: false,
+        t: reading ? L(`Reading ${webDomain}…`, `กำลังอ่าน ${webDomain}…`) : readFailed ? L("Describe your firm", "อธิบายบริษัทของท่าน") : L(`Check what we found on ${webDomain}`, `ตรวจสอบข้อมูลที่พบจาก ${webDomain}`),
+        h: reading ? L("Auto Enrich is reading your website. This takes a few seconds.", "Auto Enrich กำลังอ่านเว็บไซต์ของท่าน ใช้เวลาสักครู่") : readFailed ? L("Auto Enrich couldn't read your website. Fill these in yourself, or try Auto Enrich again.", "Auto Enrich อ่านเว็บไซต์ของท่านไม่ได้ กรุณากรอกเอง หรือลองใช้ Auto Enrich อีกครั้ง") : L("Auto Enrich read your website. Change anything that isn't right.", "Auto Enrich อ่านเว็บไซต์ของท่านแล้ว แก้ไขส่วนที่ไม่ถูกต้องได้"),
+        body: <div>{webRow(true)}<div className="seller-website-more">{reading ? (
+          <ul className="seller-reading" aria-live="polite">{[L("Short description", "คำอธิบายสั้น"), L("Long description", "คำอธิบายแบบยาว")].map((x) => <li key={x}><Loader2 className="motion-safe:animate-spin" size={18} />{x}</li>)}</ul>
+        ) : (
+          <div className="seller-description-fields">
+            <div>
+              <div className="seller-field-label"><label htmlFor="w-desc">{L("Short description", "คำอธิบายสั้น")}{marks.desc && <AutoFilled />}</label><small className={descriptionWords(a.desc) > 25 ? "!text-[#DC2626]" : ""}>{descriptionWords(a.desc)} / 25 {L("words", "คำ")}</small></div>
+              <p className="mb-2 text-[13px] text-[#6B7280] dark:text-muted-foreground">{L("1–2 sentences. Sellers see it on your card before an NDA, so ", "1–2 ประโยค ผู้ขายจะเห็นข้อความนี้บนการ์ดของท่านก่อนลงนาม NDA ")}<b className="font-medium text-[#DC2626]">{L("leave out your firm's name, website and contact details.", "โปรดอย่าระบุชื่อบริษัท เว็บไซต์ และข้อมูลติดต่อ")}</b></p>
+              <textarea id="w-desc" className={`seller-description !h-[96px] ${(touched.desc || forced.desc) && descErr ? errCls : ""}`} value={a.desc} placeholder={L("What kind of investor you are, what you invest in, and how.", "ท่านเป็นนักลงทุนประเภทใด ลงทุนในอะไร และลงทุนอย่างไร")}
+                onBlur={() => setTouched((t) => ({ ...t, desc: true }))}
+                onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+                onChange={(e) => { const desc = singleLineDescription(e.target.value); setMarks((m) => ({ ...m, desc: false })); set({ desc }, { description: desc }); }} />
+              {descErr && (touched.desc || forced.desc || descErr !== "Write at least 10 characters.") && <p className="mt-1.5 text-[13px] text-[#DC2626]">{tr(descErr)}</p>}
+              {leaks.length > 0 && <p className="mt-2 rounded-[10px] border border-[#F3D9A6] bg-[#FFF4E0] px-3.5 py-2.5 text-[13px] text-[#8A5A06]">{tr("Your description mentions")} <b>{leaks.join(", ")}</b>{setupText(". Sellers read it before an NDA, so leave out names, websites and contact details.")}</p>}
+            </div>
+            <div>
+              <div className="seller-field-label"><label htmlFor="w-about">{L("Long description", "คำอธิบายแบบยาว")}{marks.about && <AutoFilled />}</label><small className={descriptionWords(a.about) > 80 ? "!text-[#DC2626]" : ""}>{descriptionWords(a.about)} / 80 {L("words", "คำ")}</small></div>
+              <p className="mb-2 text-[13px] text-[#6B7280] dark:text-muted-foreground">{L("Sellers see it after they approve your NDA.", "ผู้ขายจะเห็นหลังจากอนุมัติ NDA ของท่าน")}</p>
+              <textarea id="w-about" className={`seller-description !h-[190px] ${errors.about ? errCls : ""}`} value={a.about} placeholder={L("Your firm, its funds, its team, what it buys and what it brings to a business.", "บริษัทของท่าน กองทุน ทีมงาน กิจการที่ต้องการซื้อ และสิ่งที่ท่านช่วยเสริมให้ธุรกิจได้")}
+                onChange={(e) => { setMarks((m) => ({ ...m, about: false })); set({ about: e.target.value }, { short_description: e.target.value }); }} />
+              {errors.about && <p className="mt-1.5 text-[13px] text-[#DC2626]">{errors.about}</p>}
+            </div>
           </div>
-          {(a.web.trim() || forced.web) && errors.web ? <Err m={errors.web} />
-            : webOpened ? <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[#15803D]"><Check className="h-4 w-4" />{setupText("Opened")} {normalizeUrl(a.web).replace(/^https?:\/\//, "").split("/")[0]}{setupText("in a new tab. Make sure it is your firm.")}</p>
-            : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Click Check website to open it in a new tab and make sure it is your firm.")}</p>}
-        </div>
-      ) },
+        )}</div></div> },
     aum: { req: true, t: corp ? tr("What is your group's annual revenue in $USD?") : tr("How much does your firm manage (AUM) in $USD?"), h: tr("Sellers see this band, never an exact figure."),
       body: <><Choice list={bandList(AUM_BANDS)} value={a.aum} onPick={(v) => autoPick("aum", { aum: v }, { aum_band: v })} /><Err m={forced.aum && errors.aum} /></> },
     ticket: { req: true, t: tr("What is your average investment per deal in $USD?"), h: tr("Sellers see this range on your card and filter Browse investors by it."),
@@ -522,14 +646,15 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           </div>
         </div>
       ) },
+    team: { req: true, t: L("Who is on your team?", "ทีมงานของท่านมีใครบ้าง"), h: L("Add the people who decide on deals. Sellers see them after they approve your NDA, and PitchSnack uses them to verify your firm.", "เพิ่มผู้ที่มีอำนาจตัดสินใจเรื่องดีล ผู้ขายจะเห็นหลังจากอนุมัติ NDA ของท่าน และ PitchSnack ใช้ข้อมูลนี้เพื่อยืนยันตัวตนบริษัทของท่าน"), body: teamBody },
     review: { req: false, t: tr("Review your answers"), h: tr("Check them, then we'll fill in the rest of your profile."),
       body: <Review a={a} med={med} steps={stepsAll} errors={errors} individual={individual} thai={thai} stagesShown={stagesShown} corp={corp}
         missingNames={missingRequired.map(s => L(...BUYER_STEP_NAMES[s.id].full))}
-        onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
+        onEdit={(id) => { setFromReview(true); setFull(id); if (id === "web" && !individual) { setWebOpen(true); setReadFailed(false); } goTo(id); }} /> },
   };
   const q = Q[step.id];
-  const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === "desc" ? "Back to your profile" : fromReview ? "Back to review" : tr("Continue");
-  const continueOk = cur === "review" ? allValid : qValid(cur);
+  const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === profileStep ? "Back to your profile" : fromReview ? "Back to review" : tr("Continue");
+  const continueOk = cur === "review" ? allValid : cur === "web" && !individual && !webOpen ? isValidUrl(a.web) : !reading && qValid(cur);
 
   // ---------------- layout ----------------
   const topBar = (
@@ -591,11 +716,14 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       )}
       {phase === "enrich" && (
         <Enrich a={a} header={header} card={card} btnO={btnO} btnP={btnP} onBack={() => { setPhase("q"); goTo("review"); }} onExit={saveExit}
-          onDone={(r) => { setEnrichRes(r); void qc.invalidateQueries({ queryKey: ["buyer-investor"] }).then(() => setPhase("complete")); }} />
+          onDone={(r0) => {
+            // Once the Website step is answered, Continue to auto-fill leaves the two descriptions alone.
+            const r = r0 && !individual && qValid("web") ? { ...r0, bio: undefined } : r0;
+            setEnrichRes(r); void qc.invalidateQueries({ queryKey: ["buyer-investor"] }).then(() => setPhase("complete")); }} />
       )}
       {phase === "complete" && (
         <Complete invId={data.investor.id} header={header} enrich={enrichRes} answered={a}
-          onBack={() => { setPhase("q"); goTo(fromProfile ? "desc" : "review"); }}
+          onBack={() => { setPhase("q"); goTo(fromProfile ? profileStep : "review"); }}
           onSaved={(msg) => { toast.success(msg); void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] }); void navigate({ to: "/marketplace/my-company", search: { open: data.investor.id } }); }} />
       )}
     </div>
@@ -619,7 +747,9 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, mi
         [tr("Year founded"), a.year, "name", "req", errors.year, "🔒 After NDA"] as Row,
         [tr("Registration number"), a.reg, "name", thai ? "req" : "opt", errors.reg, "🔒 After NDA"] as Row,
       ] : []),
-      [tr("Website"), a.web, "web", "req", errors.web, "🔒 After NDA"],
+      ...(shown.has("sectors") ? [[tr("Industries"), a.sectors.includes(SECTOR_AGNOSTIC) ? "Sector agnostic" : a.sectors.join(", "), "sectors", "req", errors.sectors] as Row] : []),
+      individual ? [tr("Website"), a.web, "web", "req", errors.web, "🔒 After NDA"] as Row
+        : [L("Firm website and description", "เว็บไซต์และคำอธิบายบริษัท"), [a.web, a.desc.trim()].filter(Boolean).join(" · "), "web", "req", errors.web || errors.about || (errors.desc ? "fix" : null)] as Row,
     ]],
     [tr("Fund & ticket"), [
       ...(shown.has("aum") ? [[corp ? "Group revenue" : "AUM", bandText(a.aum), "aum", "req", errors.aum, tr("Range")] as Row] : []),
@@ -630,10 +760,10 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, mi
       [tr("Deal types"), a.deals.join(", "), "deals", "req", errors.deals],
       ...(stagesShown ? [[tr("Preferred stages"), a.stages.join(", "), "deals", "req", errors.stages] as Row] : []),
       [tr("Geography"), a.geo.join(", "), "deals", "opt", null],
-      [tr("Industries"), a.sectors.includes(SECTOR_AGNOSTIC) ? "Sector agnostic" : a.sectors.join(", "), "sectors", "req", errors.sectors],
       ...(shown.has("photos") ? [[tr("Logo and photos"), med.logo && med.photos > 0 ? (med.photos === 1 ? tr("Logo and 1 photo") : tr("Logo and {n} photos").replace("{n}", String(med.photos))) : "", "photos", "req", errors.photos, "🔒 After NDA"] as Row] : []),
     ]],
-    [tr("Public profile"), [[tr("Description"), a.desc.trim(), "desc", "opt", errors.desc ? "fix" : null]]],
+    ...(shown.has("desc") ? [[tr("Public profile"), [[tr("Description"), a.desc.trim(), "desc", "opt", errors.desc ? "fix" : null]]] as [string, Row[]]] : []),
+    [L("Your team", "ทีมงานของท่าน"), [[L("Team", "ทีมงาน"), a.people.map((p) => p.name.trim()).filter(Boolean).join(", "), "team", "req", errors.team]]],
   ];
   return (
     <div className="space-y-5">
