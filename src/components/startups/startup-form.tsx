@@ -1863,7 +1863,7 @@ export function StartupForm({
             {curPriv === "about" && (<><TabHead title={tr("Company Info", "ข้อมูลบริษัท")}>{enrichBtn}</TabHead>{aboutJsx}</>)}
             {curPriv === "owner" && (<><TabHead title={tr("Owner Info", "ข้อมูลเจ้าของ")} />{peopleJsx}</>)}
             {curPriv === "admin" && (<><TabHead title={tr("Admin settings", "การตั้งค่าผู้ดูแล")} /><p className="text-sm text-muted-foreground">Only Admin sees this tab.</p>{adminJsx}</>)}
-            {curPriv === "address" && (<><TabHead title={tr("Company Address", "ที่อยู่บริษัท")}>{enrichBtn}</TabHead>{addressJsx}</>)}
+            {curPriv === "address" && (<><TabHead title={tr("Company Address", "ที่อยู่บริษัท")} />{addressJsx}</>)}
             {curPriv === "market" && (<><TabHead title={tr("Market Target", "ตลาดเป้าหมาย")}>{enrichBtn}</TabHead>{marketJsx}</>)}
             {curPriv === "licenses" && (
               <EditSec id="licenses" tone="seller" active={secOn("licenses")}>
