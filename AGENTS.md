@@ -8,8 +8,8 @@
 - Pipeline company chips use own-organisation DTOs from the deal's startup/linked buyer firm, never counterparty or page-selected organisations; pending/ended identity and NDA gates stay unchanged.
 - Discovery Grid and Split-list cards share StandardBrowseCard through listing/investor adapters; watchlist wrappers own view state and existing DTO gates own privacy, so panels and List rows remain independent.
 - Seller Connect flight is browser-only presentation using the stored invitation ID, shared Pipeline opening signal and public investor cover markers; invitation writes and authorization remain in the existing server function.
-- Pending contact presentation uses the existing seller Connect, buyer verification and session DTOs with one shared focusable tooltip button; status is derived server-side from own approval records and request authorization is unchanged.
-- Marketplace My Company, Pipeline and the Admin menu share WorkspaceSubmenu (Admin: toggleOnly rows never navigate); role colour vars default to amber at :root so the shared styles work outside the Marketplace.
+- Pending contacts share a focusable tooltip button using Connect/verification/session DTOs; own approval records determine server-side status; request authorization stays unchanged.
+- My Company, Pipeline and Admin share WorkspaceSubmenu; Admin toggleOnly rows never navigate. Role colours default to amber at :root for use outside Marketplace.
 - Live agreement cards use a browser-safe Bangkok calendar-day helper and a Pipeline-parent context for midnight updates and reload-only expansion reset; existing document dialogs and stored legal end dates remain authoritative.
 
 - Admin approves listings; seller resume restores only RLS-visible approved snapshots via resume-listing.server with conditional writes. listing-status refreshes owner queries before unlocking actions. Seller covers use sector-matched setMyListingImage picks.
