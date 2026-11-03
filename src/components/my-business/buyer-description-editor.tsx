@@ -73,7 +73,8 @@ export function BuyerDescriptionEditor({ i, leaks, value, onChange, forced, chil
   const visibleProblem = problem === 'Write at least 10 characters.' && !touched && !forced ? null : problem;
   const message = visibleProblem || (leaks.length ? 'leak' : null);
   const root = useRef<HTMLDivElement>(null);
-  const wantAnchor = useRef<HTMLDivElement>(null);
+  // State, not a ref, so the tour re-renders once the anchor exists on first mount.
+  const [wantAnchor, setWantAnchor] = useState<HTMLDivElement | null>(null);
   const wantBox = useRef<HTMLTextAreaElement>(null);
   const wantN = wantBuyLen(want);
   const wantOver = wantN > WANT_BUY_MAX;
