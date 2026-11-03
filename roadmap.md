@@ -2,8 +2,8 @@
 
 ## Seller Website key business strengths
 - [x] Read the supplied brief and try the HTML reference's typing, Enter and empty-row Suggest.
-- [ ] Add four bilingual shared Highlights rows, three required, with protected Suggest/enrichment and Review count; user approved adding missing waiting/reading/found states.
-- [ ] Verify saved read-back, completion rules, Thai output and desktop/mobile/dark views using test identities.
+- [x] Add four bilingual shared Highlights rows, three required, with protected Suggest/enrichment and Review count; user approved adding missing waiting/reading/found states.
+- [x] Verify EN/TH saved read-back, Listing Identity Thai preservation, real enrichment, desktop/mobile/dark views and 64 focused tests; restore test answers. Preview build OK.
 
 ## Seller after-wizard listing identity
 - [x] Add completion navigation and one-time shared pop-up.
