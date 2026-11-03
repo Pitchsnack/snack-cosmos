@@ -285,6 +285,13 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((o) => ({ ...o, [k]: e.target.value }));
   const pop = useEditInfo();
+  // The "What you want to buy" pop-up: only right after the setup wizard (?tour=want), never stored.
+  const [tourOpen, setTourOpen] = useState(!!tour && !setup);
+  const closeTour = (focusField: boolean) => {
+    setTourOpen(false);
+    void navigate({ to: "/marketplace/my-company", search: ((p: Record<string, unknown>) => ({ ...p, tour: undefined })) as never, replace: true });
+    if (focusField) window.setTimeout(() => document.getElementById("f-suggested_headline")?.focus({ preventScroll: true }), 60);
+  };
   useEffect(() => {
     if (!setup) return;
     setSources(previous => Object.fromEntries(Object.entries(previous).filter(([key]) => {
@@ -698,7 +705,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 </div>}
           {(tab === "description" || tab === "mandate") && <div className="buyer-description-mandate">
           <ListingEditorTitle title={tr("Your card in Browse investors")}><AutoFillTabButton onClick={fillTab} disabled={busy} /></ListingEditorTitle>
-          <BuyerDescriptionEditor lang={tl} source={setup ? <Tag s={src.description} /> : undefined} suggest={suggest} value={bv("description")} onChange={bset("description")} leaks={leaks} forced={!!errs.description || !!errs.description_th} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} >          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
+          <BuyerDescriptionEditor lang={tl} source={setup ? <Tag s={src.description} /> : undefined} suggest={suggest} value={bv("description")} onChange={bset("description")} leaks={leaks} forced={!!errs.description || !!errs.description_th} want={bv("suggested_headline")} onWant={bset("suggested_headline")} wantLeaks={wantLeaks} tour={tourOpen ? { open: true, close: closeTour } : undefined} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} >          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
         {directory && <CompactFields><div className="space-y-1.5"><Label>{setupText("AUM")}</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>{setupText("Min Ticket Size")}</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>{setupText("Max Ticket Size")}</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
 <div className="buyer-mandate-money">        {showsFund && (
           <S cur={setup ? undefined : sec} id="fund">
