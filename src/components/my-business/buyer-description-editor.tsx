@@ -18,6 +18,9 @@ function WantTour({ anchor, onClose }: { anchor: HTMLElement | null; onClose: (f
   const pop = useRef<HTMLDivElement>(null);
   const go = useRef<HTMLButtonElement>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  // Portal into Edit information's own box, so its focus trap accepts the pop-up's Continue.
+  // That box is transformed, so fixed positions are relative to it, not the viewport.
+  const host = anchor?.closest<HTMLElement>('[data-edit-info-body]')?.parentElement ?? null;
   useEffect(() => {
     if (!anchor) return;
     const measure = () => setRect(anchor.getBoundingClientRect());
