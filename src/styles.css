@@ -617,7 +617,7 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
   .buyer-want-tour-hole::after { animation:buyer-want-tour-ring 1.4s ease-out .3s 3; }
   @keyframes buyer-want-tour-ring { 0% { inset:-2px; opacity:.9; } 100% { inset:-12px; opacity:0; } }
 }
-.buyer-want-tour-pop { position:fixed; z-index:71; padding:16px 18px; border-radius:14px; background:var(--card); box-shadow:0 18px 40px rgba(16,24,40,.28), 0 2px 6px rgba(16,24,40,.12); }
+.buyer-want-tour-pop { position:fixed; z-index:71; pointer-events:auto; padding:16px 18px; border-radius:14px; background:var(--card); box-shadow:0 18px 40px rgba(16,24,40,.28), 0 2px 6px rgba(16,24,40,.12); }
 .buyer-want-tour-pop::before { content:''; position:absolute; top:-7px; left:30px; width:14px; height:14px; border-radius:3px 0 0 0; background:var(--card); transform:rotate(45deg); }
 .buyer-want-tour-t { margin:0 30px 0 0; font-size:16px; font-weight:600; line-height:1.4; color:var(--foreground); text-wrap:pretty; }
 .buyer-want-tour-s { margin:6px 0 0; font-size:14px; line-height:1.55; color:var(--muted-foreground); }
