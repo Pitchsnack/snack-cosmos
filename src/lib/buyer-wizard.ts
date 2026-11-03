@@ -68,7 +68,8 @@ export function buyerSkips(fromSignup: string[] | undefined, v: BuyerSkipVals): 
   const s = new Set<QId>();
   if (f.has("role") && v.role) s.add("role");
   if (f.has("type") && (v.role === "agent" ? (v.actsFor ?? []).length > 0 : !!v.type && v.type !== "Individual Investor")) s.add("type");
-  if (f.has("web") && v.web.trim()) s.add("web");
+  // A firm buyer always sees Website: it holds the two descriptions.
+  if (f.has("web") && v.web.trim() && v.role === "individual") s.add("web");
   if (f.has("sectors") && (v.sectors ?? []).length > 0) s.add("sectors");
   return s;
 }
