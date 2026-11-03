@@ -148,7 +148,7 @@ export function BuyerInvestorEdit({ section, add, id, directory, initialView }: 
 }
 
 export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry" | "From your account";
-export type SetupMode = { onBack: () => void; sources: Record<string, SourceTag>; onSaved: (msg: string) => void; enrich?: EnrichInvestorResult | null };
+export type SetupMode = { onBack: () => void; sources: Record<string, SourceTag>; onSaved: (msg: string, wantEmpty?: boolean) => void; enrich?: EnrichInvestorResult | null };
 
 /** Review & complete in the setup wizard: the same form, with source tags. */
 export function BuyerInformationForm({ data, setup, onCreated }: { data: Data; setup?: SetupMode; onCreated?: (id:string) => void; directoryRecord?: NonNullable<ReturnType<typeof useInvestor>["data"]> }) {
@@ -221,6 +221,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
     aum_band: inv.aum_band ?? "", ticket_band: inv.ticket_band ?? "", rev_band: inv.revenue_min_band ?? "",
     aum_exact: inv.aum_exact_usd != null ? inv.aum_exact_usd.toLocaleString("en-US") : "",
     registration_no: inv.registration_no ?? "", description: data.buyer.description ?? "",
+    suggested_headline: (data.buyer as any).suggested_headline ?? "",
     // One-step approval verification details; legacy suggestions remain untouched.
     revenue_band: (data.buyer as any).revenue_band ?? "",
     contact_number: (data.buyer as any).contact_number ?? "",
@@ -244,10 +245,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const { lang: contextLang, switchable: contextSw, setLang } = useTextLang();
   const tl = setup ? (language === "th" ? "th" : "en") : contextLang;
   const tlSw = !setup && contextSw;
-  const [thx, setThx] = useState({ description: (data.buyer as any).description_th ?? "", short_description: (inv as any).short_description_th ?? "" });
+  const [thx, setThx] = useState({ description: (data.buyer as any).description_th ?? "", short_description: (inv as any).short_description_th ?? "", suggested_headline: (data.buyer as any).suggested_headline_th ?? "" });
   const [keywordsTh, setKeywordsTh] = useState<string[]>((inv as any).keywords_th ?? []);
-  const bv = (k: "description" | "short_description") => tl === "th" ? (thx[k] || (!tlSw ? f[k] : "")) : (f[k] || (!tlSw ? thx[k] : ""));
-  const bset = (k: "description" | "short_description") => (v: string) => tl === "th" ? setThx((o) => ({ ...o, [k]: v })) : setF((o) => ({ ...o, [k]: v }));
+  const bv = (k: "description" | "short_description" | "suggested_headline") => tl === "th" ? (thx[k] || (!tlSw ? f[k] : "")) : (f[k] || (!tlSw ? thx[k] : ""));
+  const bset = (k: "description" | "short_description" | "suggested_headline") => (v: string) => tl === "th" ? setThx((o) => ({ ...o, [k]: v })) : setF((o) => ({ ...o, [k]: v }));
   const bph = (k: "description" | "short_description", fb?: string) => { const own = tl === "th" ? thx[k] : f[k]; const oth = tl === "th" ? f[k] : thx[k]; return tlSw && !own && oth ? missingLangHint(tl, language === "th") : fb; };
   const kwView = tl === "th" ? (keywordsTh.length || tlSw ? keywordsTh : keywords) : (keywords.length || tlSw ? keywords : keywordsTh);
   const setKw = (v: string[]) => (tl === "th" ? setKeywordsTh(v) : setKeywords(v));
