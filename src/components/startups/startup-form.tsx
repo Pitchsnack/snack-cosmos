@@ -219,6 +219,7 @@ export type StartupPopup = {
   onNav: (view: "public" | "private", tab: string) => void;
   row: HiddenProfileRow | null;
   facts: EntryFacts | undefined;
+  tour?: { open: boolean; close: (focus: boolean) => void };
 };
 
 
@@ -496,7 +497,7 @@ export function StartupForm({
     () => (popup && startup ? ({ ...(startup as unknown as ListingSource), sector, city, headquarters, product_tags: productTags, market_tags: marketTags, people: popup.facts?.people ?? [] } as ListingSource) : undefined),
     [popup?.facts, startup, sector, city, headquarters, productTags, marketTags], // eslint-disable-line react-hooks/exhaustive-deps
   );
-  const pd = usePublicDraft(popup?.row ?? null, popup?.facts, listingSource);
+  const pd = usePublicDraft(popup?.row ?? null, popup?.facts, listingSource, !!popup?.tour?.open);
   const [nameErr, setNameErr] = useState(false);
   const [createAttempted, setCreateAttempted] = useState(false);
   useEffect(() => { editCtx?.setPresentation(startupName, tr(pView === "public" ? "Listing view" : "Exclusive view", pView === "public" ? "มุมมองรายการ" : "มุมมองพิเศษ")); }, [startupName,pView]);
@@ -1845,7 +1846,7 @@ export function StartupForm({
         <>
           <TabRow idBase="sfp" label={tr("Listing view sections", "ส่วนของมุมมองรายการ")} tabs={pubTabs} value={curPub} onChange={(k) => navTab("public", k)} />
           <div role="tabpanel" id="sfp-panel" aria-labelledby={`sfp-tab-${curPub}`}>
-            <PublicViewTab tab={curPub} pd={pd} sector={sector} section={section} source={listingSource} refNo={popup?.row?.ref_no}
+            <PublicViewTab tab={curPub} pd={pd} tour={popup?.tour} sector={sector} section={section} source={listingSource} refNo={popup?.row?.ref_no}
               pickedImage={(popup?.row as { public_image_id?: string | null } | null)?.public_image_id ?? null} />
           </div>
         </>
@@ -1889,6 +1890,12 @@ export function StartupForm({
       toast.error(pd.nameTaken ? tr("That listing name is already used by another listing.", "ชื่อประกาศนี้มีประกาศอื่นใช้แล้ว") : tr("Add a listing name before you save.", "กรุณากรอกชื่อประกาศก่อนบันทึก"));
       navTab("public", "identity");
       setTimeout(() => document.getElementById("hp-code_name")?.focus(), 80);
+      return;
+    }
+    const wording = pd.wordingErrors[0];
+    if (popup?.row && wording) {
+      navTab("public", "identity");
+      setTimeout(() => document.getElementById(wording.id)?.focus(), 80);
       return;
     }
     submitForm();

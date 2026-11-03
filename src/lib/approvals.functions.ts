@@ -1,3 +1,4 @@
+import { sellerWordingError } from './seller-listing-wording';
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -66,15 +67,20 @@ export const submitListing = createServerFn({ method: "POST" })
     if (hp.approval_status === "in_review") throw new Error("Already in review");
     const { data: st } = await sb.from("startups").select("startup_name").eq("id", data.startupId).maybeSingle();
     if (!st?.startup_name?.trim()) throw new Error("Add the company name before you submit.");
-    // One-step approval: the seller suggests a listing name and headline (120 cap).
-    if (!hp.suggested_listing_name?.trim()) throw new Error("Write a listing name.");
-    if (!hp.suggested_headline?.trim()) throw new Error("Write a headline.");
-    if (hp.suggested_listing_name.trim().length > 120 || hp.suggested_headline.trim().length > 120) throw new Error("Keep it to 120 characters.");
+    // Registration checks all saved wording, including unchanged legacy values.
+    const { data: control } = await sb.rpc("is_control", { _user_id: context.userId });
+    const listingName = control ? hp.code_name : hp.suggested_listing_name;
+    if (!listingName?.trim()) throw new Error("Write a listing name.");
+    if (!(hp.headline?.trim() || hp.headline_th?.trim())) throw new Error("Write a headline.");
+    for (const [value, kind] of [[listingName, "name"], [hp.headline, "headline"], [hp.headline_th, "headline"], [hp.suggested_headline, "headline"]] as const) {
+      const error = sellerWordingError(value, kind);
+      if (error) throw new Error(error);
+    }
     const snapshot = await buildSnapshot(sb, data.startupId, hp);
     if (snapshot.identity_flags.length) throw new Error("Identity check isn't clean yet");
     // The identity check also reads the suggested listing name and headline.
     const { runIdentityCheck } = await import("@/lib/hidden-profile");
-    const extra = runIdentityCheck({ headline: hp.suggested_listing_name, description: hp.suggested_headline } as any, { ...st, people: [], customers: [] } as any);
+    const extra = runIdentityCheck({ headline: listingName, description: hp.headline || hp.headline_th || hp.suggested_headline } as any, { ...st, people: [], customers: [] } as any);
     if (extra.length) throw new Error(`Identity check: mentions ${extra.map((f) => f.term).join(", ")}`);
     const version = (hp.version ?? 0) + 1;
     const { error: e2 } = await sb.from("listing_submissions").insert({

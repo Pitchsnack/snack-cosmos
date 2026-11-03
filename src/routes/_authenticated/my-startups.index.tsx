@@ -47,6 +47,7 @@ const searchSchema = z.object({
   // Layout (profiles/grid/split/list), or the Edit information pop-up's view (public/private).
   view: z.enum([...VIEW, "public", "private"]).optional().catch(undefined),
   edit: z.literal("startup").optional().catch(undefined),
+  tour: z.literal("seller-identity").optional().catch(undefined),
   tab: z.string().max(20).optional(),
   section: z.string().regex(/^[a-z-]{2,30}$/).optional().catch(undefined),
   selected: z.string().optional(),

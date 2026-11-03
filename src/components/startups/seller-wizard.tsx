@@ -413,7 +413,7 @@ export function SellerWizard({
                   advance();
                 }}
                 className={cur.id === "web" ? "seller-action seller-action-primary" : "rounded-[10px] bg-primary px-6 py-3 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted"}>
-                {setupText(cur.id === "review" ? tr("Continue to auto-fill") : reading ? L("Reading…","กำลังอ่าน…") : full != null ? tr("Back to review") : tr("Continue"))}
+                {setupText(cur.id === "review" ? tr("Continue") : reading ? L("Reading…","กำลังอ่าน…") : full != null ? tr("Back to review") : tr("Continue"))}
 
               </Button>
             </div>

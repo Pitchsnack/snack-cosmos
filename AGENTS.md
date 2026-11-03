@@ -64,3 +64,5 @@
 
 - CompanyNameFields shares live locked names and optional twins; omit legacy second-name writes, preserve setup schemas and profile authorization.
 - Advisors use Company name only; omit legacy listing/headline fields, preserve stored values and access; see nested AGENTS.md.
+
+- Seller listing wording uses one browser-safe counting helper for changed-only saves and full registration checks; shared AfterWizardTour renders buyer/seller presentation, and completion navigation alone supplies the transient seller flag.
