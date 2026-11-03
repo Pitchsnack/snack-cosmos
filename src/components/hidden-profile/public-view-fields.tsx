@@ -5,7 +5,7 @@ import { FieldRow, AutoFillTabButton } from "@/components/common/listing-editor-
 import { Lock } from "lucide-react";
 import { bandOf, bandInText, fmtThb, thbWords, thbWordsTh } from "@/lib/asking-price";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, Check, ChevronDown, CircleCheck, Eye, Info, Pencil, Plus, RefreshCw, Sparkles } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, CircleCheck, Eye, Info, Pencil } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,13 +52,12 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
   const [baseline, setBaseline] = useState(() => JSON.stringify(base));
   useEffect(() => { setD(base); setBaseline(JSON.stringify(base)); }, [base]);
   const opts = useMemo(() => ({ guard: facts ? identityTerms(facts) : [] }), [facts]);
-  const [seed, setSeed] = useState(0);
   const codeIdeas = useMemo(() => {
     const base = source ? suggestCodeNames(source, opts) : [];
     const pool = [...base];
-    for (let i = 0; pool.length < 4 + seed * 4 && i < 40; i++) { const n = suggestCodeName(); if (!pool.includes(n)) pool.push(n); }
-    return seed === 0 ? pool.slice(0, 4) : pool.slice(-4);
-  }, [source, opts, seed]);
+    for (let i = 0; pool.length < 4 && i < 40; i++) { const n = suggestCodeName(); if (!pool.includes(n)) pool.push(n); }
+    return pool.slice(0, 4);
+  }, [source, opts]);
   const headlineIdea = useMemo(() => (source ? suggestHeadline(source, opts) : ""), [source, opts]);
   const descIdea = useMemo(() => (source ? suggestBusinessDescription(source, opts) : ""), [source, opts]);
   const highlightIdeas = useMemo(() => (source ? suggestHighlights(source, opts).filter(Boolean) : []), [source, opts]);
@@ -127,7 +126,7 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
   ].filter(x => sellerWordingChangedError(d[x.field as keyof typeof d] as string, base[x.field as keyof typeof base] as string, x.kind));
   return {
     wordingErrors,
-    d, setD, ideas: { codeIdeas, headlineIdea, descIdea, highlightIdeas, customersIdea }, moreNames: () => setSeed((s) => s + 1),
+    d, setD, ideas: { codeIdeas, headlineIdea, descIdea, highlightIdeas, customersIdea },
     fillAll, findings, counts, dirty, changedFromRow, payload, nameState, nameTaken: canName && nameState === "taken", canName,
   };
 }
