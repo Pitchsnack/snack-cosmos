@@ -352,7 +352,7 @@ export function suggestHighlights(s: ListingSource, o?: SuggestOpts): string[] {
     const thaiTag = (text: string) => /[\u0E00-\u0E7F]/.test(text) ? text : pairs.find(pair => pair[0].toLowerCase() === text.toLowerCase())?.[1] ?? '';
     const products = a.products.map(thaiTag).filter(Boolean);
     const markets = a.markets.map(text => ({ Thailand:'ประเทศไทย', ASEAN:'อาเซียน', Worldwide:'ทั่วโลก' }[text as 'Thailand' | 'ASEAN' | 'Worldwide'] ?? thaiTag(text))).filter(Boolean);
-    const one = s.year_founded ? `ดำเนินธุรกิจตั้งแต่ปี ค.ศ. ${s.year_founded}` : `ดำเนินธุรกิจในกลุ่ม${examples?.thai ?? 'ธุรกิจทั่วไป'}`;
+    const one = a.decade ? `ดำเนินธุรกิจตั้งแต่ทศวรรษ ${a.decade.replace('s','')}` : `ดำเนินธุรกิจในกลุ่ม${examples?.thai ?? 'ธุรกิจทั่วไป'}`;
     const two = products.length ? `สินค้าและบริการ ได้แก่ ${products.join(' และ ')}` : `ดำเนินงานในกลุ่ม${examples?.thai ?? 'ธุรกิจทั่วไป'}`;
     const three = markets.length ? `ให้บริการตลาดและกลุ่มลูกค้า ได้แก่ ${markets.join(' และ ')}` : `ให้บริการด้าน${products[0] ?? examples?.thai ?? 'ธุรกิจ'}ในประเทศไทย`;
     return [one, two, three].map(text => scrub(text, terms));

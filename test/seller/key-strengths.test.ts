@@ -36,11 +36,11 @@ describe('seller Website key strengths',()=>{
  });
  it('nothing found does not fill strengths',()=>expect(mergeWebsiteEnrich(d(),{}, {},false).patch).not.toHaveProperty('highlights'));
  it('Suggest writes native Thai templates with translated known tags',()=>{
-  expect(wizardStrengthIdeas(d(),true)).toEqual(['ดำเนินธุรกิจตั้งแต่ปี ค.ศ. 2006','สินค้าและบริการ ได้แก่ บรรจุภัณฑ์ชนิดอ่อนตัว','ให้บริการตลาดและกลุ่มลูกค้า ได้แก่ แบรนด์อาหาร และ อาเซียน']);
+  expect(wizardStrengthIdeas(d(),true)).toEqual(['ดำเนินธุรกิจตั้งแต่ทศวรรษ 2000','สินค้าและบริการ ได้แก่ บรรจุภัณฑ์ชนิดอ่อนตัว','ให้บริการตลาดและกลุ่มลูกค้า ได้แก่ แบรนด์อาหาร และ อาเซียน']);
  });
  it('Auto Enrich stores Thai suggestions only in Thai rows',()=>{
   const result=mergeWebsiteEnrich(d(),{productTags:['Flexible packaging'],marketTags:['Food brands']},{},true);
-  expect(result.patch.highlightsTh?.[0]).toBe('ดำเนินธุรกิจตั้งแต่ปี ค.ศ. 2006');expect(result.patch).not.toHaveProperty('highlights');
+  expect(result.patch.highlightsTh?.[0]).toBe('ดำเนินธุรกิจตั้งแต่ทศวรรษ 2000');expect(result.patch).not.toHaveProperty('highlights');
  });
  it('normalizes exactly four rows without dropping empty positions',()=>expect(strengthRows(['One','','Three'])).toEqual(['One','','Three','']));
 });
