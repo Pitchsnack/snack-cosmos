@@ -53,12 +53,15 @@ function WantTour({ anchor, onClose }: { anchor: HTMLElement | null; onClose: (f
     return () => { window.clearTimeout(t); window.removeEventListener('keydown', key, true); window.removeEventListener('pointerdown', down, true); };
   }, [onClose]);
   if (!anchor || !rect) return null;
+  const hostRect = host?.getBoundingClientRect();
+  const ox = hostRect?.left ?? 0;
+  const oy = hostRect?.top ?? 0;
   const width = Math.min(420, rect.width + 16);
   const left = Math.max(12, Math.min(rect.left - 4 - 8, window.innerWidth - width - 12));
   return createPortal(
     <>
-      <div aria-hidden="true" className="buyer-want-tour-hole" style={{ top: rect.top - 8, left: rect.left - 8, width: rect.width + 16, height: rect.height + 16 }} />
-      <div ref={pop} role="dialog" aria-labelledby="buyer-want-tour-t" aria-describedby="buyer-want-tour-s" className="buyer-want-tour-pop" style={{ top: rect.bottom + 8 + 12, left, width }}>
+      <div aria-hidden="true" className="buyer-want-tour-hole" style={{ top: rect.top - 8 - oy, left: rect.left - 8 - ox, width: rect.width + 16, height: rect.height + 16 }} />
+      <div ref={pop} role="dialog" aria-labelledby="buyer-want-tour-t" aria-describedby="buyer-want-tour-s" className="buyer-want-tour-pop" style={{ top: rect.bottom + 8 + 12 - oy, left: left - ox, width }}>
         <button type="button" className="buyer-want-tour-x" aria-label={L('Close', 'ปิด')} onClick={() => onClose(false)}><X className="h-4 w-4" aria-hidden /></button>
         <p id="buyer-want-tour-t" className="buyer-want-tour-t">{L('Last step: Acquisition target company', 'ขั้นตอนสุดท้าย: บริษัทเป้าหมายในการเข้าซื้อกิจการ')}</p>
         <p id="buyer-want-tour-s" className="buyer-want-tour-s">{L('Be specific about the type of company you want to acquire. Sellers will use this information to assess whether their business matches your criteria before deciding to contact you.', 'โปรดระบุประเภทบริษัทที่ท่านต้องการเข้าซื้อกิจการให้ชัดเจน ผู้ขายจะใช้ข้อมูลนี้ประเมินว่าธุรกิจของตนตรงกับเกณฑ์ของท่านหรือไม่ ก่อนตัดสินใจติดต่อท่าน')}</p>
