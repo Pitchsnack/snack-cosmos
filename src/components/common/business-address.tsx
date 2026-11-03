@@ -49,7 +49,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
     </div>
   );
   const district = (
-    <div className="flex flex-col justify-end">
+    <div>
       <label className={lbl} htmlFor="addr-district">{tr("City/District")}{stars && <Req />}</label>
       {thai ? (
         <input id="addr-district" aria-required autoComplete="address-level2" maxLength={80} placeholder={tr("e.g. Watthana")}
@@ -62,7 +62,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
     </div>
   );
   const province = (
-    <div className="flex flex-col justify-end">
+    <div>
       <label className={lbl} htmlFor="addr-province">{tr("Province/State")}{thai ? (stars ? <Req /> : null) : <Opt />}</label>
       {thai ? (
         <select id="addr-province" aria-required autoComplete="address-level1" className={cn(inp, nc("province"), "pr-8", show("province") && bad)} {...nd("province")} value={a.province}
@@ -77,7 +77,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
     </div>
   );
   const postal = (
-    <div className="flex flex-col justify-end">
+    <div>
       <label className={lbl} htmlFor="addr-postal">{tr("Postal code")}{thai ? (stars ? <Req /> : null) : <Opt />}</label>
       <input id="addr-postal" aria-required={thai} autoComplete="postal-code" inputMode={thai ? "numeric" : undefined} maxLength={thai ? 5 : 12}
         placeholder={thai ? tr("5 digits") : undefined} className={cn(inp, nc("postal"), show("postal") && bad)} {...nd("postal")} value={a.postal} onBlur={() => onBlur("postal")}
@@ -91,8 +91,8 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
       {title && <div className="mb-3 text-[16px] font-bold">{title}</div>}
       {withCountry ? (
         <div className="space-y-3.5">
-          <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4">
-            <div className="flex flex-col justify-end">
+          <div className="grid items-start gap-3.5 sm:grid-cols-2 sm:gap-4">
+            <div>
               <label className={lbl} htmlFor="addr-country">{tr("Country")}{stars && <Req />}</label>
               <select id="addr-country" aria-required className={cn(inp, "pr-8", countryErr && bad)} value={country}
                 onChange={(e) => onCountry?.(e.target.value)}>
@@ -105,13 +105,13 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
           </div>
           {street}
           {unit}
-          <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4">{district}{postal}</div>
+          <div className="grid items-start gap-3.5 sm:grid-cols-2 sm:gap-4">{district}{postal}</div>
         </div>
       ) : (
         <div className="space-y-3.5">
           {street}
           {unit}
-          <div className="grid gap-3.5 sm:grid-cols-2">{district}{province}</div>
+          <div className="grid items-start gap-3.5 sm:grid-cols-2">{district}{province}</div>
           <div className="sm:w-1/2 sm:pr-[7px]">{postal}</div>
         </div>
       )}
