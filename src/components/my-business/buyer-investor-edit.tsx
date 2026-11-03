@@ -391,12 +391,12 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       ["acts_for", agent && !actsFor.length ? "Pick at least one investor type." : null],
     ];
     const aBad = addrErr && (!f.country ? "Choose a country." : Object.values(addrErr).find(Boolean));
-    const bad = checks.find(([key, m]) => key.startsWith("description") && m) ?? checks.find(([key, m]) => key === "registration_no" && m) ?? checks.find(([key,m]) => key.startsWith("short_description") && m) ?? checks.find(([, m]) => m);
+    const bad = checks.find(([key, m]) => (key.startsWith("description") || key.startsWith("suggested_headline")) && m) ?? checks.find(([key, m]) => key === "registration_no" && m) ?? checks.find(([key,m]) => key.startsWith("short_description") && m) ?? checks.find(([, m]) => m);
     if ((!directory || bad?.[0] === "registration_no") && bad) {
       setErrs({ [bad[0]]: bad[1] ?? "Check this field." });
       if (bad[0].endsWith("_th") && tlSw) setLang("th");
-      else if (tlSw && ["description","short_description"].includes(bad[0])) setLang("en");
-      const target = bad[0].startsWith("description") ? "description" : "about";
+      else if (tlSw && ["description","short_description","suggested_headline"].includes(bad[0])) setLang("en");
+      const target = bad[0].startsWith("description") || bad[0].startsWith("suggested_headline") ? "description" : "about";
       setView(target === "description" ? "public" : "private"); setTab(target);
       setTimeout(()=>document.getElementById(`f-${bad[0].replace(/_th$/, "")}`)?.focus(),60);
       return;
