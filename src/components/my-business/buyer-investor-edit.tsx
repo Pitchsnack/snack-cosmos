@@ -436,6 +436,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         registration_no: individual ? null : t(f.registration_no),
         ...(descriptionChanged(f.description, data.buyer.description) ? {description: f.description.trim()} : {}), deal_types: deals,
         description_th: thx.description.trim(), short_description_th: thx.short_description.trim() || null, keywords_th: keywordsTh,
+        suggested_headline: t(f.suggested_headline), suggested_headline_th: thx.suggested_headline.trim() || null,
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, ...(portfolioDirty ? {portfolio_extra: portfolio} : {}),
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
@@ -454,7 +455,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       const ready = !!f.ticket_band && deals.length > 0 && industries.length > 0 && (!showsStages(typeOf, agent ? actsFor : null) || stages.length > 0);
       const msg = live ? "Profile saved. Sellers see the changes in Browse investors."
         : ready ? "Profile saved as a draft. Publish it when you're ready." : "Profile saved as a draft. Finish the required items to publish.";
-      if (setup) setup.onSaved(setupText(msg));
+      if (setup) setup.onSaved(setupText(msg), !f.suggested_headline.trim() && !thx.suggested_headline.trim());
       else { toast.success(setupText(msg)); if (pop) { pop.setDirty(false); pop.done(); } else back(); }
     } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   };
@@ -801,7 +802,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           </p>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={back} disabled={busy}>{setupText(setup ? "Back to answers" : "Cancel")}</Button>
-            <Button type="submit" disabled={busy}>{setupText(busy ? "Saving…" : setup ? "Save profile" : "Save changes")}</Button>
+            <Button type="submit" disabled={busy}>{setupText(busy ? "Saving…" : setup ? "Continue" : "Save changes")}</Button>
           </div>
         </div>
         )}
