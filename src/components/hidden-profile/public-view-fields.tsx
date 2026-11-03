@@ -401,32 +401,21 @@ function SuggestedNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: strin
 
 function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string }) {
   const tr = useTr();
-  const { d, setD, ideas } = pd;
+  const { d } = pd;
   const { lang } = useTextLang();
-  const [open, setOpen] = useState(false);
   const [tip, setTip] = useState(false);
-  const wrap = useRef<HTMLDivElement>(null);
-  const input = useRef<HTMLInputElement>(null);
   const tipId = useId();
   const errId = useId();
   const name = d.code_name.trim();
   const taken = pd.nameTaken;
   const empty = !name;
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [open]);
-  const pick = (n: string) => { setD((p) => ({ ...p, code_name: n })); setOpen(false); input.current?.focus(); };
   const tipText = tr("A private name buyers see instead of your real company name. It must be unique in the Marketplace.", "ชื่อที่ผู้ซื้อเห็นแทนชื่อจริงของบริษัทท่าน และต้องไม่ซ้ำกับประกาศอื่นใน Marketplace");
-  const border = taken ? "border-[#DC2626] focus-visible:border-[#DC2626] focus-visible:shadow-[0_0_0_3px_rgba(220,38,38,0.12)]"
-    : open ? "border-[#6D28D9] shadow-[0_0_0_3px_rgba(109,40,217,0.14)] focus-visible:border-[#6D28D9] focus-visible:shadow-[0_0_0_3px_rgba(109,40,217,0.14)]"
-    : "";
+  const border = taken ? "border-[#DC2626] focus-visible:border-[#DC2626] focus-visible:shadow-[0_0_0_3px_rgba(220,38,38,0.12)]" : "";
+  const shown = pd.nameState === "available" && !empty;
   return (
-    <div ref={wrap} className="relative">
+    <div>
       <div className="mb-[6px] flex items-center">
-        <label htmlFor="hp-code_name" onMouseEnter={() => setTip(true)} onMouseLeave={() => setTip(false)} onClick={() => setOpen(true)}
+        <label htmlFor="hp-code_name" onMouseEnter={() => setTip(true)} onMouseLeave={() => setTip(false)}
           className={cn(LABEL, taken && MISSING)}>{tr("Listing name", "ชื่อประกาศ")}</label>
         <span className="relative ml-[2px] inline-flex">
           <button type="button" aria-label={tr("What is a listing name?", "ชื่อประกาศคืออะไร")} aria-describedby={tipId}
@@ -440,58 +429,20 @@ function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string 
             {tipText}
           </span>
         </span>
-  
         <span className="ml-auto text-[12px]"><SellerWordingCount value={d.code_name} kind="name" language={lang} /></span>
       </div>
       <div className="relative">
-        <Input id="hp-code_name" ref={input} value={d.code_name} placeholder={tr("e.g. Established Regional Logistics Network", "เช่น เครือข่ายโลจิสติกส์ระดับภูมิภาคที่ก่อตั้งมายาวนาน")}
-          aria-describedby={cn(tipId, taken && errId)} aria-invalid={taken || undefined} aria-expanded={open} aria-haspopup="listbox"
-          onMouseDown={() => setOpen(true)}
-          onKeyDown={(e) => { if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); requestAnimationFrame(() => wrap.current?.querySelector<HTMLElement>("[data-name-opt]")?.focus()); } if (e.key === "Escape") setOpen(false); }}
-          onChange={(e) => setD((p) => ({ ...p, code_name: singleLineSellerWording(e.target.value) }))}
-          className={cn(BOX, "pr-[136px]", border)} />
-        <span aria-hidden className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-3">
-          {pd.nameState === "available" && !empty && <span className="flex items-center gap-[5px] text-[13px] font-semibold text-[#15803D]"><CircleCheck className="h-[15px] w-[15px]" strokeWidth={2} />{tr("Available", "ใช้ได้")}</span>}
-          <ChevronDown className={cn("h-[18px] w-[18px] transition-transform", open ? "rotate-180 text-[#6D28D9]" : "text-[#6A7181]")} strokeWidth={2} />
-        </span>
+        <Input id="hp-code_name" value={d.code_name} placeholder={tr("e.g. Established Regional Logistics Network", "เช่น เครือข่ายโลจิสติกส์ระดับภูมิภาคที่ก่อตั้งมายาวนาน")}
+          aria-describedby={cn(tipId, taken && errId)} aria-invalid={taken || undefined}
+          className={cn(BOX, shown && "pr-[110px]", border)} />
+        {shown && <span className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-[5px] text-[13px] font-semibold text-[#15803D]"><CircleCheck className="h-[15px] w-[15px]" strokeWidth={2} />{tr("Available", "ใช้ได้")}</span>}
       </div>
       <SellerWordingMessage value={d.code_name} kind="name" language={lang} />
       {empty && !taken && <p className="mt-[6px] text-[12.5px] text-[#6B7280] dark:text-muted-foreground">{tr(`No listing name yet. Buyers will see ${refNo || "the ref"}.`, `ยังไม่มีชื่อประกาศ ผู้ซื้อจะเห็น ${refNo || "เลขอ้างอิง"}`)}</p>}
       {taken && (
         <p id={errId} role="alert" className="mt-[6px] text-[12.5px] font-medium text-[#B42318]">
-          {tr(`“${name}” is already used by another listing. Click the field to pick a suggestion, or try another name.`, `“${name}” มีประกาศอื่นใช้แล้ว คลิกที่ช่องเพื่อเลือกชื่อที่แนะนำ หรือลองชื่ออื่น`)}
+          {tr(`“${name}” is already used by another listing. Try another name.`, `“${name}” มีประกาศอื่นใช้แล้ว ลองใชชื่ออื่น`)}
         </p>
-      )}
-      {open && (
-        <div role="listbox" aria-label={tr("Suggested names", "ชื่อที่แนะนำ")}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") { setOpen(false); input.current?.focus(); return; }
-            if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
-            e.preventDefault();
-            const opts = [...(wrap.current?.querySelectorAll<HTMLElement>("[data-name-opt]") ?? [])];
-            const i = opts.indexOf(document.activeElement as HTMLElement);
-            opts[(i + (e.key === "ArrowDown" ? 1 : -1) + opts.length) % opts.length]?.focus();
-          }}
-          className="absolute inset-x-0 top-[calc(100%+6px)] z-40 rounded-[10px] border border-[#E6E8EC] bg-background p-[6px] shadow-[0_12px_28px_rgba(16,24,40,0.14)] dark:border-border">
-          <div className="flex items-center justify-between pb-[6px] pl-[10px] pr-[6px] pt-1">
-            <span className="flex items-center gap-[6px] text-[12.5px] font-semibold text-[#5F6676]"><Sparkles className="h-[14px] w-[14px] text-[#6D28D9]" />{tr("Suggested names", "ชื่อที่แนะนำ")}</span>
-            <button type="button" onClick={pd.moreNames} className="flex h-7 items-center gap-1 rounded-md px-2 text-[12.5px] font-semibold text-[#6D28D9] hover:bg-[#F7F3FF] dark:hover:bg-muted">
-              <RefreshCw className="h-[13px] w-[13px]" />{tr("More ideas", "แนะนำเพิ่ม")}
-            </button>
-          </div>
-          {ideas.codeIdeas.map((n) => {
-            const cur = n.trim().toLowerCase() === name.toLowerCase();
-            return (
-              <button key={n} type="button" role="option" aria-selected={cur} data-name-opt onClick={() => pick(n)}
-                className={cn("flex h-[38px] w-full items-center gap-[10px] rounded-[7px] px-[10px] text-left text-[14px] font-medium text-[#374151] outline-none hover:bg-[#F7F3FF] focus:bg-[#F7F3FF] max-sm:h-[42px] dark:text-foreground dark:hover:bg-muted dark:focus:bg-muted",
-                  cur && "bg-[#F3EEFF] font-semibold text-[#151A28] dark:bg-muted")}>
-                {cur ? <Check className="h-[15px] w-[15px] text-[#6D28D9]" /> : <Plus className="h-[15px] w-[15px] text-[#6D28D9]" />}
-                <span className="flex-1 truncate">{n}</span>
-                {cur && <span className="text-[12px] text-[#6A7181]">{tr("In use", "ใช้อยู่")}</span>}
-              </button>
-            );
-          })}
-        </div>
       )}
     </div>
   );
