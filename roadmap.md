@@ -4,6 +4,7 @@
 - [x] Add completion navigation and one-time shared pop-up.
 - [x] Apply bilingual wording limits, growing fields and registration checks without direct database edits.
 - [x] 39 focused tests passed; test-seller EN/TH pop-up, 1440/1024/390, errors and dismissal verified. No saved over-limit refs found.
+- [x] Control Listing name field: "Suggested names" / "More ideas" dropdown removed; typing, availability badge, counter and taken error verified live.
 - [ ] Full wizard completion and Control Seller-tab click-through: available test seller has incomplete required setup; no completion or publication performed.
 
 ## Seller website and founder setup
