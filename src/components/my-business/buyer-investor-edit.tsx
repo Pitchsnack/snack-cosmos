@@ -258,7 +258,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const buyerMissing = {media: mediaMissing(inv),about:[!!errs.short_description || !!errs.short_description_th,!individual && !!yearError(f.year_founded),!f.investor_name.trim(),!f.website_url.trim(),!individual && !!regError(f.registration_no,f.country)].filter(Boolean).length,address:0,people:0};
   // Fund falls back to Investor Classification when the form hides the band.
   type Tab = "media" | "about" | "address" | "industries" | "people" | "description" | "mandate" | "admin";
-  const tabFor = (field?: string): Tab => field === "description" ? "description" : ["fund","mandate","revenue","focus","geography"].includes(field ?? "") ? "description" : ["country","address"].includes(field ?? "") ? "address" : ["industries","portfolio","keywords","stages"].includes(field ?? "") ? "industries" : field === "people" ? "people" : field === "media" ? "media" : "about";
+  const tabFor = (field?: string): Tab => field === "description" || field === "want" ? "description" : ["fund","mandate","revenue","focus","geography"].includes(field ?? "") ? "description" : ["country","address"].includes(field ?? "") ? "address" : ["industries","portfolio","keywords","stages"].includes(field ?? "") ? "industries" : field === "people" ? "people" : field === "media" ? "media" : "about";
   const [tab, setTab] = useState<Tab>(setup || onCreated ? "about" : section ? tabFor(section) : initialView === "public" ? "description" : "media");
   const [nameFocus, setNameFocus] = useState(false);
   useOpenAtSection(nameFocus ? "company-name" : undefined);
@@ -349,6 +349,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
   const autoEnrich = <InvestorAutoEnrichButton websiteUrl={f.website_url} onEnriched={applyEnrichment} disabled={busy} />;
   const leaks = descriptionLeaks(bv("description"), f.investor_name, f.website_url);
+  const wantLeaks = descriptionLeaks(bv("suggested_headline"), f.investor_name, f.website_url);
   const suggestion = () => {
     const next = suggestBuyerDescription({type:typeOf, industries, geography:focus}, tl);
     return descriptionLeaks(next, f.investor_name, f.website_url).length ? suggestBuyerDescription({type:"", industries:[], geography:[]}, tl) : next;
