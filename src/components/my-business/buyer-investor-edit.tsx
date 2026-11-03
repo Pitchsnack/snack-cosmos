@@ -132,7 +132,7 @@ function S({ id, cur, className, children }: { id: string; cur?: string; classNa
   return <EditSec id={id} tone="buyer" active={cur === id} className={className}>{children}</EditSec>;
 }
 
-export function BuyerInvestorEdit({ section, add, id, directory, initialView }: { section?: string; add?: boolean; id?: string; directory?: boolean; initialView?: "public" | "private" } = {}) {
+export function BuyerInvestorEdit({ section, add, id, directory, initialView, tour }: { section?: string; add?: boolean; id?: string; directory?: boolean; initialView?: "public" | "private"; tour?: boolean } = {}) {
   const fetchMe = useServerFn(getMyBuyerInvestor);
   const fetchById = useServerFn(getBuyerInvestorById);
   const directoryData = useInvestor(directory ? id : undefined);
@@ -144,7 +144,7 @@ export function BuyerInvestorEdit({ section, add, id, directory, initialView }: 
   });
   if (isLoading || (directory && directoryData.isLoading)) return <div className="mx-auto max-w-3xl space-y-4"><Skeleton className="h-10" /><Skeleton className="h-[600px]" /></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">{setupText("Couldn't load your profile. Please refresh.")}</p>;
-  return <Form data={data} section={section} add={add} directory={directory} initialView={initialView} directoryRecord={directoryData.data} />;
+  return <Form data={data} section={section} add={add} directory={directory} initialView={initialView} tour={tour} directoryRecord={directoryData.data} />;
 }
 
 export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry" | "From your account";
@@ -176,7 +176,7 @@ function initialMedia(inv: Data["investor"]): EntityMediaState {
   };
 }
 
-function Form({ data, setup, section, add, directory, initialView, onCreated, directoryRecord }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private"; onCreated?: (id:string) => void; directoryRecord?: NonNullable<ReturnType<typeof useInvestor>["data"]> }) {
+function Form({ data, setup, section, add, directory, initialView, onCreated, directoryRecord, tour }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private"; onCreated?: (id:string) => void; directoryRecord?: NonNullable<ReturnType<typeof useInvestor>["data"]>; tour?: boolean }) {
   const incoming = useSearch({strict:false}) as {tab?:string};
   section = section ?? (incoming.tab === "mandate" ? "mandate" : incoming.tab);
   const {data:session} = useSessionContext();
