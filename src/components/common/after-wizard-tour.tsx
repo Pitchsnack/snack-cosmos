@@ -38,6 +38,8 @@ export function AfterWizardTour({ anchor, onClose, title, text, tone = 'buyer' }
     window.addEventListener('keydown', key, true); window.addEventListener('pointerdown', down, true);
     return () => { window.clearTimeout(t); window.removeEventListener('keydown', key, true); window.removeEventListener('pointerdown', down, true); };
   }, [onClose]);
+  const positioned = !!rect;
+  useEffect(() => { if (positioned) { const t = window.setTimeout(() => go.current?.focus({ preventScroll: true }), 220); return () => window.clearTimeout(t); } }, [positioned]);
   if (!anchor || !rect) return null;
   const hostRect = host?.getBoundingClientRect();
   const ox = hostRect?.left ?? 0, oy = hostRect?.top ?? 0;
