@@ -186,6 +186,8 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
         status: p.status as string,
         description: (p.description ?? "") as string,
         description_th: (p.description_th ?? "") as string,
+        suggested_headline: (p.suggested_headline ?? "") as string,
+        suggested_headline_th: (p.suggested_headline_th ?? "") as string,
         deal_types: (p.deal_types ?? []) as string[],
         ref_no: p.ref_no as string,
       },
@@ -299,6 +301,7 @@ const Patch = z.object({
   // One-step approval: the buyer's suggested listing name/headline and the new About Company fields.
   suggested_listing_name: z.string().trim().max(200).nullable().optional(),
   suggested_headline: z.string().trim().max(300).nullable().optional(),
+  suggested_headline_th: z.string().trim().max(300).nullable().optional(),
   revenue_band: z.enum(["rv_lt100", "rv_100_300", "rv_300_800", "rv_800_1500", "rv_1500"]).nullable().optional(),
   contact_number: z.string().trim().max(60).nullable().optional(),
   complete_setup: z.boolean().optional(),
@@ -322,6 +325,8 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       (descriptionChanged(data.description, r.p.description) && data.description && (descriptionError(data.description) ||
         (descriptionLeaks(data.description, data.investor_name, data.website_url ?? "").length ? "Your description mentions names, websites or contact details." : null))) ||
       (descriptionChanged(data.description_th, r.p.description_th) && data.description_th && (descriptionError(data.description_th) || (descriptionLeaks(data.description_th, data.investor_name, data.website_url ?? "").length ? "Your Thai description mentions names, websites or contact details." : null))) ||
+      (descriptionChanged(data.suggested_headline ?? undefined, r.p.suggested_headline) && data.suggested_headline && descriptionLeaks(data.suggested_headline, data.investor_name, data.website_url ?? "").length && "What you want to buy mentions names, websites or contact details.") ||
+      (descriptionChanged(data.suggested_headline_th ?? undefined, r.p.suggested_headline_th) && data.suggested_headline_th && descriptionLeaks(data.suggested_headline_th, data.investor_name, data.website_url ?? "").length && "Your Thai What you want to buy mentions names, websites or contact details.") ||
       (relation !== "individual" && regError(data.registration_no ?? "", data.country ?? "")) ||
       buyerAboutError(data.short_description, stored?.short_description) ||
       buyerAboutError(data.short_description_th, stored?.short_description_th) ||
@@ -389,7 +394,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     if (data.investment_focus) bp.geography = data.investment_focus.join(", ") || null;
     if (data.ticket_band !== undefined) { const b = bandOf(data.ticket_band); bp.ticket_min = b ? b.lo * 1e6 : null; bp.ticket_max = b?.hi != null ? b.hi * 1e6 : null; }
     if (data.logo_path !== undefined && !r.extra) bp.logo_url = data.logo_path || null;
-    for (const key of ["suggested_listing_name", "suggested_headline", "revenue_band", "contact_number"] as const) {
+    for (const key of ["suggested_listing_name", "suggested_headline", "suggested_headline_th", "revenue_band", "contact_number"] as const) {
       if (data[key] !== undefined) bp[key] = data[key] || null;
     }
     const { error: e2 } = await writeBp(r, context.userId, bp);

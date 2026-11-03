@@ -5,7 +5,7 @@ import { usePersona } from "@/hooks/use-marketplace";
 import { ProfileEditPopup } from "@/components/my-business/profile-edit-popup";
 
 export const Route = createFileRoute("/_authenticated/marketplace/my-company/")({
-  validateSearch: (s: Record<string, unknown>): { open?: string; edit?: "profile"; section?: string; tab?:string; firm?: string; from?: "public" | "private"; add?: "1"; new?: "1" } => ({
+  validateSearch: (s: Record<string, unknown>): { open?: string; edit?: "profile"; section?: string; tab?:string; firm?: string; from?: "public" | "private"; add?: "1"; new?: "1"; tour?: "want" } => ({
     ...(typeof s.tab === "string" ? {tab:s.tab} : {}),
     ...(typeof s.open === "string" ? { open: s.open } : {}),
     ...(s.edit === "profile" ? { edit: "profile" as const } : {}),
@@ -14,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/marketplace/my-company/")(
     ...(s.from === "public" || s.from === "private" ? { from: s.from } : {}),
     ...(s.add ? { add: "1" as const } : {}),
     ...(s.new ? { new: "1" as const } : {}),
+    ...(s.tour === "want" ? { tour: "want" as const } : {}),
   }),
   head: () => ({
     meta: [

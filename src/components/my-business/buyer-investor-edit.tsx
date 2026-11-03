@@ -132,7 +132,7 @@ function S({ id, cur, className, children }: { id: string; cur?: string; classNa
   return <EditSec id={id} tone="buyer" active={cur === id} className={className}>{children}</EditSec>;
 }
 
-export function BuyerInvestorEdit({ section, add, id, directory, initialView }: { section?: string; add?: boolean; id?: string; directory?: boolean; initialView?: "public" | "private" } = {}) {
+export function BuyerInvestorEdit({ section, add, id, directory, initialView, tour }: { section?: string; add?: boolean; id?: string; directory?: boolean; initialView?: "public" | "private"; tour?: boolean } = {}) {
   const fetchMe = useServerFn(getMyBuyerInvestor);
   const fetchById = useServerFn(getBuyerInvestorById);
   const directoryData = useInvestor(directory ? id : undefined);
@@ -144,11 +144,11 @@ export function BuyerInvestorEdit({ section, add, id, directory, initialView }: 
   });
   if (isLoading || (directory && directoryData.isLoading)) return <div className="mx-auto max-w-3xl space-y-4"><Skeleton className="h-10" /><Skeleton className="h-[600px]" /></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">{setupText("Couldn't load your profile. Please refresh.")}</p>;
-  return <Form data={data} section={section} add={add} directory={directory} initialView={initialView} directoryRecord={directoryData.data} />;
+  return <Form data={data} section={section} add={add} directory={directory} initialView={initialView} tour={tour} directoryRecord={directoryData.data} />;
 }
 
 export type SourceTag = "Your answer" | "Auto Enrich" | "Company registry" | "From your account";
-export type SetupMode = { onBack: () => void; sources: Record<string, SourceTag>; onSaved: (msg: string) => void; enrich?: EnrichInvestorResult | null };
+export type SetupMode = { onBack: () => void; sources: Record<string, SourceTag>; onSaved: (msg: string, wantEmpty?: boolean) => void; enrich?: EnrichInvestorResult | null };
 
 /** Review & complete in the setup wizard: the same form, with source tags. */
 export function BuyerInformationForm({ data, setup, onCreated }: { data: Data; setup?: SetupMode; onCreated?: (id:string) => void; directoryRecord?: NonNullable<ReturnType<typeof useInvestor>["data"]> }) {
@@ -176,7 +176,7 @@ function initialMedia(inv: Data["investor"]): EntityMediaState {
   };
 }
 
-function Form({ data, setup, section, add, directory, initialView, onCreated, directoryRecord }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private"; onCreated?: (id:string) => void; directoryRecord?: NonNullable<ReturnType<typeof useInvestor>["data"]> }) {
+function Form({ data, setup, section, add, directory, initialView, onCreated, directoryRecord, tour }: { data: Data; setup?: SetupMode; section?: string; add?: boolean; directory?: boolean; initialView?: "public" | "private"; onCreated?: (id:string) => void; directoryRecord?: NonNullable<ReturnType<typeof useInvestor>["data"]>; tour?: boolean }) {
   const incoming = useSearch({strict:false}) as {tab?:string};
   section = section ?? (incoming.tab === "mandate" ? "mandate" : incoming.tab);
   const {data:session} = useSessionContext();
@@ -221,6 +221,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
     aum_band: inv.aum_band ?? "", ticket_band: inv.ticket_band ?? "", rev_band: inv.revenue_min_band ?? "",
     aum_exact: inv.aum_exact_usd != null ? inv.aum_exact_usd.toLocaleString("en-US") : "",
     registration_no: inv.registration_no ?? "", description: data.buyer.description ?? "",
+    suggested_headline: (data.buyer as any).suggested_headline ?? "",
     // One-step approval verification details; legacy suggestions remain untouched.
     revenue_band: (data.buyer as any).revenue_band ?? "",
     contact_number: (data.buyer as any).contact_number ?? "",
@@ -244,10 +245,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const { lang: contextLang, switchable: contextSw, setLang } = useTextLang();
   const tl = setup ? (language === "th" ? "th" : "en") : contextLang;
   const tlSw = !setup && contextSw;
-  const [thx, setThx] = useState({ description: (data.buyer as any).description_th ?? "", short_description: (inv as any).short_description_th ?? "" });
+  const [thx, setThx] = useState({ description: (data.buyer as any).description_th ?? "", short_description: (inv as any).short_description_th ?? "", suggested_headline: (data.buyer as any).suggested_headline_th ?? "" });
   const [keywordsTh, setKeywordsTh] = useState<string[]>((inv as any).keywords_th ?? []);
-  const bv = (k: "description" | "short_description") => tl === "th" ? (thx[k] || (!tlSw ? f[k] : "")) : (f[k] || (!tlSw ? thx[k] : ""));
-  const bset = (k: "description" | "short_description") => (v: string) => tl === "th" ? setThx((o) => ({ ...o, [k]: v })) : setF((o) => ({ ...o, [k]: v }));
+  const bv = (k: "description" | "short_description" | "suggested_headline") => tl === "th" ? (thx[k] || (!tlSw ? f[k] : "")) : (f[k] || (!tlSw ? thx[k] : ""));
+  const bset = (k: "description" | "short_description" | "suggested_headline") => (v: string) => tl === "th" ? setThx((o) => ({ ...o, [k]: v })) : setF((o) => ({ ...o, [k]: v }));
   const bph = (k: "description" | "short_description", fb?: string) => { const own = tl === "th" ? thx[k] : f[k]; const oth = tl === "th" ? f[k] : thx[k]; return tlSw && !own && oth ? missingLangHint(tl, language === "th") : fb; };
   const kwView = tl === "th" ? (keywordsTh.length || tlSw ? keywordsTh : keywords) : (keywords.length || tlSw ? keywords : keywordsTh);
   const setKw = (v: string[]) => (tl === "th" ? setKeywordsTh(v) : setKeywords(v));
@@ -257,7 +258,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const buyerMissing = {media: mediaMissing(inv),about:[!!errs.short_description || !!errs.short_description_th,!individual && !!yearError(f.year_founded),!f.investor_name.trim(),!f.website_url.trim(),!individual && !!regError(f.registration_no,f.country)].filter(Boolean).length,address:0,people:0};
   // Fund falls back to Investor Classification when the form hides the band.
   type Tab = "media" | "about" | "address" | "industries" | "people" | "description" | "mandate" | "admin";
-  const tabFor = (field?: string): Tab => field === "description" ? "description" : ["fund","mandate","revenue","focus","geography"].includes(field ?? "") ? "description" : ["country","address"].includes(field ?? "") ? "address" : ["industries","portfolio","keywords","stages"].includes(field ?? "") ? "industries" : field === "people" ? "people" : field === "media" ? "media" : "about";
+  const tabFor = (field?: string): Tab => field === "description" || field === "want" ? "description" : ["fund","mandate","revenue","focus","geography"].includes(field ?? "") ? "description" : ["country","address"].includes(field ?? "") ? "address" : ["industries","portfolio","keywords","stages"].includes(field ?? "") ? "industries" : field === "people" ? "people" : field === "media" ? "media" : "about";
   const [tab, setTab] = useState<Tab>(setup || onCreated ? "about" : section ? tabFor(section) : initialView === "public" ? "description" : "media");
   const [nameFocus, setNameFocus] = useState(false);
   useOpenAtSection(nameFocus ? "company-name" : undefined);
@@ -284,6 +285,13 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF((o) => ({ ...o, [k]: e.target.value }));
   const pop = useEditInfo();
+  // The "What you want to buy" pop-up: only right after the setup wizard (?tour=want), never stored.
+  const [tourOpen, setTourOpen] = useState(!!tour && !setup);
+  const closeTour = (focusField: boolean) => {
+    setTourOpen(false);
+    void navigate({ to: "/marketplace/my-company", search: ((p: Record<string, unknown>) => ({ ...p, tour: undefined })) as never, replace: true });
+    if (focusField) window.setTimeout(() => document.getElementById("f-suggested_headline")?.focus({ preventScroll: true }), 60);
+  };
   useEffect(() => {
     if (!setup) return;
     setSources(previous => Object.fromEntries(Object.entries(previous).filter(([key]) => {
@@ -348,6 +356,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
   const autoEnrich = <InvestorAutoEnrichButton websiteUrl={f.website_url} onEnriched={applyEnrichment} disabled={busy} />;
   const leaks = descriptionLeaks(bv("description"), f.investor_name, f.website_url);
+  const wantLeaks = descriptionLeaks(bv("suggested_headline"), f.investor_name, f.website_url);
   const suggestion = () => {
     const next = suggestBuyerDescription({type:typeOf, industries, geography:focus}, tl);
     return descriptionLeaks(next, f.investor_name, f.website_url).length ? suggestBuyerDescription({type:"", industries:[], geography:[]}, tl) : next;
@@ -374,7 +383,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       setTimeout(()=>document.getElementById(f.investor_name.trim() ? "investor-tenant" : "f-investor_name")?.focus(),80);
       setErrs({investor_name:!f.investor_name.trim() ? "Needed to add the investor." : "",creation:"To add the investor, fill in Company Name (About Company), Tenant and required ownership (Admin settings)."});return;
     }
+    const wantOver = (v: string) => Array.from(v).length > 80;
     const checks: [string, string | null][] = [
+      ["suggested_headline", wantOver(f.suggested_headline) ? "Keep it to 80 characters." : descriptionChanged(f.suggested_headline, (data.buyer as any).suggested_headline) && f.suggested_headline.trim() && descriptionLeaks(f.suggested_headline, f.investor_name, f.website_url).length ? "leak" : null],
+      ["suggested_headline_th", wantOver(thx.suggested_headline) ? "Keep it to 80 characters." : descriptionChanged(thx.suggested_headline, (data.buyer as any).suggested_headline_th) && thx.suggested_headline.trim() && descriptionLeaks(thx.suggested_headline, f.investor_name, f.website_url).length ? "leak" : null],
       ["year_founded", individual ? null : yearError(f.year_founded)],
       ["investor_name", f.investor_name.trim().length < 2 ? "Add your firm's name." : null],
       ["website_url", /^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(f.website_url.trim()) ? null : "Enter a valid website address, e.g. www.yourfirm.com"],
@@ -386,12 +398,12 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       ["acts_for", agent && !actsFor.length ? "Pick at least one investor type." : null],
     ];
     const aBad = addrErr && (!f.country ? "Choose a country." : Object.values(addrErr).find(Boolean));
-    const bad = checks.find(([key, m]) => key.startsWith("description") && m) ?? checks.find(([key, m]) => key === "registration_no" && m) ?? checks.find(([key,m]) => key.startsWith("short_description") && m) ?? checks.find(([, m]) => m);
+    const bad = checks.find(([key, m]) => (key.startsWith("description") || key.startsWith("suggested_headline")) && m) ?? checks.find(([key, m]) => key === "registration_no" && m) ?? checks.find(([key,m]) => key.startsWith("short_description") && m) ?? checks.find(([, m]) => m);
     if ((!directory || bad?.[0] === "registration_no") && bad) {
       setErrs({ [bad[0]]: bad[1] ?? "Check this field." });
       if (bad[0].endsWith("_th") && tlSw) setLang("th");
-      else if (tlSw && ["description","short_description"].includes(bad[0])) setLang("en");
-      const target = bad[0].startsWith("description") ? "description" : "about";
+      else if (tlSw && ["description","short_description","suggested_headline"].includes(bad[0])) setLang("en");
+      const target = bad[0].startsWith("description") || bad[0].startsWith("suggested_headline") ? "description" : "about";
       setView(target === "description" ? "public" : "private"); setTab(target);
       setTimeout(()=>document.getElementById(`f-${bad[0].replace(/_th$/, "")}`)?.focus(),60);
       return;
@@ -431,6 +443,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         registration_no: individual ? null : t(f.registration_no),
         ...(descriptionChanged(f.description, data.buyer.description) ? {description: f.description.trim()} : {}), deal_types: deals,
         description_th: thx.description.trim(), short_description_th: thx.short_description.trim() || null, keywords_th: keywordsTh,
+        suggested_headline: t(f.suggested_headline), suggested_headline_th: thx.suggested_headline.trim() || null,
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, ...(portfolioDirty ? {portfolio_extra: portfolio} : {}),
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
@@ -449,7 +462,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       const ready = !!f.ticket_band && deals.length > 0 && industries.length > 0 && (!showsStages(typeOf, agent ? actsFor : null) || stages.length > 0);
       const msg = live ? "Profile saved. Sellers see the changes in Browse investors."
         : ready ? "Profile saved as a draft. Publish it when you're ready." : "Profile saved as a draft. Finish the required items to publish.";
-      if (setup) setup.onSaved(setupText(msg));
+      if (setup) setup.onSaved(setupText(msg), !f.suggested_headline.trim() && !thx.suggested_headline.trim());
       else { toast.success(setupText(msg)); if (pop) { pop.setDirty(false); pop.done(); } else back(); }
     } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   };
@@ -692,7 +705,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 </div>}
           {(tab === "description" || tab === "mandate") && <div className="buyer-description-mandate">
           <ListingEditorTitle title={tr("Your card in Browse investors")}><AutoFillTabButton onClick={fillTab} disabled={busy} /></ListingEditorTitle>
-          <BuyerDescriptionEditor lang={tl} source={setup ? <Tag s={src.description} /> : undefined} suggest={suggest} value={bv("description")} onChange={bset("description")} leaks={leaks} forced={!!errs.description || !!errs.description_th} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} >          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
+          <BuyerDescriptionEditor lang={tl} source={setup ? <Tag s={src.description} /> : undefined} suggest={suggest} value={bv("description")} onChange={bset("description")} leaks={leaks} forced={!!errs.description || !!errs.description_th} want={bv("suggested_headline")} onWant={bset("suggested_headline")} wantLeaks={wantLeaks} tour={tourOpen ? { open: true, close: closeTour } : undefined} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} >          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
         {directory && <CompactFields><div className="space-y-1.5"><Label>{setupText("AUM")}</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>{setupText("Min Ticket Size")}</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>{setupText("Max Ticket Size")}</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
 <div className="buyer-mandate-money">        {showsFund && (
           <S cur={setup ? undefined : sec} id="fund">
@@ -796,7 +809,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           </p>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={back} disabled={busy}>{setupText(setup ? "Back to answers" : "Cancel")}</Button>
-            <Button type="submit" disabled={busy}>{setupText(busy ? "Saving…" : setup ? "Save profile" : "Save changes")}</Button>
+            <Button type="submit" disabled={busy}>{setupText(busy ? "Saving…" : setup ? "Continue" : "Save changes")}</Button>
           </div>
         </div>
         )}

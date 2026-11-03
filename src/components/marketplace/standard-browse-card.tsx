@@ -31,12 +31,14 @@ export function scheduleCardRows(el: Element | null) {
 }
 
 export type StandardFigure = { label: string; value?: string | null; second?: string | null };
-export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip }: {
+export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip }: {
   title: string; subtitle?: string; refNo: string; place?: string | null; description?: string | null;
   cover: (children: ReactNode) => ReactNode; status?: CardNdaStatus; newDays?: number | null; managed?: boolean;
   topRight?: ReactNode; badges?: { label: string; financial?: boolean }[]; figures: StandardFigure[];
   fit: StandardFigure; textRow: StandardFigure; more?: ReactNode; selected?: boolean; onOpen?: () => void;
   focusRow?: StandardFigure; descriptionContent?: ReactNode;
+  /** Optional line between the name row and the description (the buyer editor's "Wants to buy" preview). */
+  afterName?: ReactNode;
   className?: string; sourceType?: string; tag?: ReactNode; hideStatus?: boolean;
   /** Owner's last-login bucket on the left of Show more (browse/watchlist only; previews omit it). */
   lastLogin?: LastLoginStep | null; lastLoginTooltip?: string;
@@ -106,6 +108,7 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
         {onOpen && <Button variant="unstyled" size="unstyled" onClick={onOpen} aria-label={title} className="standard-card-title-link" />}
         {subtitle && <p className="standard-card-subtitle" title={subtitle}>{subtitle}</p>}
       </div>
+      {afterName}
       <p className={cn('standard-card-description', twoLines ? 'standard-card-desc-3' : 'standard-card-desc-4')} title={description ?? undefined}>{descriptionContent ?? description}</p>
       </div>
       <div className="standard-card-figures">

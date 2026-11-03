@@ -724,7 +724,9 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       {phase === "complete" && (
         <Complete invId={data.investor.id} header={header} enrich={enrichRes} answered={a}
           onBack={() => { setPhase("q"); goTo(fromProfile ? profileStep : "review"); }}
-          onSaved={(msg) => { toast.success(msg); void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] }); void navigate({ to: "/marketplace/my-company", search: { open: data.investor.id } }); }} />
+          onSaved={(msg, wantEmpty) => { toast.success(msg); void qc.invalidateQueries({ queryKey: ["buyer-profile", "me"] });
+            // What you want to buy still empty: open Edit information on it once, with its pop-up.
+            void navigate({ to: "/marketplace/my-company", search: (wantEmpty ? { open: data.investor.id, edit: "profile", section: "want", from: "public", tour: "want" } : { open: data.investor.id }) as never }); }} />
       )}
     </div>
   );
@@ -863,7 +865,7 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
 }
 
 function Complete({ invId, header, enrich, answered, onBack, onSaved }: {
-  invId: string; header: HeaderFn; enrich: EnrichInvestorResult | null; answered: A; onBack: () => void; onSaved: (msg: string) => void;
+  invId: string; header: HeaderFn; enrich: EnrichInvestorResult | null; answered: A; onBack: () => void; onSaved: (msg: string, wantEmpty?: boolean) => void;
 }) {
   const qc = useQueryClient();
   const data = qc.getQueryData<{ ok: boolean; data: Data | null }>(buyerInvestorKey(invId))?.data ?? null;
