@@ -1,4 +1,5 @@
 import { AfterWizardTour } from '@/components/common/after-wizard-tour';
+import { prefillStrengthRows } from '@/lib/seller-strengths';
 import { SellerWordingCount, SellerWordingInput, SellerWordingMessage } from './seller-wording-field';
 import { sellerWordingChangedError, singleLineSellerWording } from '@/lib/seller-listing-wording';
 import { FieldRow, AutoFillTabButton } from "@/components/common/listing-editor-fields";
