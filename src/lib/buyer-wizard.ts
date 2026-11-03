@@ -1,30 +1,50 @@
 import { setupAnswered } from "./setup-step-state";
 import { isValidUrl } from "./seller-wizard";
+import { buyerAboutError } from "./buyer-description";
 import { descriptionError, descriptionLeaks, regError, yearError, showsStages } from "./investor-bands";
 /** Buyer investor-profile setup wizard: question order, visibility by role, progress. */
 export type BuyerRelation = "individual" | "corporate" | "agent";
-export type QId = "role" | "type" | "name" | "web" | "aum" | "ticket" | "rev" | "deals" | "sectors" | "photos" | "desc" | "review";
+export type QId = "role" | "type" | "name" | "web" | "aum" | "ticket" | "rev" | "deals" | "sectors" | "photos" | "desc" | "team" | "review";
 
 export const ALL_STEPS: { id: QId; sec: string }[] = [
   { id: "role", sec: "About you" },
   { id: "type", sec: "About the firm" },
-  { id: "name", sec: "About the firm" },
-  { id: "web", sec: "About the firm" },
+  { id: "name", sec: "Your firm" },
+  { id: "sectors", sec: "Your firm" },
+  { id: "web", sec: "Your firm" },
   { id: "aum", sec: "Fund & ticket" },
   { id: "ticket", sec: "Fund & ticket" },
   { id: "rev", sec: "Buying Requirement" },
   { id: "deals", sec: "Buying Requirement" },
-  { id: "sectors", sec: "Buying Requirement" },
   { id: "photos", sec: "Firm images" },
   { id: "desc", sec: "Public profile" },
+  { id: "team", sec: "Your team" },
   { id: "review", sec: "Review" },
 ];
 
+/** Firm buyers answer the Description on the Website step; only an Individual Investor keeps the Description step. */
 export function stepsFor(rel: BuyerRelation | null) {
   // Question 2 (type) asks a Corporate Enterprise one type and a representative one or more; AUM is corporate only.
   // Logo and photos: firm buyers only (never an Individual Investor).
-  return ALL_STEPS.filter((s) => (s.id === "type" ? rel !== "individual" : s.id === "aum" ? rel === "corporate" || rel == null : s.id === "photos" ? rel !== "individual" : true));
+  return ALL_STEPS.filter((s) => (s.id === "type" ? rel !== "individual" : s.id === "aum" ? rel === "corporate" || rel == null : s.id === "photos" ? rel !== "individual" : s.id === "desc" ? rel === "individual" : true));
 }
+
+/** Old furthest-step keys mapped onto the new order: Industries -> Deal type, Description -> Photos (firm buyers). */
+export function normalizeBuyerReached(rel: BuyerRelation | null, reached: string | null | undefined): string | null {
+  if (!reached) return null;
+  if (reached === "sectors") return "deals";
+  if (reached === "desc" && rel !== "individual") return "photos";
+  return reached;
+}
+
+/** The Website step for a firm buyer also holds the short and long descriptions (both optional, both must pass their rules). */
+export function buyerWebValid(web: string, desc: string, about: string, name: string, firm: boolean): boolean {
+  if (!isValidUrl(web)) return false;
+  if (!firm) return true;
+  return !(desc.trim() && descriptionError(desc)) && !descriptionLeaks(desc, name, web).length && !buyerAboutError(about, null);
+}
+
+export const teamHasName = (people: { name: string }[] | undefined) => (people ?? []).some((p) => p.name.trim().length > 0);
 
 /** Banner / checklist progress: answered questions out of N (Review not counted). */
 export function wizardProgress(rel: BuyerRelation | null, answered: string[] | undefined) {
@@ -78,10 +98,10 @@ export function buyerProgress(rel: BuyerRelation | null, answered: string[] | un
 export function buyerProgressFor(rel: BuyerRelation | null, iv: {
   investor_type?: string | null; acts_for_types?: string[] | null; website_url?: string | null; year_founded?: number | null; investor_name?: string | null; preferred_industries?: string[] | null;
   country?: string | null; address_line1?: string | null; address_city_district?: string | null; address_province_state?: string | null; postal_code?: string | null; registration_no?: string | null;
-  aum_band?: string | null; ticket_band?: string | null; revenue_min_band?: string | null; preferred_stages?: string[]; logo_path?: string | null; media?: unknown[]; setup_reached?: string | null;
+  short_description?: string | null; aum_band?: string | null; ticket_band?: string | null; revenue_min_band?: string | null; preferred_stages?: string[]; logo_path?: string | null; media?: unknown[]; setup_reached?: string | null;
   sector_picks?: { types: string[]; other: string[] } | null;
   wizard?: { answered?: string[]; from_signup?: string[] } | null;
-} | null | undefined, buyer?: { deal_types: string[]; description: string }) {
+} | null | undefined, buyer?: { deal_types: string[]; description: string }, people?: { name: string }[]) {
   const type = iv?.investor_type ?? "", acts = iv?.acts_for_types ?? [];
   const skip = buyerSkips(iv?.wizard?.from_signup, {role: rel, type, web: iv?.website_url ?? "", year: iv?.year_founded ? String(iv.year_founded) : "", name: iv?.investor_name ?? "", actsFor: acts, sectors: iv?.preferred_industries ?? []});
   const country = iv?.country ?? "Thailand", thai = country === "Thailand";
@@ -89,14 +109,15 @@ export function buyerProgressFor(rel: BuyerRelation | null, iv: {
   const valid: Record<QId, boolean> = {
     role: !!rel, type: rel === "agent" ? acts.length > 0 : !!type && type !== "Individual Investor",
     name: !!iv?.country && (iv?.investor_name?.trim().length ?? 0) >= 2 && (rel === "individual" || (!yearError(String(iv?.year_founded ?? "")) && !regError(iv?.registration_no ?? "", country))) && !!iv?.address_line1?.trim() && !!iv?.address_city_district?.trim() && (!thai || (!!iv?.address_province_state && /^\d{5}$/.test(iv?.postal_code ?? ""))),
-    web: isValidUrl(iv?.website_url ?? ""), aum: !!iv?.aum_band, ticket: !!iv?.ticket_band, rev: !!iv?.revenue_min_band,
+    web: buyerWebValid(iv?.website_url ?? "", desc, iv?.short_description ?? "", iv?.investor_name ?? "", rel !== "individual"), aum: !!iv?.aum_band, ticket: !!iv?.ticket_band, rev: !!iv?.revenue_min_band,
     deals: !!buyer?.deal_types.length && (!showsStages(type, rel === "agent" ? acts : null) || !!iv?.preferred_stages?.length),
     sectors: (iv?.preferred_industries ?? []).includes("Sector Agnostic") || (!!iv?.sector_picks?.types.length && (!iv.sector_picks.types.includes("other") || !!iv.sector_picks.other.length)),
     photos: !!iv?.logo_path && !!iv?.media?.length,
     desc: !!desc.trim() && !descriptionError(desc) && !descriptionLeaks(desc, iv?.investor_name ?? "", iv?.website_url ?? "").length,
+    team: teamHasName(people),
     review: false,
   };
   const order = stepsFor(rel).map(s => s.id);
-  const answered = order.filter(k => k !== "review" && setupAnswered(k, valid[k], ["rev", "desc"], order, iv?.setup_reached));
+  const answered = order.filter(k => k !== "review" && setupAnswered(k, valid[k], ["rev", "desc"], order, normalizeBuyerReached(rel, iv?.setup_reached)));
   return buyerProgress(rel, answered, skip);
 }

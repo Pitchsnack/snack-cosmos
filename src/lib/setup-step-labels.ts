@@ -3,7 +3,7 @@ export const BUYER_STEP_NAMES: Record<string, Names> = {
   role: { short: ["Role", "บทบาท"], full: ["Your role", "บทบาทของท่าน"] },
   type: { short: ["Type", "ประเภท"], full: ["Investor type", "ประเภทนักลงทุน"] },
   name: { short: ["Firm", "บริษัท"], full: ["Firm name, registration number and address", "ชื่อบริษัท เลขทะเบียน และที่อยู่"] },
-  web: { short: ["Website", "เว็บไซต์"], full: ["Firm website", "เว็บไซต์บริษัท"] },
+  web: { short: ["Website", "เว็บไซต์"], full: ["Firm website and description", "เว็บไซต์และคำอธิบายบริษัท"] },
   aum: { short: ["AUM", "AUM"], full: ["Assets under management (AUM)", "สินทรัพย์ภายใต้การบริหาร (AUM)"] },
   ticket: { short: ["Ticket", "เงิน\u200bลงทุน"], full: ["Average investment per deal", "เงินลงทุนเฉลี่ยต่อดีล"] },
   rev: { short: ["Min. revenue", "รายได้\u200bขั้นต่ำ"], full: ["Minimum target company revenue", "รายได้ขั้นต่ำของบริษัทเป้าหมาย"] },
@@ -11,6 +11,7 @@ export const BUYER_STEP_NAMES: Record<string, Names> = {
   sectors: { short: ["Industries", "อุตสาห\u200bกรรม"], full: ["Industries", "อุตสาหกรรม"] },
   photos: { short: ["Photos", "รูปภาพ"], full: ["Logo and photos", "โลโก้และรูปภาพ"] },
   desc: { short: ["Description", "คำอธิบาย"], full: ["Description for sellers", "คำอธิบายสำหรับผู้ขาย"] },
+  team: { short: ["Team", "ทีมงาน"], full: ["Your team", "ทีมงานของท่าน"] },
   review: { short: ["Review", "ตรวจสอบ"], full: ["Review your answers", "ตรวจสอบข้อมูล"] },
 };
 export const ADVISOR_STEP_NAMES: Record<string, Names> = {
