@@ -68,7 +68,7 @@ function WantTour({ anchor, onClose }: { anchor: HTMLElement | null; onClose: (f
         <div className="buyer-want-tour-f"><button type="button" ref={go} className="buyer-want-tour-go" onClick={() => onClose(true)}>{L('Continue', 'ดำเนินการต่อ')}</button></div>
       </div>
     </>,
-    document.body,
+    host ?? document.body,
   );
 }
 
