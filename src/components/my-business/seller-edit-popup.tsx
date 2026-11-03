@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditInfoPopup, leaveEditUrl, markEditPushed, useTr } from "@/components/common/edit-info-popup";
@@ -9,7 +9,7 @@ import type { StartupDetail } from "@/lib/startups.functions";
 import type { PublicTab } from "@/components/hidden-profile/public-view-fields";
 
 type View = "public" | "private";
-type EditSearch = { panel?: string; edit?: "startup"; view?: string; tab?: string; section?: string };
+type EditSearch = { panel?: string; edit?: "startup"; view?: string; tab?: string; section?: string; tour?: "seller-identity" };
 
 /** Opens Seller › My Company › Edit information at a view, tab and (optionally) section. */
 export function useOpenSellerEdit() {
@@ -38,6 +38,17 @@ function viewAndTab(view: string | undefined, rawTab: string | undefined, fallba
 export function SellerEditPopup({ fallbackView }: { fallbackView: View }) {
   const s = useSearch({ strict: false }) as EditSearch;
   const navigate = useNavigate();
+  const [tourOpen, setTourOpen] = useState(s.tour === "seller-identity");
+  const closeTour = useCallback((focus: boolean) => {
+    setTourOpen(false);
+    void navigate({ to: "/my-startups", search: ((p: Record<string, unknown>) => ({ ...p, tour: undefined })) as never, replace: true });
+    if (focus) requestAnimationFrame(() => {
+      const name = document.getElementById("hp-suggested-name") ?? document.getElementById("hp-code_name");
+      const box = name as HTMLInputElement | HTMLTextAreaElement | null;
+      const target = !box?.value.trim() ? box : document.getElementById("hp-headline");
+      target?.focus();
+    });
+  }, [navigate]);
   const tr = useTr();
   const id = s.edit === "startup" ? s.panel : undefined;
   const { data, isLoading } = useStartup(id);
@@ -60,7 +71,7 @@ export function SellerEditPopup({ fallbackView }: { fallbackView: View }) {
   if (!id) return null;
   const close = () => leaveEditUrl(() => void navigate({
     to: "/my-startups",
-    search: ((p: Record<string, unknown>) => ({ ...p, edit: undefined, panel: undefined, view: undefined, tab: undefined, section: undefined })) as never,
+    search: ((p: Record<string, unknown>) => ({ ...p, edit: undefined, panel: undefined, view: undefined, tab: undefined, section: undefined, tour: undefined })) as never,
     replace: true,
   }));
   const onNav = (v: View, t: string) => void navigate({
@@ -89,6 +100,7 @@ export function SellerEditPopup({ fallbackView }: { fallbackView: View }) {
             onNav,
             row,
             facts,
+            tour: { open: tourOpen, close: closeTour },
           }}
         />
       )}

@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SellerWizard } from "@/components/startups/seller-wizard";
-import { getSellerSetup, saveSellerSetup, applySellerEnrich, type SellerSetup } from "@/lib/seller-setup.functions";
+import { getSellerSetup, getSellerIdentityReadiness, saveSellerSetup, applySellerEnrich, type SellerSetup } from "@/lib/seller-setup.functions";
 import { emptyDraft, firstUnanswered, listingPayload, SELLER_STEPS, normalizeSellerStep, type SellerDraft } from "@/lib/seller-wizard";
 import { z } from "zod";
 import { useSessionContext } from "@/hooks/use-session-context";
@@ -52,6 +52,7 @@ function Page() {
   const { data: session } = useSessionContext();
   const fetchFn = useServerFn(getSellerSetup);
   const saveFn = useServerFn(saveSellerSetup);
+  const fetchReadiness = useServerFn(getSellerIdentityReadiness);
   const applyFn = useServerFn(applySellerEnrich);
   const { data, error } = useQuery({ queryKey: sellerSetupKey(id), queryFn: () => fetchFn({ data: { id } }), staleTime: 0 });
   const initial = useMemo(() => (data ? toDraft(data, openAt) : null), [data]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -67,11 +68,19 @@ function Page() {
     if (timer.current) window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => { saveFn({ data: payload(d) }).catch((e: Error) => toast.error(e.message)); }, 400);
   };
+  const completed = async () => {
+    // Re-read after enrichment so the test matches the values the editor actually displays.
+    let missing = true;
+    try { missing = (await fetchReadiness({ data: { id } })).missing; }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Could not read listing information"); }
+    void qc.invalidateQueries();
+    navigate({ to: "/my-startups", search: missing ? { panel:id, edit:"startup", view:"public", tab:"identity", tour:"seller-identity" } : { panel:id, edit:"startup", view:"private", tab:"images" } });
+  };
   const leave = () => { void qc.invalidateQueries(); navigate({ to: "/my-startups", search: { open: id } as never }); };
 
   if (error) return <p className="p-8 text-sm text-muted-foreground">{(error as Error).message}</p>;
   if (!data || !initial || !session?.user?.id) return null;
-  if (fill) return <SellerAutoFill id={id} web={fill} onDone={() => { void qc.invalidateQueries(); navigate({ to: "/my-startups", search:{panel:id,edit:"startup",view:"private",tab:"images"} }); }} />;
+  if (fill) return <SellerAutoFill id={id} web={fill} onDone={() => { void completed(); }} />;
   return (
     <SellerWizard
       userId={session.user.id}
@@ -88,8 +97,7 @@ function Page() {
         try { await saveFn({ data: payload(d, true) }); } catch (e) { toast.error((e as Error).message); return; }
         if(d.enrichResult) {try { await applyFn({data:{id,r:d.enrichResult as never}}); } catch(e) {toast.error(e instanceof Error ? e.message : "Could not save website findings");}}
         else if (d.web.trim()) { setFill(d.web); return; }
-        void qc.invalidateQueries();
-        navigate({ to: "/my-startups", search:{panel:id,edit:"startup",view:"private",tab:"images"} });
+        await completed();
       }}
     />
   );

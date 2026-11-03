@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import { AfterWizardTour } from '@/components/common/after-wizard-tour';
 import { FieldRow } from '@/components/common/listing-editor-fields';
 import { LangTag } from '@/components/common/text-lang';
-import { Eye, X } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { StandardInvestorCard } from '@/components/marketplace/standard-investor-card';
 import type { CardInvestor } from '@/components/marketplace/buyer-browse-card';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,69 +12,9 @@ import { buyerDescriptionError, descriptionWords, singleLineDescription } from '
 export const WANT_BUY_MAX = 80;
 export const wantBuyLen = (v: string) => Array.from(v).length;
 
-/** The pop-up that points at What you want to buy, only right after the setup wizard. Fixed overlay, so the dim covers all of Edit information. */
 function WantTour({ anchor, onClose }: { anchor: HTMLElement | null; onClose: (focusField: boolean) => void }) {
   const L = useTr();
-  const pop = useRef<HTMLDivElement>(null);
-  const go = useRef<HTMLButtonElement>(null);
-  const [rect, setRect] = useState<DOMRect | null>(null);
-  // Portal into Edit information's own box, so its focus trap accepts the pop-up's Continue.
-  // That box is transformed, so fixed positions are relative to it, not the viewport.
-  const host = anchor?.closest<HTMLElement>('[data-edit-info-body]')?.parentElement ?? null;
-  useEffect(() => {
-    // Keep the dim inside Edit information's rounded corners while the pop-up shows.
-    host?.classList.add('buyer-want-tour-on');
-    return () => host?.classList.remove('buyer-want-tour-on');
-  }, [host]);
-  useEffect(() => {
-    if (!anchor) return;
-    const measure = () => setRect(anchor.getBoundingClientRect());
-    // Scroll Edit information so the field and the whole pop-up are in view (field near the top on a phone).
-    const sc = anchor.closest<HTMLElement>('[data-edit-info-body]');
-    if (sc) {
-      const tabs = sc.querySelector<HTMLElement>('[data-sticky-tabs]');
-      const top = anchor.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - (tabs?.offsetHeight ?? 0) - 16;
-      sc.scrollTo({ top: Math.max(0, top), behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    }
-    measure();
-    const again = window.setTimeout(measure, 420);
-    window.addEventListener('resize', measure);
-    window.addEventListener('scroll', measure, true);
-    return () => { window.clearTimeout(again); window.removeEventListener('resize', measure); window.removeEventListener('scroll', measure, true); };
-  }, [anchor]);
-  useEffect(() => {
-    // Focus lands on the pop-up's Continue, after Edit information's own auto-focus.
-    const t = window.setTimeout(() => go.current?.focus({ preventScroll: true }), 200);
-    const key = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      e.stopPropagation(); e.preventDefault(); onClose(false);
-    };
-    const down = (e: PointerEvent) => {
-      if (pop.current?.contains(e.target as Node)) return;
-      onClose(false); // the click itself still does what it normally does
-    };
-    window.addEventListener('keydown', key, true);
-    window.addEventListener('pointerdown', down, true);
-    return () => { window.clearTimeout(t); window.removeEventListener('keydown', key, true); window.removeEventListener('pointerdown', down, true); };
-  }, [onClose]);
-  if (!anchor || !rect) return null;
-  const hostRect = host?.getBoundingClientRect();
-  const ox = hostRect?.left ?? 0;
-  const oy = hostRect?.top ?? 0;
-  const width = Math.min(420, rect.width + 16);
-  const left = Math.max(12, Math.min(rect.left - 4 - 8, window.innerWidth - width - 12));
-  return createPortal(
-    <>
-      <div aria-hidden="true" className="buyer-want-tour-hole" style={{ top: rect.top - 8 - oy, left: rect.left - 8 - ox, width: rect.width + 16, height: rect.height + 16 }} />
-      <div ref={pop} role="dialog" aria-labelledby="buyer-want-tour-t" aria-describedby="buyer-want-tour-s" className="buyer-want-tour-pop" style={{ top: rect.bottom + 8 + 12 - oy, left: left - ox, width }}>
-        <button type="button" className="buyer-want-tour-x" aria-label={L('Close', 'ปิด')} onClick={() => onClose(false)}><X className="h-4 w-4" aria-hidden /></button>
-        <p id="buyer-want-tour-t" className="buyer-want-tour-t">{L('Last step: Acquisition target company', 'ขั้นตอนสุดท้าย: บริษัทเป้าหมายในการเข้าซื้อกิจการ')}</p>
-        <p id="buyer-want-tour-s" className="buyer-want-tour-s">{L('Be specific about the type of company you want to acquire. Sellers will use this information to assess whether their business matches your criteria before deciding to contact you.', 'โปรดระบุประเภทบริษัทที่ท่านต้องการเข้าซื้อกิจการให้ชัดเจน ผู้ขายจะใช้ข้อมูลนี้ประเมินว่าธุรกิจของตนตรงกับเกณฑ์ของท่านหรือไม่ ก่อนตัดสินใจติดต่อท่าน')}</p>
-        <div className="buyer-want-tour-f"><button type="button" ref={go} className="buyer-want-tour-go" onClick={() => onClose(true)}>{L('Continue', 'ดำเนินการต่อ')}</button></div>
-      </div>
-    </>,
-    host ?? document.body,
-  );
+  return <AfterWizardTour anchor={anchor} onClose={onClose} title={L('Last step: Acquisition target company', 'ขั้นตอนสุดท้าย: บริษัทเป้าหมายในการเข้าซื้อกิจการ')} text={L('Be specific about the type of company you want to acquire. Sellers will use this information to assess whether their business matches your criteria before deciding to contact you.', 'โปรดระบุประเภทบริษัทที่ท่านต้องการเข้าซื้อกิจการให้ชัดเจน ผู้ขายจะใช้ข้อมูลนี้ประเมินว่าธุรกิจของตนตรงกับเกณฑ์ของท่านหรือไม่ ก่อนตัดสินใจติดต่อท่าน')} />;
 }
 
 export function BuyerDescriptionEditor({ i, leaks, value, onChange, forced, children, suggest, source, lang, want, onWant, wantLeaks = [], tour }: { i: CardInvestor; leaks: string[]; value: string; onChange: (value: string) => void; forced?: boolean; children?: ReactNode; suggest?: () => void; source?: ReactNode; lang?: 'en' | 'th'; want: string; onWant: (value: string) => void; wantLeaks?: string[]; tour?: { open: boolean; close: (focusField: boolean) => void } }) {

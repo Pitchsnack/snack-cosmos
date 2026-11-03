@@ -1,0 +1,12 @@
+import { describe, expect, it } from 'vitest';
+import { needsSellerIdentityTour, sellerWordingCount, sellerWordingChangedError, singleLineSellerWording } from '../../src/lib/seller-listing-wording';
+describe('seller listing wording', () => {
+  it('limits non-Thai listing names to 7 words', () => { expect(sellerWordingCount('one two three four five six seven', 'name').over).toBe(false); expect(sellerWordingCount('one two three four five six seven eight', 'name')).toMatchObject({ count: 8, limit: 7, over: true }); });
+  it('limits non-Thai headlines to 15 words', () => { expect(sellerWordingCount(Array(15).fill('word').join(' '), 'headline').over).toBe(false); expect(sellerWordingCount(Array(16).fill('word').join(' '), 'headline').over).toBe(true); });
+  it('limits Thai listing names to 50 trimmed characters', () => { expect(sellerWordingCount(` ${'ก'.repeat(50)} `, 'name').over).toBe(false); expect(sellerWordingCount('ก'.repeat(51), 'name').over).toBe(true); });
+  it('limits each Thai headline to 100 characters', () => { expect(sellerWordingCount('ก'.repeat(100), 'headline').over).toBe(false); expect(sellerWordingCount('ก'.repeat(101), 'headline')).toMatchObject({ count: 101, limit: 100, over: true }); });
+  it('uses characters for mixed Thai text and writing language for empty fields', () => { expect(sellerWordingCount('hello ก', 'name').characters).toBe(true); expect(sellerWordingCount('', 'name', 'th').limit).toBe(50); expect(sellerWordingCount('', 'headline', 'en').limit).toBe(15); });
+  it('permits unchanged legacy wording but checks edits', () => { const old = Array(8).fill('word').join(' '); expect(sellerWordingChangedError(old, old, 'name')).toBeNull(); expect(sellerWordingChangedError(old + ' extra', old, 'name')).not.toBeNull(); });
+  it('normalizes pasted line breaks to spaces', () => { expect(singleLineSellerWording('one\r\ntwo\nthree')).toBe('one two three'); });
+  it('opens the tour for either missing identity field using the displayed name', () => { expect(needsSellerIdentityTour({ suggested_listing_name: ' ', headline: 'filled' }, false)).toBe(true); expect(needsSellerIdentityTour({ suggested_listing_name: 'filled', headline: '', headline_th: ' ' }, false)).toBe(true); expect(needsSellerIdentityTour({ suggested_listing_name: 'filled', headline_th: 'ก' }, false)).toBe(false); expect(needsSellerIdentityTour({ code_name: 'filled', headline: 'filled' }, true)).toBe(false); expect(needsSellerIdentityTour({ code_name: ' ', suggested_listing_name: 'filled', headline: 'filled' }, true)).toBe(true); });
+});

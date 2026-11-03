@@ -3,13 +3,13 @@
 - Marketplace Contacts shares role UI; list/card reads recheck active NDA and owner/view access before shared projection, keeping Admin access separate.
 - Admin contacts use Control+Admin directory access and user-keyed admin_contact_notes; lazy company DTOs adapt shared cards without viewer controls. Shared Admin projections preserve marketplace privacy.
 - Seller setup shares legacy-normalized keys, existing bilingual fields and FounderEditor; preserve founder IDs, access gates and completed Website fields during later enrichment; retain bio/bio_story.
-- Pipeline chat uses the Messages Chat in a lazy locked presentation inside the existing ProfileBox dialog; Pipeline-parent in-memory drafts preserve unsent content without new storage or authorization paths.
+- Pipeline chat lazily reuses Messages Chat inside ProfileBox; parent-held drafts preserve unsent content without new storage/auth paths.
 - Pipeline full-profile dialogs reuse invitationPrivateProfile's selected-deal gate, InvestorDetailPanel and shared identity parts; only All deals/watchlist opt in, preserving other viewers.
-- Shared Pipeline card company chips use an own-organisation DTO sourced from each deal's startup or linked buyer firm; counterparty privacy fields and page-selected organisations are not chip sources, so pending/ended cards retain correct identity without changing NDA gates.
+- Pipeline company chips use own-organisation DTOs from the deal's startup/linked buyer firm, never counterparty or page-selected organisations; pending/ended identity and NDA gates stay unchanged.
 - Discovery Grid and Split-list cards share StandardBrowseCard through listing/investor adapters; watchlist wrappers own view state and existing DTO gates own privacy, so panels and List rows remain independent.
 - Seller Connect flight is browser-only presentation using the stored invitation ID, shared Pipeline opening signal and public investor cover markers; invitation writes and authorization remain in the existing server function.
-- Pending contact presentation uses the existing seller Connect, buyer verification and session DTOs with one shared focusable tooltip button; status is derived server-side from own approval records and request authorization is unchanged.
-- Marketplace My Company, Pipeline and the Admin menu share WorkspaceSubmenu (Admin: toggleOnly rows never navigate); role colour vars default to amber at :root so the shared styles work outside the Marketplace.
+- Pending contacts share a focusable tooltip button using Connect/verification/session DTOs; own approval records determine server-side status; request authorization stays unchanged.
+- My Company, Pipeline and Admin share WorkspaceSubmenu; Admin toggleOnly rows never navigate. Role colours default to amber at :root for use outside Marketplace.
 - Live agreement cards use a browser-safe Bangkok calendar-day helper and a Pipeline-parent context for midnight updates and reload-only expansion reset; existing document dialogs and stored legal end dates remain authoritative.
 
 - Admin approves listings; seller resume restores only RLS-visible approved snapshots via resume-listing.server with conditional writes. listing-status refreshes owner queries before unlocking actions. Seller covers use sector-matched setMyListingImage picks.
@@ -64,3 +64,5 @@
 
 - CompanyNameFields shares live locked names and optional twins; omit legacy second-name writes, preserve setup schemas and profile authorization.
 - Advisors use Company name only; omit legacy listing/headline fields, preserve stored values and access; see nested AGENTS.md.
+
+- Seller wording shares browser-safe counts for changed-only saves/full registration. AfterWizardTour serves buyers/sellers; only completion navigation supplies the transient flag, using boolean readiness behind setup access, not directory DTOs.

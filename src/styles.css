@@ -612,13 +612,13 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 
 /* The after-wizard pop-up: the field stays bright in a pulsing ring; the rest of Edit information dims. */
 .edit-info-pop.buyer-want-tour-on { overflow:clip; }
-.buyer-want-tour-hole { position:fixed; z-index:70; border-radius:12px; box-shadow:0 0 0 2px #818CF8, 0 0 0 4000px rgba(17,24,39,.5); pointer-events:none; }
-.buyer-want-tour-hole::after { content:''; position:absolute; inset:-2px; border-radius:14px; border:2px solid #818CF8; opacity:0; pointer-events:none; }
+.buyer-want-tour-hole { position:fixed; z-index:70; border-radius:12px; box-shadow:0 0 0 2px var(--after-wizard-ring), 0 0 0 4000px var(--after-wizard-dim); pointer-events:none; }
+.buyer-want-tour-hole::after { content:''; position:absolute; inset:-2px; border-radius:14px; border:2px solid var(--after-wizard-ring); opacity:0; pointer-events:none; }
 @media (prefers-reduced-motion:no-preference) {
   .buyer-want-tour-hole::after { animation:buyer-want-tour-ring 1.4s ease-out .3s 3; }
   @keyframes buyer-want-tour-ring { 0% { inset:-2px; opacity:.9; } 100% { inset:-12px; opacity:0; } }
 }
-.buyer-want-tour-pop { position:fixed; z-index:71; pointer-events:auto; padding:16px 18px; border-radius:14px; background:var(--card); box-shadow:0 18px 40px rgba(16,24,40,.28), 0 2px 6px rgba(16,24,40,.12); }
+.buyer-want-tour-pop { position:fixed; z-index:71; pointer-events:auto; padding:16px 18px; border-radius:14px; background:var(--card); box-shadow:var(--after-wizard-shadow); }
 .buyer-want-tour-pop::before { content:''; position:absolute; top:-7px; left:30px; width:14px; height:14px; border-radius:3px 0 0 0; background:var(--card); transform:rotate(45deg); }
 .buyer-want-tour-t { margin:0 30px 0 0; font-size:16px; font-weight:600; line-height:1.4; color:var(--foreground); text-wrap:pretty; }
 .buyer-want-tour-s { margin:6px 0 0; font-size:14px; line-height:1.55; color:var(--muted-foreground); }
@@ -684,3 +684,20 @@ html[lang=th] #buyer-edit-form [class*="tracking-"], html[lang=th] [data-mkt-vie
 .lang-tag { display: inline-flex; align-items: center; height: 18px; margin-left: 8px; padding: 0 6px; border-radius: 5px; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; vertical-align: middle; }
 .lang-tag-en { background: #EEF0F3; color: #4B5563; }
 .lang-tag-th { background: #FFF1E2; color: #C2410C; }
+
+:root { --after-wizard-ring:#818CF8; --after-wizard-dim:rgba(17,24,39,.5); --after-wizard-shadow:0 18px 40px rgba(16,24,40,.28),0 2px 6px rgba(16,24,40,.12); --seller-wording-placeholder:#9CA3AF; --seller-wording-error:#DC2626; --seller-wording-error-border:#FCA5A5; --seller-continue-ink:#0E162F; --seller-continue-hover:#E89B14; }
+.after-wizard-seller { --after-wizard-ring:var(--plan-seller); }
+.after-wizard-seller .buyer-want-tour-go { background:var(--plan-seller); color:var(--seller-continue-ink); }
+.after-wizard-seller .buyer-want-tour-go:hover { background:var(--seller-continue-hover); filter:none; }
+.seller-identity-anchor { display:flex; flex-direction:column; gap:16px; }
+.seller-wording-input { display:block; width:100%; min-height:42px; padding:10px 13px; border:1px solid var(--input); border-radius:9px; background:var(--card); color:var(--foreground); font-size:15px; line-height:20px; resize:none; overflow:hidden; }
+.seller-wording-input::placeholder { color:var(--seller-wording-placeholder); opacity:1; }
+.seller-wording-input:focus { outline:2px solid var(--ring); outline-offset:1px; }
+.seller-wording-input.is-over { border-color:var(--seller-wording-error-border); }
+.seller-wording-count { font-variant-numeric:tabular-nums; }
+.seller-wording-count.is-over { color:var(--seller-wording-error); font-weight:600; }
+.seller-wording-error { margin-top:6px; font-size:13px; font-weight:500; color:var(--seller-wording-error); }
+.seller-wording-note { display:flex; align-items:flex-start; gap:7px; margin-top:8px; font-size:13px; line-height:1.45; color:var(--seller-wording-error); }
+.seller-wording-note svg { flex:none; margin-top:2px; }
+.seller-wording-note.tour-hidden { visibility:hidden; }
+@media (max-width:639px) { .seller-wording-input.is-headline { min-height:62px; } }
