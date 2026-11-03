@@ -15,11 +15,13 @@ import type { SellerFavPrivate } from '@/lib/investor-browse.functions';
  * closed card (one line each), Investment focus as the one-line text row,
  * and Geography plus the baht ranges inside Show more.
  */
-export function StandardInvestorCard({ i, privateData, onClick, selected, topRight, className, tag, descriptionContent, hideStatus, exactFigures, lastLoginStep }: {
+export function StandardInvestorCard({ i, privateData, onClick, selected, topRight, className, tag, descriptionContent, hideStatus, exactFigures, lastLoginStep, wantBuy }: {
   i: CardInvestor & { managed?: boolean; coverUrl?: string | null; status?: string; newDays?: number | null; lastLoginStep?: LastLoginStep | null };
   privateData?: Omit<SellerFavPrivate, 'ndaApprovedAt' | 'ndaValidUntil'> | null; onClick?: () => void; selected?: boolean; topRight?: ReactNode; className?: string; tag?: ReactNode;
   hideStatus?: boolean; exactFigures?: { figures: StandardFigure[]; fit: StandardFigure };
   descriptionContent?: ReactNode;
+  /** "Wants to buy: …" preview line under the investor type (the buyer editor's live card). */
+  wantBuy?: ReactNode;
   lastLoginStep?: LastLoginStep | null;
 }) {
   const { t, language } = useTranslation();
@@ -57,7 +59,7 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
     lastLogin={lastLoginStep ?? i.lastLoginStep} lastLoginTooltip={t('When the buyer last logged in to PitchSnack')}
     cover={(children) => p ? <div className="standard-card-private-cover">{photo ? <img src={photo} alt="" /> : <div className="standard-card-logo">{p.logo_signed_url ? <img src={p.logo_signed_url} alt="" /> : initials}</div>}{children}</div> : <BuyerCover type={i.type} src={i.coverUrl}>{children}</BuyerCover>}
     badges={[...(i.verified ? [{ label: 'Verified investor' }] : []), ...(i.proofOfFunds ? [{ label: 'Proof of funds' }] : [])]}
-    descriptionContent={descriptionContent} figures={exactFigures?.figures ?? figures} fit={exactFigures?.fit ?? band('Min. target revenue', p?.revenue_min_band ?? i.revBand)}
+    descriptionContent={descriptionContent} afterName={wantBuy} figures={exactFigures?.figures ?? figures} fit={exactFigures?.fit ?? band('Min. target revenue', p?.revenue_min_band ?? i.revBand)}
     textRow={{ label: 'Investment focus', value: cardValue(i.dealTypes.join(' · '), language) }}
     more={<>{moreFigures}{(p?.city ?? i.city) && <StandardCardSection label="Based in">{contactPlace(p?.city ?? i.city, language)}</StandardCardSection>}{!!(sectors.length || stages.length || i.dealTypes.length) && <StandardCardSection label="Focus"><StandardCardChips values={[...sectors, ...stages, ...i.dealTypes]} /></StandardCardSection>}</>} />;
 }
