@@ -106,7 +106,7 @@ export function BuyerDescriptionEditor({ i, leaks, value, onChange, forced, chil
   return <div ref={root} className="buyer-description-layout">
     <div className="buyer-preview-col"><div className="buyer-preview-sticky"><p className="buyer-preview-caption"><Eye aria-hidden />{L('What sellers see', 'สิ่งที่ผู้ขายเห็น')}</p><StandardInvestorCard i={i} descriptionContent={description} wantBuy={wantLine} className="buyer-editor-preview" /></div></div>
     <div className="buyer-description-fields"><section data-edit-sec="want" className="buyer-description-field buyer-want-field">
-      <div ref={wantAnchor} className="buyer-want-anchor">
+      <div ref={setWantAnchor} className="buyer-want-anchor">
       <FieldRow htmlFor="f-suggested_headline" label={L('What you want to buy', 'สิ่งที่ท่านต้องการซื้อ')} after={!source && <LangTag />} right={<span className={wantOver ? 'text-destructive font-semibold' : ''}>{wantN} / {WANT_BUY_MAX}</span>}>
       <textarea ref={wantBox} id="f-suggested_headline" lang={lang} rows={1} value={want} autoComplete="off"
         placeholder={L('e.g. Profitable logistics firm with its own distribution channel in main cities', 'เช่น บริษัทโลจิสติกส์ที่มีกำไร และมีช่องทางจัดจำหน่ายของตนเองในเมืองหลัก')}
@@ -118,7 +118,7 @@ export function BuyerDescriptionEditor({ i, leaks, value, onChange, forced, chil
       </div>
       <p id="buyer-want-help" className="buyer-description-help" style={tour?.open ? { visibility: 'hidden' } : undefined}>{L("Sellers see it on your card in Browse investors. Admin reviews it before it's published.", 'ผู้ขายจะเห็นข้อความนี้บนการ์ดของท่านในหน้าค้นหานักลงทุน ผู้ดูแลระบบจะตรวจสอบก่อนเผยแพร่')}</p>
       <div id="buyer-want-message" aria-live="polite">{wantOver ? <p className="buyer-description-error">{L('Keep it to 80 characters.', 'โปรดเขียนไม่เกิน 80 ตัวอักษร')}</p> : wantLeaks.length ? <p className="buyer-description-warning">{L('It mentions', 'ข้อความกล่าวถึง')} <b>{wantLeaks.join(', ')}</b>{L('. Sellers read it before an NDA, so leave out names, websites and contact details.', ' ผู้ขายจะอ่านก่อนลงนาม NDA โปรดไม่ระบุชื่อ เว็บไซต์ และข้อมูลติดต่อ')}</p> : null}</div>
-      {tour?.open && <WantTour anchor={wantAnchor.current} onClose={tour.close} />}
+      {tour?.open && <WantTour anchor={wantAnchor} onClose={tour.close} />}
     </section><section data-edit-sec="description" className="buyer-description-field">
       <FieldRow htmlFor="f-description" label={<>{L('Description', 'คำอธิบาย')} <span className="buyer-label-explanation">{L('(1–2 sentences)', '(1–2 ประโยค)')}</span></>} after={!source && <LangTag />} source={source} suggest={suggest} right={<span className={descriptionWords(value) > 25 ? 'text-destructive font-semibold' : ''}>{descriptionWords(value)} / 25 {L('words','คำ')}</span>}>
       <Textarea id="f-description" lang={lang} value={value} onChange={(e) => onChange(singleLineDescription(e.target.value))} onBlur={() => setTouched(true)} onKeyDown={(e) => {if(e.key === 'Enter') e.preventDefault();}} aria-invalid={!!message} aria-describedby="buyer-description-help buyer-description-message" className="buyer-description-textarea" />
