@@ -380,7 +380,6 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
   const checklist = firmChecklist(f);
   const complete = checklist.every((i) => i.done);
   const declined = f.verification?.state === "declined";
-  const pending = f.credentials.filter((c) => c.status === "pending");
   const addr = fullAddress(f);
   
   const edit = (s: EditSection) => openEdit(f.id, s);
