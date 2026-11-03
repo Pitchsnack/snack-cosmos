@@ -4,7 +4,7 @@ import { furthestStep, setupStepState } from "@/lib/setup-step-state";
 import { buyerProgressFor } from "@/lib/buyer-wizard";
 import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
-import { buyerAboutError, descriptionSentences, descriptionWords, singleLineDescription } from '@/lib/buyer-description';
+import { buyerAboutError, descriptionWords, singleLineDescription } from '@/lib/buyer-description';
 import { useFocusNeeded } from "@/components/common/need-fill";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -733,6 +733,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
 function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, missingNames, onEdit }: {
   a: A; med: { logo: boolean; photos: number }; steps: { id: QId }[]; errors: Record<string, string | null>; individual: boolean; thai: boolean; stagesShown: boolean; corp: boolean; missingNames: string[]; onEdit: (id: QId) => void;
 }) {
+  const L = useL();
   const shown = new Set(steps.map((s) => s.id));
   type Row = [string, React.ReactNode, QId, "req" | "opt", string | null, string?];
   const groups: [string, Row[]][] = [
