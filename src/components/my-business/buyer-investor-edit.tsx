@@ -376,7 +376,10 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
       setTimeout(()=>document.getElementById(f.investor_name.trim() ? "investor-tenant" : "f-investor_name")?.focus(),80);
       setErrs({investor_name:!f.investor_name.trim() ? "Needed to add the investor." : "",creation:"To add the investor, fill in Company Name (About Company), Tenant and required ownership (Admin settings)."});return;
     }
+    const wantOver = (v: string) => Array.from(v).length > 80;
     const checks: [string, string | null][] = [
+      ["suggested_headline", wantOver(f.suggested_headline) ? "Keep it to 80 characters." : descriptionChanged(f.suggested_headline, (data.buyer as any).suggested_headline) && f.suggested_headline.trim() && descriptionLeaks(f.suggested_headline, f.investor_name, f.website_url).length ? "leak" : null],
+      ["suggested_headline_th", wantOver(thx.suggested_headline) ? "Keep it to 80 characters." : descriptionChanged(thx.suggested_headline, (data.buyer as any).suggested_headline_th) && thx.suggested_headline.trim() && descriptionLeaks(thx.suggested_headline, f.investor_name, f.website_url).length ? "leak" : null],
       ["year_founded", individual ? null : yearError(f.year_founded)],
       ["investor_name", f.investor_name.trim().length < 2 ? "Add your firm's name." : null],
       ["website_url", /^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(f.website_url.trim()) ? null : "Enter a valid website address, e.g. www.yourfirm.com"],
