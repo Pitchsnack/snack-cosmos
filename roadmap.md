@@ -2,7 +2,7 @@
 
 ## Seller Website key business strengths
 - [x] Read the supplied brief and try the HTML reference's typing, Enter and empty-row Suggest.
-- [ ] Add four bilingual shared Highlights rows, three required, with protected Suggest/enrichment and Review count; blocked pending approval to add missing Website waiting/reading/found states (current rows all spin together).
+- [ ] Add four bilingual shared Highlights rows, three required, with protected Suggest/enrichment and Review count; user approved adding missing waiting/reading/found states.
 - [ ] Verify saved read-back, completion rules, Thai output and desktop/mobile/dark views using test identities.
 
 ## Seller after-wizard listing identity
