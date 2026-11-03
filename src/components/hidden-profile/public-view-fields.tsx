@@ -415,7 +415,8 @@ function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string 
     <div>
       <div className="mb-[6px] flex items-center">
         <label htmlFor="hp-code_name" onMouseEnter={() => setTip(true)} onMouseLeave={() => setTip(false)}
-          className={cn(LABEL, taken && MISSING)}>{tr("Listing name", "ชื่อประกาศ")}</label>
+          className={cn(LABEL, (taken || empty) && MISSING)}>{tr("Listing name", "ชื่อประกาศ")}</label>
+        {empty && <span className={cn("ml-1 text-[14px] font-semibold", MISSING)}>{tr("· Missing", "· ยังขาด")}</span>}
         <span className="relative ml-[2px] inline-flex">
           <button type="button" aria-label={tr("What is a listing name?", "ชื่อประกาศคืออะไร")} aria-describedby={tipId}
             onMouseEnter={() => setTip(true)} onMouseLeave={() => setTip(false)} onFocus={() => setTip(true)} onBlur={() => setTip(false)} onClick={() => setTip((t) => !t)}
@@ -434,7 +435,7 @@ function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string 
         <Input id="hp-code_name" value={d.code_name} placeholder={tr("e.g. Established Regional Logistics Network", "เช่น เครือข่ายโลจิสติกส์ระดับภูมิภาคที่ก่อตั้งมายาวนาน")}
           aria-describedby={cn(tipId, taken && errId)} aria-invalid={taken || undefined}
           onChange={(e) => setD((p) => ({ ...p, code_name: singleLineSellerWording(e.target.value) }))}
-          className={cn(BOX, shown && "pr-[110px]", border)} />
+          className={cn(BOX, shown && "pr-[110px]", empty && MISS_BOX, border)} />
         {shown && <span className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-[5px] text-[13px] font-semibold text-[#15803D]"><CircleCheck className="h-[15px] w-[15px]" strokeWidth={2} />{tr("Available", "ใช้ได้")}</span>}
       </div>
       <SellerWordingMessage value={d.code_name} kind="name" language={lang} />
