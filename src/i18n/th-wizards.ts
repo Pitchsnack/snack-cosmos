@@ -311,6 +311,7 @@ export const TH_WIZARDS: Record<string, string> = {
   "Logo and {n} photos": "โลโก้และรูปภาพ {n} รูป",
   "Photos": "รูปภาพ",
   "Your firm": "บริษัทของท่าน",
+  "Your team": "ทีมงานของท่าน",
   "Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your work. Sellers and buyers see them on your profile.": "เพิ่มโลโก้ของบริษัทและรูปภาพอย่างน้อย 1 รูป (สูงสุด 3 รูป) ของสำนักงาน ทีมงาน หรือผลงานของท่าน ผู้ขายและผู้ซื้อจะเห็นภาพเหล่านี้บนโปรไฟล์ของท่าน",
   "Sellers and buyers see your logo on your card, and your photos on your profile.": "ผู้ขายและผู้ซื้อจะเห็นโลโก้บนการ์ดของท่าน และเห็นรูปภาพบนโปรไฟล์ของท่าน",
   "Add your logo and photos": "เพิ่มโลโก้และรูปภาพ",

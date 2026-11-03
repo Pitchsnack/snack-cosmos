@@ -189,7 +189,7 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
         deal_types: (p.deal_types ?? []) as string[],
         ref_no: p.ref_no as string,
       },
-      account: { name: (meta.full_name || meta.name || "") as string, title: (up?.title ?? "") as string },
+      account: { name: (meta.full_name || meta.name || "") as string, title: (up?.title ?? "") as string, email: (au?.user?.email ?? "") as string },
       people: (p.people ?? []) as { name: string; role: string; role_th?: string; email: string; phone: string }[],
       verification: {
         status: (bv?.status === "unverified" || !bv?.status ? "none" : bv.status) as "none" | "pending" | "verified" | "more_info" | "declined",
@@ -451,9 +451,11 @@ const Wizard = z.object({
   deal_types: arr(12), preferred_stages: arr(12), geography: arr(12), preferred_industries: arr(40),
   sector_picks: z.object({ types: z.array(z.string().max(30)).max(5), kinds: z.record(z.string().max(20), z.array(z.string().max(30)).max(20)), other: z.array(z.string().max(80)).max(40) }).nullable().optional(),
   description: z.string().trim().optional(),
+  short_description: z.string().max(4000).optional(),
+  people: z.array(z.object({ name: z.string().max(120), role: z.string().max(120).default(""), role_th: z.string().max(120).optional(), email: z.string().max(200).default(""), phone: z.string().max(60).default("") })).max(20).optional(),
   answered: z.array(z.string().max(20)).max(20).optional(),
   pe_ticked: z.boolean().optional(),
-  setup_reached: z.enum(["role", "type", "name", "web", "aum", "ticket", "rev", "deals", "sectors", "photos", "desc", "review"]).optional(),
+  setup_reached: z.enum(["role", "type", "name", "web", "aum", "ticket", "rev", "deals", "sectors", "photos", "desc", "team", "review"]).optional(),
   acts_for_types: arr(7),
 });
 
@@ -503,6 +505,14 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     if (data.preferred_industries) { inv.preferred_industries = data.preferred_industries; bp.sectors = data.preferred_industries; }
     if (has("sector_picks")) inv.sector_picks = data.sector_picks;
     if (has("description")) { bp.description = data.description || null; bp.headline = data.description || null; }
+    // About Company (Edit information › Exclusive view), same 80-word rule.
+    if (has("short_description")) {
+      const { data: st } = await sb.from("investors").select("short_description").eq("id", investorId).single();
+      if (buyerAboutError(data.short_description, st?.short_description)) throw new Error("Keep it to 80 words.");
+      inv.short_description = data.short_description?.trim() || null; bp.private_description = data.short_description?.trim() || null;
+    }
+    // Team members: the same list as Edit information › Team.
+    if (data.people) bp.people = data.people.filter((m) => m.name.trim());
     if (data.answered || data.pe_ticked !== undefined) {
       inv.wizard = { ...(cur.wizard ?? {}), ...(data.answered ? { answered: data.answered } : {}), ...(data.pe_ticked !== undefined ? { pe_ticked: data.pe_ticked } : {}) };
     }
