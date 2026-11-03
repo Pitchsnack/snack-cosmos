@@ -39,8 +39,9 @@ export function normalizeBuyerReached(rel: BuyerRelation | null, reached: string
 
 /** The Website step for a firm buyer also holds the short and long descriptions (both optional, both must pass their rules). */
 export function buyerWebValid(web: string, desc: string, about: string, name: string, firm: boolean): boolean {
+  // Individual Investors may leave the website blank; a typed one must still be valid.
+  if (!firm) return !web.trim() || isValidUrl(web);
   if (!isValidUrl(web)) return false;
-  if (!firm) return true;
   return !(desc.trim() && descriptionError(desc)) && !descriptionLeaks(desc, name, web).length && !buyerAboutError(about, null);
 }
 
