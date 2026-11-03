@@ -5,6 +5,7 @@
  */
 import type { RegulatoryLicence } from "@/lib/compliance";
 import type { FounderStory } from "@/lib/founder-story";
+import { strengthCount, STRENGTH_MAX } from './seller-strengths';
 
 export type SellerRelation = "owner" | "family_owner" | "agent";
 
@@ -177,7 +178,7 @@ export type SellerFounder = {
   id?: string; full_name: string; position?: string | null; linkedin_url?: string | null;
   bio?: string | null; bio_story?: FounderStory | null; bio_th?: string | null; bio_story_th?: FounderStory | null; photo_url?: string | null;
 };
-export function websiteFieldsAnswered(d: SellerDraft) {
+export function websiteDescriptionFieldsAnswered(d: SellerDraft) {
   const short = d.shortDescription?.trim() || d.shortDescriptionTh?.trim() || "";
   const long = d.longDescription?.trim() || d.longDescriptionTh?.trim() || "";
   return !!short && short.length <= SELLER_DESCRIPTION_LIMITS.short && !!long && long.length <= SELLER_DESCRIPTION_LIMITS.long
@@ -186,6 +187,10 @@ export function websiteFieldsAnswered(d: SellerDraft) {
     && [d.shortDescription, d.shortDescriptionTh].every(v => (v?.length ?? 0) <= 500)
     && [d.longDescription, d.longDescriptionTh].every(v => (v?.length ?? 0) <= 5000)
     && [...(d.productTags ?? []), ...(d.productTagsTh ?? [])].every(v => !!v.trim() && v.length <= 50);
+}
+export function websiteFieldsAnswered(d: SellerDraft) {
+  return websiteDescriptionFieldsAnswered(d) && strengthCount(d, true) === 3
+    && [...(d.highlights ?? []), ...(d.highlightsTh ?? [])].every(text => text.trim().length <= STRENGTH_MAX);
 }
 /** Legacy year and size both map to the combined question; other keys retain identity. */
 export function normalizeSellerStep(k: string | null | undefined): StepKey | null {
@@ -230,6 +235,7 @@ export interface SellerDraft {
   step: number;
   shortDescription?: string; longDescription?: string; productTags?: string[]; marketTags?: string[];
   shortDescriptionTh?: string; longDescriptionTh?: string; productTagsTh?: string[]; marketTagsTh?: string[];
+  highlights?: string[]; highlightsTh?: string[];
   founders?: SellerFounder[];
   /** Additional website findings are applied only after Review, under the existing access gate. */
   enrichResult?: Record<string, unknown>;
