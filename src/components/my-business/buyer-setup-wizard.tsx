@@ -749,7 +749,7 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, mi
         [tr("Registration number"), a.reg, "name", thai ? "req" : "opt", errors.reg, "🔒 After NDA"] as Row,
       ] : []),
       ...(shown.has("sectors") ? [[tr("Industries"), a.sectors.includes(SECTOR_AGNOSTIC) ? "Sector agnostic" : a.sectors.join(", "), "sectors", "req", errors.sectors] as Row] : []),
-      individual ? [tr("Website"), a.web, "web", "req", errors.web, "🔒 After NDA"] as Row
+      individual ? [tr("Website"), a.web, "web", "opt", errors.web, "🔒 After NDA"] as Row
         : [L("Firm website and description", "เว็บไซต์และคำอธิบายบริษัท"), [a.web, a.desc.trim()].filter(Boolean).join(" · "), "web", "req", errors.web || errors.about || (errors.desc ? "fix" : null)] as Row,
     ]],
     [tr("Fund & ticket"), [
