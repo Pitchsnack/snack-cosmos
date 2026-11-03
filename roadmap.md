@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Seller after-wizard listing identity
+- [ ] Add completion navigation and one-time shared pop-up.
+- [ ] Apply bilingual wording limits, growing fields and registration checks without changing records.
+- [ ] Run focused tests, check test-account previews and report legacy over-limit refs and verification gaps.
+
 ## Seller website and founder setup
 - [x] Reorder seller steps, migrate legacy progress on read/save, combine founded/size, require Website descriptions/tags, and reuse founders.
 - [x] Expand Website with real enrichment and bilingual sector examples; preserve manual fields and later auto-fill safeguards.
