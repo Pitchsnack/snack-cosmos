@@ -33,10 +33,10 @@ describe("buyer and advisor setup rules", () => {
     expect(setupStepState("name", "name", true, [], advisor, "review")).toBe("here");
   });
   it("Individual Investors omit type, AUM and firm photos", () => {
-    expect(stepsFor("individual").map(s => s.id)).toEqual(["role", "name", "web", "ticket", "rev", "deals", "sectors", "desc", "review"]);
+    expect(stepsFor("individual").map(s => s.id)).toEqual(["role", "name", "sectors", "web", "ticket", "rev", "deals", "desc", "team", "review"]);
   });
   it("signup-answered questions have no step", () => {
     const skip = buyerSkips(["role", "type", "web", "sectors"], { role:"corporate", type:"Private Equity", web:"https://example.test", year:"2010", name:"Test firm", sectors:["Technology"] });
-    expect(shownSteps("corporate", skip).map(s => s.id)).toEqual(["name", "aum", "ticket", "rev", "deals", "photos", "desc", "review"]);
+    expect(shownSteps("corporate", skip).map(s => s.id)).toEqual(["name", "web", "aum", "ticket", "rev", "deals", "photos", "team", "review"]);
   });
 });
