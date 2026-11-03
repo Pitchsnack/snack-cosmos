@@ -355,7 +355,10 @@ export function suggestHighlights(s: ListingSource, o?: SuggestOpts): string[] {
     const one = a.decade ? `ดำเนินธุรกิจตั้งแต่ทศวรรษ ${a.decade.replace('s','')}` : `ดำเนินธุรกิจในกลุ่ม${examples?.thai ?? 'ธุรกิจทั่วไป'}`;
     const two = products.length ? `สินค้าและบริการ ได้แก่ ${products.join(' และ ')}` : `ดำเนินงานในกลุ่ม${examples?.thai ?? 'ธุรกิจทั่วไป'}`;
     const three = markets.length ? `ให้บริการตลาดและกลุ่มลูกค้า ได้แก่ ${markets.join(' และ ')}` : `ให้บริการด้าน${products[0] ?? examples?.thai ?? 'ธุรกิจ'}ในประเทศไทย`;
-    return [one, two, three].map(text => scrub(text, terms));
+    return [one, two, three].map(text => {
+      const clean = scrub(text, terms);
+      return clean.endsWith('ทศวรรษ') ? scrub(`ดำเนินธุรกิจในกลุ่ม${examples?.thai ?? 'ธุรกิจทั่วไป'}`, terms) : clean;
+    });
   }
 
   const one = [
