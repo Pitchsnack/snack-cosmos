@@ -22,6 +22,11 @@ function WantTour({ anchor, onClose }: { anchor: HTMLElement | null; onClose: (f
   // That box is transformed, so fixed positions are relative to it, not the viewport.
   const host = anchor?.closest<HTMLElement>('[data-edit-info-body]')?.parentElement ?? null;
   useEffect(() => {
+    // Keep the dim inside Edit information's rounded corners while the pop-up shows.
+    host?.classList.add('buyer-want-tour-on');
+    return () => host?.classList.remove('buyer-want-tour-on');
+  }, [host]);
+  useEffect(() => {
     if (!anchor) return;
     const measure = () => setRect(anchor.getBoundingClientRect());
     // Scroll Edit information so the field and the whole pop-up are in view (field near the top on a phone).
