@@ -29,7 +29,7 @@ import '@/styles/public-home.css';
 import '@/styles/businesses-wanted.css';
 import '@/styles/public-discovery.css';
 
-export function DiscoveryPage({ data }: { data: DiscoveryData }) { return <PublicShell current="discovery" talkHref="/#close"><DiscoveryBody data={data}/></PublicShell>; }
+export function DiscoveryPage({ data }: { data: DiscoveryData }) { return <PublicShell current="discovery" noGate talkHref="/#close"><DiscoveryBody data={data}/></PublicShell>; }
 
 function DiscoveryBody({data}:{data:DiscoveryData}) {
  const {lang,t}=useHomeLang(); const th=lang==='th'; const {setLanguage}=useTranslation();

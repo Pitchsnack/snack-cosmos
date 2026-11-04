@@ -38,12 +38,16 @@ export const recordDiscoveryView = createServerFn({ method: 'POST' }).inputValid
 export const discoveryMyState = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { roleOf } = await import('./plan-access.server');
   const role = await roleOf(context.userId);
+  if (!role) throw new Error('Not available');
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+  const startupIds = role === 'seller' ? await (await import('./workspace-scope.server')).myWorkspaceStartupIds(context.userId) : [];
+  const { data: ownedListings } = startupIds.length ? await supabaseAdmin.from('hidden_profiles').select('id').in('startup_id', startupIds) : { data: [] };
+  const listingIds = (ownedListings ?? []).map(x => x.id);
   const [{ data: applications }, { data: ndas }] = await Promise.all([
-    role === 'seller' ? context.supabase.from('buy_order_applications').select('buy_order_id,applied_at,status') : Promise.resolve({ data: [] }),
+    listingIds.length ? supabaseAdmin.from('buy_order_applications').select('buy_order_id,applied_at,status').in('business_id',listingIds) : Promise.resolve({ data: [] }),
     role === 'buyer' ? supabaseAdmin.from('deal_pipelines').select('hidden_profile_id,nda_requested_at,status').eq('buyer_user_id', context.userId).not('nda_requested_at','is',null) : Promise.resolve({ data: [] }),
   ]);
-  return { role, applications: (applications ?? []) as { buy_order_id: string; applied_at: string; status: 'new' | 'nda_requested' | 'not_a_fit' }[], ndas: (ndas ?? []).filter(x => !['declined','withdrawn'].includes(x.status)).map(x => ({ id: x.hidden_profile_id, at: x.nda_requested_at })) };
+  return { role, applications: (applications ?? []) as { buy_order_id: string; applied_at: string; status: 'new' | 'nda_requested' | 'not_a_fit' }[], ndas: (ndas ?? []).filter(x => !['declined','withdrawn','ended'].includes(x.status)).map(x => ({ id: x.hidden_profile_id, at: x.nda_requested_at })) };
 });
 export const sendDiscoveryListingShare = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator(d => z.object({ id: z.string().uuid(), email: z.string().trim().email().max(254), lang: z.enum(['en','th']), token: z.string().uuid() }).parse(d)).handler(async ({ context, data }) => {
   const { roleOf } = await import('./plan-access.server');

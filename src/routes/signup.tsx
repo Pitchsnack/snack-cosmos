@@ -80,7 +80,9 @@ function setPersona(userId: string, role: Role) {
 }
 
 function SignupPage() {
-  return <AccessGate claimInBackground={false}><SignupInner /></AccessGate>;
+  const [lang,setLang] = useState<Lang>('th');
+  useEffect(()=>{const l=localStorage.getItem(LANG_KEY);if(l==='en'||l==='th')setLang(l);},[]);
+  return <><AccessGate claimInBackground={false}><SignupInner /></AccessGate><DiscoveryLoginPrompt lang={lang}/></>;
 }
 
 function SignupInner() {
@@ -456,7 +458,6 @@ function SignupInner() {
         <div className="lg-mid">
           <div className={`lg-col su-col${step === 7 ? " su-wide" : ""}`}>
             <div className="lg-card su-card">
-              <DiscoveryLoginPrompt lang={lang}/>
               <DiscoveryWaiting lang={lang} signup role={step===1?role:null}/>
               {boInv && step === 1 && (
                 <div className="su-boinv">
