@@ -10,9 +10,9 @@ import { fmtThb } from '@/lib/asking-price';
 import { contactPlace, cardValue } from '@/lib/marketplace-contacts';
 import type { FavPrivate } from '@/lib/favourites.functions';
 
-export function StandardListingCard({ l, deal, privateData, publicOnly, status, hideStatus, selected, onSelect, topRight, tag, className }: {
+export function StandardListingCard({ l, deal, privateData, publicOnly, status, hideStatus, selected, onSelect, topRight, tag, className, discovery = false }: {
   l: PublicListing; deal?: ListingDeal; privateData?: Omit<FavPrivate, 'ndaApprovedAt' | 'ndaValidUntil'> | null; publicOnly?: boolean; status?: string | null; hideStatus?: boolean;
-  selected?: boolean; onSelect?: () => void; topRight?: ReactNode; tag?: ReactNode; className?: string;
+  selected?: boolean; onSelect?: () => void; topRight?: ReactNode; tag?: ReactNode; className?: string; discovery?: boolean;
 }) {
   const { t, language } = useTranslation();
   const p = privateData;
@@ -26,7 +26,7 @@ export function StandardListingCard({ l, deal, privateData, publicOnly, status, 
   return <StandardBrowseCard title={p?.companyName || lt.headline} subtitle={p ? lt.headline : undefined} refNo={l.refNo} place={contactPlace(p?.location || l.location?.replace(/, Thailand$/, ''),language)}
     description={p ? p.description : lt.description} status={cardNdaStatus(status)} hideStatus={hideStatus} newDays={l.newDays} managed={l.managed} topRight={topRight} tag={tag} selected={selected} onOpen={onSelect} className={className}
     lastLogin={l.lastLoginStep} lastLoginTooltip={t('When the seller last logged in to PitchSnack')}
-    cover={(children) => p ? <div className="standard-card-private-cover">{p.photoUrl ? <img src={p.photoUrl} alt="" /> : <div className="standard-card-logo">{logo ? <img src={logo} alt="" /> : initials}</div>}{children}</div> : <SectorArt src={l.coverUrl} art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId}>{children}</SectorArt>}
+    cover={(children) => p ? <div className="standard-card-private-cover">{p.photoUrl ? <img src={p.photoUrl} alt="" /> : <div className="standard-card-logo">{logo ? <img src={logo} alt="" /> : initials}</div>}{children}</div> : <SectorArt src={l.coverUrl} art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId} instantCached={discovery}>{children}</SectorArt>}
     badges={[...(l.certified ? [{ label: 'Certified' }] : []), ...(l.verified ? [{ label: 'Verified company' }] : []), ...(l.hasFinancials ? [{ label: 'Verified financials', financial: true }] : [])]}
     figures={[{ label: language==='th' && year ? `รายได้ปี ${Number(p?.fy || `20${year}`)+543}` : `${t('Revenue')}${year ? ` FY${year}` : ''}`, value: p ? (p.revenue != null ? fmtThb(p.revenue) : null) : publicRevenueLabel(l.revenueBand) }, { label: 'Deal type', value: deal?.dealType ? t(deal.dealType) : null }]}
     fit={{ label: 'Asking price', value: price, second: null }} textRow={{ label: 'Sector', value: cardValue(l.sector,language) }}

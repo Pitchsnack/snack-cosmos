@@ -12,13 +12,13 @@ import { sectorIcon } from "./bw-icons";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function ShareDialog({ card: rawCard, onClose }: { card: BoCard; onClose: () => void }) {
+export function ShareDialog({ card: rawCard, onClose, onSend, initialEmail = '', initialSent = null, listing = false }: { card: BoCard; onClose: () => void; onSend?: (email: string) => Promise<boolean>; initialEmail?: string; initialSent?: string | null; listing?: boolean }) {
   const { c, th } = useBw();
   const card = localizeCard(rawCard, th);
   const send = useServerFn(sendBuyOrderShare);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [err, setErr] = useState<string | null>(null);
-  const [sent, setSent] = useState<string | null>(null);
+  const [sent, setSent] = useState<string | null>(initialSent);
   const [busy, setBusy] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
   const Icon = sectorIcon(card.sector);
@@ -31,7 +31,8 @@ export function ShareDialog({ card: rawCard, onClose }: { card: BoCard; onClose:
     if (!EMAIL.test(v)) { setErr(c("Enter a valid email address, like name@company.com.", "กรุณากรอกอีเมลให้ถูกต้อง เช่น name@company.com")); return; }
     setErr(null); setBusy(true);
     try {
-      await send({ data: { id: card.id, email: v, lang: th ? "th" : "en" } });
+      if (onSend) { if (!(await onSend(v))) return; }
+      else await send({ data: { id: card.id, email: v, lang: th ? "th" : "en" } });
       setSent(v); setEmail("");
     } catch {
       setErr(c("Couldn't send the invitation. Please try again.", "ส่งคำเชิญไม่สำเร็จ กรุณาลองอีกครั้ง"));
@@ -44,21 +45,21 @@ export function ShareDialog({ card: rawCard, onClose }: { card: BoCard; onClose:
         <div className="bw-share-h">
           <span className="bw-share-tile"><Share2 className="h-5 w-5" /></span>
           <div>
-            <DialogTitle className="bw-share-t">{c("Share this buyer request", "แชร์ความต้องการของผู้ซื้อ")}</DialogTitle>
-            <DialogDescription className="bw-share-d">{c("Know a business owner who may be interested in selling? Send them this opportunity.", "รู้จักเจ้าของธุรกิจที่อาจสนใจขายหรือไม่? ส่งโอกาสนี้ให้เขา")}</DialogDescription>
+            <DialogTitle className="bw-share-t">{listing ? c("Share this listing", "แชร์ประกาศนี้") : c("Share this buyer request", "แชร์ความต้องการของผู้ซื้อ")}</DialogTitle>
+            <DialogDescription className="bw-share-d">{listing ? c("Know a buyer who may be interested? Send them this business for sale.", "ท่านรู้จักผู้ซื้อที่อาจสนใจหรือไม่ ส่งธุรกิจที่ประกาศขายนี้ให้เขา") : c("Know a business owner who may be interested in selling? Send them this opportunity.", "รู้จักเจ้าของธุรกิจที่อาจสนใจขายหรือไม่? ส่งโอกาสนี้ให้เขา")}</DialogDescription>
           </div>
         </div>
         <div className="bw-share-body">
-        <div className="bw-share-lab">{c("BUY ORDER", "ประกาศซื้อ")}</div>
+        <div className="bw-share-lab">{listing ? c("Business for sale", "ธุรกิจที่ประกาศขาย") : c("BUY ORDER", "ประกาศซื้อ")}</div>
         <div className="bw-share-box">
           <span className="bw-share-sec" style={{ background: coverOf(card.sector).gradient }}><Icon size={24} strokeWidth={1.8} aria-hidden="true" /></span>
           <div className="min-w-0">
             <div className="bw-share-name"><b>{card.name}</b> <span>· {card.ref}</span></div>
-            <div className="bw-share-meta">{placeOf(citiesDisplay(card.cities, th), card.location)} · {c("Target revenue", "รายได้เป้าหมาย")} {card.targetRevenue} · {c("Target company price", "ราคาบริษัทเป้าหมาย")} {card.priceRange}</div>
-            <span className="bw-pill bw-share-hidden"><EyeOff className="h-3 w-3" />{c("Buyer’s name hidden", "ไม่แสดงชื่อผู้ซื้อ")}</span>
+            <div className="bw-share-meta">{placeOf(citiesDisplay(card.cities, th), card.location)} · {listing ? c("Revenue FY25", "รายได้ปี 2568") : c("Target revenue", "รายได้เป้าหมาย")} {card.targetRevenue} · {listing ? c("Asking price", "ราคาเสนอขาย") : c("Target company price", "ราคาบริษัทเป้าหมาย")} {card.priceRange}</div>
+            <span className="bw-pill bw-share-hidden"><EyeOff className="h-3 w-3" />{listing ? c("Company name hidden", "ไม่เปิดเผยชื่อบริษัท") : c("Buyer’s name hidden", "ไม่แสดงชื่อผู้ซื้อ")}</span>
           </div>
         </div>
-        <div className="bw-share-lock"><Lock className="h-3.5 w-3.5" />{c("The buyer’s and seller’s names stay confidential.", "ชื่อของผู้ซื้อและผู้ขายจะถูกเก็บเป็นความลับ")}</div>
+        <div className="bw-share-lock"><Lock className="h-3.5 w-3.5" />{listing ? c("The seller’s name stays confidential until they approve an NDA.", "ชื่อผู้ขายจะเป็นความลับจนกว่าผู้ขายจะอนุมัติ NDA") : c("The buyer’s and seller’s names stay confidential.", "ชื่อของผู้ซื้อและผู้ขายจะถูกเก็บเป็นความลับ")}</div>
         <label className="bw-share-fl" htmlFor="bw-share-email">{c("Email address", "อีเมล")}</label>
         <form className="bw-share-row" noValidate onSubmit={(e) => { e.preventDefault(); void submit(); }}>
           <input id="bw-share-email" ref={ref} type="email" placeholder="name@company.com" value={email} aria-invalid={!!err} aria-describedby={err ? "bw-share-err" : undefined}

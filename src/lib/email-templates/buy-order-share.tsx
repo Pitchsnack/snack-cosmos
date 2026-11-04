@@ -19,8 +19,9 @@ export const BO_SHARE_COPY = {
   ignore: ['on PitchSnack. If you weren’t expecting it, you can ignore this email.', 'บน PitchSnack หากท่านไม่ได้คาดหวังอีเมลนี้ สามารถเพิกเฉยได้'],
 } as const;
 
-function BuyOrderShare({ name = 'PitchSnack member', email = '', url = 'https://pitchsnack.com', lang = 'en', existing = false, card = { title: '', ref: '', description: '', tile: '#475569', buyer: '', sealed: false, rows: [] as Row[] } }: any) {
-  const c = (k: keyof typeof BO_SHARE_COPY) => BO_SHARE_COPY[k][lang === 'th' ? 1 : 0];
+function BuyOrderShare({ name = 'PitchSnack member', email = '', url = 'https://pitchsnack.com', lang = 'en', existing = false, listing = false, card = { title: '', ref: '', description: '', tile: '#475569', buyer: '', sealed: false, rows: [] as Row[] } }: any) {
+  const overrides = { subject:['{name} shared a listing with you','{name} แชร์ประกาศให้ท่าน'], title:['a business for sale with you','ธุรกิจที่ประกาศขายให้ท่าน'], body:['The seller’s name stays confidential until they approve an NDA.','ชื่อผู้ขายจะเป็นความลับจนกว่าผู้ขายจะอนุมัติ NDA'],buyer:['Sector','หมวดธุรกิจ'],view:['View listing','ดูประกาศ'],becauseTail:['a listing with','ประกาศไปยัง'],hintOld:['Open Discovery to view the public listing.','เปิดหน้าค้นหาโอกาสเพื่อดูประกาศสาธารณะ']} as const;
+  const c = (k: keyof typeof BO_SHARE_COPY) => (listing && k in overrides ? overrides[k as keyof typeof overrides] : BO_SHARE_COPY[k])[lang === 'th' ? 1 : 0];
   const L = lang as Lang;
   return (
     <Html lang={L}><Head /><Preview>{c('subject').replace('{name}', name)}</Preview>
@@ -55,7 +56,7 @@ function BuyOrderShare({ name = 'PitchSnack member', email = '', url = 'https://
       </Container></Body></Html>
   );
 }
-export const template = { component: BuyOrderShare, subject: (d: Record<string, any>) => BO_SHARE_COPY.subject[d.lang === 'th' ? 1 : 0].replace('{name}', d.name || 'PitchSnack member'), displayName: 'Buy order share' } satisfies TemplateEntry;
+export const template = { component: BuyOrderShare, subject: (d: Record<string, any>) => (d.listing ? ['{name} shared a listing with you','{name} แชร์ประกาศให้ท่าน'] : BO_SHARE_COPY.subject)[d.lang === 'th' ? 1 : 0].replace('{name}', d.name || 'PitchSnack member'), displayName: 'Buy order share' } satisfies TemplateEntry;
 const main = { backgroundColor: '#EEF1F5', fontFamily: '"DM Sans", Arial, sans-serif', padding: '24px 12px' };
 const box = { maxWidth: '580px', backgroundColor: '#ffffff', border: '1px solid #E9EBF0', borderRadius: '12px', overflow: 'hidden' as const };
 const bar = { backgroundColor: '#1E3E56', padding: '16px 24px' };
