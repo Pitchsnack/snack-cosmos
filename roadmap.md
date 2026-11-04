@@ -1,8 +1,9 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
 ## Businesses Wanted no-flash covers
-- [ ] Neutral lookup/photo loading, shared photo fade, cached immediate display, drawn failure fallback and reduced motion; preserve all other cards and cover overlays.
-- [ ] Check delayed photos, redraws, missing/failed images, all persona tabs, details and previews in both themes; run existing cover tests.
+- [x] Neutral lookup/photo loading, shared opt-in photo fade/cache handling, drawn failure fallback and reduced motion; preserve all other cards and cover overlays.
+- [x] Delayed-photo grey → loaded photo, cached details/redraw, failed-photo fallback, reduced motion and Seller/Buyer/Advisor light/dark checked; 47 tests passed and preview build OK.
+- [ ] Admin check and Post an advertisement live preview: no waiting Admin rows; new-post flow requires real complete answers and was not submitted. Shared Cover wiring inspected. No-picture lookup branch has no live matching record to exercise.
 
 ## Seller Website key business strengths
 - [x] Read the supplied brief and try the HTML reference's typing, Enter and empty-row Suggest.
