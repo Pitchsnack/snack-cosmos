@@ -71,6 +71,9 @@
 
 .bw-cover { position: relative; flex-shrink: 0; overflow: hidden; color: var(--bw-cover-light); }
 .bw-cover-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.bw-cover-drawn { position: absolute; inset: 0; animation: bw-cover-in 200ms ease-out; }
+@keyframes bw-cover-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .bw-cover-drawn { animation: none; } }
 .bw-cover-closed { filter: grayscale(1); opacity: .6; }
 .bw-grey .bw-card-cover:has(.bw-cover-closed) { filter: none; opacity: 1; }
 .bw-cover-icon { position: absolute; right: -12px; bottom: -30px; width: 132px; height: 132px; color: rgba(255,255,255,.2); }
