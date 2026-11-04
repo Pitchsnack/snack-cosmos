@@ -6,6 +6,7 @@ import type { DiscoveryData, DiscoveryListing } from './discovery';
 import type { BoCard } from './buy-orders.functions';
 import { PRICE_BANDS } from './asking-price';
 import { discoveryRecent } from './discovery';
+import { buildPublicListing } from './public-listing';
 
 function publicClient() {
   const key = process.env['SUPABASE_PUBLISHABLE_KEY'];
@@ -27,7 +28,8 @@ async function publicDiscovery(): Promise<DiscoveryData> {
   const listings: DiscoveryListing[] = await Promise.all((data.listings ?? []).map(async (r: any) => {
     const band = PRICE_BANDS.find(b => b.key === r.priceKey);
     return { id: r.id, dealType: r.dealType, askingPrice: null, priceBand: band ? { key: band.key, label: band.label, th: band.th } : null, handover: r.handover, reason: r.reason, reasonTh: r.reasonTh, views: r.views, ndas: r.ndas, growthBand: null, ebitdaMargin: null,
-      listing: { headline: r.headline || r.codeName, description: r.description || '', highlights: r.highlights, productTags: r.productTags, marketTags: r.marketTags, revenueBand: r.revenueBand, location: r.location ? `${r.location}, Thailand` : null, typeFounded: [r.companyType, r.decade ? `Founded ${r.decade}s` : null].filter(Boolean).join(' · '), employees: r.employees, certifications: [], sector: r.sector, subSector: null, verified: false, certified: r.certified, hasFinancials: r.hasFinancials, codeName: r.codeName, refNo: r.ref, coverArt: r.sector, coverImage: null, publicImageId: r.publicImageId, coverUrl: await sectorCover(r.sector, r.publicImageId), live: true, publishedAt: r.publishedAt, newDays: discoveryRecent(r.publishedAt) ? 0 : null, th: { headline: r.headlineTh || '', description: r.descriptionTh || '', highlights: r.highlightsTh, customerProfile: '' } } };
+      listing: { ...buildPublicListing({ sector:r.sector, city:r.location, company_type:r.companyType, year_founded:r.decade, company_size:r.employees, last_year_revenue:r.revenueBand }, { headline:r.headline || r.codeName, description:r.description, highlights:r.highlights, product_tags:r.productTags, market_tags:r.marketTags, code_name:r.codeName, ref_no:r.ref, cover_art:r.sector, public_image_id:r.publicImageId, live:true, published_at:r.publishedAt, headline_th:r.headlineTh, description_th:r.descriptionTh, highlights_th:r.highlightsTh }, r.hasFinancials), certified:r.certified, coverUrl:await sectorCover(r.sector,r.publicImageId) } };
+
   }));
   return { orders, listings };
 }
