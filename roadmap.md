@@ -1,5 +1,11 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Public Discovery
+- [ ] Public, privacy-whitelisted live data and EN/TH two-tab page with shared header/footer.
+- [ ] Reuse cards, covers, industry picker and details across Grid, Split and List.
+- [ ] Continue Apply/NDA/Share after login/signup; waiting boxes and role notes.
+- [ ] Verify privacy, live actions, no-flash covers and EN/TH screen widths.
+
 ## Businesses Wanted no-flash covers
 - [x] Neutral lookup/photo loading, shared opt-in photo fade/cache handling, drawn failure fallback and reduced motion; preserve all other cards and cover overlays.
 - [x] Delayed-photo grey → loaded photo, cached details/redraw, failed-photo fallback, reduced motion and Seller/Buyer/Advisor light/dark checked; 47 tests passed and preview build OK.

@@ -17,7 +17,7 @@ function Tile({ label, count, picked, Icon, onClick, autoFocus, id }: { label: s
 }
 
 /** The industry tiles row with ‹ › (section 3.1). */
-export function IndustryRow({ sectors, counts, total, picked, onPick, onAll }: { sectors: string[]; counts: Record<string, number>; total: number; picked: string | null; onPick: (s: string | null) => void; onAll: () => void }) {
+export function IndustryRow({ sectors, counts, total, picked, onPick, onAll, oneTile = false }: { sectors: string[]; counts: Record<string, number>; total: number; picked: string | null; onPick: (s: string | null) => void; onAll: () => void; oneTile?: boolean }) {
   const { c } = useBw();
   const name = useSectorName();
   const ref = useRef<HTMLDivElement>(null);
@@ -29,15 +29,15 @@ export function IndustryRow({ sectors, counts, total, picked, onPick, onAll }: {
   };
   useEffect(() => { measure(); const ro = new ResizeObserver(measure); if (ref.current) ro.observe(ref.current); return () => ro.disconnect(); }, [sectors.length]);
   useEffect(() => { if (picked) document.getElementById(`bw-tile-${picked}`)?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" }); }, [picked]);
-  const move = (dir: number) => ref.current?.scrollBy({ left: dir * ref.current.clientWidth * 0.8, behavior: "smooth" });
+  const move = (dir: number) => { const el = ref.current; if (!el) return; const tiles = Array.from(el.children) as HTMLElement[]; const step = tiles[1] ? tiles[1].offsetLeft - (tiles[0]?.offsetLeft ?? 0) : el.clientWidth; el.scrollTo({ left: oneTile ? (Math.round(el.scrollLeft / step) + dir) * step : el.scrollLeft + dir * el.clientWidth * .8, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
   return (
     <div className="bw-tiles-wrap">
-      {edge.over && <button type="button" className="bw-arrow" style={{ opacity: edge.start ? 0.35 : 1 }} aria-label={c("Previous industries", "อุตสาหกรรมก่อนหน้า")} onClick={() => move(-1)}><ChevronLeft className="h-4 w-4" /></button>}
+      {edge.over && <button type="button" className="bw-arrow" disabled={oneTile && edge.start} style={{ opacity: edge.start ? 0.35 : 1 }} aria-label={c("Previous industries", "อุตสาหกรรมก่อนหน้า")} onClick={() => move(-1)}><ChevronLeft className="h-4 w-4" /></button>}
       <div ref={ref} className="bw-tiles" role="group" aria-label={c("Industries", "อุตสาหกรรม")} onScroll={measure}>
         <Tile label={c("All industries", "ทุกอุตสาหกรรม")} count={total} picked={!picked} Icon={LayoutGrid} onClick={onAll} />
         {sectors.map((s) => <Tile key={s} id={`bw-tile-${s}`} label={name(s)} count={counts[s] ?? 0} picked={picked === s} Icon={sectorIcon(s)} onClick={() => onPick(picked === s ? null : s)} />)}
       </div>
-      {edge.over && <button type="button" className="bw-arrow" style={{ opacity: edge.end ? 0.35 : 1 }} aria-label={c("Next industries", "อุตสาหกรรมถัดไป")} onClick={() => move(1)}><ChevronRight className="h-4 w-4" /></button>}
+      {edge.over && <button type="button" className="bw-arrow" disabled={oneTile && edge.end} style={{ opacity: edge.end ? 0.35 : 1 }} aria-label={c("Next industries", "อุตสาหกรรมถัดไป")} onClick={() => move(1)}><ChevronRight className="h-4 w-4" /></button>}
     </div>
   );
 }

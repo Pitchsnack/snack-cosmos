@@ -79,7 +79,7 @@ function TopBar({ current, talkHref }: { current: keyof typeof NAV | null; talkH
           ))}
         </nav>
         <div className="ph-ctrls">
-          <Link to="/contact" hash="enquiry" hashScrollIntoView={false} className="ph-talk"
+          <Link to={talkHref ? "/" : "/contact"} hash={talkHref ? "close" : "enquiry"} hashScrollIntoView={false} className="ph-talk"
             onClick={() => { if (typeof window !== "undefined" && window.location.pathname === "/contact") window.dispatchEvent(new Event("ps-enquiry")); }}>{t(NAV.talk)}</Link>
           <div className="ph-ctrls-r">
             <LangMenu />

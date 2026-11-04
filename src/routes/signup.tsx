@@ -20,6 +20,8 @@ import { L } from "@/components/login/login-copy";
 import { ADVISOR_OPTS, BUYER_OPTS, BUYER_REL_OPTS, S, SELLER_OPTS, type Role } from "@/components/login/signup-copy";
 import "@/styles/login-page.css";
 import "@/styles/signup-page.css";
+import { DiscoveryWaiting, DiscoveryBack, DiscoveryLoginPrompt, useDiscoveryPending } from "@/components/public-site/discovery-auth";
+import { readDiscoveryPending } from "@/lib/discovery";
 import { AccessGate, useClaimSeat, useGate } from "@/components/access-gate/access-gate";
 import { G, months as monthsText } from "@/components/access-gate/access-copy";
 import { sc } from '@/i18n/sidebar-share';
@@ -78,7 +80,9 @@ function setPersona(userId: string, role: Role) {
 }
 
 function SignupPage() {
-  return <AccessGate claimInBackground={false}><SignupInner /></AccessGate>;
+  const [lang,setLang] = useState<Lang>('th');
+  useEffect(()=>{const l=localStorage.getItem(LANG_KEY);if(l==='en'||l==='th')setLang(l);},[]);
+  return <><AccessGate claimInBackground={false}><SignupInner /></AccessGate><DiscoveryLoginPrompt lang={lang}/></>;
 }
 
 function SignupInner() {
@@ -87,6 +91,7 @@ function SignupInner() {
   const claimSeat = useClaimSeat();
   const [full, setFull] = useState(false);
   const search = Route.useSearch();
+  const discoveryPending = useDiscoveryPending();
   const qc = useQueryClient();
   const fetchState = useServerFn(getSignupState);
   const saveAnswers = useServerFn(saveSignupAnswers);
@@ -120,7 +125,7 @@ function SignupInner() {
   useEffect(() => { if (search.join) boInviteFn({ data: { token: search.join } }).then(setBoInv, () => {}); }, [search.join]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (boInv) setEmail(boInv.email); }, [boInv]);
   const boPath = boInv ? `/marketplace/businesses-wanted?bo=${encodeURIComponent(boInv.ref)}` : null;
-  const goHome = (r: Role) => { if (boPath) navigate({ to: "/marketplace/businesses-wanted", search: { bo: boInv!.ref } as never }); else navigate({ to: myCompanyPath(r) }); };
+  const goHome = (r: Role) => { if (readDiscoveryPending()) navigate({to:"/discovery"}); else if (boPath) navigate({ to: "/marketplace/businesses-wanted", search: { bo: boInv!.ref } as never }); else navigate({ to: myCompanyPath(r) }); };
   // step 4
   const [code, setCode] = useState(["", "", "", "", "", ""]); const [codeErr, setCodeErr] = useState<null | "short" | "bad">(null);
   const [wait, setWait] = useState(30); const [sentNote, setSentNote] = useState(false);
@@ -168,7 +173,7 @@ function SignupInner() {
         }
         writePending(null);
         if (!s.answers?.done_at && !(await claimOk())) return;
-        if (!s.answers) { navigate({ to: "/tenants" }); return; }
+        if (!s.answers) { navigate({ to: readDiscoveryPending() ? "/discovery" : "/tenants" }); return; }
         if (s.answers.done_at && s.signupDone) { setPersona(uid, s.answers.role); goHome(s.answers.role); return; }
         if (s.answers.done_at) {
           // Draft made, sector question not answered yet: open the last step.
@@ -447,12 +452,13 @@ function SignupInner() {
 
       <main className="lg-right">
         <div className="lg-rtop">
-          <Link to="/" className="lg-back"><ArrowLeft size={17} />{t(L.back)}</Link>
+          {discoveryPending ? <DiscoveryBack lang={lang}/> : <Link to="/" className="lg-back"><ArrowLeft size={17} />{t(L.back)}</Link>}
           <Switch />
         </div>
         <div className="lg-mid">
           <div className={`lg-col su-col${step === 7 ? " su-wide" : ""}`}>
             <div className="lg-card su-card">
+              <DiscoveryWaiting lang={lang} signup role={step===1?role:null}/>
               {boInv && step === 1 && (
                 <div className="su-boinv">
                   <Mail size={18} />

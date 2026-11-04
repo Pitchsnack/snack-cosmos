@@ -8277,6 +8277,11 @@ export type Database = {
         }
         Returns: Json
       }
+      discovery_public_rows: { Args: never; Returns: Json }
+      discovery_record_view: {
+        Args: { _id: string; _kind: string }
+        Returns: undefined
+      }
       fn_import_global_startup: {
         Args: {
           _global_id: string

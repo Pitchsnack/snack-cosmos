@@ -11,16 +11,16 @@ import { recordBuyOrderView, type ApplyContext, type BoCard } from "@/lib/buy-or
 import { AppState, ApplyButton, BuyerChip, Cover, ForCompany, KindPill, managedCardState, ShareButton, StatusPill, useBw, useSectorName } from "./bw-card";
 import { cn } from "@/lib/utils";
 
-export function BuyOrderDetails({ card: rawCard, persona, applyCtx, onClose, onApply, onShare }: {
+export function BuyOrderDetails({ card: rawCard, persona, applyCtx, onClose, onApply, onShare, embedded = false, discovery = false }: {
   card: BoCard | null; persona: "seller" | "buyer" | "advisor"; applyCtx?: ApplyContext;
-  onClose: () => void; onApply: (c: BoCard) => void; onShare: (c: BoCard) => void;
+  onClose: () => void; onApply: (c: BoCard) => void; onShare: (c: BoCard) => void; embedded?: boolean; discovery?: boolean;
 }) {
   const { c, th } = useBw();
   const card = rawCard && localizeCard(rawCard, th);
   const sectorName = useSectorName();
   const record = useServerFn(recordBuyOrderView);
   useEffect(() => {
-    if (card && !card.yours && !card.client) record({ data: { id: card.id } }).catch(() => {});
+    if (card && !discovery && !card.yours && !card.client) record({ data: { id: card.id } }).catch(() => {});
   }, [card?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!card) return null;
   const posted = card.status === "posted";
@@ -51,14 +51,17 @@ export function BuyOrderDetails({ card: rawCard, persona, applyCtx, onClose, onA
     ? c("Until the LOI is signed, the buyer is shown as a PitchSnack Private Client, and the PitchSnack team communicates on the buyer’s behalf.", "จนกว่าจะลงนาม LOI ผู้ซื้อจะแสดงเป็นลูกค้าส่วนตัวของ PitchSnack และทีม PitchSnack จะสื่อสารในนามของผู้ซื้อ")
     : c("Until you approve the NDA, the buyer sees your Listing view, never your company’s name.", "จนกว่าคุณจะอนุมัติ NDA ผู้ซื้อจะเห็นเฉพาะมุมมองประกาศ ไม่เห็นชื่อบริษัทของคุณ");
 
-  return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="bw-dialog bw-details [&>button.absolute]:hidden">
+  const Frame = embedded ? 'div' : DialogContent;
+  const Title = embedded ? 'h3' : DialogTitle;
+  const Description = embedded ? 'p' : DialogDescription;
+  const content = (
+      <Frame className="bw-dialog bw-details [&>button.absolute]:hidden">
         <Cover card={card} height={96} top={<><StatusPill card={card} /><span /></>} />
-        <button type="button" className="bw-x" aria-label={c("Close", "ปิด")} onClick={onClose}><X className="h-4 w-4" /></button>
+        {!embedded && <button type="button" className="bw-x" aria-label={c("Close", "ปิด")} onClick={onClose}><X className="h-4 w-4" /></button>}
         <div className="bw-dbody">
-          <DialogTitle className="bw-dtitle">{card.name} <span>{card.ref} · {placeOf(citiesDisplay(card.cities, th), card.location)}</span></DialogTitle>
-          <DialogDescription className="bw-ddesc">{card.description}</DialogDescription>
+          {discovery && <span className="discovery-type">{c("BUY ORDER", "ประกาศรับซื้อ")}</span>}
+          <Title className="bw-dtitle">{card.name} <span>{card.ref} · {placeOf(citiesDisplay(card.cities, th), card.location)}</span></Title>
+          <Description className="bw-ddesc">{card.description}</Description>
           <div className="mt-2.5 flex flex-wrap items-center gap-2"><BuyerChip card={card} solid /><KindPill kind={card.kind} bordered /></div>
           <div className="bw-dline"><Calendar className="h-[13px] w-[13px]" />{date}</div>
           {card.sharedBy && (
@@ -120,13 +123,13 @@ export function BuyOrderDetails({ card: rawCard, persona, applyCtx, onClose, onA
           </div>
         </div>
         <div className="bw-dfoot">
-          <button type="button" className="bw-btn bw-outline flex-none px-4" onClick={onClose}>{c("Close", "ปิด")}</button>
-          {persona === "seller" && posted && (managedState ? managedState === "available" : !card.myApp && !card.forCompany) && <span className="flex-none"><ApplyButton ctx={applyCtx} onApply={() => onApply(card)} /></span>}
+          {!embedded && <button type="button" className="bw-btn bw-outline flex-none px-4" onClick={onClose}>{c("Close", "ปิด")}</button>}
+          {discovery && posted && !card.myApp ? <button className="bw-btn discovery-primary" onClick={() => onApply(card)}>{c("Apply", "สมัคร")}</button> : persona === "seller" && posted && (managedState ? managedState === "available" : !card.myApp && !card.forCompany) && <span className="flex-none"><ApplyButton ctx={applyCtx} onApply={() => onApply(card)} /></span>}
           {persona === "seller" && posted && managedState === "applied" && <span className="bw-btn bw-applied flex-none"><Check className="h-4 w-4" />{c("Applied", "สมัครแล้ว")}</span>}
           {posted && !card.yours && !card.client && <span className="flex-none"><ShareButton onShare={() => onShare(card)} /></span>}
         </div>
         <span className="sr-only">{th ? "" : ""}</span>
-      </DialogContent>
-    </Dialog>
+      </Frame>
   );
+  return embedded ? content : <Dialog open onOpenChange={(o) => !o && onClose()}>{content}</Dialog>;
 }

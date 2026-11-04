@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { Undo2, Calendar, ChevronDown, Eye, EyeOff, Lock, Megaphone, Send, Share2, User, Users, Check, Clock, CircleCheck, Info } from "lucide-react";
+import { Undo2, Calendar, ChevronDown, Eye, EyeOff, Lock, Megaphone, Send, Share2, User, Users, Check, Clock, CircleCheck, Info, Target } from "lucide-react";
 import { useTranslation } from "@/i18n/language";
 import { boSector, localizeCard, closesInDays, coverOf, fmtDay, isNew, managedApplyState } from "@/lib/buy-orders";
 import { citiesDisplay } from "@/lib/buy-order-defaults";
@@ -182,9 +182,9 @@ export function ShareButton({ narrow, onShare }: { narrow?: boolean; onShare: ()
 
 export type CardMode = "browse" | "applications" | "preview" | "mine";
 
-export function BuyOrderCard({ card: rawCard, persona, applyCtx, mode = "browse", sharedWithYou, onDetails, onApply, onShare, onEdit, onSend, busy }: {
+export function BuyOrderCard({ card: rawCard, persona, applyCtx, mode = "browse", sharedWithYou, onDetails, onApply, onShare, onEdit, onSend, busy, discovery = false }: {
   card: BoCard; persona: "seller" | "buyer" | "advisor"; applyCtx?: ApplyContext; mode?: CardMode; sharedWithYou?: boolean;
-  onDetails: () => void; onApply: () => void; onShare: () => void; onEdit?: () => void; onSend?: () => void; busy?: boolean;
+  onDetails: () => void; onApply: () => void; onShare: () => void; onEdit?: () => void; onSend?: () => void; busy?: boolean; discovery?: boolean;
 }) {
   const { c, th } = useBw();
   const card = localizeCard(rawCard, th);
@@ -225,10 +225,10 @@ export function BuyOrderCard({ card: rawCard, persona, applyCtx, mode = "browse"
       {n ? <><span className="bw-btn-text">{c("Applications", "ใบสมัคร")}</span><span aria-hidden className="bw-count-pill">{n}</span></>
         : <span className="bw-btn-text">{c(`Applications · ${card.appsTotal}`, `ใบสมัคร · ${card.appsTotal}`)}</span>}
     </Link>);
-  } else if (persona === "seller") {
+  } else if (persona === "seller" || discovery) {
     if (mode === "applications" && card.myApp) buttons.push(<div key="st" className="flex-[2] min-w-0"><AppState card={card} /><ForCompany company={card.forCompany} /></div>);
     else if (applied || (!managedState && card.myApp)) buttons.push(<span key="ap" className="bw-btn bw-applied"><Check className="h-4 w-4" />{c("Applied", "สมัครแล้ว")}</span>);
-    else if (posted) buttons.push(<ApplyButton key="ap" ctx={applyCtx} onApply={onApply} />);
+    else if (posted) buttons.push(discovery ? <Button variant="unstyled" key="ap" className="bw-btn discovery-primary" onClick={onApply}><Send size={16} />{c("Apply", "สมัคร")}</Button> : <ApplyButton key="ap" ctx={applyCtx} onApply={onApply} />);
   }
   buttons.push(<Button variant="unstyled" key="vd" type="button" className="bw-btn bw-outline" onClick={onDetails}><span className="bw-btn-text">{c("View details", "ดูรายละเอียด")}</span></Button>);
   const three = canShare && buttons.length >= 2;
@@ -252,7 +252,8 @@ export function BuyOrderCard({ card: rawCard, persona, applyCtx, mode = "browse"
       </div>
       <div className="bw-card-head">
         {card.kind === "sealed" && <span aria-hidden className="bw-watermark">{th ? "ปิดผนึก" : "SEALED"}</span>}
-        <div className="bw-title-row"><h3>{card.name}</h3><span>{card.ref}</span></div>
+        {discovery && <div className="discovery-type-row"><span className="discovery-type"><Target size={12} />{c("BUY ORDER", "ประกาศรับซื้อ")}</span><small>{card.ref}</small></div>}
+        <div className="bw-title-row"><h3>{card.name}</h3>{!discovery && <span>{card.ref}</span>}</div>
         <p className="bw-desc">{card.description}</p>
         {card.client && <p className="bw-client"><Lock className="h-[13px] w-[13px]" />{c(`For ${card.client.name ?? "—"} · ${card.client.ref ?? "—"} · only PitchSnack sees this`, `สำหรับ ${card.client.name ?? "—"} · ${card.client.ref ?? "—"} · เห็นเฉพาะ PitchSnack`)}</p>}
         <div className="bw-req">{c("Buying requirement", "ความต้องการซื้อ")}</div>

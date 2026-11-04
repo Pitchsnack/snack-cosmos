@@ -81,20 +81,21 @@ export function Flagged({ text, terms }: { text: string; terms: { term: string; 
  * Listing cover. Follows the shared cover rule (picked image → sector's first
  * image → drawn default). `plain` always draws the default cover.
  */
-export function SectorArt({ art, sector, imageId, plain, className, children, tile, src }: { art?: string | null; sector?: string | null; imageId?: string | null; plain?: boolean; className?: string; children?: ReactNode; tile?: ReactNode; /** Cover address sent by the server; when given, no client lookup happens. */ src?: string | null }) {
+export function SectorArt({ art, sector, imageId, plain, className, children, tile, src, instantCached = false }: { art?: string | null; sector?: string | null; imageId?: string | null; plain?: boolean; className?: string; children?: ReactNode; tile?: ReactNode; instantCached?: boolean; /** Cover address sent by the server; when given, no client lookup happens. */ src?: string | null }) {
   const lookup = src === undefined && !plain;
   const { data: images } = useSectorImages(lookup);
   const url = plain ? null : src !== undefined ? src : resolveCover(images, sector ?? art, imageId)?.url ?? null;
-  if (url) {
+  const [failed, setFailed] = useState<string | null>(null);
+  if (url && (!instantCached || failed !== url)) {
     return (
       <div className={cn("relative overflow-hidden bg-secondary", className)}>
-        <FadeImg src={url} className="object-center" />
+        <FadeImg key={url} src={url} className="object-center" instantCached={instantCached} onError={instantCached ? () => setFailed(url) : undefined} />
         {tile && <div className="absolute inset-0 grid place-items-center"><div className="grid h-12 w-12 place-items-center overflow-hidden rounded-lg border border-border bg-card shadow-sm">{tile}</div></div>}
         {children}
       </div>
     );
   }
-  return <DrawnCover art={art ?? sector} className={className} tile={tile}>{children}</DrawnCover>;
+  return <DrawnCover art={art ?? sector} className={cn(className, instantCached && 'discovery-drawn')} tile={tile}>{children}</DrawnCover>;
 }
 
 /** Cover photo over the grey background; fades in over 200ms once downloaded (instantly when cached). */

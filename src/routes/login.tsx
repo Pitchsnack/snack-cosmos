@@ -13,6 +13,8 @@ import hatWhite from "@/assets/pitchsnack-hat-white-icon.png";
 import streetSvg from "@/components/login/street.svg?raw";
 import { L, type LoginLang } from "@/components/login/login-copy";
 import "@/styles/login-page.css";
+import { DiscoveryWaiting, DiscoveryBack, useDiscoveryPending } from "@/components/public-site/discovery-auth";
+import { readDiscoveryPending } from "@/lib/discovery";
 
 const searchSchema = z.object({ redirect: z.string().optional(), email: z.string().optional() });
 const REMEMBER_KEY = "sp2.login.email";
@@ -29,7 +31,7 @@ export const Route = createFileRoute("/login")({
     // Signed in (incl. coming back from Google/Microsoft): unfinished sign-ups go back to the steps.
     try { const st = await getSignupState(); if (st.answers && (!st.answers.done_at || !st.signupDone)) throw redirect({ to: "/signup" }); }
     catch (e) { if (isRedirect(e)) throw e; }
-    throw redirect({ to: search.redirect || "/tenants" });
+    throw redirect({ to: (readDiscoveryPending() ? "/discovery" : search.redirect || "/tenants") });
   },
   head: () => ({
     meta: [
@@ -52,6 +54,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
+  const discoveryPending = useDiscoveryPending();
   const qc = useQueryClient();
   const onLogin = useServerFn(recordLogin);
   const onFailed = useServerFn(logSecurityEvent);
@@ -128,7 +131,7 @@ function LoginPage() {
       await qc.invalidateQueries();
       // Sign-up not finished (no Draft profile yet): reopen step 5.
       try { const st = await getState(); if (st.answers && (!st.answers.done_at || !st.signupDone)) { navigate({ to: "/signup" }); return; } } catch { /* normal landing */ }
-      navigate({ to: search.redirect || "/tenants" });
+      navigate({ to: (readDiscoveryPending() ? "/discovery" : search.redirect || "/tenants") });
     } catch {
       setPwErr("other");
       setBusy(false);
@@ -149,7 +152,7 @@ function LoginPage() {
         if (r.redirected) return;
         await qc.invalidateQueries();
         try { const st = await getState(); if (st.answers && (!st.answers.done_at || !st.signupDone)) { navigate({ to: "/signup" }); return; } } catch { /* normal landing */ }
-        navigate({ to: search.redirect || "/tenants" });
+        navigate({ to: (readDiscoveryPending() ? "/discovery" : search.redirect || "/tenants") });
         return;
       }
       const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: back } });
@@ -196,12 +199,13 @@ function LoginPage() {
 
       <main className="lg-right">
         <div className="lg-rtop">
-          <Link to="/" className="lg-back"><ArrowLeft size={17} />{t(L.back)}</Link>
+          {discoveryPending ? <DiscoveryBack lang={lang}/> : <Link to="/" className="lg-back"><ArrowLeft size={17} />{t(L.back)}</Link>}
           <Switch />
         </div>
         <div className="lg-mid">
           <div className="lg-col">
             <div className="lg-card">
+              <DiscoveryWaiting lang={lang}/>
               <div className="lg-chead">
                 <div className="lg-hat"><img src={hatWhite} alt="" /></div>
                 <h1>{t(L.card)}</h1>

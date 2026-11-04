@@ -932,6 +932,13 @@
       "when": 1793664813146,
       "tag": "0132_buyer_setup_reached_new_order",
       "breakpoints": true
+    },
+    {
+      "idx": 133,
+      "version": "7",
+      "when": 1793806349082,
+      "tag": "0133_public_discovery_projection",
+      "breakpoints": true
     }
   ]
 }

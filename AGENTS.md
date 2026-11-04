@@ -66,3 +66,5 @@
 - Advisors use Company name only; omit legacy listing/headline fields, preserve stored values and access; see nested AGENTS.md.
 
 - Seller wording shares browser-safe counts for changed-only saves/full registration. AfterWizardTour serves buyers/sellers; only completion navigation supplies the transient flag, using boolean readiness behind setup access, not directory DTOs.
+
+- Public Discovery reads only the public allowlist RPC and shapes listings through buildPublicListing; existing authenticated application/NDA handlers own authorization, and session-only pending actions never grant access.
