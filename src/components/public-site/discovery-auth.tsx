@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/compone
 import { Button } from '@/components/ui/button';
 import { readDiscoveryPending, writeDiscoveryPending, type DiscoveryPending } from '@/lib/discovery';
 import { DC } from './discovery-copy';
+import { toast } from 'sonner';
 import '@/styles/public-discovery.css';
 
 export function useDiscoveryPending() {
@@ -21,7 +22,7 @@ export function DiscoveryWaiting({ lang, signup, role }: {lang:'en'|'th';signup?
 }
 export function DiscoveryBack({lang}:{lang:'en'|'th'}) {
  const p=useDiscoveryPending(); const nav=useNavigate(); if(!p)return null;
- return <Button variant="unstyled" className="lg-back" onClick={()=>{writeDiscoveryPending(null);nav({to:'/discovery',hash:p.ref.toLowerCase()});}}><ArrowLeft size={17}/>{DC.back[lang]}</Button>;
+ return <Button variant="unstyled" className="lg-back" onClick={()=>{writeDiscoveryPending(null);toast(p.action==='share'?(lang==='th'?'ยังไม่ได้ส่ง กรุณาเข้าสู่ระบบเพื่อแชร์ประกาศ':'Not sent. Log in to share.'):p.action==='apply'?(lang==='th'?'กรุณาเข้าสู่ระบบเพื่อสมัครประกาศรับซื้อ':'Log in to apply to a buy order.'):(lang==='th'?'กรุณาเข้าสู่ระบบเพื่อขอ NDA':'Log in to request an NDA.'));nav({to:'/discovery',hash:p.ref.toLowerCase()});}}><ArrowLeft size={17}/>{DC.back[lang]}</Button>;
 }
 export function DiscoveryLoginPrompt({lang}:{lang:'en'|'th'}) {
  const p=useDiscoveryPending(); const [open,setOpen]=useState(false); const nav=useNavigate();
