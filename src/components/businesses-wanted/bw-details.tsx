@@ -55,7 +55,7 @@ export function BuyOrderDetails({ card: rawCard, persona, applyCtx, onClose, onA
   const Title = embedded ? 'h3' : DialogTitle;
   const Description = embedded ? 'p' : DialogDescription;
   const content = (
-      <Frame className="bw-dialog bw-details [&>button.absolute]:hidden">
+      <Frame className={cn("bw-dialog bw-details [&>button.absolute]:hidden", discovery && "discovery-light")}>
         <Cover card={card} height={96} top={<><StatusPill card={card} /><span /></>} />
         {!embedded && <button type="button" className="bw-x" aria-label={c("Close", "ปิด")} onClick={onClose}><X className="h-4 w-4" /></button>}
         <div className="bw-dbody">

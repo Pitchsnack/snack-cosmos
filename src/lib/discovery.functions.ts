@@ -5,7 +5,6 @@ import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import type { DiscoveryData, DiscoveryListing } from './discovery';
 import type { BoCard } from './buy-orders.functions';
 import { PRICE_BANDS } from './asking-price';
-import { discoveryRecent } from './discovery';
 import { buildPublicListing } from './public-listing';
 
 function publicClient() {
@@ -52,6 +51,7 @@ export const discoveryMyState = createServerFn({ method: 'GET' }).middleware([re
 export const sendDiscoveryListingShare = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator(d => z.object({ id: z.string().uuid(), email: z.string().trim().email().max(254), lang: z.enum(['en','th']), token: z.string().uuid() }).parse(d)).handler(async ({ context, data }) => {
   const { roleOf } = await import('./plan-access.server');
   const role = await roleOf(context.userId); if (!role) throw new Error('Not available');
+  if (role==='admin') await (await import('./profile-handover.server')).requireControlAdmin(context);
   const item = (await publicDiscovery()).listings.find(x => x.id === data.id); if (!item) throw new Error('Listing no longer available');
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const key = `discovery-listing:${context.userId}:${data.token}`;

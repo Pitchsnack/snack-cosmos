@@ -1,15 +1,16 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
 ## Public Discovery
-- [ ] Public, privacy-whitelisted live data and EN/TH two-tab page with shared header/footer.
-- [ ] Reuse cards, covers, industry picker and details across Grid, Split and List.
-- [ ] Continue Apply/NDA/Share after login/signup; waiting boxes and role notes.
-- [ ] Verify privacy, live actions, no-flash covers and EN/TH screen widths.
+- [x] Public, privacy-whitelisted live data and EN/TH two-tab page with shared header/footer.
+- [x] Reuse cards, covers, industry picker and details across Grid, Split and List.
+- [x] Wire continued Apply/NDA/Share after login/signup; waiting boxes and role notes.
+- [x] Checked public live data, Grid/Split/List, details, signed-out NDA → login waiting → Back, current-account role restrictions, 24 language/tab/width combinations, delayed/failed/cached/reduced-motion photos; 33 tests passed.
+- [ ] Full buyer/seller completion and actual email delivery: current injected account is Admin; no approved buyer/seller session or requested recipient supplied. Existing soft-launch invitation remains required for new signup.
 
 ## Businesses Wanted no-flash covers
 - [x] Neutral lookup/photo loading, shared opt-in photo fade/cache handling, drawn failure fallback and reduced motion; preserve all other cards and cover overlays.
 - [x] Delayed-photo grey → loaded photo, cached details/redraw, failed-photo fallback, reduced motion and Seller/Buyer/Advisor light/dark checked; 47 tests passed and preview build OK.
-- [ ] Admin check and Post an advertisement live preview: no waiting Admin rows; new-post flow requires real complete answers and was not submitted. Shared Cover wiring inspected. No-picture lookup branch has no live matching record to exercise.
+- [x] Admin check and Post an advertisement previews inspected under delayed image loading; temporary order status restored, no new post submitted.
 
 ## Seller Website key business strengths
 - [x] Read the supplied brief and try the HTML reference's typing, Enter and empty-row Suggest.

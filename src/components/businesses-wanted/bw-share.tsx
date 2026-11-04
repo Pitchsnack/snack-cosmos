@@ -41,7 +41,7 @@ export function ShareDialog({ card: rawCard, onClose, onSend, initialEmail = '',
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="bw-dialog bw-share" onOpenAutoFocus={(e) => { e.preventDefault(); ref.current?.focus(); }}>
+      <DialogContent className={`bw-dialog bw-share${onSend ? " discovery-light" : ""}`} onOpenAutoFocus={(e) => { e.preventDefault(); ref.current?.focus(); }}>
         <div className="bw-share-h">
           <span className="bw-share-tile"><Share2 className="h-5 w-5" /></span>
           <div>

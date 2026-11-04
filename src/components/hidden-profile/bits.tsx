@@ -114,7 +114,7 @@ export function FadeImg({ src, className, onError, instantCached = false }: { sr
   }, [src, instantCached, onError]);
   useEffect(() => { if (!instantCached) setLoaded(!!ref.current?.complete && ref.current.naturalWidth > 0); }, [src, instantCached]);
   return <img ref={attach} src={src} alt="" decoding="async" onError={onError} onLoad={() => { if (instantCached) loadedCoverPhotos.add(src); setLoaded(true); }}
-    className={cn("absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ease-out motion-reduce:transition-none", loaded ? "opacity-100" : "opacity-0", instant && "transition-none", className)} />;
+    className={cn("absolute inset-0 h-full w-full object-cover transition-opacity ease-out motion-reduce:transition-none", loaded ? "opacity-100" : "opacity-0", instant ? "duration-0" : "duration-200", className)} />;
 }
 
 function DrawnCover({ art, className, children, tile }: { art?: string | null; className?: string; children?: ReactNode; tile?: ReactNode }) {
