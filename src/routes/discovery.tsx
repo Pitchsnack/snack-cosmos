@@ -1,19 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/public-site/public-home";
-import { SOON } from "@/components/public-site/home-copy";
+import { DiscoveryPage } from "@/components/public-site/discovery-page";
+import { getDiscovery } from "@/lib/discovery.functions";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
-const page = SOON["/discovery"]!;
+const discoveryQuery = queryOptions({queryKey:['public-discovery'],queryFn:()=>getDiscovery(),staleTime:60000});
 
 export const Route = createFileRoute("/discovery")({
+  loader: ({context})=>context.queryClient.ensureQueryData(discoveryQuery),
   head: () => ({
     meta: [
-      { title: `${page.title.en} — PitchSnack` },
-      { name: "description", content: `${page.title.en} on PitchSnack, the confidential marketplace for Thai businesses changing hands. Coming soon.` },
-      { property: "og:title", content: `${page.title.en} — PitchSnack` },
-      { property: "og:description", content: `${page.title.en} on PitchSnack. This page is coming soon.` },
+      { title: "PitchSnack · Discovery" },
+      { name: "description", content: "Explore open buy orders and confidential Thai businesses for sale on PitchSnack." },
+      { property: "og:title", content: "PitchSnack · Discovery" },
+      { property: "og:description", content: "Discover buyers seeking businesses and owners open to selling, with identities protected until agreement." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => <ComingSoon title={page.title} nav={page.nav} />,
+  component: DiscoveryRoute,
 });
+function DiscoveryRoute(){const {data}=useSuspenseQuery(discoveryQuery);return <DiscoveryPage data={data}/>;}

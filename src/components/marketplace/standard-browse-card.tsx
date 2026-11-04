@@ -31,7 +31,7 @@ export function scheduleCardRows(el: Element | null) {
 }
 
 export type StandardFigure = { label: string; value?: string | null; second?: string | null };
-export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip }: {
+export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, beforeName, figureLabel, footerDate, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip }: {
   title: string; subtitle?: string; refNo: string; place?: string | null; description?: string | null;
   cover: (children: ReactNode) => ReactNode; status?: CardNdaStatus; newDays?: number | null; managed?: boolean;
   topRight?: ReactNode; badges?: { label: string; financial?: boolean }[]; figures: StandardFigure[];
@@ -39,6 +39,7 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
   focusRow?: StandardFigure; descriptionContent?: ReactNode;
   /** Optional line between the name row and the description (the buyer editor's "Wants to buy" preview). */
   afterName?: ReactNode;
+  beforeName?: ReactNode; figureLabel?: string; footerDate?: string;
   className?: string; sourceType?: string; tag?: ReactNode; hideStatus?: boolean;
   /** Owner's last-login bucket on the left of Show more (browse/watchlist only; previews omit it). */
   lastLogin?: LastLoginStep | null; lastLoginTooltip?: string;
@@ -102,6 +103,7 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
     </div>
     <div className="standard-card-body" id={id}>
       <div className="standard-card-text" data-card-text>
+      {beforeName}
       <div ref={nameRow} className={cn('standard-card-name', cut && 'standard-card-title-cut', subtitle && 'standard-card-private-name')}>
         <span className="standard-card-ref">{refNo}{place && <> · <b>{place}</b></>}</span>
         <h3 ref={titleRef} title={title} data-card-title>{title}</h3>
@@ -111,6 +113,7 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
       {afterName}
       <p className={cn('standard-card-description', twoLines ? 'standard-card-desc-3' : 'standard-card-desc-4')} title={description ?? undefined}>{descriptionContent ?? description}</p>
       </div>
+      {figureLabel && <div className="standard-card-caption">{figureLabel}</div>}
       <div className="standard-card-figures">
         <div className={cn('standard-card-figure-row', figures.length === 1 && 'standard-card-one')}>{figures.map((f) => <div key={f.label}>{figure(f)}</div>)}</div>
         <div className="standard-card-fit-row">{figure(fit, true)}</div>
@@ -118,9 +121,9 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
         <dl className="standard-card-text-row"><dt>{t(textRow.label)}</dt><dd title={textRow.value ?? undefined}>{textRow.value || t('Not stated')}</dd></dl>
       </div>
       {expanded && <div className="standard-card-more">{tag}{more}</div>}
-      {lastLogin ? (
+      {lastLogin || footerDate ? (
         <div className="standard-card-foot">
-          <span className="standard-card-last-login" title={lastLoginTooltip}><LogIn aria-hidden />{t(LAST_LOGIN_LABEL[lastLogin])}</span>
+          <span className="standard-card-last-login" title={lastLoginTooltip}>{lastLogin ? <><LogIn aria-hidden />{t(LAST_LOGIN_LABEL[lastLogin])}</> : footerDate}</span>
           <Button variant="unstyled" size="unstyled" className="standard-card-toggle" aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded((v) => !v)}>{t(expanded ? 'Show less' : 'Show more')}<ChevronDown aria-hidden /></Button>
         </div>
       ) : (
