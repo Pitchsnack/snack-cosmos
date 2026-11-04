@@ -30,3 +30,9 @@
 .discovery .standard-card-text .discovery-type-row{padding:0}
 @media(max-width:1100px){.discovery .bw-filters{grid-template-columns:1fr}.discovery .bw-filter-lists{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:700px){.discovery .bw-filter-lists{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.discovery-tab[data-kind=wanted][aria-selected=true]{background:var(--d-blue);color:var(--d-blue-ink)}
+.discovery-tab[data-kind=sale][aria-selected=true]{background:var(--d-mint);color:var(--d-mint-ink)}
+.discovery-grid{align-items:stretch}.discovery-grid>div{display:flex;flex-direction:column}.discovery-grid>div>.bw-card,.discovery-grid>div>.discovery-listing{height:100%}.discovery-listing{display:flex;flex-direction:column}.discovery-listing>.discovery-actions{margin-top:auto}
+.discovery .discovery-listing{container-type:inline-size}@container(max-width:330px){.discovery-listing .discovery-stats-nda{display:none}}
+.discovery .bw-dialog,.discovery-light.bw-dialog{color:var(--d-text);background:var(--d-paper)}
