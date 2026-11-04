@@ -1,5 +1,9 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Businesses Wanted no-flash covers
+- [ ] Neutral lookup/photo loading, shared photo fade, cached immediate display, drawn failure fallback and reduced motion; preserve all other cards and cover overlays.
+- [ ] Check delayed photos, redraws, missing/failed images, all persona tabs, details and previews in both themes; run existing cover tests.
+
 ## Seller Website key business strengths
 - [x] Read the supplied brief and try the HTML reference's typing, Enter and empty-row Suggest.
 - [x] Add four bilingual shared Highlights rows, three required, with protected Suggest/enrichment and Review count; user approved adding missing waiting/reading/found states.

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { resolveBuyOrderCover } from "@/lib/buy-order-cover";
 import { useSectorImages } from "@/hooks/use-sector-images";
 import { typeLabel } from "@/lib/investor-bands";
+import { FadeImg } from "@/components/hidden-profile/bits";
 
 /** Shows the cards inside it in one language, whatever the app's language (Control's Preview, Admin's check). */
 const BwLangCtx = createContext<"en" | "th" | null>(null);
@@ -107,13 +108,18 @@ export function BuyerChip({ card, solid }: { card: BoCard; solid?: boolean }) {
 
 export function Cover({ card, height, top, bottom }: { card: BoCard; height: number; top?: ReactNode; bottom?: ReactNode }) {
   const Icon = sectorIcon(card.sector);
-  const { data: images } = useSectorImages(!card.cover);
+  const { data: images, isPending, isError } = useSectorImages(!card.cover);
   const cover = card.cover ?? resolveBuyOrderCover(images, card.sector);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
-  const picture = cover.url && failedUrl !== cover.url;
+  const picture = cover.url && failedUrl !== cover.url ? cover.url : null;
+  const pending = !card.cover && images === undefined && isPending && !isError;
   return (
-    <div className={cn("bw-cover", card.status === "closed" && "bw-cover-closed")} style={{ height, background: coverOf(card.sector).gradient }}>
-      {picture ? <img src={cover.url ?? undefined} alt="" className="bw-cover-photo" onError={() => setFailedUrl(cover.url)} /> : <Icon aria-hidden className="bw-cover-icon" strokeWidth={1.3} />}
+    <div className={cn("bw-cover bg-secondary", card.status === "closed" && "bw-cover-closed")} style={{ height }}>
+      {picture ? <FadeImg key={picture} src={picture} instantCached className="bw-cover-photo" onError={() => setFailedUrl(picture)} /> : !pending && (
+        <div className="bw-cover-drawn" style={{ background: coverOf(card.sector).gradient }}>
+          <Icon aria-hidden className="bw-cover-icon" strokeWidth={1.3} />
+        </div>
+      )}
       {top && <div className="bw-cover-top">{top}</div>}
       {bottom && <div className="bw-cover-bottom">{bottom}</div>}
     </div>

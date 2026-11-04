@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link2, Lock, ArrowLeftRight, Waves, Building2, Factory, ShoppingBag, Truck, HeartPulse, Utensils, Monitor, Clapperboard, BriefcaseBusiness } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { resolveCover, useSectorImages } from "@/hooks/use-sector-images";
@@ -98,12 +98,22 @@ export function SectorArt({ art, sector, imageId, plain, className, children, ti
 }
 
 /** Cover photo over the grey background; fades in over 200ms once downloaded (instantly when cached). */
-export function FadeImg({ src, className }: { src: string; className?: string }) {
+const loadedCoverPhotos = new Set<string>();
+export function FadeImg({ src, className, onError, instantCached = false }: { src: string; className?: string; onError?: () => void; instantCached?: boolean }) {
   const [loaded, setLoaded] = useState(false);
+  const [instant, setInstant] = useState(false);
   const ref = useRef<HTMLImageElement>(null);
-  useEffect(() => { setLoaded(!!ref.current?.complete && ref.current.naturalWidth > 0); }, [src]);
-  return <img ref={ref} src={src} alt="" decoding="async" onLoad={() => setLoaded(true)}
-    className={cn("absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ease-out motion-reduce:transition-none", loaded ? "opacity-100" : "opacity-0", className)} />;
+  const attach = useCallback((image: HTMLImageElement | null) => {
+    ref.current = image;
+    if (!image || !instantCached) return;
+    const cached = loadedCoverPhotos.has(src) || (image.complete && image.naturalWidth > 0);
+    setInstant(cached);
+    setLoaded(cached);
+    if (image.complete && image.naturalWidth === 0) onError?.();
+  }, [src, instantCached, onError]);
+  useEffect(() => { if (!instantCached) setLoaded(!!ref.current?.complete && ref.current.naturalWidth > 0); }, [src, instantCached]);
+  return <img ref={attach} src={src} alt="" decoding="async" onError={onError} onLoad={() => { if (instantCached) loadedCoverPhotos.add(src); setLoaded(true); }}
+    className={cn("absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ease-out motion-reduce:transition-none", loaded ? "opacity-100" : "opacity-0", instant && "transition-none", className)} />;
 }
 
 function DrawnCover({ art, className, children, tile }: { art?: string | null; className?: string; children?: ReactNode; tile?: ReactNode }) {
