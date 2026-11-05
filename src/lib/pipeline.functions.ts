@@ -1,3 +1,5 @@
+import supportSettings from "@/config/deal-support.json";
+import type { DealWorkflow, LoiChanges, LoiConsent } from "@/lib/loi-workflow";
 import { priceFor, thbOf } from "@/lib/asking-price";
 import { dealCompanyName } from "@/lib/pipeline-company";
 import { createServerFn } from "@tanstack/react-start";
@@ -65,6 +67,13 @@ export type PipelineRow = {
   ndaApprovedAt: string | null;
   reportRequestedAt: string | null;
   reportSharedAt: string | null;
+  loiFrom?: "buyer" | "seller";
+  loiRevision?: number;
+  loiChanges?: LoiChanges | null;
+  loiSendConsent?: LoiConsent | null;
+  loiAcceptConsent?: LoiConsent | null;
+  workflow?: DealWorkflow;
+  listingRef?: string | null;
   loiAmount: number | null;
   loiExclusivityDays: number | null;
   loiConditions: string | null;
@@ -109,6 +118,9 @@ function mapRow(r: any, counterparty: PipelineRow["counterparty"], asking: numbe
     ndaApprovedAt: r.nda_approved_at,
     reportRequestedAt: r.report_requested_at,
     reportSharedAt: r.report_shared_at,
+    loiFrom: r.loi_from ?? "buyer", loiRevision: r.loi_revision ?? 0,
+    loiChanges: r.loi_changes ?? null, loiSendConsent: r.loi_send_consent ?? null, loiAcceptConsent: r.loi_accept_consent ?? null,
+    workflow: publicWorkflow(r.workflow),
     loiAmount: r.loi_amount != null ? Number(r.loi_amount) : null,
     loiExclusivityDays: r.loi_exclusivity_days,
     loiConditions: r.loi_conditions,
@@ -334,6 +346,7 @@ export const listPipeline = createServerFn({ method: "GET" })
     stIds.forEach((id, i) => { dk[id] = dkList[i]; });
     items.forEach((it, i) => {
       const r = rows[i];
+      it.listingRef = hpMap[r.hidden_profile_id]?.ref_no ?? null;
       it.ownCompanyName = dealCompanyName(data.as === "seller", stMap[r.startup_id]?.startup_name, bvMap[r.buyer_user_id]?.company_name);
       const mine = (shares ?? []).filter((x: any) => x.pipeline_id === r.id);
       const act = mine.find((x: any) => !x.revoked_at);
@@ -364,53 +377,18 @@ export const listPipeline = createServerFn({ method: "GET" })
     return items;
   });
 
-/** Light count for the Pipeline menu badge (same rule as waitingOnYouCount). */
-export const pipelineBadgeCount = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ as: z.enum(["seller", "buyer"]) }).parse(d))
-  .handler(async ({ data, context }) => {
-    const sb = await admin();
-    const cols = "id, startup_id, status, nda_approved_at, nda_expires_at, report_requested_at, report_shared_at, loi_sent_at, loi_accepted_at, legal_at, spa_at, payment_at";
-    let rows: any[] = [];
-    if (data.as === "buyer") {
-      rows = (await sb.from("deal_pipelines").select(cols).eq("buyer_user_id", context.userId).not("status", "in", "(declined,withdrawn,ended)")).data ?? [];
-    } else {
-      const [{ data: own }, { data: su }] = await Promise.all([
-        sb.from("startup_ownership").select("startup_id").eq("owning_agent_user_id", context.userId),
-        sb.from("startup_users").select("startup_id").eq("user_id", context.userId),
-      ]);
-      const ids = await (await import("@/lib/workspace-scope.server")).scopeStartupIds(context.userId, [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id as string))]);
-      if (ids.length) rows = (await sb.from("deal_pipelines").select(cols).in("startup_id", ids).not("status", "in", "(declined,withdrawn,ended)")).data ?? [];
-    }
-    const seller = data.as === "seller";
-    // Only seller rows waiting on a report share need report/share lookups.
-    const need = seller ? rows.filter((r) => r.nda_approved_at && !r.payment_at && r.report_requested_at) : [];
-    let shareMap: Record<string, boolean> = {};
-    const dk: Record<string, any> = {};
-    if (need.length) {
-      const { deliveredKinds, ndaActive } = await import("./report-shares.server");
-      const sIds = [...new Set(need.map((r) => r.startup_id))];
-      const [{ data: shares }, kinds] = await Promise.all([
-        sb.from("report_shares").select("pipeline_id, revoked_at").in("pipeline_id", need.map((r) => r.id)).is("revoked_at", null),
-        Promise.all(sIds.map((id: string) => deliveredKinds(sb, id))),
-      ]);
-      sIds.forEach((id, i) => { dk[id] = kinds[i]; });
-      shareMap = Object.fromEntries(need.map((r) => [r.id, !!(shares ?? []).find((x: any) => x.pipeline_id === r.id) && ndaActive(r)]));
-    }
-    let n = 0;
-    for (const r of rows) {
-      if (!r.nda_approved_at) { if (seller) n++; continue; }
-      if (r.payment_at) continue;
-      if (seller) {
-        const d = dk[r.startup_id];
-        if (r.report_requested_at && !shareMap[r.id] && d && (d.financials || d.valuation)) { n++; continue; }
-        if (r.loi_sent_at && !r.loi_accepted_at) { n++; continue; }
-        if (!r.loi_sent_at) continue;
-        n++;
-      } else if (!(r.report_requested_at && !r.report_shared_at) && !r.loi_sent_at) n++;
-    }
-    return n;
-  });
+/** Uses the same canonical waiting rules as the workspace. */
+export const pipelineBadgeCount = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
+ .inputValidator(d=>z.object({as:z.enum(["seller","buyer"])}).parse(d))
+ .handler(async({data,context})=>{
+  const {data:rows,error}=await context.supabase.from("deal_pipelines").select("*").not("status","in","(declined,withdrawn,ended)");
+  if(error)throw new Error("Deals could not be loaded");
+  const {waitState}=await import("./pipeline-state");
+  let scoped:any[]=rows??[];
+  if(data.as==="buyer")scoped=scoped.filter(r=>r.buyer_user_id===context.userId);
+  else {const {data:own}=await context.supabase.from("startup_ownership").select("startup_id").eq("owning_agent_user_id",context.userId);const {data:su}=await context.supabase.from("startup_users").select("startup_id").eq("user_id",context.userId);const ids=await(await import("./workspace-scope.server")).scopeStartupIds(context.userId,[...new Set([...(own??[]),...(su??[])].map((r:any)=>r.startup_id))] as string[]);scoped=scoped.filter(r=>ids.includes(r.startup_id));}
+  return scoped.filter(r=>waitState(mapRow(r,{name:"",sub:"",person:null,verified:false,logoUrl:null},null,{sellerCompany:"",buyerOrg:"",codeName:null,buyerName:null,sellerName:null}),data.as==="seller").onYou).length;
+ });
 
 const Id = z.object({ id: z.string().uuid() });
 
@@ -515,80 +493,24 @@ export const loiParties = createServerFn({ method: "GET" })
     return { buyer, seller, listingCode: (hp?.ref_no as string | null) ?? null };
   });
 
-export const sendLoi = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
-    Id.extend({
-      amount: z.number().positive(),
-      exclusivityDays: z.number().int().min(0).max(365),
-      conditions: z.string().max(2000).optional(),
-      consent: z.string().min(10).max(2000),
-    }).parse(d),
-  )
-  .handler(async ({ data, context }) => {
-    const p = await loadOpen(data.id);
-    if (p.buyer_user_id !== context.userId) throw new Error("Not your pipeline");
-    if (!p.nda_approved_at) throw new Error("The NDA must be approved first");
-    const now = new Date().toISOString();
-    await update(p.id, {
-      loi_amount: data.amount,
-      loi_exclusivity_days: data.exclusivityDays,
-      loi_conditions: data.conditions ?? null,
-      loi_sent_at: now,
-      loi_accepted_at: null,
-      loi_changes_requested_at: null,
-      loi_requested_at: null,
-      loi_requested_by: null,
-    });
-    if (p.loi_requested_at) await log(p.id, "loi_request_fulfilled", context.userId);
-    // Buyer's agreement (who · when · text) is kept on the event log.
-    await log(p.id, "loi_sent", context.userId, `Buyer consent at ${now}: ${data.consent}`);
-    const sb = await admin();
-    const { data: owners } = await sb.from("startup_ownership").select("owning_agent_user_id").eq("startup_id", p.startup_id);
-    const { data: st } = await sb.from("startups").select("tenant_id").eq("id", p.startup_id).maybeSingle();
-    const ids = [...new Set((owners ?? []).map((o: any) => o.owning_agent_user_id).filter(Boolean))];
-    if (ids.length) {
-      await sb.from("notifications").insert(ids.map((uid) => ({
-        user_id: uid, tenant_id: st?.tenant_id ?? null, notification_type: "approval",
-        title: "New letter of intent", message: "A buyer sent you a letter of intent. Open Pipeline to review it.",
-      })));
-    }
-    return { ok: true };
-  });
-
-/** Seller asks the buyer to send a letter of intent, with optional suggested terms. */
-export const requestLoi = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
-    Id.extend({
-      note: z.string().trim().max(2000).optional(),
-      price: z.number().positive().max(1e15).nullable().optional(),
-      days: z.number().int().min(0).max(365).nullable().optional(),
-      respondBy: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
-    }).parse(d),
-  )
-  .handler(async ({ data, context }) => {
-    const p = await loadOpen(data.id);
-    await assertSeller(context, p.startup_id);
-    if (!p.nda_approved_at) throw new Error("The NDA must be approved first");
-    if (p.loi_sent_at && !p.loi_accepted_at) throw new Error("The buyer has already sent a letter of intent");
-    if (p.loi_accepted_at) throw new Error("A letter of intent was already accepted");
-    if (p.loi_requested_at) throw new Error("A request is already open");
-    const now = new Date().toISOString();
-    await update(p.id, {
-      loi_requested_at: now, loi_requested_by: context.userId,
-      loi_request_note: data.note || null, loi_request_price: data.price ?? null,
-      loi_request_days: data.days ?? null, loi_request_respond_by: data.respondBy ?? null,
-    });
-    await log(p.id, "loi_requested", context.userId, data.note || undefined);
-    const sb = await admin();
-    const { data: st } = await sb.from("startups").select("tenant_id").eq("id", p.startup_id).maybeSingle();
-    await sb.from("notifications").insert({
-      user_id: p.buyer_user_id, tenant_id: st?.tenant_id ?? null, notification_type: "approval",
-      title: "Letter of intent requested", message: "A seller asked you to send a letter of intent. Open Pipeline to respond.",
-    });
-    return { ok: true };
-  });
+const Side = z.enum(["seller","buyer"]);
+const Terms = { amount:z.number().positive().max(1e15),exclusivityDays:z.number().int().min(0).max(365),conditions:z.string().max(2000).default("") };
+async function transition(ctx:Ctx,p:any,action:string,side:"seller"|"buyer",version:number,terms:Record<string,unknown>={}) {
+ const {data,error}=await ctx.supabase.rpc("pipeline_transition",{_id:p.id,_action:action,_side:side,_version:version,_terms:terms});
+ if(error)throw new Error(error.message);
+ if(data?.event){const {pipelineAlert}=await import("./email-alerts.server");await pipelineAlert(p.id,data.event,data.eventId,side);
+ if(["loi_sent","loi_revised_sent"].includes(data.event)){const sb=await admin();const {sideUsers,bell}=await import("./advisor-pipeline.server");await bell(sb,await sideUsers(sb,p,side==="seller"?"buyer":"seller"),"New letter of intent",`A ${side} sent you a letter of intent. Open Pipeline to review it.`,"/marketplace/pipeline/all-deals?deal="+p.id);}}
+ return {ok:true};
+}
+function publicWorkflow(w:any):DealWorkflow {
+ const out:DealWorkflow={supportName:w?.supportName??null,supportAt:w?.supportAt??null,choices:w?.choices??{},receipts:{},spaDraftedAt:w?.spaDraftedAt??null,spaSignedAt:w?.spaSignedAt??null,payment:w?.payment??{}};
+ for(const side of ["seller","buyer"] as const){const r=w?.receipts?.[side];if(r)out.receipts[side]={at:r.at,fileName:r.fileName??null};}return out;
+}
+export const sendLoi = createServerFn({method:"POST"}).middleware([requireSupabaseAuth])
+ .inputValidator(d=>Id.extend({...Terms,side:Side.default("buyer"),version:z.number().int().min(0),revised:z.boolean().default(false),read:z.literal(true),consent:z.string().min(10).max(2000)}).parse(d))
+ .handler(async({data,context})=>{const p=await loadOpen(data.id);return transition(context,p,data.revised?"resend":"send",data.side,data.version,{amount:data.amount,days:data.exclusivityDays,conditions:data.conditions,consent:data.consent,read:data.read});});
+/** Retained endpoint refuses new requests; existing withdrawal/fulfilment remains. */
+export const requestLoi = createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).inputValidator(d=>Id.parse(d)).handler(async()=>{throw new Error("Either side can now send a letter of intent. New requests are no longer available.");});
 
 export const withdrawLoiRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -602,28 +524,25 @@ export const withdrawLoiRequest = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const decideLoi = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d) => Id.extend({ decision: z.enum(["accept", "decline", "changes"]), consent: z.string().max(2000).optional() }).parse(d))
-  .handler(async ({ data, context }) => {
-    const p = await loadOpen(data.id);
-    await assertSeller(context, p.startup_id);
-    if (!p.loi_sent_at || p.loi_accepted_at) throw new Error("No letter of intent to decide");
-    const now = new Date();
-    if (data.decision === "accept") {
-      if (!data.consent) throw new Error("Tick the box to accept");
-      const until = new Date(now.getTime() + (p.loi_exclusivity_days ?? 0) * 86_400_000).toISOString();
-      await update(p.id, { loi_accepted_at: now.toISOString(), contact_at: now.toISOString(), loi_accepted_by: context.userId, loi_consent_text: data.consent, exclusivity_until: until });
-      await log(p.id, "loi_accepted", context.userId, data.consent);
-    } else if (data.decision === "changes") {
-      await update(p.id, { loi_changes_requested_at: now.toISOString() });
-      await log(p.id, "loi_changes_requested", context.userId);
-    } else {
-      await update(p.id, { loi_sent_at: null, loi_amount: null });
-      await log(p.id, "loi_declined", context.userId);
-    }
-    return { ok: true };
-  });
+export const decideLoi = createServerFn({method:"POST"}).middleware([requireSupabaseAuth])
+ .inputValidator(d=>Id.extend({side:Side,version:z.number().int().min(0),decision:z.enum(["accept","decline","changes","accept_revised"]),consent:z.string().max(2000).optional(),read:z.boolean().optional(),amount:z.number().positive().max(1e15).optional(),exclusivityDays:z.number().int().min(0).max(365).optional(),conditions:z.string().max(2000).optional(),note:z.string().max(2000).optional()}).parse(d))
+ .handler(async({data,context})=>{const p=await loadOpen(data.id);return transition(context,p,data.decision,data.side,data.version,{amount:data.amount,days:data.exclusivityDays,conditions:data.conditions,note:data.note,consent:data.consent,read:data.read,supportName:supportSettings.name});});
+export const saveStageChoice=createServerFn({method:"POST"}).middleware([requireSupabaseAuth])
+ .inputValidator(d=>Id.extend({side:Side,stage:z.enum(["valuation","legal"]),choice:z.enum(["pitchsnack","own","none"]).nullable(),unlock:z.boolean().optional()}).parse(d))
+ .handler(async({data,context})=>{const p=await loadOpen(data.id);return transition(context,p,data.unlock?"unlock":"choice",data.side,p.loi_revision,{stage:data.stage,choice:data.choice});});
+export const confirmPayment=createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).inputValidator(d=>Id.extend({side:Side}).parse(d))
+ .handler(async({data,context})=>{const p=await loadOpen(data.id);return transition(context,p,"payment",data.side,p.loi_revision);});
+export const receiveValuation=createServerFn({method:"POST"}).middleware([requireSupabaseAuth])
+ .inputValidator(d=>Id.extend({side:Side,file:z.object({name:z.string().max(200),type:z.string().max(120),base64:z.string().max(14000000)}).optional()}).parse(d))
+ .handler(async({data,context})=>{const p=await loadOpen(data.id);if(data.side==="buyer"?p.buyer_user_id!==context.userId:false)throw new Error("Not your deal");if(data.side==="seller")await assertSeller(context,p.startup_id);if(!p.loi_accepted_at||p.workflow?.choices?.[data.side]?.valuation?.value!=="own")throw new Error("Choose your own valuer first");let path:string|null=null;
+ const sb=await admin();if(data.file){if(!/\.(pdf|docx?|xlsx?)$/i.test(data.file.name))throw new Error("Choose PDF, Word or Excel");const bytes=Uint8Array.from(atob(data.file.base64),c=>c.charCodeAt(0));if(bytes.length>10*1024*1024)throw new Error("Choose a file under 10 MB");path=`pipeline-valuation/${p.id}/${data.side}/${crypto.randomUUID()}`;const {error}=await sb.storage.from("deal-documents").upload(path,bytes,{contentType:data.file.type||"application/octet-stream"});if(error)throw new Error("Report could not be uploaded");}
+ try{return await transition(context,p,"receipt",data.side,p.loi_revision,{fileName:data.file?.name??null,filePath:path});}catch(e){if(path)await sb.storage.from("deal-documents").remove([path]);throw e;}});
+export const readValuationFile=createServerFn({method:"GET"}).middleware([requireSupabaseAuth]).inputValidator(d=>Id.extend({side:Side}).parse(d))
+ .handler(async({data,context})=>{const p=await loadOpen(data.id);const side=await assertParty(context,p);if(side!==data.side)throw new Error("This report belongs to the other side");if(!p.nda_approved_at||(p.nda_expires_at&&Date.parse(p.nda_expires_at)<=Date.now()))throw new Error("An active NDA is required");const path=p.workflow?.receipts?.[side]?.filePath;if(!path)throw new Error("No attachment");const {data:r,error}=await(await admin()).storage.from("deal-documents").createSignedUrl(path,300);if(error||!r)throw new Error("Report could not be opened");return {url:r.signedUrl};});
+export const pendingLoiDeclines=createServerFn({method:"GET"}).middleware([requireSupabaseAuth]).inputValidator(d=>z.object({side:Side}).parse(d)).handler(async({data,context})=>{
+ const {data:events,error}=await context.supabase.from("deal_pipeline_events").select("id,pipeline_id,payload,created_at").eq("event","loi_declined").order("created_at");if(error)throw new Error("Notices could not be loaded");const {data:seen}=await context.supabase.from("loi_decline_receipts").select("event_id").eq("user_id",context.userId);const ids=new Set((seen??[]).map(r=>r.event_id));const out=[];
+ for(const e of events??[]){const payload=e.payload as any;if(ids.has(e.id)||payload?.from!==data.side)continue;const p=await load(e.pipeline_id);if(data.side==="buyer"){if(p.buyer_user_id!==context.userId)continue;}else{try{await assertSeller(context,p.startup_id);}catch{continue;}}out.push({id:e.id,pipelineId:e.pipeline_id,at:e.created_at,amount:payload.amount as number,days:payload.days as number,revised:!!payload.previous,side:payload.side as string});}return out;});
+export const acknowledgeLoiDecline=createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).inputValidator(d=>z.object({eventId:z.string().uuid()}).parse(d)).handler(async({data,context})=>{const {error}=await context.supabase.from("loi_decline_receipts").upsert({event_id:data.eventId,user_id:context.userId},{ignoreDuplicates:true});if(error)throw new Error("Notice could not be acknowledged");return {ok:true};});
 
 /** Seller shares the Legal folder / SPA draft, or marks payment complete. */
 export const shareStep = createServerFn({ method: "POST" })
@@ -645,7 +564,7 @@ export const pipelineEvents = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: ev } = await context.supabase
       .from("deal_pipeline_events")
-      .select("event, actor_id, created_at")
+      .select("id, event, actor_id, created_at, payload")
       .eq("pipeline_id", data.id)
       .order("created_at", { ascending: false });
     return ev ?? [];

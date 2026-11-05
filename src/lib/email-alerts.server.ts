@@ -88,7 +88,7 @@ export async function sellerTeam(startupId: string | null | undefined) {
 const fmtDate = (d = new Date()) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Bangkok" });
 
 /** Maps a deal pipeline event to its email alert. Names stay hidden until the NDA is approved. */
-export async function pipelineAlert(pipelineId: string, event: string) {
+export async function pipelineAlert(pipelineId: string, event: string, eventId?: string, actorSide?: "buyer" | "seller") {
   const map: Record<string, [string, AlertRole]> = {
     nda_requested: ["nda_request", "seller"],
     nda_approved: ["nda_approved", "buyer"],
@@ -96,6 +96,8 @@ export async function pipelineAlert(pipelineId: string, event: string) {
     report_requested: ["financial_report", "seller"],
     report_shared: ["financial_report", "buyer"],
     loi_sent: ["loi", "seller"],
+    loi_revised_sent: ["loi", "seller"],
+    loi_revised_accepted: ["loi", "buyer"],
     loi_accepted: ["loi", "buyer"],
     loi_changes_requested: ["loi", "buyer"],
     loi_declined: ["loi", "buyer"],
@@ -125,6 +127,10 @@ export async function pipelineAlert(pipelineId: string, event: string) {
       "NDA expiry": p.nda_expires_at ? fmtDate(new Date(p.nda_expires_at)) : "",
     };
     let [alert, role] = m;
+    if (alert === "loi") {
+      const sender = p.loi_from === "seller" ? "seller" : "buyer";
+      role = event === "loi_sent" || event === "loi_revised_sent" ? (sender === "seller" ? "buyer" : "seller") : actorSide ? (actorSide === "seller" ? "buyer" : "seller") : sender;
+    }
     if (event === "withdrawn") {
       // Sent to the side that didn't withdraw; no reason or comment.
       role = p.ended_by_side === "buyer" ? "seller" : "buyer";
@@ -135,9 +141,9 @@ export async function pipelineAlert(pipelineId: string, event: string) {
     if (alert === "nda_approved") details.push(["Listing", vars["listing code name"]], ["Approved", fmtDate()], ...(p.nda_expires_at ? [["Valid until", fmtDate(new Date(p.nda_expires_at))] as [string, string]] : []));
     if (alert === "nda_declined") details.push(["Listing", vars["listing code name"]]);
     if (alert === "financial_report" && role === "buyer") details.push(["Report", "Verified financial report"], ["Download", p.report_allow_download ? "Allowed" : "View only"]);
-    if (alert === "loi" && role === "buyer") details.push(["Seller", String(vars["seller company"])], ["Reply", event === "loi_accepted" ? "Accepted" : event === "loi_declined" ? "Declined" : "Changes requested"]);
+    if (alert === "loi") details.push([role === "buyer" ? "Seller" : "Buyer", String(vars[role === "buyer" ? "seller company" : "buyer company"])], ["Reply", event === "loi_accepted" || event === "loi_revised_accepted" ? "Accepted" : event === "loi_declined" ? "Declined" : event === "loi_sent" || event === "loi_revised_sent" ? "Letter sent" : "Changes requested"]);
     const userIds = role === "seller" ? await sellerTeam(p.startup_id) : [p.buyer_user_id];
-    await sendAlert({ alert, role, userIds, vars, details, refKey: `${pipelineId}:${event}:${Date.now() - (Date.now() % 60000)}` });
+    await sendAlert({ alert, role, userIds, vars, details, refKey: eventId ? `${pipelineId}:${eventId}` : `${pipelineId}:${event}:${Date.now() - (Date.now() % 60000)}` });
   } catch (e) {
     console.error("[email-alerts] pipeline", (e as Error).message);
   }
