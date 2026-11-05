@@ -2703,6 +2703,7 @@ export type Database = {
           event: string
           id: string
           note: string | null
+          payload: Json | null
           pipeline_id: string
         }
         Insert: {
@@ -2711,6 +2712,7 @@ export type Database = {
           event: string
           id?: string
           note?: string | null
+          payload?: Json | null
           pipeline_id: string
         }
         Update: {
@@ -2719,6 +2721,7 @@ export type Database = {
           event?: string
           id?: string
           note?: string | null
+          payload?: Json | null
           pipeline_id?: string
         }
         Relationships: [
@@ -2745,19 +2748,24 @@ export type Database = {
           hidden_profile_id: string
           id: string
           legal_at: string | null
+          loi_accept_consent: Json | null
           loi_accepted_at: string | null
           loi_accepted_by: string | null
           loi_amount: number | null
+          loi_changes: Json | null
           loi_changes_requested_at: string | null
           loi_conditions: string | null
           loi_consent_text: string | null
           loi_exclusivity_days: number | null
+          loi_from: string
           loi_request_days: number | null
           loi_request_note: string | null
           loi_request_price: number | null
           loi_request_respond_by: string | null
           loi_requested_at: string | null
           loi_requested_by: string | null
+          loi_revision: number
+          loi_send_consent: Json | null
           loi_sent_at: string | null
           loi_stake_pct: number | null
           nda_approved_at: string | null
@@ -2774,6 +2782,7 @@ export type Database = {
           updated_at: string
           wait_kind: string
           wait_task: string | null
+          workflow: Json
         }
         Insert: {
           buyer_approval_seen_at?: string | null
@@ -2788,19 +2797,24 @@ export type Database = {
           hidden_profile_id: string
           id?: string
           legal_at?: string | null
+          loi_accept_consent?: Json | null
           loi_accepted_at?: string | null
           loi_accepted_by?: string | null
           loi_amount?: number | null
+          loi_changes?: Json | null
           loi_changes_requested_at?: string | null
           loi_conditions?: string | null
           loi_consent_text?: string | null
           loi_exclusivity_days?: number | null
+          loi_from?: string
           loi_request_days?: number | null
           loi_request_note?: string | null
           loi_request_price?: number | null
           loi_request_respond_by?: string | null
           loi_requested_at?: string | null
           loi_requested_by?: string | null
+          loi_revision?: number
+          loi_send_consent?: Json | null
           loi_sent_at?: string | null
           loi_stake_pct?: number | null
           nda_approved_at?: string | null
@@ -2817,6 +2831,7 @@ export type Database = {
           updated_at?: string
           wait_kind?: string
           wait_task?: string | null
+          workflow?: Json
         }
         Update: {
           buyer_approval_seen_at?: string | null
@@ -2831,19 +2846,24 @@ export type Database = {
           hidden_profile_id?: string
           id?: string
           legal_at?: string | null
+          loi_accept_consent?: Json | null
           loi_accepted_at?: string | null
           loi_accepted_by?: string | null
           loi_amount?: number | null
+          loi_changes?: Json | null
           loi_changes_requested_at?: string | null
           loi_conditions?: string | null
           loi_consent_text?: string | null
           loi_exclusivity_days?: number | null
+          loi_from?: string
           loi_request_days?: number | null
           loi_request_note?: string | null
           loi_request_price?: number | null
           loi_request_respond_by?: string | null
           loi_requested_at?: string | null
           loi_requested_by?: string | null
+          loi_revision?: number
+          loi_send_consent?: Json | null
           loi_sent_at?: string | null
           loi_stake_pct?: number | null
           nda_approved_at?: string | null
@@ -2860,6 +2880,7 @@ export type Database = {
           updated_at?: string
           wait_kind?: string
           wait_task?: string | null
+          workflow?: Json
         }
         Relationships: [
           {
@@ -4869,6 +4890,32 @@ export type Database = {
             columns: ["hidden_profile_id"]
             isOneToOne: false
             referencedRelation: "hidden_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loi_decline_receipts: {
+        Row: {
+          event_id: string
+          seen_at: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          seen_at?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          seen_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loi_decline_receipts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "deal_pipeline_events"
             referencedColumns: ["id"]
           },
         ]
@@ -8327,6 +8374,16 @@ export type Database = {
       mark_welcome_tour_seen: { Args: never; Returns: string }
       next_inv_ref: { Args: never; Returns: string }
       normalize_url_key: { Args: { _url: string }; Returns: string }
+      pipeline_transition: {
+        Args: {
+          _action: string
+          _id: string
+          _side: string
+          _terms?: Json
+          _version: number
+        }
+        Returns: Json
+      }
       prune_sign_in_days: { Args: never; Returns: undefined }
       publish_report_price_checked: {
         Args: { _by: string; _expected: string; _key: string; _values: Json }
