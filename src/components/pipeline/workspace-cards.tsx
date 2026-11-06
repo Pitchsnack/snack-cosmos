@@ -103,10 +103,11 @@ function Stepper({ cur, t, endedOn }: { cur: number; t: T; endedOn?: string }) {
           <div key={s} className="relative flex flex-col items-center">
             {i > 0 && <div className={cn("absolute right-1/2 top-[6px] h-[2px] w-[calc(100%-18px)] -translate-x-[9px]", i <= cur ? "bg-success" : "bg-border")} />}
             <div className={cn("loi-stepper-marker",i===3&&"loi-hat-marker",(i===4||i===5)&&"loi-optional-marker",done?"is-done":now?"is-current":"")}>{i===3&&<HatMark width={14}/>}</div>
-            <div className={cn("mt-2 text-center text-[12px]", now ? "font-bold text-foreground" : done ? "text-foreground" : "text-muted-foreground")}>{t(s)}{(i===4||i===5)&&<span className="sr-only"> ({t("optional")})</span>}</div>{i===4&&<span className="loi-optional-bracket">{t("Optional")}</span>}
+            <div className={cn("mt-2 text-center text-[12px]", now ? "font-bold text-foreground" : done ? "text-foreground" : "text-muted-foreground")}>{t(s)}{(i===4||i===5)&&<span className="sr-only"> ({t("optional")})</span>}</div>
           </div>
         );
       })}
+      <div className="loi-optional-bracket" aria-hidden="true"><span>{t("Optional")}</span></div>
     </div>
   );
 }
