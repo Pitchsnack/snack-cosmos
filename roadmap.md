@@ -2,11 +2,12 @@
 
 ## Either-side LOI and post-LOI Pipeline
 - [x] Review brief, try reference and trace shared permissions, cards, alerts and messaging; Admin is Deal Support for now.
-- [ ] Add protected two-sided LOI transitions, revisions, consent records, decline acknowledgements and mirrored notifications.
-- [ ] Build shared bilingual letter dialogs, confirmations and expandable LOI timelines.
-- [ ] Add Admin support assignment, optional-stage choices/report receipt, shared SPA dates and bilateral payment readiness.
-- [ ] Add All deals top-bar review alert and update canonical waiting/stage counts.
-- [ ] Test permissions, concurrency, legacy data and user flows; verify both sides at 1440/1024/390 in EN/TH and light/dark.
+- [x] Add protected two-sided LOI transitions, revisions, consent records, decline acknowledgements and mirrored notifications.
+- [x] Build shared bilingual letter dialogs, confirmations and expandable LOI timelines.
+- [x] Add Admin support assignment, optional-stage choices/report receipt, shared server-only SPA date display and bilateral payment readiness.
+- [x] Add All deals top-bar review alert and update canonical waiting/stage counts.
+- [x] 38 focused tests; live buyer reading/tick/Cancel and twelve width/language/theme combinations; phone alert and eight Thai clauses; preview build OK.
+- [ ] Full live two-sided send/accept/decline, report upload/read-back, payment and email checks need an authorised test deal; current offers are real and were not changed. Separate seller session and concurrent-transition end-to-end remain unverified.
 
 ## Public Discovery
 - [x] Public, privacy-whitelisted live data and EN/TH two-tab page with shared header/footer.
