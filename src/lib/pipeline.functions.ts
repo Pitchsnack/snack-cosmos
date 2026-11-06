@@ -31,7 +31,7 @@ async function load(id: string) {
 /** Same as load, but refuses deals that have ended (withdrawn). */
 async function loadOpen(id: string) {
   const p = await load(id);
-  if (p.status === "ended") throw new Error("This deal has ended");
+  if (["ended","declined","withdrawn","revoked"].includes(p.status)) throw new Error("This deal has ended");
   return p;
 }
 async function assertSeller(ctx: Ctx, startupId: string) {

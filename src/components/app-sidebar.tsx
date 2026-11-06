@@ -691,6 +691,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
           </SheetContent>
         </Sheet>
         <main className="flex-1 overflow-y-auto p-4">
+          <div id="pipeline-review-mobile-host" />
           <RouteBreadcrumbs className="mb-3" />
           <GlobalRouteLoading />
           {children}
