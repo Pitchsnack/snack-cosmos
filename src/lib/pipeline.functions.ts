@@ -287,7 +287,7 @@ export const listPipeline = createServerFn({ method: "GET" })
     const signedLogos: Record<string, string> = {};
     const [names, signedRes] = await Promise.all([
       userNames([...new Set([...buyerIds, ...Object.values(ownerMap), ...rows.map((r) => r.loi_accepted_by).filter(Boolean)])] as string[]),
-      data.as === "buyer" && logoPaths.length ? sb.storage.from("startup-media").createSignedUrls(logoPaths, 3600) : Promise.resolve({ data: [] as any[] }),
+      data.as === "buyer" && logoPaths.length ? sb.storage.from("pipeline-valuation").createSignedUrls(logoPaths, 3600) : Promise.resolve({ data: [] as any[] }),
     ]);
     for (const d of (signedRes as any).data ?? []) if (d.path && d.signedUrl) signedLogos[d.path] = d.signedUrl;
     const bvMap: Record<string, any> = Object.fromEntries((bvs ?? []).map((b: any) => [b.user_id, { ...b }]));
@@ -494,7 +494,7 @@ export const loiParties = createServerFn({ method: "GET" })
   });
 
 const Side = z.enum(["seller","buyer"]);
-const Terms = { amount:z.number().positive().max(1e15),exclusivityDays:z.number().int().min(0).max(365),conditions:z.string().max(2000).default("") };
+const Terms = { amount:z.number().int().positive().max(1e15),exclusivityDays:z.number().int().min(0).max(365),conditions:z.string().max(2000).default("") };
 async function transition(ctx:Ctx,p:any,action:string,side:"seller"|"buyer",version:number,terms:Record<string,unknown>={}) {
  const {data,error}=await ctx.supabase.rpc("pipeline_transition",{_id:p.id,_action:action,_side:side,_version:version,_terms:terms});
  if(error)throw new Error(error.message);
@@ -525,7 +525,7 @@ export const withdrawLoiRequest = createServerFn({ method: "POST" })
   });
 
 export const decideLoi = createServerFn({method:"POST"}).middleware([requireSupabaseAuth])
- .inputValidator(d=>Id.extend({side:Side,version:z.number().int().min(0),decision:z.enum(["accept","decline","changes","accept_revised"]),consent:z.string().max(2000).optional(),read:z.boolean().optional(),amount:z.number().positive().max(1e15).optional(),exclusivityDays:z.number().int().min(0).max(365).optional(),conditions:z.string().max(2000).optional(),note:z.string().max(2000).optional()}).parse(d))
+ .inputValidator(d=>Id.extend({side:Side,version:z.number().int().min(0),decision:z.enum(["accept","decline","changes","accept_revised"]),consent:z.string().max(2000).optional(),read:z.boolean().optional(),amount:z.number().int().positive().max(1e15).optional(),exclusivityDays:z.number().int().min(0).max(365).optional(),conditions:z.string().max(2000).optional(),note:z.string().max(2000).optional()}).parse(d))
  .handler(async({data,context})=>{const p=await loadOpen(data.id);return transition(context,p,data.decision,data.side,data.version,{amount:data.amount,days:data.exclusivityDays,conditions:data.conditions,note:data.note,consent:data.consent,read:data.read,supportName:supportSettings.name});});
 export const saveStageChoice=createServerFn({method:"POST"}).middleware([requireSupabaseAuth])
  .inputValidator(d=>Id.extend({side:Side,stage:z.enum(["valuation","legal"]),choice:z.enum(["pitchsnack","own","none"]).nullable(),unlock:z.boolean().optional()}).parse(d))
@@ -535,10 +535,10 @@ export const confirmPayment=createServerFn({method:"POST"}).middleware([requireS
 export const receiveValuation=createServerFn({method:"POST"}).middleware([requireSupabaseAuth])
  .inputValidator(d=>Id.extend({side:Side,file:z.object({name:z.string().max(200),type:z.string().max(120),base64:z.string().max(14000000)}).optional()}).parse(d))
  .handler(async({data,context})=>{const p=await loadOpen(data.id);if(data.side==="buyer"?p.buyer_user_id!==context.userId:false)throw new Error("Not your deal");if(data.side==="seller")await assertSeller(context,p.startup_id);if(!p.loi_accepted_at||p.workflow?.choices?.[data.side]?.valuation?.value!=="own")throw new Error("Choose your own valuer first");let path:string|null=null;
- const sb=await admin();if(data.file){if(!/\.(pdf|docx?|xlsx?)$/i.test(data.file.name))throw new Error("Choose PDF, Word or Excel");const bytes=Uint8Array.from(atob(data.file.base64),c=>c.charCodeAt(0));if(bytes.length>10*1024*1024)throw new Error("Choose a file under 10 MB");path=`pipeline-valuation/${p.id}/${data.side}/${crypto.randomUUID()}`;const {error}=await sb.storage.from("startup-media").upload(path,bytes,{contentType:data.file.type||"application/octet-stream"});if(error)throw new Error("Report could not be uploaded");}
- try{return await transition(context,p,"receipt",data.side,p.loi_revision,{fileName:data.file?.name??null,filePath:path});}catch(e){if(path)await sb.storage.from("startup-media").remove([path]);throw e;}});
+ const sb=await admin();if(data.file){if(!/\.(pdf|docx?|xlsx?)$/i.test(data.file.name))throw new Error("Choose PDF, Word or Excel");const bytes=Uint8Array.from(atob(data.file.base64),c=>c.charCodeAt(0));if(bytes.length>10*1024*1024)throw new Error("Choose a file under 10 MB");path=`pipeline-valuation/${p.id}/${data.side}/${crypto.randomUUID()}`;const {error}=await sb.storage.from("pipeline-valuation").upload(path,bytes,{contentType:data.file.type||"application/octet-stream"});if(error)throw new Error("Report could not be uploaded");}
+ try{return await transition(context,p,"receipt",data.side,p.loi_revision,{fileName:data.file?.name??null,filePath:path});}catch(e){if(path)await sb.storage.from("pipeline-valuation").remove([path]);throw e;}});
 export const readValuationFile=createServerFn({method:"GET"}).middleware([requireSupabaseAuth]).inputValidator(d=>Id.extend({side:Side}).parse(d))
- .handler(async({data,context})=>{const p=await loadOpen(data.id);const side=await assertParty(context,p);if(side!==data.side)throw new Error("This report belongs to the other side");if(!p.nda_approved_at||(p.nda_expires_at&&Date.parse(p.nda_expires_at)<=Date.now()))throw new Error("An active NDA is required");const path=p.workflow?.receipts?.[side]?.filePath;if(!path)throw new Error("No attachment");const {data:r,error}=await(await admin()).storage.from("startup-media").createSignedUrl(path,300);if(error||!r)throw new Error("Report could not be opened");return {url:r.signedUrl};});
+ .handler(async({data,context})=>{const p=await loadOpen(data.id);const side=await assertParty(context,p);if(side!==data.side)throw new Error("This report belongs to the other side");if(!p.nda_approved_at||(p.nda_expires_at&&Date.parse(p.nda_expires_at)<=Date.now()))throw new Error("An active NDA is required");const path=p.workflow?.receipts?.[side]?.filePath;if(!path)throw new Error("No attachment");if(!new RegExp(`^pipeline-valuation/${p.id}/${side}/[0-9a-f-]{36}$`).test(path))throw new Error("Invalid report attachment");const {data:r,error}=await(await admin()).storage.from("pipeline-valuation").createSignedUrl(path,300);if(error||!r)throw new Error("Report could not be opened");return {url:r.signedUrl};});
 export const pendingLoiDeclines=createServerFn({method:"GET"}).middleware([requireSupabaseAuth]).inputValidator(d=>z.object({side:Side}).parse(d)).handler(async({data,context})=>{
  const {data:events,error}=await context.supabase.from("deal_pipeline_events").select("id,pipeline_id,payload,created_at").eq("event","loi_declined").order("created_at");if(error)throw new Error("Notices could not be loaded");const {data:seen}=await context.supabase.from("loi_decline_receipts").select("event_id").eq("user_id",context.userId);const ids=new Set((seen??[]).map(r=>r.event_id));const out=[];
  for(const e of events??[]){const payload=e.payload as any;if(ids.has(e.id)||payload?.from!==data.side)continue;const p=await load(e.pipeline_id);if(data.side==="buyer"){if(p.buyer_user_id!==context.userId)continue;}else{try{await assertSeller(context,p.startup_id);}catch{continue;}}out.push({id:e.id,pipelineId:e.pipeline_id,at:e.created_at,amount:payload.amount as number,days:payload.days as number,revised:!!payload.previous,side:payload.side as string});}return out;});

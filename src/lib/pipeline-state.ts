@@ -3,7 +3,9 @@ import type { PipelineRow } from "@/lib/pipeline.functions";
 export const STEPS = ["NDA", "Financial & Valuation", "Letter of intent", "Deal Support", "Independent valuation", "Legal", "Payment"] as const;
 
 export function stepDates(p: PipelineRow) {
-  return [p.ndaApprovedAt, p.reportSharedAt, p.loiAcceptedAt, p.contactAt, p.legalAt, p.spaAt, p.paymentAt];
+  const latest=(values:(string|null|undefined)[])=>values.filter((x):x is string=>!!x).sort().at(-1)??null;
+  const w=p.workflow;
+  return [p.ndaApprovedAt,p.reportSharedAt,p.loiAcceptedAt,w?.supportAt??null,latest([w?.receipts?.buyer?.at,w?.receipts?.seller?.at]),w?.spaSignedAt??w?.spaDraftedAt??null,p.paymentAt??(w?.payment?.buyer&&w.payment.seller?latest([w.payment.buyer,w.payment.seller]):null)];
 }
 export function currentStep(p: PipelineRow) {
  if(!p.ndaApprovedAt)return 0;
