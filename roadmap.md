@@ -1,6 +1,7 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
 ## Businesses Wanted Grid / Split / List
+- The second uploaded pair is byte-identical to the first; it does not change the scope.
 - [ ] Reuse Discovery controls and frames without changing its rendering or existing marketplace cards.
 - [ ] Add transient sorting, saved layouts, selected role-aware details and list actions; preserve privacy/view counting.
 - [ ] Verify before/after Grid dimensions, EN/TH widths, covers and available role views; run focused tests.
