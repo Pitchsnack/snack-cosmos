@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Businesses Wanted Grid / Split / List
+- [ ] Reuse Discovery controls and frames without changing its rendering or existing marketplace cards.
+- [ ] Add transient sorting, saved layouts, selected role-aware details and list actions; preserve privacy/view counting.
+- [ ] Verify before/after Grid dimensions, EN/TH widths, covers and available role views; run focused tests.
+
 ## Either-side LOI and post-LOI Pipeline
 - [x] Review brief, try reference and trace shared permissions, cards, alerts and messaging; Admin is Deal Support for now.
 - [x] Add protected two-sided LOI transitions, revisions, consent records, decline acknowledgements and mirrored notifications.
