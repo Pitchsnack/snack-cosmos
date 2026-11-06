@@ -11,9 +11,9 @@ import { recordBuyOrderView, type ApplyContext, type BoCard } from "@/lib/buy-or
 import { AppState, ApplyButton, BuyerChip, Cover, ForCompany, KindPill, managedCardState, ShareButton, StatusPill, useBw, useSectorName } from "./bw-card";
 import { cn } from "@/lib/utils";
 
-export function BuyOrderDetails({ card: rawCard, persona, applyCtx, onClose, onApply, onShare, embedded = false, discovery = false }: {
+export function BuyOrderDetails({ card: rawCard, persona, applyCtx, onClose, onApply, onShare, embedded = false, discovery = false, footer }: {
   card: BoCard | null; persona: "seller" | "buyer" | "advisor"; applyCtx?: ApplyContext;
-  onClose: () => void; onApply: (c: BoCard) => void; onShare: (c: BoCard) => void; embedded?: boolean; discovery?: boolean;
+  onClose: () => void; onApply: (c: BoCard) => void; onShare: (c: BoCard) => void; embedded?: boolean; discovery?: boolean; footer?: React.ReactNode;
 }) {
   const { c, th } = useBw();
   const card = rawCard && localizeCard(rawCard, th);
@@ -122,12 +122,12 @@ export function BuyOrderDetails({ card: rawCard, persona, applyCtx, onClose, onA
             )}
           </div>
         </div>
-        <div className="bw-dfoot">
+        {footer !== undefined ? footer : <div className="bw-dfoot">
           {!embedded && <button type="button" className="bw-btn bw-outline flex-none px-4" onClick={onClose}>{c("Close", "ปิด")}</button>}
           {discovery && posted && !card.myApp ? <button className="bw-btn discovery-primary" onClick={() => onApply(card)}>{c("Apply", "สมัคร")}</button> : persona === "seller" && posted && (managedState ? managedState === "available" : !card.myApp && !card.forCompany) && <span className="flex-none"><ApplyButton ctx={applyCtx} onApply={() => onApply(card)} /></span>}
           {persona === "seller" && posted && managedState === "applied" && <span className="bw-btn bw-applied flex-none"><Check className="h-4 w-4" />{c("Applied", "สมัครแล้ว")}</span>}
           {posted && !card.yours && !card.client && <span className="flex-none"><ShareButton onShare={() => onShare(card)} /></span>}
-        </div>
+        </div>}
         <span className="sr-only">{th ? "" : ""}</span>
       </Frame>
   );
