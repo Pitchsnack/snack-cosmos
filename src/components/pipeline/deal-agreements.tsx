@@ -22,7 +22,7 @@ export function DealAgreements({ p, seller, onNda, onLoi }: { p: PipelineRow; se
   ].map(a => ({ ...a, timing: agreementTiming(a.start, a.end, today) }));
   const pill = (a: typeof agreements[number]) => <span className="agreement-status" data-tone={a.unsigned ? 'unsigned' : a.timing?.tone ?? 'ended'}>{a.unsigned ? c('Not signed yet', 'ยังไม่ได้ลงนาม') : status(a.timing, a.end)}</span>;
   const protection = (a: typeof agreements[number]) => {
-    if (a.unsigned) return seller ? c(`Exclusivity starts on the day you accept ${p.counterparty.name}'s letter of intent.`, `สิทธิ์เจรจาแต่เพียงผู้เดียวเริ่มในวันที่คุณยอมรับหนังสือแสดงเจตจำนงของ ${p.counterparty.name}`) : c(`Exclusivity starts on the day ${p.counterparty.name} accepts your letter of intent.`, `สิทธิ์เจรจาแต่เพียงผู้เดียวเริ่มในวันที่ ${p.counterparty.name} ยอมรับหนังสือแสดงเจตจำนงของคุณ`);
+    if (a.unsigned) return c('Exclusivity starts on the day a letter of intent is accepted.', 'สิทธิ์เจรจาแต่เพียงผู้เดียวเริ่มในวันที่หนังสือแสดงเจตจำนงได้รับการยอมรับ');
     const ended = a.timing && a.timing.daysLeft < 0;
     if (a.key === 'nda') return ended ? c(`The NDA ended on ${fmt(a.end)}.`, `NDA สิ้นสุดเมื่อ ${fmt(a.end)}`) : c('Everything shared in this deal stays confidential: names, figures, reports and documents. No direct contact with staff, customers or suppliers.', 'ข้อมูลทั้งหมดที่แบ่งปันในดีลนี้เป็นความลับ ทั้งชื่อ ตัวเลข รายงาน และเอกสาร ห้ามติดต่อพนักงาน ลูกค้า หรือซัพพลายเออร์โดยตรง');
     if (ended) return c(`Exclusivity ended on ${fmt(a.end)}. The NDA still protects what was shared.`, `สิทธิ์เจรจาแต่เพียงผู้เดียวสิ้นสุดเมื่อ ${fmt(a.end)} NDA ยังคงคุ้มครองข้อมูลที่แบ่งปันไปแล้ว`);
