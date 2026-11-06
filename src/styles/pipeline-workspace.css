@@ -107,3 +107,8 @@ body:has(.connect-sent-dialog[data-state=closed]) [data-radix-dialog-overlay]{an
 @media(prefers-reduced-motion:reduce){.pipeline-review-alert,.loi-free,.pipeline-cards button,.loi-main-dialog button{animation:none!important;transition:none!important}}
 
 #pipeline-review-mobile-host{position:sticky;top:0;z-index:30}#pipeline-review-mobile-host:empty{display:none}#pipeline-review-mobile-host:not(:empty){min-height:42px;margin-bottom:8px}#pipeline-review-mobile-host .pipeline-review-tag{margin:0 auto 8px}#pipeline-review-mobile-host .pipeline-review-full{margin-bottom:8px}
+.pipeline-review-tag button,.pipeline-review-tag a{display:inline-flex;align-items:center;flex:none}
+.loi-stage-row>div:first-child>b{color:#111827}.loi-stage-row>div:first-child>b.loi-idle-name{color:#9CA3AF}.loi-stage-row>div:nth-child(3){color:#374151}.loi-stage-row .loi-stage-date{color:#6B7280}.loi-stage-row small{color:#6B7280}.loi-stage-row .loi-idle-name+small{color:#9CA3AF}
+.dark .loi-stage-row>div:first-child>b{color:var(--foreground)}.dark .loi-stage-row>div:nth-child(3){color:var(--muted-foreground)}
+.loi-optional-bracket[data-idle=true] span{color:#9CA3AF}
+.loi-dashed-line{background:repeating-linear-gradient(90deg,#D1D5DB 0 5px,transparent 5px 9px)!important}.loi-dashed-line.is-on{background:repeating-linear-gradient(90deg,#16A34A 0 5px,transparent 5px 9px)!important}
