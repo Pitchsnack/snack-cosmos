@@ -1,9 +1,11 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
 ## Businesses Wanted Grid / Split / List
-- [ ] Reuse Discovery controls and frames without changing its rendering or existing marketplace cards.
-- [ ] Add transient sorting, saved layouts, selected role-aware details and list actions; preserve privacy/view counting.
-- [ ] Verify before/after Grid dimensions, EN/TH widths, covers and available role views; run focused tests.
+- The second uploaded pair is byte-identical to the first; it does not change the scope.
+- [x] Reuse Discovery controls and frames without changing its rendering or existing marketplace cards.
+- [x] Add transient sorting, saved layouts, selected role-aware details and list actions; preserve privacy/view counting.
+- [x] Exact before/after Grid card widths/heights/covers match at 1440/1280; populated Control buyer EN/TH Grid/Split/List at six widths without overflow, saved layout, details, dark mode and empty-selection recovery; Discovery Split/List still render; 56 tests passed, preview build OK.
+- [ ] Separate seller/advisor/buyer-owner Advertisement and closed-order checks require suitable role accounts/records; role switches returned empty pages. Tile arrows need a populated multi-industry list to verify live; delayed-cover rerun and all menu-fold combinations remain unverified.
 
 ## Either-side LOI and post-LOI Pipeline
 - [x] Review brief, try reference and trace shared permissions, cards, alerts and messaging; Admin is Deal Support for now.
