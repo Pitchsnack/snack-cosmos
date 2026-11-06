@@ -68,3 +68,8 @@
 - [x] 10. Tests: step thresholds pass; tsgo clean
 - [x] 11. Advisor Browse EN/TH and opened firm checked; investor/listing cards unchanged by compact advisor work.
 - Architecture baseline remains untouched (479 direct calls versus frozen 243); not part of this task.
+
+## Pipeline cards open on their own
+- [x] Removed Expand all / Collapse all from All deals, Deal watchlist and History; Sort unchanged.
+- [x] All deals / Deal watchlist open with only the first card open; per-card toggles stay independent; deep-linked deal still opens.
+- [x] Verified live (buyer view, 8 cards): no link EN/TH, first card open on load and after reload, independent toggles; 52 pipeline tests pass, build OK.
