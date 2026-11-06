@@ -1,3 +1,7 @@
+import { PostLoiStages } from "./post-loi-stages";
+import { LoiTimeline } from "./loi-timeline";
+import { HatMark } from "@/components/messages/hat-mark";
+import { loiTurn } from "@/lib/loi-workflow";
 import { ShareAccessDialog } from "@/components/my-business/report-share-ui";
 import { DealAgreements } from './deal-agreements';
 import { DealCompanyChip } from './deal-company-chip';
@@ -5,7 +9,7 @@ import {PipelineReportsButton} from '@/components/reports/reports-hub';
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { RequestLoiDialog, SendLoiDialog } from "@/components/pipeline/send-loi-dialog";
+import { SendLoiDialog } from "@/components/pipeline/send-loi-dialog";
 import { useServerFn } from "@tanstack/react-start";
 import { useAdvisorContactRow } from "@/components/pipeline/advisor-bits";
 import { Check, ChevronDown, ChevronRight, Columns3, Lock, X, Star } from "lucide-react";
@@ -75,7 +79,7 @@ function useRefresh() {
 
 function Stepper({ cur, t, endedOn }: { cur: number; t: T; endedOn?: string }) {
   if (endedOn) return (
-    <div className="grid grid-cols-7 pt-3">
+    <div className="loi-stepper grid grid-cols-7 pt-3">
       {STEPS.map((s, i) => {
         const done = i < cur, stop = i === cur;
         return (
@@ -98,9 +102,8 @@ function Stepper({ cur, t, endedOn }: { cur: number; t: T; endedOn?: string }) {
         return (
           <div key={s} className="relative flex flex-col items-center">
             {i > 0 && <div className={cn("absolute right-1/2 top-[6px] h-[2px] w-[calc(100%-18px)] -translate-x-[9px]", i <= cur ? "bg-success" : "bg-border")} />}
-            <div className={cn("relative z-10 h-[14px] w-[14px] rounded-full border-2",
-              done ? "border-success bg-success" : now ? "border-accent bg-accent ring-4 ring-accent/20" : "border-border bg-card")} />
-            <div className={cn("mt-2 text-center text-[12px]", now ? "font-bold text-foreground" : done ? "text-foreground" : "text-muted-foreground")}>{t(s)}</div>
+            <div className={cn("loi-stepper-marker",i===3&&"loi-hat-marker",(i===4||i===5)&&"loi-optional-marker",done?"is-done":now?"is-current":"")}>{i===3&&<HatMark width={14}/>}</div>
+            <div className={cn("mt-2 text-center text-[12px]", now ? "font-bold text-foreground" : done ? "text-foreground" : "text-muted-foreground")}>{t(s)}{(i===4||i===5)&&<span className="sr-only"> ({t("optional")})</span>}</div>{i===4&&<span className="loi-optional-bracket">{t("Optional")}</span>}
           </div>
         );
       })}
@@ -115,7 +118,8 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
   const pendingNda=!p.ndaApprovedAt;
   const wd = p.status === "ended" ? p.withdrawal : null;
   const [loiOpen, setLoiOpen] = useState(false);
-  const [reqOpen, setReqOpen] = useState(false);
+  const [loiExpanded,setLoiExpanded]=useState(false);
+  useEffect(()=>{const sent=(e:Event)=>{if((e as CustomEvent).detail?.id===p.id)setLoiExpanded(true);};const review=(e:Event)=>{if((e as CustomEvent).detail?.id===p.id)setDlg("loi");};window.addEventListener("pipeline-loi-sent",sent);window.addEventListener("pipeline-review-loi",review);return()=>{window.removeEventListener("pipeline-loi-sent",sent);window.removeEventListener("pipeline-review-loi",review);};},[p.id]);
   const withdrawReq = useServerFn(withdrawLoiRequest);
   const lr = p.loiRequest;
   const [histOpen, setHistOpen] = useState(false);
@@ -133,7 +137,8 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
   const w = waitState(p, seller);
   const other = seller ? t("the buyer") : t("the seller");
 
-  const reviewLoi = seller && !!p.loiSentAt && !p.loiAcceptedAt;
+  const turn=loiTurn(p,seller?"seller":"buyer");
+  const reviewLoi = turn==="review";
   const adv = useAdvisorContactRow(p.id, !!p.contactAt, !!p.paymentAt, t);
   const rows: [string, string | null, React.ReactNode, React.ReactNode?][] = [
     ["NDA", p.ndaApprovedAt, `${t("Approved by")} ${seller ? t("you") : t("the seller")} · ${t("requested")} ${day(p.ndaRequestedAt)}`,
@@ -150,18 +155,15 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
           : p.reports.financials || p.reports.valuation ? <Button size="sm" onClick={() => setDlg("share")}>{t("Share report")}</Button> : undefined)
         : p.share ? <Button size="sm" variant="outline" onClick={() => setDlg("report")}>{t("View report")}</Button>
         : !p.reportRequestedAt ? <Button size="sm" variant="outline" onClick={ask}>{t("Ask for the report")}</Button> : undefined],
-    ["Letter of intent", p.loiAcceptedAt,
-      p.loiAcceptedAt ? `${money(p.loiAmount)} · ${t("accepted by")} ${seller ? t("you") : t("the seller")} · ${t("exclusivity")} ${p.loiExclusivityDays ?? 0} ${t("days")}`
-        : p.loiSentAt ? `${money(p.loiAmount)} · ${t("sent")} ${day(p.loiSentAt)} · ${t("waiting for")} ${seller ? t("you") : t("the seller")}`
-        : lr ? (seller ? `${t("Requested")} ${day(lr.at)} · ${t("waiting for the buyer")}` : `${t("Seller requested a letter of intent")} · ${day(lr.at)}`)
-        : t("No letter of intent yet"),
-      reviewLoi ? <Button size="sm" onClick={() => setDlg("loi")}>{t("View / Accept LOI")}</Button>
-        : p.loiSentAt ? <Button size="sm" variant="outline" onClick={() => setDlg("loi")}>{t("View LOI")}</Button>
-        : !seller ? <Button size="sm" onClick={() => setLoiOpen(true)}>{t("Send letter of intent")}</Button>
-        : lr ? <button type="button" className="text-[12.5px] font-semibold text-[#2563EB] hover:underline" onClick={async () => {
-            try { await withdrawReq({ data: { id: p.id } }); toast.success(t("Request withdrawn")); refresh(); } catch (e) { toast.error((e as Error).message); }
-          }}>{t("Withdraw request")}</button>
-        : p.ndaApprovedAt ? <Button size="sm" onClick={() => setReqOpen(true)}>{t("Request letter of intent")}</Button> : undefined],
+    ["Letter of intent", p.loiAcceptedAt??p.loiSentAt,
+      p.loiAcceptedAt ? `${money(p.loiAmount)} · ${t("accepted by")} ${p.loiAcceptConsent?.side===(seller?"seller":"buyer")?t("you"):other} · ${t("exclusivity")} ${p.loiExclusivityDays??0} ${t("days")}`
+      : p.loiChangesRequestedAt ? `${turn==="revised"?t(seller?"Buyer asked for changes":"Seller asked for changes"):t("Changes asked for")} · ${day(p.loiChangesRequestedAt)}`
+      :p.loiSentAt ? `${money(p.loiAmount)} · ${t("sent")} ${day(p.loiSentAt)} · ${t("waiting for")} ${reviewLoi?t("you"):other}`
+      :lr ? (seller?`${t("Requested")} ${day(lr.at)} · ${t("waiting for the buyer")}`:`${t("Seller requested a letter of intent")} · ${day(lr.at)}`):t("No letter of intent yet"),
+      turn==="revised"?<><Button size="sm" variant="outline" onClick={()=>setDlg("loi")}>{t("View LOI")}</Button><Button size="sm" onClick={()=>setDlg("loi")}>{t("Accept revised LOI")}</Button></>:reviewLoi?<Button size="sm" onClick={()=>setDlg("loi")}>{t("View / Accept LOI")}</Button>
+      :p.loiSentAt?<Button size="sm" variant="outline" onClick={()=>setDlg("loi")}>{t("View LOI")}</Button>
+      :seller&&lr?<Button variant="link" onClick={async()=>{try{await withdrawReq({data:{id:p.id}});refresh();}catch(e){toast.error((e as Error).message);}}}>{t("Withdraw request")}</Button>
+      :<Button size="sm" onClick={()=>setLoiOpen(true)}>{t("Send letter of intent")}</Button>],
     ["Contact M&A", p.contactAt,
       adv.text, adv.action],
     ["Legal", p.legalAt, p.legalAt ? (seller ? t("Legal folder shared") : t("Legal folder received")) : t("Legal folder not shared yet"),
@@ -212,12 +214,10 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
             {!wd && p.ndaApprovedAt && (!p.ndaExpiresAt || Date.parse(p.ndaExpiresAt)>Date.now()) && <PipelineReportsButton pipelineId={p.id} seller={seller}/>}
           </div>
           <div className="truncate text-[12.5px] text-[#6B7280]">
-            {[p.counterparty.sub, p.loiAmount ? `${seller ? t("offer") : t("your offer")} ${money(p.loiAmount)}` : null].filter(Boolean).join(" · ")}
+            {[p.counterparty.sub, p.loiAmount ? `${(p.loiFrom??"buyer")===(seller?"seller":"buyer")?t(seller?"your price":"your offer"):t((p.loiFrom??"buyer")==="seller"?"seller’s price":"offer")} ${money(p.loiAmount)}` : null].filter(Boolean).join(" · ")}
             {" · "}
             {wd ? <span className="font-semibold text-[#4B5563]">{withdrewText(wd, t)}</span> : <span className={cn("font-semibold", w.onYou ? "text-[#B45309]" : "text-[#6B7280]")}>
-              {w.onYou && w.what === "send a letter of intent"
-                ? `${t("Pending")}: ${t("send a letter of intent")}`
-                : `${t("waiting on")} ${w.onYou ? t("you") : other}: ${t(w.what)}`}
+              {!p.loiSentAt&&p.ndaApprovedAt?t("next: a letter of intent, from either side"):p.loiAcceptedAt?t("LOI accepted · next: optional steps, then payment"):`${t("waiting on")} ${w.onYou?t("you"):other}: ${t(w.what)}`}
             </span>}
           </div>
         </div>
@@ -241,14 +241,15 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
         <div className="min-h-0 overflow-hidden" inert={!open || undefined}>
           {wd && <EndedBox w={wd} p={p} seller={seller} t={t} />}
           <div className="mx-5 border-t border-[#F0F1F4]">
-            {rows.map(([label, date, text, action]) => (
-              <div key={label} className="grid min-h-[50px] grid-cols-[168px_72px_1fr_auto] items-center gap-4 border-b border-[#F0F1F4] py-2 text-[13.5px]">
+            {(wd?rows:rows.slice(0,3)).map(([label, date, text, action]) => (
+              <div key={label} className={`loi-stage-row ${!wd&&label===STEPS[cur]?"loi-current-row":""}`} onClick={e=>{if(label==="Letter of intent"&&!wd&&!(e.target as HTMLElement).closest("button,a")&&!window.getSelection()?.toString())setLoiExpanded(v=>!v);}}>
                 <div className={cn("font-semibold", date || STEPS.indexOf(label as typeof STEPS[number]) === cur ? "text-[#111827]" : "text-[#9CA3AF]")}>{t(label)}</div>
                 <div className="text-muted-foreground">{day(date)}</div>
                 <div className="text-[#374151]">{text}</div>
-                <div className="flex justify-end gap-2 [&_button]:h-8">{action}</div>
+                <div className="loi-stage-actions">{action}{label==="Letter of intent"&&!wd&&<Button variant="ghost" size="icon" aria-label={t("Show steps")} aria-expanded={loiExpanded} onClick={()=>setLoiExpanded(v=>!v)}><ChevronDown size={16} className={loiExpanded?"rotate-180":""}/></Button>}</div>{label==="Letter of intent"&&loiExpanded&&!wd&&<LoiTimeline p={p} seller={seller}/>}
               </div>
             ))}
+            {!wd&&<PostLoiStages p={p} seller={seller} onDone={refresh}/>}
           </div>
           <div className="flex items-center justify-between gap-3 px-5 pb-4 pt-2.5">
             {!pendingNda&&<WithdrawLink p={p} seller={seller} t={t} onDone={() => { refresh(); onEnded(); }} />}
@@ -258,9 +259,9 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
       </div>
       {reviewNda&&<ReviewInvestorDialog pipelineId={p.id} onClose={()=>{setReviewNda(false);refresh();}}/>}
       {withdrawConfirm&&<Dialog open onOpenChange={setWithdrawConfirm}><DialogContent><DialogTitle>{t("Withdraw request")}?</DialogTitle><DialogDescription>{t("The seller has not approved this NDA yet.")}</DialogDescription><DialogFooter><Button variant="outline" onClick={()=>setWithdrawConfirm(false)}>{t("Cancel")}</Button><Button onClick={()=>act(async()=>{await withdrawNda({data:{id:p.hiddenProfileId}});setWithdrawConfirm(false);},t("Request withdrawn"))}>{t("Withdraw request")}</Button></DialogFooter></DialogContent></Dialog>}
-      {adv.dialogs}
-      {loiOpen && <SendLoiDialog id={p.id} request={lr} onClose={() => setLoiOpen(false)} onSent={refresh} />}
-      {reqOpen && <RequestLoiDialog id={p.id} onClose={() => setReqOpen(false)} onSent={refresh} />}
+
+      {loiOpen && <SendLoiDialog id={p.id} p={p} seller={seller} request={lr} onClose={() => setLoiOpen(false)} onSent={refresh} />}
+
       {histOpen && <HistoryDialog id={p.id} other={other} onClose={() => setHistOpen(false)} t={t} />}
       {dlg === "report" && <ReportViewer p={p} seller={seller} onClose={() => setDlg(null)} />}
       {dlg === "share" && <ShareAccessDialog p={p} mode={p.share ? "manage" : "share"} onClose={() => setDlg(null)} onDone={refresh} />}

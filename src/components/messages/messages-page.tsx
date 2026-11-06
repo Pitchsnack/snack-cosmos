@@ -148,6 +148,7 @@ export function MessagesPage({ adminView = false }: { adminView?: boolean }) {
   useEffect(() => { setPanel(false); setSel(null); }, [persona]);
   const [wanted, setWanted] = useState<string | null>(() => typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("thread"));
   useEffect(() => {
+    if (wanted === "help") { const help = convs.find(c => c.kind === "a"); if (help) { setSel(help.key); setMobileChat(true); setWanted(null); return; } }
     if (wanted && convs.some((c) => c.key === wanted)) { setSel(wanted); setMobileChat(true); setWanted(null); return; }
     if (!sel && convs.length && !wanted) setSel(convs[0].key);
   }, [convs, sel, wanted]);

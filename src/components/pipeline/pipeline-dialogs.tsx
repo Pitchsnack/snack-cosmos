@@ -623,28 +623,6 @@ Requested by the Buyer on ${fmtDate(p.ndaRequestedAt)}. Approved by the Seller o
 
 — End of agreement —`;
 }
-function loiText(p: PipelineRow) {
-  return `LETTER OF INTENT
-
-From ${p.parties.buyerOrg} to ${p.parties.sellerCompany}, sent ${fmtDate(p.loiSentAt)}.
-
-1. Proposed transaction. The Buyer proposes to acquire ${p.loiStakePct != null ? `${p.loiStakePct}% of` : "an interest in"} the Seller for an indicative price of ${money(p.loiAmount)}.
-
-2. Consideration. Cash at completion, subject to due diligence and final agreement.
-
-3. Due diligence. Financial, legal and commercial review through the PitchSnack data room.
-
-4. Conditions. ${p.loiConditions || "No further conditions stated."}
-
-5. Exclusivity. From acceptance the Seller grants the Buyer ${p.loiExclusivityDays ?? 0} days of exclusivity, during which it does not negotiate with other buyers.
-
-6. Binding effect. This letter is non-binding, except for exclusivity and confidentiality.
-
-7. Confidentiality. This letter and its contents are confidential under the NDA between the parties.
-
-— End of letter —`;
-}
-
 export function NdaDialog({ p, seller, onClose }: { p: PipelineRow; seller: boolean; onClose: () => void }) {
   return (
     <Shell width={640} onClose={onClose} label="Mutual NDA">
@@ -668,79 +646,7 @@ export function NdaDialog({ p, seller, onClose }: { p: PipelineRow; seller: bool
   );
 }
 
-export function LoiDialog({ p, seller, onClose }: { p: PipelineRow; seller: boolean; onClose: () => void }) {
-  const deciding = seller && !!p.loiSentAt && !p.loiAcceptedAt;
-  const [read, setRead] = useState(false);
-  const [tick, setTick] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const f = useServerFn(decideLoi);
-  const qc = useQueryClient();
-  const days = p.loiExclusivityDays ?? 0;
-  const consent = `I have read the letter of intent and accept its terms on behalf of ${p.parties.sellerCompany}. I understand that exclusivity starts today and runs for ${days} days.`;
-  const run = async (decision: "accept" | "decline" | "changes") => {
-    setBusy(true);
-    try {
-      await f({ data: { id: p.id, decision, consent: decision === "accept" ? consent : undefined } });
-      toast.success(decision === "accept" ? "Letter of intent accepted · exclusivity started today" : decision === "changes" ? "Changes requested" : "Letter of intent declined");
-      qc.invalidateQueries({ queryKey: ["pipeline"] });
-      onClose();
-    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
-  };
-  const status = p.loiAcceptedAt
-    ? <StatusPill tone="green">✓ Accepted {fmtDate(p.loiAcceptedAt)}</StatusPill>
-    : <StatusPill tone="amber">{seller ? "Waiting for your review" : "Waiting for the seller"}</StatusPill>;
-  return (
-    <Shell width={640} onClose={onClose} label="Letter of intent">
-      <DocHead title="Letter of intent" sub={`${seller ? `From ${p.parties.buyerOrg}` : `To ${p.parties.sellerCompany}`} · sent ${fmtDate(p.loiSentAt)}`} onClose={onClose} />
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
-        {status}
-        <div className="mt-4 grid grid-cols-3 gap-3">
-          {([["Price", money(p.loiAmount)], ["Stake", p.loiStakePct != null ? `${p.loiStakePct}%` : "—"], ["Exclusivity", `${days} days`]] as const).map(([k, v]) => (
-            <div key={k} className="rounded-[12px] border border-[#E5E7EB] p-3"><div className="text-[12px] text-[#6B7280]">{k}</div><div className="mt-0.5 text-[17px] font-bold">{v}</div></div>
-          ))}
-        </div>
-        <Caption>Terms</Caption>
-        <Rows rows={[
-          ["Consideration", "Cash at completion"],
-          ["Due diligence", "Financial, legal and commercial"],
-          ["Conditions", p.loiConditions || "—"],
-          ["Timeline", `${days} days exclusivity from acceptance`],
-          ["Offer valid until", null],
-          ["Binding", "Non-binding, except exclusivity and confidentiality"],
-        ]} />
-        <Caption>Signed</Caption>
-        <Rows rows={[
-          ["By the buyer", [p.parties.buyerName, fmtDate(p.loiSentAt), "e-signature"].filter(Boolean).join(" · ")],
-          ["Seller decision", p.loiAcceptedAt ? `Accepted by ${p.loiAcceptedByName ?? "the seller"} · ${fmtDate(p.loiAcceptedAt)}` : "Not decided yet"],
-        ]} />
-        <Reader label="letter of intent" text={loiText(p)} onRead={() => setRead(true)} />
-        {deciding && (
-          <label className={cn("mt-4 flex items-start gap-3 rounded-[12px] border border-[#E5E7EB] px-[14px] py-3 text-[13px]", !read && "bg-[#FAFAFB] text-[#9CA3AF]")}>
-            <input type="checkbox" disabled={!read} checked={tick} onChange={(e) => setTick(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#111827]" />
-            <span>
-              {consent}
-              <span className="mt-1 block text-[12px] text-[#6B7280]">{read ? "You have read the full letter." : "Open and read the full letter to the end to tick this box."}</span>
-            </span>
-          </label>
-        )}
-      </div>
-      {deciding ? (
-        <div className="flex items-center gap-2 border-t border-[#F0F1F4] bg-[#FAFAFB] px-6 py-3">
-          <span className="flex-1 text-[12.5px] text-[#6B7280]">Accepting starts {days} days of exclusivity.</span>
-          <Button variant="outline" size="sm" disabled={busy} onClick={() => run("decline")}>Decline</Button>
-          <Button variant="outline" size="sm" disabled={busy} onClick={() => run("changes")}>Request changes</Button>
-          {tick ? (
-            <Button size="sm" disabled={busy} onClick={() => run("accept")}>Accept LOI</Button>
-          ) : (
-            <Tooltip><TooltipTrigger asChild><span tabIndex={0}><Button size="sm" disabled>Accept LOI</Button></span></TooltipTrigger><TooltipContent>Tick the box to accept</TooltipContent></Tooltip>
-          )}
-        </div>
-      ) : (
-        <Foot><Lock className="h-3.5 w-3.5" />Confidential under the NDA. Both parties see the same letter.</Foot>
-      )}
-    </Shell>
-  );
-}
+export { LoiReviewDialog as LoiDialog } from "./loi-review-dialog";
 
 /* ---------------- Seller profile (buyer) ---------------- */
 export function SellerProfile({ p, onClose, fullProfile=false, chatPopup=false }: { p: PipelineRow; onClose: () => void; onNda?: () => void; onLoi?: () => void; onReport?: () => void; onAsk?: () => void; fullProfile?:boolean; chatPopup?:boolean }) {

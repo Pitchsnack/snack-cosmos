@@ -1,0 +1,12 @@
+import {useQuery,useQueryClient} from '@tanstack/react-query';
+import {useServerFn} from '@tanstack/react-start';
+import {useState} from 'react';
+import {toast} from 'sonner';
+import {AlertDialog,AlertDialogContent,AlertDialogTitle,AlertDialogDescription} from '@/components/ui/alert-dialog';
+import {Button} from '@/components/ui/button';
+import {pendingLoiDeclines,acknowledgeLoiDecline,type PipelineRow} from '@/lib/pipeline.functions';
+import {useTranslation} from '@/i18n/language';
+export function DeclineNotice({seller,rows}:{seller:boolean;rows:PipelineRow[]}){
+ const side=seller?'seller':'buyer';const fetch=useServerFn(pendingLoiDeclines),ack=useServerFn(acknowledgeLoiDecline);const {data=[]}=useQuery({queryKey:['pipeline','decline-notices',side],queryFn:()=>fetch({data:{side}})});const [busy,setBusy]=useState(false);const qc=useQueryClient();const {language}=useTranslation();const th=language==='th';const c=(en:string,thai:string)=>th?thai:en;const e=data.find(e=>rows.some(p=>p.id===e.pipelineId));if(!e)return null;const company=rows.find(p=>p.id===e.pipelineId)?.counterparty.name??c('The other side','อีกฝ่าย');
+ return <AlertDialog open><AlertDialogContent className="loi-confirmation" onEscapeKeyDown={e=>e.preventDefault()}><AlertDialogTitle>{c(`Your ${e.revised?'revised ':''}letter of intent (LOI) was declined`,`หนังสือแสดงเจตจำนง (LOI) ${e.revised?'ฉบับแก้ไข':''}ของท่านถูกปฏิเสธ`)}</AlertDialogTitle><AlertDialogDescription asChild><div className="loi-confirmation-copy"><p>{c(`${company} declined your Letter of Intent on ${new Date(e.at).toLocaleDateString('en-GB')}. The offer was ฿${Number(e.amount).toLocaleString()} with ${e.days} days of exclusivity.`,`${company} ปฏิเสธหนังสือแสดงเจตจำนงของท่านเมื่อ ${new Date(e.at).toLocaleDateString('th-TH')} ข้อเสนอคือ ฿${Number(e.amount).toLocaleString()} พร้อมสิทธิ์เจรจาแต่เพียงผู้เดียว ${e.days} วัน`)}</p><p>{c('The LOI has been deleted. You can submit a new Letter of Intent at any time.','LOI ถูกลบแล้ว ท่านสามารถส่งหนังสือแสดงเจตจำนงฉบับใหม่ได้ทุกเมื่อ')}</p></div></AlertDialogDescription><div className="loi-confirmation-actions"><Button autoFocus disabled={busy} onClick={async()=>{setBusy(true);try{await ack({data:{eventId:e.id}});await qc.invalidateQueries({queryKey:['pipeline','decline-notices']});}catch(e){toast.error((e as Error).message);}finally{setBusy(false);}}}>{c('OK','ตกลง')}</Button></div></AlertDialogContent></AlertDialog>;
+}

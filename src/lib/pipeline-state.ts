@@ -1,13 +1,17 @@
 import type { PipelineRow } from "@/lib/pipeline.functions";
 
-export const STEPS = ["NDA", "Financial & Valuation", "Letter of intent", "Contact M&A", "Legal", "Offer & SPA", "Payment"] as const;
+export const STEPS = ["NDA", "Financial & Valuation", "Letter of intent", "Deal Support", "Independent valuation", "Legal", "Payment"] as const;
 
 export function stepDates(p: PipelineRow) {
-  return [p.ndaApprovedAt, p.reportSharedAt, p.loiAcceptedAt, p.contactAt, p.legalAt, p.spaAt, p.paymentAt];
+  const latest=(values:(string|null|undefined)[])=>values.filter((x):x is string=>!!x).sort().at(-1)??null;
+  const w=p.workflow;
+  return [p.ndaApprovedAt,p.reportSharedAt,p.loiAcceptedAt,w?.supportAt??null,latest([w?.receipts?.buyer?.at,w?.receipts?.seller?.at]),w?.spaSignedAt??w?.spaDraftedAt??null,p.paymentAt??(w?.payment?.buyer&&w.payment.seller?latest([w.payment.buyer,w.payment.seller]):null)];
 }
 export function currentStep(p: PipelineRow) {
-  const i = stepDates(p).findIndex((x) => !x);
-  return i === -1 ? STEPS.length : i;
+ if(!p.ndaApprovedAt)return 0;
+ if(p.loiAcceptedAt){if(p.paymentAt||p.workflow?.payment?.seller&&p.workflow?.payment?.buyer)return 6;return 3;}
+ if(!p.reportSharedAt)return 1;
+ return 2;
 }
 export function isPending(p: PipelineRow) {
   return !p.ndaApprovedAt || (!!p.loiSentAt && !p.loiAcceptedAt);
@@ -17,20 +21,11 @@ export function isPending(p: PipelineRow) {
 export function waitState(p: PipelineRow, seller: boolean): { onYou: boolean; what: string } {
   if (!p.ndaApprovedAt) return { onYou: seller, what: seller ? "approve or decline the NDA request" : "approve your NDA request" };
   if (p.paymentAt) return { onYou: false, what: "deal completed" };
-  if (seller) {
-    if (p.reportRequestedAt && !p.share && (p.reports?.financials || p.reports?.valuation)) return { onYou: true, what: "share the financial report" };
-    if (p.loiSentAt && !p.loiAcceptedAt) return { onYou: true, what: "review the letter of intent" };
-    if (!p.loiSentAt) return { onYou: false, what: "letter of intent" };
-    if (!p.legalAt) return { onYou: true, what: "share the legal folder" };
-    if (!p.spaAt) return { onYou: true, what: "share the SPA draft" };
-    return { onYou: true, what: "confirm payment" };
-  }
-  if (p.reportRequestedAt && !p.reportSharedAt) return { onYou: false, what: "financial report" };
-  if (!p.loiSentAt) return { onYou: true, what: "send a letter of intent" };
-  if (!p.loiAcceptedAt) return { onYou: false, what: "decision on your letter of intent" };
-  if (!p.legalAt) return { onYou: false, what: "legal folder" };
-  if (!p.spaAt) return { onYou: false, what: "SPA draft" };
-  return { onYou: false, what: "payment" };
+  if (p.loiAcceptedAt) return {onYou:!p.workflow?.payment?.[seller?"seller":"buyer"],what:p.workflow?.payment?.[seller?"seller":"buyer"]?"payment confirmation":"confirm payment"};
+  if (!p.loiSentAt) return {onYou:false,what:"next: a letter of intent, from either side"};
+  const mine=(p.loiFrom??"buyer")===(seller?"seller":"buyer");
+  if(p.loiChangesRequestedAt)return {onYou:mine,what:mine?"accept the revised letter of intent":"decision on the revised letter of intent"};
+  return {onYou:!mine,what:mine?"decision on your letter of intent":"review the letter of intent"};
 }
 
 /** Pipeline menu badge = cards waiting on you (plus NDA requests for sellers). */

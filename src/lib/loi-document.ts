@@ -20,7 +20,7 @@ export function letterClauses(p:LetterTerms,th:boolean){
  'ตรวจสอบด้านการเงิน กฎหมาย และการค้า ผ่านห้องข้อมูลของ PitchSnack',p.conditions||'ไม่มีเงื่อนไขเพิ่มเติม',
  `นับจากวันที่ยอมรับ ผู้ขายให้สิทธิ์เจรจาแต่เพียงผู้เดียวแก่ผู้ซื้อเป็นเวลา ${p.days} วัน`,
  'ไม่มีผลผูกพัน ยกเว้นเรื่องสิทธิ์เจรจาแต่เพียงผู้เดียวและการรักษาความลับ','เป็นไปตาม NDA ระหว่างคู่สัญญา',
- `โดย${sender?'ผู้ขาย':'ผู้ซื้อ'}: ${date} การตัดสินใจของ${sender?'ผู้ซื้อ':'ผู้ขาย'}: ${p.decision||'ยังไม่ได้ตัดสินใจ'}`
+ `โดย${sender?'ผู้ขาย':'ผู้ซื้อ'}: ${p.sentAt?'ลงนามอิเล็กทรอนิกส์ ':''}${date} การตัดสินใจของ${sender?'ผู้ซื้อ':'ผู้ขาย'}: ${p.decision||'ยังไม่ได้ตัดสินใจ'}`
  ]:[`The ${sender?'Seller proposes to sell its business':'Buyer proposes to buy the Seller’s business'} (Listing ${p.ref??'—'})${sender?' to the Buyer':''} for an indicative price of ฿${amount} (${englishAmount(p.amount)} baht).`,
  'Cash at completion, subject to due diligence and final agreement.','Financial, legal and commercial review through the PitchSnack data room.',p.conditions||'No further conditions stated.',
  `From acceptance the Seller grants the Buyer ${p.days} days of exclusivity.`,'Non-binding, except for exclusivity and confidentiality.','Under the NDA between the parties.',
