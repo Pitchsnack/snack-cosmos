@@ -8,6 +8,7 @@
 - [x] Add All deals top-bar review alert and update canonical waiting/stage counts.
 - [x] 38 focused tests; live buyer reading/tick/Cancel and twelve width/language/theme combinations; phone alert and eight Thai clauses; preview build OK.
 - [ ] Full live two-sided send/accept/decline, report upload/read-back, payment and email checks need an authorised test deal; current offers are real and were not changed. Separate seller session and concurrent-transition end-to-end remain unverified.
+- [x] Card rows one line down to 720px card width, grey pre-acceptance rows with "—", one-line review tag with orange edge, aligned step-bar labels and Optional bracket; buyer/seller/Thai/390px checked live, 59 tests passed, build OK.
 
 ## Public Discovery
 - [x] Public, privacy-whitelisted live data and EN/TH two-tab page with shared header/footer.
