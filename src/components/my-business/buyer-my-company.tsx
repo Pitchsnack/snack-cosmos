@@ -1,3 +1,4 @@
+import { CompanyScrollLayout } from "./company-scroll-layout";
 import { setupText, tr } from "@/i18n/language";
 import { buyerListingName } from "@/lib/buyer-listing-identity";
 import { revenueBandLabel } from "@/lib/revenue-bands";
@@ -166,6 +167,9 @@ export function BuyerMyCompany() {
   const [hq, setHq] = useState("");
   const [sort, setSort] = useState("updated_desc");
   const [favOnly, setFavOnly] = useState(false);
+  const [selectedExtra, setSelectedExtra] = useState<string | null>(null);
+  const buyerScrollReset = JSON.stringify([search,type,status,sector,hq,sort,favOnly]);
+  useEffect(() => { setSelectedExtra(null); }, [buyerScrollReset]);
   const [panelOpen, setPanelOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
   const [layout, setLayout] = useState<Layout>("profiles");
@@ -182,6 +186,9 @@ export function BuyerMyCompany() {
   const extraIds = (idsQ.data?.ids ?? []).filter((x) => x !== inv.data?.investor.id);
   const extras = isAdmin ? <AdminInvestorProfiles ids={extraIds} openId={openId} /> : null;
   const total = 1 + extraIds.length;
+  useEffect(() => { if (openId && extraIds.includes(openId)) setSelectedExtra(openId); }, [openId, extraIds.join(",")]);
+  const extraList = isAdmin ? <AdminInvestorProfiles ids={extraIds} openId={selectedExtra ?? undefined} part="list" onSelect={setSelectedExtra} /> : null;
+  const extraPanel = selectedExtra ? <AdminInvestorProfiles ids={extraIds} openId={selectedExtra} part="panel" /> : null;
 
   if (isLoading) return <div className="space-y-6"><Skeleton className="h-20" /><Skeleton className="h-12" /><div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[420px]" /><Skeleton className="h-[520px]" /></div></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">{setupText("Couldn't load your investor profile. Please refresh.")}</p>;
@@ -243,10 +250,8 @@ export function BuyerMyCompany() {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-semibold tracking-tight">{setupText("My Company")}</h1>
-        <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
-          <div className="space-y-5"><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected /> : <Skeleton className="h-[260px]" />} /></div>
-          <div className="min-w-0 lg:self-start">{rightPanel}</div>
-        </div>
+        <CompanyScrollLayout listLabel={tr("Your investor profiles")} panelLabel={org.name || tr("My Company")} selectedKey={`${selectedExtra ?? p.user_id}:${view}`} resetKey={buyerScrollReset}
+          list={<div className="space-y-5">{extraList}<div data-company-selected={!selectedExtra} onClick={() => setSelectedExtra(null)}><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected /> : <Skeleton className="h-[260px]" />} /></div></div>} panel={extraPanel ?? rightPanel} />
         {edit && <EditDialog section={edit} p={p} org={org} onClose={() => setEdit(null)} />}
       </div>
     );
@@ -306,21 +311,19 @@ export function BuyerMyCompany() {
           <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />{setupText("Refresh")}
         </Button>
       </div>
-      {extras}
+      {(layout === "grid" || layout === "list") && extras}
       {!matches ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">{setupText("No companies match your filters")}</div>
       ) : layout === "profiles" ? (
-        <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
-          <div className="space-y-5"><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected /> : <Skeleton className="h-[260px]" />} /></div>
-          <div className="min-w-0 lg:self-start">{rightPanel}</div>
-        </div>
+        <CompanyScrollLayout listLabel={tr("Your investor profiles")} panelLabel={org.name || tr("My Company")} selectedKey={`${selectedExtra ?? p.user_id}:${view}`} resetKey={buyerScrollReset}
+          list={<div className="space-y-5">{extraList}<div data-company-selected={!selectedExtra} onClick={() => setSelectedExtra(null)}><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected /> : <Skeleton className="h-[260px]" />} /></div></div>} panel={extraPanel ?? rightPanel} />
       ) : layout === "split" ? (
-        <div className="grid items-start gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
-          {inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected onSelect={() => setView("private")} /> : <Skeleton className="h-[220px]" />}
-          <div className="min-w-0 self-start rounded-lg border border-border bg-card p-5 shadow-sm lg:sticky lg:top-4">
+        <CompanyScrollLayout mode="split" className="gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]"
+          listLabel={tr("Your investor profiles")} panelLabel={org.name || tr("My Company")} selectedKey={`${selectedExtra ?? p.user_id}:${view}`} resetKey={buyerScrollReset}
+          list={<div className="space-y-5">{extraList}<div data-company-selected={!selectedExtra} onClick={() => setSelectedExtra(null)}>{inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected onSelect={() => setView("private")} /> : <Skeleton className="h-[220px]" />}</div></div>}
+          panel={extraPanel ?? <div className="min-w-0 rounded-lg border border-border bg-card p-5 shadow-sm">
             {view === "public" ? profilePanel : inv.data ? <BuyerPrivatePanel d={inv.data} view={view} onView={setView} /> : <Skeleton className="h-[520px]" />}
-          </div>
-        </div>
+          </div>} />
       ) : layout === "grid" ? (
         <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <BuyerDirectoryItem p={p} org={org} mode="grid" selected={false} onClick={openProfile} />
@@ -439,7 +442,7 @@ function Logo({ p, org, size }: { p: BuyerProfile; org: BuyerOrg; size: number }
 
 function PanelHead({ kind, thumb, title, meta, editLabel, onEdit, pill, deleteDraft }: { kind: View; thumb: React.ReactNode; title: string; meta: string; editLabel: string; onEdit: () => void; pill: React.ReactNode; deleteDraft?: Omit<DeleteDraftTarget, "name"> }) {
   return (
-    <div className="mb-4 flex items-center gap-3.5 border-b border-border pb-4">
+    <div data-company-panel-header="padded" className="mb-4 flex items-center gap-3.5 border-b border-border pb-4">
       {thumb}
       <div className="min-w-0 flex-1">
         {kind === "public"

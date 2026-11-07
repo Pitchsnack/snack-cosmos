@@ -1,0 +1,11 @@
+@media (min-width: 1024px) {
+  main.company-scroll-page { overflow-y: hidden; }
+  .company-scroll-layout { height: var(--company-scroll-height); min-height: 0; grid-template-rows: minmax(0, 1fr); }
+  .company-scroll-list { height: 100%; min-height: 0; overflow-y: auto; padding: 2px 8px 2px 2px; scrollbar-gutter: stable; scrollbar-width: auto; overscroll-behavior: contain; overflow-anchor: none; }
+  .company-scroll-panel { max-height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; overflow-anchor: none; border-radius: 14px; }
+  .company-scroll-panel [data-company-panel-header] { position: sticky; top: 0; z-index: 20; background: var(--card); border-bottom: 1px solid var(--border); }
+  .company-scroll-panel > .p-6 { --company-panel-padding: 24px; }
+  .company-scroll-panel [data-company-panel-header="padded"] { top: 0; margin-inline: calc(-1 * var(--company-panel-padding, 20px)); padding: var(--company-panel-padding, 20px); }
+  .company-scroll-panel [data-company-panel-header="flush"] { top: 0; }
+  .company-scroll-panel [data-company-panel-shell] { overflow: visible; }
+}

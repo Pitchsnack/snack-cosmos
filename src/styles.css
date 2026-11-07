@@ -23,6 +23,7 @@
 @import "./styles/approval-review.css";
 @import "./styles/advisor-compact.css";
 @import "./styles/seller-website-setup.css";
+@import "./styles/my-company-scroll.css";
 @source "../src";
 @import "tw-animate-css";
 

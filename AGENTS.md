@@ -70,3 +70,5 @@
 - Public Discovery reads only the public allowlist RPC and shapes listings through buildPublicListing; existing authenticated application/NDA handlers own authorization, and session-only pending actions never grant access.
 
 - Either-side LOI transitions lock and validate party/revision in pipeline_transition; pipeline.functions.ts owns notifications and private valuation uploads/signing in a dedicated no-client-policy bucket. Workflow dates never reinterpret legacy milestones.
+
+- My Company desktop Profiles/Split share CompanyScrollLayout for measured viewport height, independent scroll regions and selection resets; hosts keep cards, access, selection and mobile behavior, and explicit panel-header markers scope sticky styling.

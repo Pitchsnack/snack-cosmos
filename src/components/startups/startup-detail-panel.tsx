@@ -467,7 +467,7 @@ export function StartupDetailPanel({
   return (
     <div className="space-y-[14px] text-foreground">
       {/* Header — follows the panel width (container query): under 600px the actions take their own row. */}
-      <div className="@container">
+      <div data-company-panel-header="padded" className="@container">
       <header className={cn("flex flex-col gap-3 @[600px]:flex-row @[600px]:items-start @[600px]:justify-between @[600px]:gap-4", compact && "pt-1")}>
 
         <div className="flex min-w-0 items-start gap-4">

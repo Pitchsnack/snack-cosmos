@@ -1,3 +1,4 @@
+import { CompanyScrollLayout } from "@/components/my-business/company-scroll-layout";
 import { licenceName } from "@/lib/advisor-licences";
 import { setupText, useTranslation } from "@/i18n/language";
 import { FirmServices } from "@/components/advisor/firm-services";
@@ -117,6 +118,8 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
       .filter(() => !savedOnly)
       .sort((a, b) => (sort === "name" ? (a.name || "~").localeCompare(b.name || "~") : b.updatedAt.localeCompare(a.updatedAt)));
   }, [firms, q, svc, status, sector, hq, sort, savedOnly]);
+  const resetKey = JSON.stringify([q, svc, status, sector, hq, sort, savedOnly]);
+  useEffect(() => { setOpenId(null); }, [resetKey]);
   const open = list.find((f) => f.id === openId) ?? list[0] ?? null;
   const { data: session } = useSessionContext();
   const role = session?.user?.accountRole ?? null;
@@ -134,10 +137,9 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
             {adding ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Plus className="mr-1.5 h-4 w-4" />}{setupText("Add Firm Profile")}
           </Button>
         ) : (
-          <div className="grid items-start gap-5 lg:grid-cols-[320px_1fr]">
-            <div className="space-y-4">{firms.map((f) => <FirmCard key={f.id} f={f} selected={sel?.id === f.id} onClick={() => setOpenId(f.id)} />)}</div>
-            {sel && <FirmPanel f={sel} views={views?.[sel.id] ?? 0} onDeletedDraft={() => setOpenId(null)} />}
-          </div>
+          <CompanyScrollLayout listLabel={tr("Your firm profiles")} panelLabel={sel?.name || tr("My Company")} selectedKey={sel?.id} listClassName="space-y-4"
+            list={firms.map(f => <div key={f.id} data-company-selected={sel?.id === f.id}><FirmCard f={f} selected={sel?.id === f.id} onClick={() => setOpenId(f.id)} /></div>)}
+            panel={sel && <FirmPanel f={sel} views={views?.[sel.id] ?? 0} onDeletedDraft={() => setOpenId(null)} />} />
         )}
       </div>
     );
@@ -204,12 +206,10 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
       ) : list.length === 0 ? (
         <p className="py-10 text-center text-sm text-muted-foreground">{setupText("No firm profiles match these filters.")}</p>
       ) : mode === "profiles" || mode === "split" ? (
-        <div className={cn("grid items-start gap-5", mode === "profiles" ? "lg:grid-cols-[320px_1fr]" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]")}>
-          <div className="space-y-4">
-            {list.map((f) => <FirmCard key={f.id} f={f} selected={open?.id === f.id} onClick={() => setOpenId(f.id)} />)}
-          </div>
-          {open && <FirmPanel f={open} views={views?.[open.id] ?? 0} onDeletedDraft={() => setOpenId(null)} />}
-        </div>
+        <CompanyScrollLayout mode={mode} resetKey={resetKey} selectedKey={open?.id} listLabel={tr("Your firm profiles")} panelLabel={open?.name || tr("My Company")}
+          className={mode === "profiles" ? "lg:grid-cols-[320px_1fr]" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]"} listClassName="space-y-4"
+          list={list.map(f => <div key={f.id} data-company-selected={open?.id === f.id}><FirmCard f={f} selected={open?.id === f.id} onClick={() => setOpenId(f.id)} /></div>)}
+          panel={open && <FirmPanel f={open} views={views?.[open.id] ?? 0} onDeletedDraft={() => setOpenId(null)} />} />
       ) : mode === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {list.map((f) => <FirmCard key={f.id} f={f} onClick={() => { setOpenId(f.id); setMode("profiles"); }} />)}
@@ -399,10 +399,10 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
   const statusLine = f.status === "live" ? "Live · in Browse advisors" : f.status === "draft" ? "Draft · not published" : "Paused · hidden from Browse advisors";
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-border bg-card shadow-card">
+    <div data-company-panel-shell className="overflow-hidden rounded-[14px] border border-border bg-card shadow-card">
       {!client && <div className="px-5 pt-5 empty:hidden"><OwnerHandoverBox kind="firm" id={f.id} onEdit={(x) => edit((x.edit.section ?? "firm") as EditSection)} /></div>}
       {/* Header */}
-      <div className={cn("flex flex-wrap items-start gap-4 border-b border-border p-5", client && "advisor-client-header")}>
+      <div data-company-panel-header="flush" className={cn("flex flex-wrap items-start gap-4 border-b border-border p-5", client && "advisor-client-header")}>
         <FirmLogo f={f} size={client ? 48 : 52} radius={client ? 11 : 13} ring={false} />
         <div className={cn("min-w-0 flex-1", !client && "max-sm:min-w-[180px]")}>
           {client ? <>

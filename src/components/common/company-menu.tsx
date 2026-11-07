@@ -95,7 +95,7 @@ export function DraftCompanyPanel({ role, name, banner, onEdit, onFinish, delete
   const line = role === "seller" ? "Draft · buyers can't see this business yet" : "Draft · sellers can't see this profile yet";
   return (
     <div className="min-w-0 overflow-visible rounded-[14px] border border-border bg-card shadow-sm">
-      <div className="flex items-center gap-3.5 border-b border-border p-5">
+      <div data-company-panel-header="flush" className="flex items-center gap-3.5 border-b border-border p-5">
         <div className={`grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[12px] text-[17px] font-bold ${t.bg} ${t.fg}`}>{draftInitials(name)}</div>
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-[21px] font-bold leading-tight">{name === "New investor profile" ? setupText("New investor profile") : name || "Untitled"}</h2>

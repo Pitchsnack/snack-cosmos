@@ -38,6 +38,8 @@ import { SellerSetupBanner, useSellerSetup } from "@/components/my-business/sign
 import { ReportOffers, ReportHeaderAction } from "@/components/my-business/report-offers";
 import {useReportPrices} from '@/hooks/use-report-prices';
 
+import { CompanyScrollLayout } from "./company-scroll-layout";
+
 type View = "public" | "private";
 
 /* ------------------------------ Completeness ------------------------------ */
@@ -304,7 +306,7 @@ function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | nu
         <FolderTab side="right" active={v === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title={tr("Exclusive view")} sub={tr("Shared after NDA")} open={selected} tone="green" onClick={() => pick("private")} />
       </div>
       {v === "public" ? (
-        <div role="button" tabIndex={0} onClick={() => pick("public")} onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) pick("public"); }} className={cn("cursor-pointer overflow-hidden rounded-b-[14px] rounded-t-none border bg-card transition-shadow hover:shadow-md [&_.rounded-t-xl]:rounded-t-none", selected ? "border-accent" : "border-border")}>
+        <div role="button" tabIndex={0} onClick={() => pick("public")} onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) { e.preventDefault(); pick("public"); } }} className={cn("cursor-pointer overflow-hidden rounded-b-[14px] rounded-t-none border bg-card transition-shadow hover:shadow-md [&_.rounded-t-xl]:rounded-t-none", selected ? "border-accent" : "border-border")}>
           <PublicCardBody s={s} row={row} />
         </div>
       ) : (
@@ -359,7 +361,7 @@ function PublicPanel({ s, pill, onDeleted }: { s: StartupListItem; pill: React.R
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-3.5 border-b border-border pb-4">
+      <div data-company-panel-header="padded" className="mb-4 flex items-center gap-3.5 border-b border-border pb-4">
         <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[10px] bg-gradient-to-br from-accent to-accent-dark text-accent-foreground"><EyeOff className="h-5 w-5" /></div>
         <div className="min-w-0 flex-1">
           <KindPill kind="public" row={row} />
@@ -451,7 +453,7 @@ function sectionTab(k: string): ["public" | "private", string] {
   return ["private", "about"];
 }
 
-export function MyBusinessProfiles({ items: allItems, openId }: { items: StartupListItem[]; openId?: string }) {
+export function MyBusinessProfiles({ items: allItems, openId, resetKey = "" }: { items: StartupListItem[]; openId?: string; resetKey?: string }) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [gone, setGone] = useState<string[]>([]);
@@ -465,8 +467,17 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
     if (!sel || !items.some((i) => i.id === sel.id)) setSel({ id: openId && items.some((i) => i.id === openId) ? openId : items[0].id, view: "public" });
   }, [items, sel]);
 
+  const priorReset = useRef(resetKey);
+  useEffect(() => {
+    if (priorReset.current !== resetKey && items[0]) setSel({ id: items[0].id, view: "public" });
+    priorReset.current = resetKey;
+  }, [resetKey]);
+
   const current = items.find((i) => i.id === sel?.id) ?? null;
-  const pick = (id: string, view: View) => { setSel({ id, view }); setMobileOpen(true); };
+  const pick = (id: string, view: View) => {
+    setSel({ id, view }); setMobileOpen(true);
+    if (!adminReview) void navigate({ from: "/my-startups/", to: "/my-startups", search: (prev) => ({ ...prev, selected: id }), replace: true });
+  };
   const closeDeleted = (id: string) => { setGone((g) => [...g, id]); setSel(null); setMobileOpen(false); };
 
   const onItem = (k: ItemKey) => {
@@ -541,15 +552,15 @@ export function MyBusinessProfiles({ items: allItems, openId }: { items: Startup
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+    <>
       {popup}
-      <div className="space-y-5">
-        {items.map((s) => (
-          <SellerCardSlot key={s.id} s={s} skipDraft={!!adminReview} view={sel?.id === s.id ? sel.view : null} onView={(v) => pick(s.id, v)} />
-        ))}
-      </div>
-      {!isMobile && <div className="min-w-0 lg:self-start">{right}</div>}
-    </div>
+      <CompanyScrollLayout listLabel={tr("Your businesses")} panelLabel={current?.startup_name || tr("My Company")}
+        selectedKey={`${sel?.id ?? ""}:${sel?.view ?? ""}`} resetKey={resetKey}
+        listClassName="space-y-5"
+        list={items.map((s) => <div key={s.id} data-company-selected={sel?.id === s.id}>
+          <SellerCardSlot s={s} skipDraft={!!adminReview} view={sel?.id === s.id ? sel.view : null} onView={(v) => pick(s.id, v)} />
+        </div>)} panel={!isMobile ? right : null} />
+    </>
   );
 }
 
@@ -568,7 +579,7 @@ function SellerCardSlot({ s, view, onView, skipDraft }: { s: StartupListItem; vi
   const { data } = useSellerSetup(skipDraft ? null : s.id);
   if (data && !data.setupDoneAt) {
     return (
-      <div role="button" tabIndex={0} onClick={() => onView("public")} onKeyDown={(e) => { if (e.key === "Enter") onView("public"); }} className="cursor-pointer">
+      <div role="button" tabIndex={0} onClick={() => onView("public")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onView("public"); } }} className="cursor-pointer">
         <DraftCompanyCard role="seller" name={s.startup_name || tr("New business")} founded={data.year || null} size={data.size} website={data.web || null} selected={view != null} />
       </div>
     );

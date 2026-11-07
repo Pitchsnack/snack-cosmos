@@ -1,5 +1,5 @@
 import { setupText } from "@/i18n/language";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/i18n/language";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -28,6 +28,7 @@ import { PermissionGuard } from "@/components/permission-guard";
 import { PublicationStatusBadge } from "@/components/startups/publication-actions";
 import { selectMyStartups } from "@/lib/publication/my-startups-membership";
 import { cn } from "@/lib/utils";
+import { CompanyScrollLayout } from "@/components/my-business/company-scroll-layout";
 import { MyBusinessProfiles } from "@/components/my-business/my-business-profiles";
 
 const SORT = ["updated_desc","created_desc","name_asc","name_desc"] as const;
@@ -97,6 +98,7 @@ function MyStartupsPageInner() {
   const view = oneCompany ? "profiles" : layoutView ?? "profiles";
   const selected = s.selected;
   const favOnly = !!s.fav;
+  const scrollReset = JSON.stringify([s.q,s.stage,s.industry,s.hq,s.ct,s.ptag,s.mtag,sort,favOnly]);
   const { ids: favIds } = useFavoriteStartups();
 
   const [modalId, setModalId] = useState<string | null>(s.edit === "startup" ? null : s.panel ?? null);
@@ -147,6 +149,16 @@ function MyStartupsPageInner() {
   }, [s.edit, s.panel, mineItems]); // eslint-disable-line react-hooks/exhaustive-deps
   const total = items.length;
 
+  useEffect(() => {
+    if (view === "split" && items.length && !items.some(i => i.id === selected))
+      void navigate({ search: (p: typeof s) => ({ ...p, selected: items[0].id }), replace: true });
+  }, [view, items, selected]);
+  const priorScrollReset = useRef(scrollReset);
+  useEffect(() => {
+    if (priorScrollReset.current !== scrollReset && view === "split" && items[0]) void navigate({ search: (p: typeof s) => ({ ...p, selected: items[0].id }), replace: true });
+    priorScrollReset.current = scrollReset;
+  }, [scrollReset]);
+
   const update = (patch: Partial<typeof s>) =>
     navigate({ search: (prev: typeof s) => ({ ...prev, ...patch, page: 1 }) });
 
@@ -161,7 +173,7 @@ function MyStartupsPageInner() {
         ) : items.length === 0 ? (
           <AddBusinessButton />
         ) : (
-          <MyBusinessProfiles items={items} openId={s.open} />
+          <MyBusinessProfiles items={items} openId={s.open ?? selected} resetKey={scrollReset} />
         )}
       </div>
     );
@@ -281,7 +293,7 @@ function MyStartupsPageInner() {
           )}
         </div>
       ) : view === "profiles" ? (
-        <MyBusinessProfiles items={items} openId={s.open} />
+        <MyBusinessProfiles items={items} openId={s.open ?? selected} resetKey={scrollReset} />
       ) : view === "grid" ? (
         <div
           className={cn(
@@ -327,41 +339,17 @@ function MyStartupsPageInner() {
           </div>
         )
       ) : (
-        <div
-          className={cn(
-            "grid gap-4",
-            favOnly
-              ? "lg:grid-cols-[minmax(260px,20rem)_1fr]"
-              : "lg:grid-cols-[minmax(320px,26rem)_1fr]",
-          )}
-        >
-          <div className="h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1">
-            {favOnly
-              ? items.map((it) => (
-                  <FavoriteSplitRow
-                    key={it.id}
-                    s={it}
-                    selected={selected === it.id}
-                    onSelect={() =>
-                      navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })
-                    }
-                  />
-                ))
-              : items.map((it) => (
-                  <StartupListItem
-                    key={it.id}
-                    s={it}
-                    selected={selected === it.id}
-                    onSelect={() =>
-                      navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })
-                    }
-                  />
-                ))}
-          </div>
-          <div className="min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4">
+        <CompanyScrollLayout mode="split" resetKey={scrollReset} selectedKey={selected}
+          className={favOnly ? "gap-4 lg:grid-cols-[minmax(260px,20rem)_1fr]" : "gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]"}
+          listLabel={t("Your businesses")} panelLabel={items.find(i => i.id === selected)?.startup_name || t("My Company")}
+          listClassName="space-y-1.5"
+          list={items.map(it => <div key={it.id} data-company-selected={selected === it.id}>
+            {favOnly ? <FavoriteSplitRow s={it} selected={selected === it.id} onSelect={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })} />
+              : <StartupListItem s={it} selected={selected === it.id} onSelect={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })} />}
+          </div>)}
+          panel={<div className="min-w-0 rounded-lg border border-border bg-card p-6 shadow-sm">
             {selected ? <StartupDetailPanel id={selected} showPublication workspace="my-startups" /> : <StartupDetailEmpty />}
-          </div>
-        </div>
+          </div>} />
       )}
 
       {/* Keep unused paging variable silenced */}

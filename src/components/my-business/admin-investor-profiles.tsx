@@ -52,18 +52,18 @@ export function AddInvestorProfileButton({ onClick, busy }: { onClick: () => voi
 }
 
 /** Admin's extra investor profiles on Buyer › My Company, each opening its own panel, wizard and Edit profile. */
-export function AdminInvestorProfiles({ ids, openId }: { ids: string[]; openId?: string }) {
+export function AdminInvestorProfiles({ ids, openId, part, onSelect }: { ids: string[]; openId?: string; part?: "list" | "panel"; onSelect?: (id: string) => void }) {
   if (!ids.length) return null;
-  return <div className="space-y-5">{ids.map((id) => <ExtraProfile key={id} id={id} open={openId === id} />)}</div>;
+  return <div className="space-y-5">{ids.filter(id => part !== "panel" || id === openId).map((id) => <ExtraProfile key={id} id={id} open={openId === id} part={part} onSelect={onSelect} />)}</div>;
 }
 
-function ExtraProfile({ id, open }: { id: string; open: boolean }) {
+function ExtraProfile({ id, open, part, onSelect }: { id: string; open: boolean; part?: "list" | "panel"; onSelect?: (id: string) => void }) {
   const fetchById = useServerFn(getBuyerInvestorById);
   const navigate = useNavigate();
   const ref = useRef<HTMLDivElement | null>(null);
   const [editing, setEditing] = useState(false);
   const { data: r } = useQuery({ queryKey: buyerInvestorKey(id), queryFn: async () => { const x = await fetchById({ data: { id } }); return x.ok ? { ok: true as const, data: x.data as Data } : { ok: false as const, data: null }; } });
-  useEffect(() => { if (open && r?.ok) ref.current?.scrollIntoView({ block: "center" }); }, [open, r?.ok]);
+  useEffect(() => { if (!part && open && r?.ok) ref.current?.scrollIntoView({ block: "center" }); }, [open, r?.ok, part]);
   if (!r) return <Skeleton className="h-[220px]" />;
   if (!r.ok || !r.data) return null;
   const d = r.data;
@@ -74,10 +74,12 @@ function ExtraProfile({ id, open }: { id: string; open: boolean }) {
   const nm = iv.investor_name || (iv.investor_type ? typeName(iv.investor_type) : tr("New investor profile"));
   const openWizard = () => void navigate({ to: "/buyer/company/$id/setup", params: { id }, search: {} });
   return (
-    <div ref={ref} className={cn("grid gap-5 rounded-[14px] lg:grid-cols-[320px_minmax(0,1fr)]", open && "ring-2 ring-accent/40 ring-offset-4 ring-offset-background")} style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+    <div ref={ref} data-company-selected={open} className={cn(!part && "grid gap-5 rounded-[14px] lg:grid-cols-[320px_minmax(0,1fr)]", open && !part && "ring-2 ring-accent/40 ring-offset-4 ring-offset-background")} style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+      {part !== "panel" && <div role={part ? "button" : undefined} tabIndex={part ? 0 : undefined} onClick={() => onSelect?.(id)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect?.(id); } }}>
       <DraftCompanyCard role="buyer" name={nm} typeLine={iv.investor_type ? typeName(iv.investor_type) : null}
-        founded={individual ? null : iv.year_founded} size={individual ? null : iv.company_size_band} website={iv.website_url} />
-      {!iv.setup_done_at ? (
+        selected={part ? open : true} founded={individual ? null : iv.year_founded} size={individual ? null : iv.company_size_band} website={iv.website_url} />
+      </div>}
+      {part !== "list" && (!iv.setup_done_at ? (
         <DraftCompanyPanel role="buyer" name={nm} banner={<SetupBanner n={prog.n} N={prog.N} onOpen={openWizard} />}
           onEdit={() => setEditing(true)} onFinish={openWizard}
           deleteDraft={{ kind: "investor", id, invalidate: [INVESTOR_IDS_KEY, buyerInvestorKey(id)] }} />
@@ -89,7 +91,7 @@ function ExtraProfile({ id, open }: { id: string; open: boolean }) {
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>{tr("Edit information")}</Button>
           </div>
         </div>
-      )}
+      ))}
       {editing && <EditInfoPopup open subtitle={nm} companyName={nm} onClosed={()=>setEditing(false)}><BuyerInvestorEdit id={id} /></EditInfoPopup>}
     </div>
   );

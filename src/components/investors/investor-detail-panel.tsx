@@ -195,6 +195,7 @@ export function InvestorDetailPanel({
 
   return (
     <div className="space-y-[14px] text-foreground">
+      <div data-company-panel-header="padded">
       {buyer?.topBar}
       {/* Header */}
       {!sv?.hideHeader && <header className={cn("flex items-start justify-between gap-4", compact && "pt-1", sv && "flex-wrap")}>
@@ -304,6 +305,7 @@ export function InvestorDetailPanel({
           )}
         </div>
       </header>}
+      </div>
 
       {buyer?.intro}
       {/* Relationship state (Connect → Requested → Share) */}

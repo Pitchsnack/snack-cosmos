@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## My Company independent panel scrolling
+- [x] Shared CompanyScrollLayout for desktop Profiles/Split across roles, including Control extra buyer profiles; pinned themed headers, focusable contained regions, viewport sizing and selection/filter resets.
+- [x] Live Control seller Profiles/Split, buyer Profiles/Split and advisor Profiles: independent scrolling and pinned headers; 1440×900, 1280×720, 1024, 1000 and phone, dark mode, keyboard PageDown, filter reset and normal Grid/List checked; 12 focused tests passed, build OK.
+- [ ] Separate seller/buyer/advisor signed-in account checks and full advisor Split matrix need suitable role sessions; current managed session is Control. Buyer has only two cards, so its halfway-scroll screenshot has no overflowing list.
+
 ## Businesses Wanted Grid / Split / List
 - The second uploaded pair is byte-identical to the first; it does not change the scope.
 - [x] Reuse Discovery controls and frames without changing its rendering or existing marketplace cards.
