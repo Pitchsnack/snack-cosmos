@@ -34,7 +34,7 @@ export function FinancialReports({hub,seller,onFold}:{hub?:HubData;seller:boolea
  };
  return <div className="pipeline-financial-reports" role="group" aria-label={seller?c(`Your reports, for ${hub.buyer?.name}`,`รายงานของท่าน สำหรับ ${hub.buyer?.name}`):c(`Reports on ${hub.company}`,`รายงานของ ${hub.company}`)} onClick={e=>{if(!(e.target as HTMLElement).closest('button,a,[role=dialog]')&&!window.getSelection()?.toString())onFold();}}>
   {[true,false].map(ready=>{const rows=hub.rows.filter(r=>reportReadyToView(r,seller)===ready);return rows.length?<section key={String(ready)}><h3>{ready?c('Ready to view','พร้อมให้ดู'):c('Can be ordered','สั่งซื้อได้')} · {rows.length}</h3>{rows.map(render)}</section>:null;})}
-  {selected&&<Dialog open onOpenChange={o=>!o&&setSelected(null)}><DialogContent className="pipeline-report-dialog" aria-describedby={undefined}><DialogTitle className="sr-only">{name(selected)}</DialogTitle><ReportsHub mode={seller?'seller':'buyer'} pipelineId={hub.pipelineId??undefined} initialReport={selected}/></DialogContent></Dialog>}
+  {selected&&<Dialog open onOpenChange={o=>{if(!o){setSelected(null);void qc.invalidateQueries({queryKey:['reports-hub']});}}}><DialogContent className="pipeline-report-dialog" aria-describedby={undefined}><DialogTitle className="sr-only">{name(selected)}</DialogTitle><ReportsHub mode={seller?'seller':'buyer'} pipelineId={hub.pipelineId??undefined} initialReport={selected}/></DialogContent></Dialog>}
   {share&&<HubShareAccessDialog hub={hub} buyer={share.buyer} selected={share.key} onClose={()=>setShare(null)}/>}
  </div>;
 }

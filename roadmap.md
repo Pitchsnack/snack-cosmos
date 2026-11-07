@@ -3,9 +3,10 @@
 ## Optional Pipeline Financial & Valuation reports
 - [x] Read brief and try reference folding, buyer/Thai controls and report action.
 - [x] Report current seven-report state availability and current yellow row/Step chip; Dan chose existing actions only, including existing unavailable checkout/quote flows.
-- [ ] Reuse per-deal report states/actions in expandable All deals/watchlist lists; preserve report pricing/access and advisors.
-- [ ] Make Financial & Valuation optional and independently complete; approved NDA/completed report rows green.
-- [ ] Verify stage/access rules, existing report flows and 1440/1280/1024/390 EN/TH light/dark; provide 1280 buyer/seller screenshots.
+- [x] Reuse per-deal report states/actions in expandable All deals/watchlist lists; preserve report pricing/access and advisors.
+- [x] Make Financial & Valuation optional and independently complete; approved NDA/completed report rows green.
+- [x] 41 focused tests; live Control buyer/seller lists, real shared-report viewer, and 32 role/language/theme/width checks without horizontal overflow; 1280 buyer/seller screenshots captured.
+- [ ] Standalone role-account mutations, buyer-owned pending-order distinctions, and live watchlist read-back remain unverified; available session is Control and no real orders/shares were altered. Missing quote requests, free-order confirmations and buyer checkout deliberately stay unchanged per Dan.
 
 ## Five Sign out fixes
 - [x] Keyboard/touch selection, shared duplicate lock, busy indicator, Thai copy, ordered logout and origin-aware cache teardown; preserve existing expiry guard/login.
