@@ -7,6 +7,10 @@ import { TH_COMPANY_SETUP } from "./th-company-setup";
 // Thai translations keyed by the exact English UI string.
 // Any string without an entry falls back to English.
 const TH_BASE: Record<string, string> = {
+  "Sign out": "ออกจากระบบ",
+  "Signing out…": "กำลังออกจากระบบ…",
+  "Signed out": "ออกจากระบบแล้ว",
+  "Could not sign out. Please try again.": "ไม่สามารถออกจากระบบได้ โปรดลองอีกครั้ง",
   "Subscription plans": "แพ็กเกจสมาชิก",
   "Education": "การศึกษา",
   "Energy & Utilities": "พลังงานและสาธารณูปโภค",

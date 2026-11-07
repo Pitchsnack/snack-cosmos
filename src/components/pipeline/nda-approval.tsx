@@ -14,6 +14,7 @@ import { STEPS } from "@/lib/pipeline-state";
 import { useTranslation } from "@/i18n/language";
 import { usePersona } from "@/hooks/use-marketplace";
 import { cn } from "@/lib/utils";
+import { isMenuSigningOut } from "@/lib/sign-out";
 
 /** Pipeline › NDA Invitations: key terms, confirm boxes, Review and approve, and the NDA approved box. */
 export function useC() {
@@ -175,7 +176,7 @@ export function BuyerApprovalWatcher() {
   const [s, setS] = useState<ApprovalSummary | null>(null);
   const busy = useRef(false);
   useEffect(() => {
-    if (persona !== "buyer" || s || busy.current) return;
+    if (isMenuSigningOut() || persona !== "buyer" || s || busy.current) return;
     busy.current = true;
     void fn().then((r) => { if (r) setS(r); }).catch(() => {}).finally(() => { busy.current = false; });
   }, [persona, path, s]); // eslint-disable-line react-hooks/exhaustive-deps

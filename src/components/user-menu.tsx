@@ -1,11 +1,14 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, User as UserIcon } from "lucide-react";
+import { onlineManager, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { Loader2, LogOut, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { recordLogout } from "@/lib/auth.functions";
+import { signOutFromMenu } from "@/lib/sign-out";
+import { useTranslation } from "@/i18n/language";
 import { useSessionContext } from "@/hooks/use-session-context";
 import {
   DropdownMenu,
@@ -24,6 +27,8 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
   const qc = useQueryClient();
   const { data } = useSessionContext();
   const onLogout = useServerFn(recordLogout);
+  const [busy, setBusy] = useState(false);
+  const { t } = useTranslation();
 
   const u = data?.user;
   const initials =
@@ -38,11 +43,20 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
   const railTip = `${name} · ${isMarket ? c(roleLabel) : roleLabel}`;
 
   async function signOut() {
-    try { await onLogout(); } catch { /* best effort */ }
-    await supabase.auth.signOut();
-    qc.clear();
-    toast.success("Signed out");
-    navigate({ to: "/login" });
+    const wasOnline = onlineManager.isOnline();
+    await signOutFromMenu({
+      setBusy,
+      recordLogout: onLogout,
+      cancelQueries: () => qc.cancelQueries(),
+      pauseQueries: () => onlineManager.setOnline(false),
+      resumeQueries: () => onlineManager.setOnline(wasOnline),
+      signOut: () => supabase.auth.signOut(),
+      clear: () => qc.clear(),
+      navigate: (options) => navigate(options),
+      success: () => toast.success(t("Signed out")),
+      error: (error) => toast.error(error instanceof Error ? error.message : t("Could not sign out. Please try again.")),
+      logAuditError: () => console.warn("Could not record the logout security event; continuing sign-out."),
+    });
   }
 
   return (
@@ -77,9 +91,15 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
           {roleLabel}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign out
+        <DropdownMenuItem
+          onSelect={(event) => { event.preventDefault(); if (!busy) void signOut(); }}
+          disabled={busy}
+          aria-disabled={busy}
+          aria-busy={busy}
+          className="text-destructive focus:text-destructive data-[disabled]:pointer-events-none"
+        >
+          {busy ? <Loader2 aria-hidden className="mr-2 !h-3.5 !w-3.5 animate-spin motion-reduce:animate-none" /> : <LogOut aria-hidden className="mr-2 h-4 w-4" />}
+          {t(busy ? "Signing out…" : "Sign out")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

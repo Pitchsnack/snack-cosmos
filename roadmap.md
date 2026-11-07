@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Five Sign out fixes
+- [x] Keyboard/touch selection, shared duplicate lock, busy indicator, Thai copy, ordered logout and origin-aware cache teardown; preserve existing expiry guard/login.
+- [x] Focused ordering/duplicate/failure/external-event tests passed; live Enter/Space, Thai confirmation and auth failure checked. Added query pause and approval-watcher guard for observed logout refetches.
+- [ ] Final no-refetch retest, touch and expiry/next-login end-to-end checks remain unverified: preview menu repeatedly detached during automation; real next-login credentials are unavailable.
+
 ## My Company independent panel scrolling
 - [x] Shared CompanyScrollLayout for desktop Profiles/Split across roles, including Control extra buyer profiles; pinned themed headers, focusable contained regions, viewport sizing and selection/filter resets.
 - [x] Live Control seller Profiles/Split, buyer Profiles/Split and advisor Profiles: independent scrolling and pinned headers; 1440×900, 1280×720, 1024, 1000 and phone, dark mode, keyboard PageDown, filter reset and normal Grid/List checked; 12 focused tests passed, build OK.

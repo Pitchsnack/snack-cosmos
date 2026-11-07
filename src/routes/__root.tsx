@@ -18,6 +18,7 @@ import { ViewModeProvider } from "@/context/view-mode-context";
 import { LanguageProvider } from "@/i18n/language";
 import { SignInDayRecorder } from '@/hooks/use-sign-in-day';
 import { ToolsOfferHistoryTracker } from '@/hooks/use-tools-offer-close';
+import { handleSignedOut } from '@/lib/sign-out';
 
 function NotFoundComponent() {
   return (
@@ -160,7 +161,15 @@ function AuthStateSync() {
       // TOKEN_REFRESHED fire on every page load / refresh and would wipe
       // the session-context cache, causing the permission flicker
       // documented in PRD-INV-001.
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+      if (event === "SIGNED_OUT") {
+        void handleSignedOut({
+          cancelQueries: () => qc.cancelQueries(),
+          clear: () => qc.clear(),
+          invalidateRouter: () => router.invalidate(),
+        });
+        return;
+      }
+      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
         router.invalidate();
         qc.invalidateQueries();
       }
