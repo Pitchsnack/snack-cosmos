@@ -1,3 +1,6 @@
+import {FinancialReports} from './financial-reports';
+import {financialStageComplete} from '@/lib/pipeline-report-state';
+import type {HubData} from '@/lib/reports-hub';
 import { PostLoiStages } from "./post-loi-stages";
 import { LoiTimeline } from "./loi-timeline";
 import { HatMark } from "@/components/messages/hat-mark";
@@ -77,7 +80,7 @@ function useRefresh() {
   return () => Promise.all([qc.invalidateQueries({ queryKey: ["pipeline"] }),qc.invalidateQueries({queryKey:["invitations"]}),qc.invalidateQueries({queryKey:["reports-hub"]})]);
 }
 
-function Stepper({ cur, t, endedOn }: { cur: number; t: T; endedOn?: string }) {
+function Stepper({ cur, t, endedOn, financialDone=false, financialOptional=false }: { cur: number; t: T; endedOn?: string; financialDone?:boolean; financialOptional?:boolean }) {
   if (endedOn) return (
     <div className="loi-stepper grid grid-cols-7 pt-3">
       {STEPS.map((s, i) => {
@@ -98,21 +101,22 @@ function Stepper({ cur, t, endedOn }: { cur: number; t: T; endedOn?: string }) {
   return (
     <div className="grid grid-cols-7 pt-3">
       {STEPS.map((s, i) => {
-        const done = i < cur, now = i === cur;
+        const done = i===1&&financialOptional?financialDone:i < cur, now = i === cur;
         return (
           <div key={s} className="relative flex flex-col items-center">
-            {i > 0 && <div className={cn("absolute right-1/2 top-[6px] h-[2px] w-[calc(100%-18px)] -translate-x-[9px]", i <= cur ? "bg-success" : "bg-border", (i===4||i===5)&&"loi-dashed-line", (i===4||i===5)&&i<=cur&&"is-on")} />}
-            <div className={cn("loi-stepper-marker",i===3&&"loi-hat-marker",(i===4||i===5)&&"loi-optional-marker",done?"is-done":now?"is-current":"")}>{i===3&&<HatMark width={14}/>}</div>
-            <div className={cn("mt-2 text-center text-[12px]", now ? "font-bold text-foreground" : done ? "text-foreground" : "text-muted-foreground")}>{t(s)}{(i===4||i===5)&&<span className="sr-only"> ({t("optional")})</span>}</div>
+            {i > 0 && <div className={cn("absolute right-1/2 top-[6px] h-[2px] w-[calc(100%-18px)] -translate-x-[9px]", i <= cur ? "bg-success" : "bg-border", (i===4||i===5||i===1&&financialOptional)&&"loi-dashed-line", (i===4||i===5||i===1&&financialOptional)&& (i===1?financialDone:i<=cur)&&"is-on")} />}
+            <div className={cn("loi-stepper-marker",i===3&&"loi-hat-marker",(i===4||i===5||i===1&&financialOptional)&&"loi-optional-marker",done?"is-done":now?"is-current":"")}>{i===3&&<HatMark width={14}/>}</div>
+            <div className={cn("mt-2 text-center text-[12px]", now ? "font-bold text-foreground" : done ? "text-foreground" : "text-muted-foreground")}>{t(s)}{(i===4||i===5||i===1&&financialOptional)&&<span className="sr-only"> ({t("optional")})</span>}</div>
           </div>
         );
       })}
+      {financialOptional&&<div className="loi-optional-bracket pipeline-financial-bracket" aria-hidden="true"><span>{t("Optional")}</span></div>}
       <div className="loi-optional-bracket" data-idle={cur<3} aria-hidden="true"><span>{t("Optional")}</span></div>
     </div>
   );
 }
 
-export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, onStar, chatPopup=false }: { starred?: boolean; onStar?: () => void; p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void; onEnded: () => void; t: T; chatPopup?:boolean }) {
+export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, onStar, chatPopup=false, reports, financialOptional=false }: { reports?:HubData; financialOptional?:boolean; starred?: boolean; onStar?: () => void; p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void; onEnded: () => void; t: T; chatPopup?:boolean }) {
   const withdrawNda = useServerFn(withdrawNdaRequest);
   const [reviewNda,setReviewNda]=useState(false);
   const [withdrawConfirm,setWithdrawConfirm]=useState(false);
@@ -120,6 +124,8 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
   const wd = p.status === "ended" ? p.withdrawal : null;
   const [loiOpen, setLoiOpen] = useState(false);
   const [loiExpanded,setLoiExpanded]=useState(false);
+  const [financialExpanded,setFinancialExpanded]=useState(false);
+  const financialDone=financialStageComplete(reports);
   useEffect(()=>{const sent=(e:Event)=>{if((e as CustomEvent).detail?.id===p.id)setLoiExpanded(true);};const review=(e:Event)=>{if((e as CustomEvent).detail?.id===p.id)setDlg("loi");};window.addEventListener("pipeline-loi-sent",sent);window.addEventListener("pipeline-review-loi",review);return()=>{window.removeEventListener("pipeline-loi-sent",sent);window.removeEventListener("pipeline-review-loi",review);};},[p.id]);
   const withdrawReq = useServerFn(withdrawLoiRequest);
   const lr = p.loiRequest;
@@ -236,20 +242,25 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
           </span>
         </div>
       </div>
-      <div className="px-5 pb-[18px] [&>*]:!mt-4"><Stepper cur={cur} t={t} endedOn={wd ? `${t("withdrawn")} ${day(wd.at)}` : undefined} /></div>
+      <div className="px-5 pb-[18px] [&>*]:!mt-4"><Stepper cur={cur} t={t} financialDone={financialDone} financialOptional={financialOptional} endedOn={wd ? `${t("withdrawn")} ${day(wd.at)}` : undefined} /></div>
       {!wd && <DealAgreements p={p} seller={seller} onNda={() => setDlg('nda')} onLoi={() => setDlg('loi')} />}
       <div className={cn("grid transition-[grid-template-rows] duration-[250ms] ease-in-out motion-reduce:transition-none", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden" inert={!open || undefined}>
           {wd && <EndedBox w={wd} p={p} seller={seller} t={t} />}
           <div className="mx-5 border-t border-[#F0F1F4]">
-            {(wd?rows:rows.slice(0,3)).map(([label, date, text, action]) => (
-              <div key={label} className={`loi-stage-row ${!wd&&label===STEPS[cur]?"loi-current-row":""}`} onClick={e=>{if(label==="Letter of intent"&&!wd&&!(e.target as HTMLElement).closest("button,a")&&!window.getSelection()?.toString())setLoiExpanded(v=>!v);}}>
-                <div className={cn("font-semibold", date || STEPS.indexOf(label as typeof STEPS[number]) === cur ? "text-[#111827]" : "text-[#9CA3AF]")}>{t(label)}</div>
+            {(wd?rows:rows.slice(0,3)).map(([label, date, text, action]) => {
+              const financial=label==="Financial & Valuation"&&financialOptional&&!wd;
+              const completed=financialOptional&&!wd&&(label==="NDA"&&!!p.ndaApprovedAt||financial&&financialDone);
+              return <div key={label} className="pipeline-stage-wrap">
+              <div className={cn("loi-stage-row",!wd&&label===STEPS[cur]&&"loi-current-row",completed&&"pipeline-completed-row",financial&&"pipeline-financial-row")} onClick={e=>{if(!(e.target as HTMLElement).closest("button,a")&&!window.getSelection()?.toString()){if(financial)setFinancialExpanded(v=>!v);else if(label==="Letter of intent"&&!wd)setLoiExpanded(v=>!v);}}}>
+                <div className={cn("font-semibold", date || STEPS.indexOf(label as typeof STEPS[number]) === cur ? "text-foreground" : "text-muted-foreground")}>{t(label)}{financial&&<small>{t("Optional")}</small>}</div>
                 <div className="text-muted-foreground">{day(date)}</div>
-                <div className="text-[#374151]">{text}</div>
-                <div className="loi-stage-actions">{action}{label==="Letter of intent"&&!wd&&<Button variant="ghost" size="icon" aria-label={t("Show steps")} aria-expanded={loiExpanded} onClick={()=>setLoiExpanded(v=>!v)}><ChevronDown size={16} className={loiExpanded?"rotate-180":""}/></Button>}</div>{label==="Letter of intent"&&loiExpanded&&!wd&&<LoiTimeline p={p} seller={seller}/>}
+                <div className="text-muted-foreground">{text}</div>
+                <div className="loi-stage-actions">{action}{financial&&<Button variant="ghost" size="icon" aria-label={t(financialExpanded?"Hide the Financial & Valuation reports":"Show the Financial & Valuation reports")} aria-expanded={financialExpanded} onClick={()=>setFinancialExpanded(v=>!v)}><ChevronDown size={16} className={financialExpanded?"rotate-180":""}/></Button>}{label==="Letter of intent"&&!wd&&<Button variant="ghost" size="icon" aria-label={t("Show steps")} aria-expanded={loiExpanded} onClick={()=>setLoiExpanded(v=>!v)}><ChevronDown size={16} className={loiExpanded?"rotate-180":""}/></Button>}</div>{label==="Letter of intent"&&loiExpanded&&!wd&&<LoiTimeline p={p} seller={seller}/>}
               </div>
-            ))}
+              {financial&&financialExpanded&&<FinancialReports hub={reports} seller={seller} onFold={()=>setFinancialExpanded(false)}/>}
+              </div>;
+            })}
             {!wd&&<PostLoiStages p={p} seller={seller} onDone={refresh}/>}
           </div>
           <div className="flex items-center justify-between gap-3 px-5 pb-4 pt-2.5">

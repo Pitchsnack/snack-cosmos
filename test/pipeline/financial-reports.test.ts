@@ -1,0 +1,20 @@
+import {describe,it,expect} from 'vitest';
+import {currentStep} from '../../src/lib/pipeline-state';
+import {financialStageComplete,reportReadyToView} from '../../src/lib/pipeline-report-state';
+import type {PipelineRow} from '../../src/lib/pipeline.functions';
+import type {HubData,HubRow} from '../../src/lib/reports-hub';
+const deal=(values:Partial<PipelineRow>)=>({ndaApprovedAt:null,reportSharedAt:null,loiAcceptedAt:null,...values} as PipelineRow);
+const report=(values:Partial<HubRow>)=>({status:'ready',buyerState:'buy',...values} as HubRow);
+describe('Optional Financial & Valuation',()=>{
+ it('approved NDA without any report advances to LOI, step 3',()=>expect(currentStep(deal({ndaApprovedAt:'2026-11-07'}))).toBe(2));
+ it('reports never become the current stage even with sharing',()=>expect(currentStep(deal({ndaApprovedAt:'2026-11-07',reportSharedAt:'2026-11-07'}))).toBe(2));
+ it('NDA remains step 1 until approved',()=>expect(currentStep(deal({}))).toBe(0));
+ it('accepted LOI keeps Deal Support current',()=>expect(currentStep(deal({ndaApprovedAt:'2026-11-07',loiAcceptedAt:'2026-11-07'}))).toBe(3));
+ it('buyer can view a ready shared report',()=>expect(reportReadyToView(report({buyerState:'shared'}),false)).toBe(true));
+ it('buyer can view a ready owned report',()=>expect(reportReadyToView(report({buyerState:'yours'}),false)).toBe(true));
+ it('a free plan allowance does not grant ready-to-view access',()=>expect(reportReadyToView(report({buyerState:'plan'}),false)).toBe(false));
+ it('an owned report in progress cannot be viewed',()=>expect(reportReadyToView(report({buyerState:'yours',status:'in_progress'}),false)).toBe(false));
+ it('seller can view a ready report that is not shared',()=>expect(reportReadyToView(report({}),true)).toBe(true));
+ it('unknown report data does not imply completed Financial & Valuation',()=>expect(financialStageComplete()).toBe(false));
+ it('both modes use the same canonical completion flag',()=>{for(const mode of ['seller','buyer'] as const){expect(financialStageComplete({mode,buyerHasReadyReport:true} as HubData)).toBe(true);expect(financialStageComplete({mode,buyerHasReadyReport:false} as HubData)).toBe(false);}});
+});

@@ -112,3 +112,20 @@ body:has(.connect-sent-dialog[data-state=closed]) [data-radix-dialog-overlay]{an
 .dark .loi-stage-row>div:first-child>b{color:var(--foreground)}.dark .loi-stage-row>div:nth-child(3){color:var(--muted-foreground)}
 .loi-optional-bracket[data-idle=true] span{color:#9CA3AF}
 .loi-dashed-line{background:repeating-linear-gradient(90deg,#D1D5DB 0 5px,transparent 5px 9px)!important}.loi-dashed-line.is-on{background:repeating-linear-gradient(90deg,#16A34A 0 5px,transparent 5px 9px)!important}
+
+/* Optional report stage: scoped to the shared seller/buyer card. */
+.pipeline-stage-wrap:first-child .pipeline-completed-row{margin-top:10px}
+.pipeline-completed-row{background:var(--loi-support-bg);border:1px solid var(--loi-support-line);border-radius:10px;margin:6px -14px;padding:8px 13px}
+.pipeline-financial-row{cursor:pointer}.pipeline-financial-row.pipeline-completed-row:hover{background:var(--loi-support-hover)}
+.pipeline-financial-bracket{grid-column:2/3;grid-row:2}.pipeline-financial-bracket span{letter-spacing:0;color:var(--muted-foreground)}
+.pipeline-financial-reports{margin:2px 0 10px 272px;color:var(--muted-foreground);font-size:12px;min-width:0}
+.pipeline-financial-reports section+section{margin-top:12px}.pipeline-financial-reports h3{font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:6px;letter-spacing:0}
+.pipeline-financial-item{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;background:var(--card);min-height:44px;padding:6px 10px;margin-top:6px}
+.pipeline-financial-icon{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;flex:none;background:var(--muted);color:var(--muted-foreground)}
+.pipeline-financial-copy{flex:1;min-width:0;overflow-wrap:anywhere}.pipeline-financial-copy b{font-size:13px;font-weight:600;color:var(--foreground)}.pipeline-financial-copy small{display:block;font-size:12px;line-height:1.5}
+.pipeline-financial-actions{display:flex;flex-wrap:wrap;gap:6px;flex-shrink:0;max-width:100%}.pipeline-financial-actions button{height:auto;min-height:30px;white-space:normal;padding:4px 10px;font-size:12px;background:var(--loi-navy);color:var(--loi-on-navy)}.pipeline-financial-actions button[data-report-outline]{background:var(--card);color:var(--foreground)}
+.pipeline-report-dialog{width:min(1150px,calc(100vw - 24px));max-width:1150px;max-height:90dvh;overflow-y:auto}
+@container(max-width:900px){.pipeline-financial-item{flex-wrap:wrap}.pipeline-financial-actions{margin-left:38px;flex-basis:100%}}
+@container(max-width:720px){.pipeline-financial-reports{margin-left:0}.pipeline-completed-row{margin:6px -6px}.pipeline-financial-copy{flex-basis:calc(100% - 40px)}}
+
+.pipeline-financial-row .loi-stage-actions>button:last-child{background:transparent;color:var(--muted-foreground);width:32px;padding:0}.pipeline-financial-row .loi-stage-actions>button:last-child:hover{background:var(--loi-hover)}
