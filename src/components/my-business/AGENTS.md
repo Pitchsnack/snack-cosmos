@@ -1,0 +1,2 @@
+# My Company layout
+- Desktop Profiles/Split share CompanyScrollLayout for measured viewport height, independent scroll regions and selection resets; hosts keep cards, access, selection and mobile behavior, and explicit panel-header markers scope sticky styling.
