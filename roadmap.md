@@ -1,5 +1,12 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Optional Pipeline Financial & Valuation reports
+- [x] Read brief and try reference folding, buyer/Thai controls and report action.
+- [ ] Report current seven-report state availability and current yellow row/Step chip; review implementation plan.
+- [ ] Reuse per-deal report states/actions in expandable All deals/watchlist lists; preserve report pricing/access and advisors.
+- [ ] Make Financial & Valuation optional and independently complete; approved NDA/completed report rows green.
+- [ ] Verify stage/access rules, existing report flows and 1440/1280/1024/390 EN/TH light/dark; provide 1280 buyer/seller screenshots.
+
 ## Five Sign out fixes
 - [x] Keyboard/touch selection, shared duplicate lock, busy indicator, Thai copy, ordered logout and origin-aware cache teardown; preserve existing expiry guard/login.
 - [x] Focused ordering/duplicate/failure/external-event tests passed; live Enter/Space, Thai confirmation and auth failure checked. Added query pause and approval-watcher guard for observed logout refetches.
