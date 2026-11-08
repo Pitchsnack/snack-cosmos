@@ -158,9 +158,9 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
         : p.revokedAt ? `${t("The seller stopped sharing the report on")} ${day(p.revokedAt)}`
         : p.reportRequestedAt ? <><b>{t("You asked for the report on")} {day(p.reportRequestedAt)}</b> · {t("waiting for the seller")}</>
         : t("Not shared yet"),
-      seller ? (p.share ? <><Button size="sm" variant="outline" onClick={() => setDlg("share")}>{t("Manage access")}</Button><Button size="sm" variant="outline" onClick={() => setDlg("report")}>{t("View report")}</Button></>
+      seller ? (p.share ? <><Button size="sm" variant="outline" onClick={() => setDlg("share")}>{t("Manage access")}</Button><Button size="sm" variant="outline" className="pipeline-view-report" aria-expanded={financialExpanded} onClick={() => setFinancialExpanded(v => !v)}>{t("View report")}</Button></>
           : p.reports.financials || p.reports.valuation ? <Button size="sm" onClick={() => setDlg("share")}>{t("Share report")}</Button> : undefined)
-        : p.share ? <Button size="sm" variant="outline" onClick={() => setDlg("report")}>{t("View report")}</Button>
+        : p.share ? <Button size="sm" variant="outline" className="pipeline-view-report" aria-expanded={financialExpanded} onClick={() => setFinancialExpanded(v => !v)}>{t("View report")}</Button>
         : !p.reportRequestedAt ? <Button size="sm" variant="outline" onClick={ask}>{t("Ask for the report")}</Button> : undefined],
     ["Letter of intent", p.loiAcceptedAt??p.loiSentAt,
       p.loiAcceptedAt ? `${money(p.loiAmount)} · ${t("accepted by")} ${p.loiAcceptConsent?.side===(seller?"seller":"buyer")?t("you"):other} · ${t("exclusivity")} ${p.loiExclusivityDays??0} ${t("days")}`
@@ -259,7 +259,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
                 <div className="loi-stage-actions">{action}{financial&&<Button variant="ghost" size="icon" aria-label={t(financialExpanded?"Hide the Financial & Valuation reports":"Show the Financial & Valuation reports")} aria-expanded={financialExpanded} onClick={()=>setFinancialExpanded(v=>!v)}><ChevronDown size={16} className={financialExpanded?"rotate-180":""}/></Button>}{label==="Letter of intent"&&!wd&&<Button variant="ghost" size="icon" aria-label={t("Show steps")} aria-expanded={loiExpanded} onClick={()=>setLoiExpanded(v=>!v)}><ChevronDown size={16} className={loiExpanded?"rotate-180":""}/></Button>}</div>{label==="Letter of intent"&&loiExpanded&&!wd&&!completed&&<LoiTimeline p={p} seller={seller}/>}
               </div>
               {completed&&label==="Letter of intent"&&loiExpanded&&<div className="pipeline-completed-steps" onClick={e=>{if(!(e.target as HTMLElement).closest("button,a")&&!window.getSelection()?.toString())setLoiExpanded(false);}}><LoiTimeline p={p} seller={seller}/></div>}
-              {financial&&financialExpanded&&<FinancialReports hub={reports} seller={seller} onFold={()=>setFinancialExpanded(false)}/>}
+              {financial&&financialExpanded&&<FinancialReports p={p} hub={reports} seller={seller} onFold={()=>setFinancialExpanded(false)}/>}
               </div>;
             })}
             {!wd&&<PostLoiStages p={p} seller={seller} onDone={refresh}/>}
