@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {currentStep} from '../../src/lib/pipeline-state';
 import {financialStageComplete,reportReadyToView} from '../../src/lib/pipeline-report-state';
 import type {PipelineRow} from '../../src/lib/pipeline.functions';
-import type {HubData,HubRow} from '../../src/lib/reports-hub';
+import type {HubRow} from '../../src/lib/reports-hub';
 const deal=(values:Partial<PipelineRow>)=>({ndaApprovedAt:null,reportSharedAt:null,loiAcceptedAt:null,...values} as PipelineRow);
 const report=(values:Partial<HubRow>)=>({status:'ready',buyerState:'buy',...values} as HubRow);
 describe('Optional Financial & Valuation',()=>{
@@ -15,6 +15,6 @@ describe('Optional Financial & Valuation',()=>{
  it('a free plan allowance does not grant ready-to-view access',()=>expect(reportReadyToView(report({buyerState:'plan'}),false)).toBe(false));
  it('an owned report in progress cannot be viewed',()=>expect(reportReadyToView(report({buyerState:'yours',status:'in_progress'}),false)).toBe(false));
  it('seller can view a ready report that is not shared',()=>expect(reportReadyToView(report({}),true)).toBe(true));
- it('unknown report data does not imply completed Financial & Valuation',()=>expect(financialStageComplete()).toBe(false));
- it('both modes use the same canonical completion flag',()=>{for(const mode of ['seller','buyer'] as const){expect(financialStageComplete({mode,buyerHasReadyReport:true} as HubData)).toBe(true);expect(financialStageComplete({mode,buyerHasReadyReport:false} as HubData)).toBe(false);}});
+ it('Financial & Valuation is incomplete without NDA approval',()=>expect(financialStageComplete(deal({}))).toBe(false));
+ it('NDA approval completes Financial & Valuation without any reports',()=>expect(financialStageComplete(deal({ndaApprovedAt:'2026-11-08',reportSharedAt:null}))).toBe(true));
 });

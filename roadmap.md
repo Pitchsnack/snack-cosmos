@@ -1,5 +1,11 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Pipeline completion colours follow-up
+- [x] Use existing NDA/LOI and side-specific valuation/legal completion signals; keep Deal Support current after acceptance and payment confirmation.
+- [x] Green completed rows with outside steps, yellow unfinished rows, blue Deal Support, payment pulse and scoped hover.
+- [x] 38 focused tests pass; live Control buyer/seller accepted cards, buyer watchlist, report/outlined-button/LOI-step hover and 16 EN/TH width checks without overflow; genuine 1280 screenshots saved, latest build OK.
+- [ ] Seller screenshot with completed valuation and live payment-confirmation pulse remain unverified: real seller valuation is unfinished and real confirmations were not changed. Separate role-account transitions and receipt/SPA writes require authorised test data; no real deal records modified.
+
 ## Optional Pipeline Financial & Valuation reports
 - [x] Read brief and try reference folding, buyer/Thai controls and report action.
 - [x] Report current seven-report state availability and current yellow row/Step chip; Dan chose existing actions only, including existing unavailable checkout/quote flows.

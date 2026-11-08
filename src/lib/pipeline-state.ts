@@ -9,7 +9,7 @@ export function stepDates(p: PipelineRow) {
 }
 export function currentStep(p: PipelineRow) {
  if(!p.ndaApprovedAt)return 0;
- if(p.loiAcceptedAt){if(p.paymentAt||p.workflow?.payment?.seller&&p.workflow?.payment?.buyer)return 6;return 3;}
+ if(p.loiAcceptedAt){if(p.paymentAt)return 6;return 3;}
  return 2;
 }
 export function isPending(p: PipelineRow) {
