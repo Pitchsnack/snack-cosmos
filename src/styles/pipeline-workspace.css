@@ -173,6 +173,3 @@ body:has(.connect-sent-dialog[data-state=closed]) [data-radix-dialog-overlay]{an
 .pipeline-page-link[aria-current=page]::after{content:'';position:absolute;height:1px;bottom:-1px;left:0;right:0;background:var(--pipeline-tab-surface)}
 .pipeline-page-link:focus-visible{outline:2px solid var(--ring);outline-offset:-4px}
 .pipeline-page-link .pipeline-count-number{color:var(--pipeline-tab-count)}
-.pipeline-view-report[aria-expanded=true]{background:#EFF2F7;border-color:#B9C1CF;color:#151A28}
-.pipeline-plain-steps{grid-column:3/-1;border-radius:8px}.pipeline-plain-steps:hover{background:#FAFAFB}.pipeline-plain-steps>.loi-stage-steps{padding-top:0}
-@container(max-width:720px){.pipeline-plain-steps{grid-column:1/-1}.pipeline-plain-steps>.loi-stage-steps{margin-left:28px}}
