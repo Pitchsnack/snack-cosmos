@@ -1,5 +1,11 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Pipeline top page links
+- [x] Read brief, open reference, and report existing seller/buyer menu counts and distinct addresses.
+- [x] Add six bilingual links above every Pipeline title, reusing live sidebar counts; leave sidebar and other content unchanged.
+- [x] Verify all six pages in both Control views and EN/TH (24 combinations), exact sidebar counts, navigation and independent 390px scrolling; 28 existing rule tests pass, no runtime errors, latest build OK; four 1280 screenshots delivered.
+- Separate seller/buyer accounts were not exercised; checks used Control viewing each side. No real deal data changed.
+
 ## Pipeline completion colours follow-up
 - [x] Use existing NDA/LOI and side-specific valuation/legal completion signals; keep Deal Support current after acceptance and payment confirmation.
 - [x] Green completed rows with outside steps, yellow unfinished rows, blue Deal Support, payment pulse and scoped hover.
