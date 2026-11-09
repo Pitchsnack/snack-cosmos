@@ -9,7 +9,7 @@ import { ShareAccessDialog } from "@/components/my-business/report-share-ui";
 import { DealAgreements } from './deal-agreements';
 import { DealCompanyChip } from './deal-company-chip';
 import {PipelineReportsButton} from '@/components/reports/reports-hub';
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SendLoiDialog } from "@/components/pipeline/send-loi-dialog";
@@ -126,6 +126,9 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
   const [loiExpanded,setLoiExpanded]=useState(false);
   const [financialExpanded,setFinancialExpanded]=useState(false);
   const financialDone=financialStageComplete(p);
+  const finWrap=useRef<HTMLDivElement>(null);
+  const inlineReports=financialOptional&&!wd;
+  useEffect(()=>{if(!financialExpanded)return;const down=(e:PointerEvent)=>{const el=e.target as HTMLElement;if(finWrap.current?.contains(el)||el.closest('[role=dialog],[data-radix-popper-content-wrapper],.hub-overlay'))return;setFinancialExpanded(false);};document.addEventListener('pointerdown',down,true);return()=>document.removeEventListener('pointerdown',down,true);},[financialExpanded]);
   useEffect(()=>{const sent=(e:Event)=>{if((e as CustomEvent).detail?.id===p.id)setLoiExpanded(true);};const review=(e:Event)=>{if((e as CustomEvent).detail?.id===p.id)setDlg("loi");};window.addEventListener("pipeline-loi-sent",sent);window.addEventListener("pipeline-review-loi",review);return()=>{window.removeEventListener("pipeline-loi-sent",sent);window.removeEventListener("pipeline-review-loi",review);};},[p.id]);
   const withdrawReq = useServerFn(withdrawLoiRequest);
   const lr = p.loiRequest;
@@ -141,6 +144,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
   };
   const ask = () => act(() => fAsk({ data: { id: p.id } }), `${t("Request sent to")} ${p.counterparty.name}. ${t("You will be notified when the report is shared.")}`);
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+  const viewReportBtn=<Button size="sm" variant="outline" className={inlineReports&&financialExpanded?"pipeline-view-report-open":undefined} aria-expanded={inlineReports?financialExpanded:undefined} onClick={() => inlineReports?setFinancialExpanded(v=>!v):setDlg("report")}>{t("View report")}</Button>;
   const w = waitState(p, seller);
   const other = seller ? t("the buyer") : t("the seller");
 
@@ -158,9 +162,9 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
         : p.revokedAt ? `${t("The seller stopped sharing the report on")} ${day(p.revokedAt)}`
         : p.reportRequestedAt ? <><b>{t("You asked for the report on")} {day(p.reportRequestedAt)}</b> · {t("waiting for the seller")}</>
         : t("Not shared yet"),
-      seller ? (p.share ? <><Button size="sm" variant="outline" onClick={() => setDlg("share")}>{t("Manage access")}</Button><Button size="sm" variant="outline" onClick={() => setDlg("report")}>{t("View report")}</Button></>
+      seller ? (p.share ? <><Button size="sm" variant="outline" onClick={() => setDlg("share")}>{t("Manage access")}</Button>{viewReportBtn}</>
           : p.reports.financials || p.reports.valuation ? <Button size="sm" onClick={() => setDlg("share")}>{t("Share report")}</Button> : undefined)
-        : p.share ? <Button size="sm" variant="outline" onClick={() => setDlg("report")}>{t("View report")}</Button>
+        : p.share ? viewReportBtn
         : !p.reportRequestedAt ? <Button size="sm" variant="outline" onClick={ask}>{t("Ask for the report")}</Button> : undefined],
     ["Letter of intent", p.loiAcceptedAt??p.loiSentAt,
       p.loiAcceptedAt ? `${money(p.loiAmount)} · ${t("accepted by")} ${p.loiAcceptConsent?.side===(seller?"seller":"buyer")?t("you"):other} · ${t("exclusivity")} ${p.loiExclusivityDays??0} ${t("days")}`
@@ -251,7 +255,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
             {(wd?rows:rows.slice(0,3)).map(([label, date, text, action]) => {
               const financial=label==="Financial & Valuation"&&financialOptional&&!wd;
               const completed=financialOptional&&!wd&&(label==="NDA"&&!!p.ndaApprovedAt||financial&&financialDone||label==="Letter of intent"&&!!p.loiAcceptedAt);
-              return <div key={label} className="pipeline-stage-wrap">
+              return <div key={label} ref={financial?finWrap:undefined} className="pipeline-stage-wrap">
               <div aria-current={!wd&&label===STEPS[cur]?"step":undefined} className={cn("loi-stage-row",!wd&&label===STEPS[cur]&&"loi-current-row",completed&&"pipeline-completed-row",financial&&"pipeline-financial-row",label==="Letter of intent"&&!wd&&"pipeline-expandable-row")} onClick={e=>{if(!(e.target as HTMLElement).closest("button,a")&&!window.getSelection()?.toString()){if(financial)setFinancialExpanded(v=>!v);else if(label==="Letter of intent"&&!wd)setLoiExpanded(v=>!v);}}}>
                 <div className={cn("font-semibold", date || STEPS.indexOf(label as typeof STEPS[number]) === cur ? "text-foreground" : "text-muted-foreground")}>{t(label)}{financial&&<small>{t("Optional")}</small>}</div>
                 <div className="text-muted-foreground">{day(date)}</div>
@@ -259,7 +263,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
                 <div className="loi-stage-actions">{action}{financial&&<Button variant="ghost" size="icon" aria-label={t(financialExpanded?"Hide the Financial & Valuation reports":"Show the Financial & Valuation reports")} aria-expanded={financialExpanded} onClick={()=>setFinancialExpanded(v=>!v)}><ChevronDown size={16} className={financialExpanded?"rotate-180":""}/></Button>}{label==="Letter of intent"&&!wd&&<Button variant="ghost" size="icon" aria-label={t("Show steps")} aria-expanded={loiExpanded} onClick={()=>setLoiExpanded(v=>!v)}><ChevronDown size={16} className={loiExpanded?"rotate-180":""}/></Button>}</div>{label==="Letter of intent"&&loiExpanded&&!wd&&!completed&&<LoiTimeline p={p} seller={seller}/>}
               </div>
               {completed&&label==="Letter of intent"&&loiExpanded&&<div className="pipeline-completed-steps" onClick={e=>{if(!(e.target as HTMLElement).closest("button,a")&&!window.getSelection()?.toString())setLoiExpanded(false);}}><LoiTimeline p={p} seller={seller}/></div>}
-              {financial&&financialExpanded&&<FinancialReports hub={reports} seller={seller} onFold={()=>setFinancialExpanded(false)}/>}
+              {financial&&financialExpanded&&<FinancialReports p={p} hub={reports} seller={seller} onFold={()=>setFinancialExpanded(false)}/>}
               </div>;
             })}
             {!wd&&<PostLoiStages p={p} seller={seller} onDone={refresh}/>}

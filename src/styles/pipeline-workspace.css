@@ -173,3 +173,12 @@ body:has(.connect-sent-dialog[data-state=closed]) [data-radix-dialog-overlay]{an
 .pipeline-page-link[aria-current=page]::after{content:'';position:absolute;height:1px;bottom:-1px;left:0;right:0;background:var(--pipeline-tab-surface)}
 .pipeline-page-link:focus-visible{outline:2px solid var(--ring);outline-offset:-4px}
 .pipeline-page-link .pipeline-count-number{color:var(--pipeline-tab-count)}
+/* View report rows (Nov 9): pressed View report, openable report boxes only, plain open steps */
+:root{--pipeline-pressed-bg:#EFF2F7;--pipeline-pressed-line:#B9C1CF;--pipeline-pressed-text:#151A28;--pipeline-plain-hover:#FAFAFB}
+.dark{--pipeline-pressed-bg:hsl(220 15% 22%);--pipeline-pressed-line:hsl(220 12% 40%);--pipeline-pressed-text:var(--foreground);--pipeline-plain-hover:hsl(220 10% 14%)}
+.pipeline-view-report-open,.pipeline-view-report-open:hover{background:var(--pipeline-pressed-bg);border-color:var(--pipeline-pressed-line);color:var(--pipeline-pressed-text)}
+.pipeline-financial-item:hover{background:var(--card)}
+.pipeline-financial-openable{cursor:pointer}.pipeline-financial-openable:hover{background:var(--pipeline-item-hover)}
+.pipeline-financial-name{font:inherit;color:inherit;background:none;border:0;padding:0;text-align:left;cursor:pointer}
+.pipeline-financial-name:focus-visible{outline:2px solid var(--ring);outline-offset:2px;border-radius:4px}
+.loi-stage-row.pipeline-expandable-row:not(.pipeline-completed-row):not(.loi-current-row):hover{background:var(--pipeline-plain-hover)}
