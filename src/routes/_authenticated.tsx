@@ -5,6 +5,7 @@ import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/app-sidebar";
 import { RoutePendingSkeleton } from "@/components/skeletons/route-pending-skeleton";
+import { GlobalPipelineReviewAlert } from "@/components/pipeline/review-alert-host";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   return (
     <AppSidebar>
+      <GlobalPipelineReviewAlert />
       <FreePlanBars />
       <ApprovalBanners />
       <ApprovedPopup />

@@ -1,5 +1,11 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Review alert on every page
+- [x] Mount one shared seller/buyer alert in the authenticated top-bar layout; remove the All deals copy and exclude Admin/advisors.
+- [x] Preserve folding across navigation, refresh live counts every five seconds and make LOI/NDA review actions work from every eligible page.
+- [x] Control seller My Company, Browse, watchlist, Messages, Notifications, reports and every Pipeline page; folded navigation, LOI/NDA destinations, Thai, dark mode, 1440×900, 1280×720 and 1024; one alert only and no runtime errors.
+- [ ] Buyer-with-items screenshot and live new-NDA arrival remain unverified: the available Control buyer view has nothing waiting, and no live NDA was created. Buyer empty state, Admin and advisor exclusions checked; separate role accounts unavailable.
+
 ## Merged NDA Invitations
 - [x] Merge pending/completed lists, sorting, four-part steps, history, bilingual controls and deep links; retain existing dialogs and Applications.
 - [x] Remove Deal status navigation; exclude unsigned NDAs from All deals/watchlist without changing stored deals or parent badge.
