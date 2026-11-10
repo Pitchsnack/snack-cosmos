@@ -200,13 +200,14 @@ export const withdrawNdaRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    await (await import("./plan-access.server")).requireRole(context.userId,["buyer"]);
     const sb = await admin();
-    const { data: p } = await sb.from("deal_pipelines").select("id, buyer_user_id, nda_approved_at, status").eq("hidden_profile_id", data.id).eq("buyer_user_id", context.userId).maybeSingle();
-    if (!p) throw new Error("No NDA request for this listing");
-    if (p.nda_approved_at) throw new Error("The seller has already approved this NDA");
-    const { error } = await sb.from("deal_pipelines").update({ status: "withdrawn" }).eq("id", p.id);
-    if (error) throw new Error(error.message);
-    await sb.from("deal_pipeline_events").insert({ pipeline_id: p.id, event: "nda_withdrawn", actor_id: context.userId });
+    const {data:p}=await sb.from("deal_pipelines").select("id").eq("hidden_profile_id",data.id).eq("buyer_user_id",context.userId).maybeSingle();
+    if(!p)throw new Error("No NDA request for this listing");
+    const {data:result,error}=await sb.rpc("nda_withdraw_commit",{_id:p.id,_actor:context.userId,_side:"buyer"});
+    if(error)throw new Error(error.message);
+    const {sendAlert,sellerTeam}=await import("./email-alerts.server");
+    await sendAlert({alert:"nda_request_withdrawn",role:"seller",userIds:(await sellerTeam(result.startup)).filter(id=>id!==context.userId),vars:{"listing code name":result.listing,"buyer code name":result.buyer,date:new Date(result.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"Asia/Bangkok"}),pipeline:result.id},refKey:`${result.id}:${result.date}`});
     return { ok: true };
   });
 

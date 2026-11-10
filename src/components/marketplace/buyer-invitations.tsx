@@ -41,7 +41,7 @@ export function InvitedYouChip() {
 }
 
 type Tab = "current" | "nda" | "archive";
-const TAB_OF: Record<BuyerInvitation["status"], Tab> = { new: "current", viewed: "current", waiting: "current", approved: "nda", declined: "archive", not_interested: "archive", closed: "archive" };
+const TAB_OF: Record<BuyerInvitation["status"], Tab> = { new: "current", viewed: "current", waiting: "current", approved: "nda", declined: "archive", not_interested: "archive", withdrawn: "archive", closed: "archive" };
 
 function useFmt() {
   const { language } = useTranslation();
@@ -52,6 +52,7 @@ function statusView(r: BuyerInvitation, tr: (e: string, t: string) => string, da
   const reason = r.closedReason === "listing_not_live" ? tr("Listing no longer live", "ประกาศไม่ได้เผยแพร่แล้ว")
     : r.closedReason === "profile_unpublished" ? tr("Your profile is unpublished", "โปรไฟล์ของท่านไม่ได้เผยแพร่") : tr("NDA ended", "NDA สิ้นสุดแล้ว");
   switch (r.status) {
+    case "withdrawn": return { tone: "grey", pill: tr("Withdrawn", "ถอนแล้ว"), line: tr(`Withdrawn · ${day(r.withdrawnAt??null)}`, `ถอนแล้ว · ${day(r.withdrawnAt??null)}`) };
     case "new": return { tone: "blue", pill: tr("New", "ใหม่"), line: tr("Not opened yet", "ยังไม่ได้เปิดดู") };
     case "viewed": return { tone: "blue", pill: tr("Viewed", "ดูแล้ว"), line: tr(`${day(r.viewedAt)} · no NDA request yet`, `${day(r.viewedAt)} · ยังไม่ได้ขอ NDA`) };
     case "waiting": return { tone: "grey", pill: tr("Waiting for the seller", "รอผู้ขาย"), line: tr(`You signed the NDA · ${day(r.ndaAt)}`, `ท่านลงนาม NDA แล้ว · ${day(r.ndaAt)}`) };
@@ -313,7 +314,7 @@ function DecisionBar({ r, reason, onClose }: { r: BuyerInvitation; reason?: stri
             <button type="button" className={outline} onClick={() => setMode("decide")}>{tr("Cancel", "ยกเลิก")}</button>
             <button type="button" aria-disabled={!tick || undefined} title={!tick ? tr("Tick the box to sign", "ทำเครื่องหมายเพื่อลงนาม") : undefined} disabled={busy}
               className={cn(navy, !tick && "cursor-not-allowed opacity-40")}
-              onClick={() => tick && run(() => nda({ data: { listingId: r.listingId, consent } }), () => {
+              onClick={() => tick && run(() => nda({ data: { listingId: r.listingId, invitationId:r.origin==="received"?r.id:undefined, consent } }), () => {
                 setStatus("waiting", { ndaAt: new Date().toISOString() });
                 toast.success(tr("NDA signed. The seller has received your NDA request.", "ลงนาม NDA แล้ว ผู้ขายได้รับคำขอ NDA ของท่านแล้ว"));
               })}>

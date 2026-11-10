@@ -2,7 +2,7 @@
  * Server-only invitation helpers shared by invitations, pipeline and listing loaders.
  * An investor organisation = every buyer account linked to the same investor row.
  */
-export type InvStatus = "closed" | "approved" | "declined" | "waiting" | "not_interested" | "viewed" | "new";
+export type InvStatus = "withdrawn" | "closed" | "approved" | "declined" | "waiting" | "not_interested" | "viewed" | "new";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -21,6 +21,8 @@ export async function buyerOrg(userId: string) {
 
 /** Section 14's order: first match wins. `pipe` is the org's latest pipeline row on the listing. */
 export function deriveStatus(inv: any, pipe: any | null): InvStatus {
+  if (inv.withdrawn_at) return "withdrawn";
+  if (pipe?.status === "withdrawn" && (pipe.nda_requested_at ?? "") >= inv.sent_at) return "withdrawn";
   if (inv.closed_at) return "closed";
   if(pipe?.nda_approved_at&&(pipe.status==="ended"||pipe.status==="revoked"||(pipe.nda_expires_at&&Date.parse(pipe.nda_expires_at)<=Date.now())))return "closed";
   const live = pipe && !["withdrawn", "declined"].includes(pipe.status) && !pipe.ended_at;
@@ -80,11 +82,11 @@ export async function notifySellers(startupId: string, title: string, message: s
 
 /** First view of an invitation: stamp it and tell the seller once. */
 export async function markViewed(inv: any) {
-  if (inv.viewed_at) return;
+  if (inv.viewed_at || inv.withdrawn_at || inv.closed_at) return;
   const sb = await admin();
   const { data: upd } = await sb.from("listing_invitations").update({ viewed_at: new Date().toISOString() }).eq("id", inv.id).is("viewed_at", null).select("id");
   if (!upd?.length) return;
   const { loadPublicInvestors } = await import("./investor-browse.functions");
   const [i] = await loadPublicInvestors(sb, [inv.investor_id]);
-  await notifySellers(inv.startup_id, `${i ? `${i.codeName} (${i.refNo})` : "An investor"} has opened your listed profile.`, "");
+  await notifySellers(inv.startup_id, `${i ? `${i.codeName} (${i.refNo})` : "An investor"} has opened your listed profile.`, "", `/marketplace/pipeline/invitations?open=${inv.id}`);
 }

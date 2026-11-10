@@ -91,7 +91,7 @@ export const EMAIL_ALERTS: AlertDef[] = [
   {
     key: "nda_request", n: 4, group: "NDA", name: "NDA request", icon: "lock", color: "#4338CA", wired: true,
     placeholders: ["{buyer code name}", "{listing code name}"],
-    seller: v("A buyer requests an NDA on the listing", SELLER_TO, "Pipeline › All deals", "/marketplace/pipeline",
+    seller: v("A buyer requests an NDA on the listing", SELLER_TO, "Pipeline › NDA Invitations", "/marketplace/pipeline/invitations?open={pipeline}",
       { subject: "{buyer code name} asked for an NDA on {listing code name}", title: "A buyer asked for your NDA", body: "{buyer code name} wants to see the private view of {listing code name}. Their name stays hidden until you approve, but you can see their public profile now.", button: "Review the request" },
       { subject: "{buyer code name} ขอ NDA สำหรับ {listing code name}", title: "มีผู้ซื้อขอ NDA กับคุณ", body: "{buyer code name} ต้องการดูมุมมองพิเศษของ {listing code name} ชื่อของผู้ซื้อจะถูกซ่อนจนกว่าคุณจะอนุมัติ แต่คุณดูโปรไฟล์สาธารณะได้แล้ว", button: "ตรวจสอบคำขอ" }),
     buyer: v("A seller requests an NDA with the buyer", BUYER_TO, "Pipeline › All deals", "/marketplace/pipeline",
@@ -117,6 +117,20 @@ export const EMAIL_ALERTS: AlertDef[] = [
     buyer: v("The seller declines the buyer's NDA request", BUYER_TO, "Browse listings", "/marketplace/browse",
       { subject: "Your NDA for {listing code name} was declined", title: "The seller declined your NDA", body: "The seller of {listing code name} declined your request. The listing stays in Browse listings, anonymous.", button: "Browse other listings" },
       { subject: "NDA ของคุณสำหรับ {listing code name} ถูกปฏิเสธ", title: "ผู้ขายปฏิเสธ NDA ของคุณ", body: "ผู้ขาย {listing code name} ปฏิเสธคำขอของคุณ รายการยังอยู่ใน Browse listings แบบไม่ระบุตัวตน", button: "ดูรายการอื่น" }),
+  },
+  {
+    key:"nda_invitation_withdrawn",n:20,group:"NDA",name:"NDA invitation withdrawn",icon:"log-out",color:"#B91C1C",wired:true,
+    placeholders:["{listing code name}","{date}","{pipeline}"],
+    buyer:v("A seller withdraws an unsigned invitation",BUYER_TO,"Browse listings","/marketplace/browse",
+      {subject:"{listing code name} withdrew its NDA invitation",title:"NDA invitation withdrawn",body:"{listing code name} withdrew the NDA invitation it sent you on {date}. Nothing more is needed from you.",button:"Browse other listings"},
+      {subject:"{listing code name} ถอนคำเชิญ NDA แล้ว",title:"ถอนคำเชิญ NDA แล้ว",body:"{listing code name} ถอนคำเชิญ NDA ที่ส่งถึงท่านเมื่อ {date} ท่านไม่ต้องดำเนินการใดๆ เพิ่มเติม",button:"ดูรายการอื่น"}),
+  },
+  {
+    key:"nda_request_withdrawn",n:21,group:"NDA",name:"NDA request withdrawn",icon:"log-out",color:"#B91C1C",wired:true,
+    placeholders:["{buyer code name}","{listing code name}","{date}","{pipeline}"],
+    seller:v("A buyer withdraws an unsigned NDA request",SELLER_TO,"Pipeline › NDA Invitations","/marketplace/pipeline/invitations?open={pipeline}",
+      {subject:"{buyer code name} withdrew their NDA request for {listing code name}",title:"NDA request withdrawn",body:"{buyer code name} withdrew the NDA request they signed on {date}. Nothing was shared.",button:"View details"},
+      {subject:"{buyer code name} ถอนคำขอ NDA สำหรับ {listing code name}",title:"ถอนคำขอ NDA แล้ว",body:"{buyer code name} ถอนคำขอ NDA ที่ลงนามเมื่อ {date} ไม่มีข้อมูลใดถูกเปิดเผย",button:"ดูรายละเอียด"}),
   },
   {
     key: "financial_report", n: 7, group: "Pipeline", name: "Financial report", icon: "file", color: "#0E7490", wired: true,

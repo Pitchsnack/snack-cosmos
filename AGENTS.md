@@ -22,7 +22,7 @@
 - Covers: listing resolveCover/SectorArt (pick → oldest → drawn); buy-order resolveBuyOrderCover (upload first), signed DTOs, Control review; shared Sector images processing; private public-images.
 - Seller Browse uses listBrowseInvestors: code names, ranges, revenue minimum; investor-browse.ts filters public ranges, never exact figures.
 - Buyer investor profiles go live only by Admin approval (buyer_profiles.approval_status, decideBuyerProfile); setBuyerListing sends unapproved profiles to review.
-- Email alerts: wording defaults in src/config/email-alerts.ts, Admin overrides/switches in email_alert_settings; every send goes through sendAlert (email-alerts.server.ts), which checks the user switch and logs to email_alert_log; pipeline emails fire from pipeline log() so steps and emails never drift.
+- Email alerts: defaults live in email-alerts.ts with Admin overrides; sends use sendAlert's user switch and log. NDA RPCs store events transactionally before pipelineAlert; other Pipeline actions use log(), preventing duplicate NDA history.
 - Advisor view: users.advisor_view gates it; advisor stars live in advisor_favourites (view='advisor'), separate from buyer/seller saves; advisor-marketplace.tsx reuses existing cards/panels and only public loaders (listAdvisorMarketplace).
 - Edit-at-section: My Company Edit/Add links pass ?section=; forms use EditSec + useOpenAtSection (edit-section.tsx).
 - Sign-up answers live in signup_answers; finishSignup creates each role's Draft and records sign-up-answered fields so wizards skip them while set.
@@ -48,7 +48,7 @@
 
 - Company verification: whitelisted DTOs; selected-deal NDA + entitlement on buyer reads; DB-enforced quotas and six-check badge.
 
-- Seller/buyer Pipeline shares workspace-page/cards and six child routes; authenticated DTOs own invitations/counts, stable pipeline IDs own watchlist stars. workspace-reports embeds ReportsHub behind a deal selector, never a table; pipelinePage gates per-buyer extras, preserving /my-reports and pop-ups.
+- Seller/buyer Pipeline shares workspace-page/cards and five content routes plus the legacy status redirect; authenticated DTOs own invitations/counts, stable pipeline IDs own watchlist stars. workspace-reports embeds ReportsHub behind a deal selector, never a table; pipelinePage gates per-buyer extras, preserving /my-reports and pop-ups.
 - Invitation dialogs reuse extracted watchlist profile bodies; no route-module component imports and no private profile payload before a valid approved NDA.
 - NDA Invitations: one row per NDA (linked requests show only on the invitation row); Invite again (invite_count ≤ 2) via inviteAgain; approval boxes come from nda-approval.tsx and the buyer's box shows once via deal_pipelines.buyer_approval_seen_at.
 - Pipeline Investor/Seller profile box is read-only from getProfileBox (profile-box.functions.ts): private person/firm facts only while the NDA is approved and valid, else the public investor profile; nothing is stored.
@@ -71,3 +71,5 @@
 
 - Either-side LOI transitions lock and validate party/revision in pipeline_transition; pipeline.functions.ts owns notifications and private valuation uploads/signing in a dedicated no-client-policy bucket. Workflow dates never reinterpret legacy milestones.
 
+
+- NDA Invitations uses browser-safe bucketing/sorting and a shared list separate from preserved profile dialogs; service-only atomic NDA RPCs serialize invitation withdrawal, request linking and seller decisions after server role/scope checks. Unfiltered requests remain available for the unchanged parent badge/review alert, while signedPipelineOpen gates deal lists/counts.

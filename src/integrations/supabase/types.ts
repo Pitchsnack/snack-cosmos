@@ -4812,6 +4812,8 @@ export type Database = {
           sent_by: string
           startup_id: string
           viewed_at: string | null
+          withdrawn_at: string | null
+          withdrawn_by: string | null
         }
         Insert: {
           buyer_choice?: string
@@ -4831,6 +4833,8 @@ export type Database = {
           sent_by: string
           startup_id: string
           viewed_at?: string | null
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
         }
         Update: {
           buyer_choice?: string
@@ -4850,6 +4854,8 @@ export type Database = {
           sent_by?: string
           startup_id?: string
           viewed_at?: string | null
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
         }
         Relationships: []
       }
@@ -8372,6 +8378,24 @@ export type Database = {
         Returns: boolean
       }
       mark_welcome_tour_seen: { Args: never; Returns: string }
+      nda_decision_commit: {
+        Args: { _actor: string; _approve: boolean; _id: string }
+        Returns: undefined
+      }
+      nda_request_commit: {
+        Args: {
+          _actor: string
+          _invitation: string
+          _listing: string
+          _message?: string
+          _startup: string
+        }
+        Returns: Json
+      }
+      nda_withdraw_commit: {
+        Args: { _actor: string; _id: string; _side: string }
+        Returns: Json
+      }
       next_inv_ref: { Args: never; Returns: string }
       normalize_url_key: { Args: { _url: string }; Returns: string }
       pipeline_transition: {

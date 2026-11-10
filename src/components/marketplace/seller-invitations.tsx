@@ -19,7 +19,7 @@ import { SellerApprovedBox } from "@/components/pipeline/nda-approval";
 /** Seller › Invitations (sections 6 and 10) and the Review investor dialog (section 9). */
 
 type Tab = "current" | "nda" | "archive";
-const TAB_OF: Record<SellerInvitation["status"], Tab> = { new: "current", viewed: "current", waiting: "current", approved: "nda", declined: "archive", not_interested: "archive", closed: "archive" };
+const TAB_OF: Record<SellerInvitation["status"], Tab> = { new: "current", viewed: "current", waiting: "current", approved: "nda", declined: "archive", not_interested: "archive", withdrawn: "archive", closed: "archive" };
 const KEY = ["invitations", "seller"];
 
 export function useSellerInvitations(enabled = true) {
@@ -36,6 +36,7 @@ function statusView(r: SellerInvitation, tr: (e: string, t: string) => string, d
   const reason = r.closedReason === "listing_not_live" ? tr("Your listing is no longer live", "ประกาศของท่านไม่ได้เผยแพร่แล้ว")
     : r.closedReason === "profile_unpublished" ? tr("Their profile is unpublished", "โปรไฟล์ของผู้ซื้อไม่ได้เผยแพร่แล้ว") : tr("NDA ended", "NDA สิ้นสุดแล้ว");
   switch (r.status) {
+    case "withdrawn": return { tone: "grey", pill: tr("Withdrawn", "ถอนแล้ว"), line: tr(`Withdrawn · ${day(r.withdrawnAt??null)}`, `ถอนแล้ว · ${day(r.withdrawnAt??null)}`) };
     case "new": return { tone: "grey", pill: tr("Not opened yet", "ยังไม่ได้เปิดดู"), line: tr("The buyer hasn't looked yet", "ผู้ซื้อยังไม่ได้เปิดดู") };
     case "viewed": return { tone: "grey", pill: tr("Viewed your profile", "ดูประกาศของท่านแล้ว"), line: tr(`${day(r.viewedAt)} · no NDA request yet`, `${day(r.viewedAt)} · ยังไม่ได้ขอ NDA`) };
     case "waiting": return { tone: "blue", pill: tr("Needs your review", "รอท่านตรวจสอบ"), line: tr(`Buyer signed the NDA · ${day(r.ndaAt)}`, `ผู้ซื้อลงนาม NDA แล้ว · ${day(r.ndaAt)}`) };

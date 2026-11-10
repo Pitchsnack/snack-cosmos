@@ -30,7 +30,7 @@ export function buildAlert(alert: string, role: AlertRole, lang: AlertLang, ov: 
   return {
     role, lang,
     subject: fill(t.subject, vars), title: fill(t.title, vars), body: fill(body, localVars),
-    button: t.button, place: ver.place, url: SITE + (vars.pipeline ? (alert==='deal_withdrawn'?`/marketplace/pipeline/history?deal=${encodeURIComponent(vars.pipeline)}`:alert==='nda_declined'?`/marketplace/pipeline/invitations?open=${encodeURIComponent(vars.pipeline)}`:`/marketplace/pipeline/all-deals?deal=${encodeURIComponent(vars.pipeline)}`) : fill(ver.path, Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, encodeURIComponent(String(v))])))), color: def.color,
+    button: t.button, place: ver.place, url: SITE + (vars.pipeline && alert!=='nda_invitation_withdrawn' ? (alert==='deal_withdrawn'?`/marketplace/pipeline/history?deal=${encodeURIComponent(vars.pipeline)}`:['nda_declined','nda_request','nda_request_withdrawn'].includes(alert)?`/marketplace/pipeline/invitations?open=${encodeURIComponent(vars.pipeline)}`:`/marketplace/pipeline/all-deals?deal=${encodeURIComponent(vars.pipeline)}`) : fill(ver.path, Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, encodeURIComponent(String(v))])))), color: def.color,
     details: advisorApproved ? details?.filter(([label]) => label === "Verified") : details, quote: quote ? quote.slice(0, 300) : undefined,
   };
 }

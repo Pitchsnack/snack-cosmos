@@ -1,5 +1,11 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Merged NDA Invitations
+- [ ] Merge pending/completed lists, sorting, four-part steps, history, bilingual controls and deep links; retain existing dialogs and Applications.
+- [ ] Remove Deal status navigation; exclude unsigned NDAs from All deals/watchlist without changing stored deals or parent badge.
+- [ ] Add atomic seller invitation/buyer request withdrawal, opposite-side bells and two standard email alerts.
+- [ ] Run rule tests and live layout/interaction checks; capture requested states where real records permit.
+
 ## Pipeline top page links
 - [x] Read brief, open reference, and report existing seller/buyer menu counts and distinct addresses.
 - [x] Add six bilingual links above every Pipeline title, reusing live sidebar counts; leave sidebar and other content unchanged.

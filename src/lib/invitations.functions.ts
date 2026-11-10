@@ -62,6 +62,7 @@ async function statesFor(sb: any, hp: any, investorIds?: string[]): Promise<Reco
     if (live && p.nda_approved_at && (!p.nda_expires_at || new Date(p.nda_expires_at).getTime() > now)) out[id] = { kind: "approved", at: p.nda_approved_at, ...base };
     else if (live && p.nda_requested_at && !p.nda_approved_at) out[id] = { kind: "nda_requested", at: p.nda_requested_at, ...base };
     else if (inv && p?.status === "declined" && (p.nda_requested_at ?? "") >= inv.sent_at) out[id] = { kind: "declined", at: p.updated_at, ...base };
+    else if (inv?.withdrawn_at) continue;
     else if (inv && inv.buyer_choice === "not_interested") out[id] = { kind: "not_interested", at: inv.choice_at, ...base };
     else if (inv) out[id] = { kind: "invited", at: inv.sent_at, ...base };
   }
@@ -114,7 +115,7 @@ export const sendInvitation = createServerFn({ method: "POST" })
       user_id: inv.userId, notification_type: "deal",
       title: `${name} invited you to view their business`,
       message: "Browse their listed profile. If you're interested, request an NDA to see the company's name and details.",
-      link_url: `/marketplace/invitations?open=${row.id}`,
+      link_url: `/marketplace/pipeline/invitations?open=${row.id}`,
     });
     const a = await planAccess(context.userId);
     return { id: row.id as string, sentAt: row.sent_at as string, investorRef: inv.refNo, listingRef: hp.ref_no as string | null, left: requestsLeft(a, "contact"), termMonths: (a.plan?.term_months as number | undefined) ?? null };
@@ -155,7 +156,9 @@ export const adminInvitations = createServerFn({ method: "GET" })
 
 /* ───────────────────────── Buyer side ───────────────────────── */
 
-export type BuyerInvitation = {
+export type NdaHistoryEvent={event:string;at:string};
+export type NdaHistoryFields={withdrawnAt?:string|null;withdrawnSide?:"buyer"|"seller"|null;expiresAt?:string|null;history?:NdaHistoryEvent[]};
+export type BuyerInvitation = NdaHistoryFields & {
   id: string; listingId: string; origin?: "received" | "sent"; status: import("./invitations.server").InvStatus;
   sentAt: string; viewedAt: string | null; choiceAt: string | null; closedAt: string | null; closedReason: string | null;
   ndaAt: string | null; approvedAt: string | null; pipelineId: string | null;
@@ -172,9 +175,9 @@ export const listMyInvitations = createServerFn({ method: "GET" })
     const { orgInvitations } = await import("./invitations.server");
     const { rows,org } = await orgInvitations(context.userId);
     const sb = await admin();
-    const {data:standalone}=await sb.from("deal_pipelines").select("*").in("buyer_user_id",org.userIds).neq("status","withdrawn");
+    const {data:standalone}=await sb.from("deal_pipelines").select("*").in("buyer_user_id",org.userIds);
     const linked=new Set(rows.map(r=>r.inv.hidden_profile_id));
-    for(const p of standalone??[]){if(linked.has(p.hidden_profile_id))continue;rows.push({inv:{id:p.id,hidden_profile_id:p.hidden_profile_id,sent_at:p.nda_requested_at,viewed_at:null,choice_at:null,closed_at:null,closed_reason:null},pipe:p,status:p.status==="ended"||p.status==="revoked"||(p.nda_approved_at&&p.nda_expires_at&&Date.parse(p.nda_expires_at)<=Date.now())?"closed":p.status==="declined"?"declined":p.nda_approved_at?"approved":"waiting"});}
+    for(const p of standalone??[]){if(linked.has(p.hidden_profile_id))continue;rows.push({inv:{id:p.id,hidden_profile_id:p.hidden_profile_id,sent_at:p.nda_requested_at,viewed_at:null,choice_at:null,closed_at:null,closed_reason:null},pipe:p,status:p.status==="ended"||p.status==="revoked"||(p.nda_approved_at&&p.nda_expires_at&&Date.parse(p.nda_expires_at)<=Date.now())?"closed":p.status==="withdrawn"?"withdrawn":p.status==="declined"?"declined":p.nda_approved_at?"approved":"waiting"});}
     if(!rows.length)return [];
     const hpIds = rows.map((r) => r.inv.hidden_profile_id as string);
     const [{ data: hps }, { loadMarketplaceTeasers }] = await Promise.all([
@@ -192,7 +195,7 @@ export const listMyInvitations = createServerFn({ method: "GET" })
       const hp = hpBy.get(inv.hidden_profile_id);
       let t = teasers.get(inv.hidden_profile_id) ?? null;
       if(t){const {priceFor}=await import("./asking-price");const {askingPrice:_exact,...publicTeaser}=t;t={...publicTeaser,...priceFor(hp?.live as never,false)};}
-      if(!t){status="closed";inv.closed_reason="listing_not_live";}
+      if(!t&&status!=="withdrawn"){status="closed";inv.closed_reason="listing_not_live";}
       return {
         id: inv.id, listingId: inv.hidden_profile_id, origin: inv.id===pipe?.id ? "sent" : "received", status,
         sentAt: inv.sent_at, viewedAt: inv.viewed_at, choiceAt: inv.choice_at, closedAt: inv.closed_at, closedReason: status==="closed" ? inv.closed_reason??"nda_ended" : inv.closed_reason,
@@ -201,6 +204,7 @@ export const listMyInvitations = createServerFn({ method: "GET" })
         companyName: status === "approved" ? nameBy.get(hp?.startup_id) ?? null : null,
         inviteCount: inv.id===pipe?.id ? 1 : inv.invite_count ?? 1, firstDeclinedAt: inv.first_declined_at ?? null, buyerOrg,
         teaser: t,
+        ...(await ndaHistory(sb,inv,pipe)),
       };
     }));
   });
@@ -255,7 +259,7 @@ export const setInvitationChoice = createServerFn({ method: "POST" })
     if (first) {
       const { loadPublicInvestors } = await import("./investor-browse.functions");
       const [i] = await loadPublicInvestors(sb, [r.inv.investor_id]);
-      await (await import("./invitations.server")).notifySellers(r.inv.startup_id, `${i ? `${i.codeName} (${i.refNo})` : "An investor"} isn't interested in your listing.`, "");
+      await (await import("./invitations.server")).notifySellers(r.inv.startup_id, `${i ? `${i.codeName} (${i.refNo})` : "An investor"} isn't interested in your listing.`, "", `/marketplace/pipeline/invitations?open=${r.inv.id}`);
     }
     return { ok: true };
   });
@@ -286,7 +290,7 @@ export const invitationsBadgeCount = createServerFn({ method: "GET" })
 
 /* ───────────────────────── Seller side ───────────────────────── */
 
-export type SellerInvitation = {
+export type SellerInvitation = NdaHistoryFields & {
   id: string; investorId: string; origin?: "received" | "sent"; status: import("./invitations.server").InvStatus;
   sentAt: string; viewedAt: string | null; choiceAt: string | null; closedAt: string | null; closedReason: string | null;
   ndaAt: string | null; approvedAt: string | null; declinedAt: string | null; pipelineId: string | null;
@@ -312,7 +316,7 @@ async function sellerRows(userId: string): Promise<SellerInvitation[]> {
   const ids = await sellerStartupIds(userId);
   if (!ids.length) return [];
   const { data: invs } = await sb.from("listing_invitations").select("*").in("startup_id", ids).order("sent_at", { ascending: false });
-  const {data:allPipes}=await sb.from("deal_pipelines").select("*").in("startup_id",ids).neq("status","withdrawn");
+  const {data:allPipes}=await sb.from("deal_pipelines").select("*").in("startup_id",ids);
   const invitations=invs??[];
   const {data:allBps}=await sb.from("buyer_profiles").select("user_id,investor_id").in("user_id",(allPipes??[]).map((p:any)=>p.buyer_user_id));
   for(const p of allPipes??[]){const bp=allBps?.find((b:any)=>b.user_id===p.buyer_user_id);if(invitations.some((i:any)=>i.pipeline_id===p.id))continue;if(invitations.some((i:any)=>i.hidden_profile_id===p.hidden_profile_id&&i.investor_id===bp?.investor_id))continue;invitations.push({id:p.id,hidden_profile_id:p.hidden_profile_id,startup_id:p.startup_id,investor_id:bp?.investor_id,sent_at:p.nda_requested_at,viewed_at:null,choice_at:null,closed_at:p.status==="ended"||p.status==="revoked"?p.updated_at:null,closed_reason:p.status==="ended"||p.status==="revoked"?"nda_ended":null});}
@@ -356,7 +360,7 @@ async function sellerRows(userId: string): Promise<SellerInvitation[]> {
     if(pipe?.nda_approved_at&&(pipe.status==="ended"||pipe.status==="revoked"||(pipe.nda_expires_at&&Date.parse(pipe.nda_expires_at)<=Date.now())))status="closed";
     let closedReason = inv.closed_reason ?? null;
     let closedAt = inv.closed_at ?? null;
-    if (status !== "closed") {
+    if (status !== "closed" && status !== "withdrawn") {
       if (!pub) { status = "closed"; closedReason = "profile_unpublished"; closedAt = closedAt ?? inv.updated_at ?? inv.sent_at; }
       else if (hp && !isBuyerVisible(hp)) { status = "closed"; closedReason = "listing_not_live"; closedAt = closedAt ?? inv.sent_at; }
     }
@@ -371,6 +375,7 @@ async function sellerRows(userId: string): Promise<SellerInvitation[]> {
       companyName: nameBy.get(inv.startup_id) ?? null,
       investor: status === "closed" && ["profile_unpublished","listing_not_live"].includes(closedReason??"") ? null : publicInvestor,
       investorName: null,
+      ...(await ndaHistory(sb,inv,pipe)),
     };
     if (status === "approved") { approvedInv.add(inv.investor_id); pending.push([row, inv.investor_id]); }
     out.push(row);
@@ -462,6 +467,7 @@ export const inviteAgain = createServerFn({ method: "POST" })
     const sb = await admin();
     const { data: inv } = await sb.from("listing_invitations").select("*").eq("id", data.id).maybeSingle();
     if (!inv || !(await sellerStartupIds(context.userId)).includes(inv.startup_id)) throw new Error("Invitation not found");
+    if (inv.withdrawn_at) throw new Error("This invitation was withdrawn.");
     if ((inv.invite_count ?? 1) >= 2) throw new Error("You can't invite this investor a third time.");
     if (inv.buyer_choice !== "not_interested" || inv.closed_at) throw new Error("This invitation can't be sent again now.");
     const hp = await myLiveListing(context.userId);
@@ -485,7 +491,7 @@ export const inviteAgain = createServerFn({ method: "POST" })
       user_id: pub.userId, notification_type: "deal",
       title: `${name} invited you to view their business`,
       message: "Browse their listed profile. If you're interested, request an NDA to see the company's name and details.",
-      link_url: `/marketplace/invitations?open=${inv.id}`,
+      link_url: `/marketplace/pipeline/invitations?open=${inv.id}`,
     });
     const a = await planAccess(context.userId);
     return { ok: true, left: requestsLeft(a, "contact") };
@@ -536,3 +542,24 @@ export const nextBuyerApproval = createServerFn({ method: "POST" })
     }
     return null;
   });
+
+async function ndaHistory(sb:any,inv:any,pipe:any):Promise<NdaHistoryFields>{
+ const {data:events,error}=pipe?.id?await sb.from("deal_pipeline_events").select("event,created_at").eq("pipeline_id",pipe.id).in("event",["nda_requested","nda_approved","nda_declined","nda_withdrawn"]).order("created_at"):{data:[],error:null};
+ if(error)throw new Error("NDA history could not be loaded.");
+ const history=(events??[]).map((e:any)=>({event:e.event as string,at:e.created_at as string}));
+ if(pipe?.nda_requested_at&&!history.some((e:NdaHistoryEvent)=>e.event==='nda_requested'))history.push({event:'nda_requested',at:pipe.nda_requested_at});
+ if(pipe?.nda_approved_at&&!history.some((e:NdaHistoryEvent)=>e.event==='nda_approved'))history.push({event:'nda_approved',at:pipe.nda_approved_at});
+ history.sort((a:NdaHistoryEvent,b:NdaHistoryEvent)=>Date.parse(a.at)-Date.parse(b.at));
+ const withdrawal=history.filter((e:NdaHistoryEvent)=>e.event==="nda_withdrawn").at(-1);
+ return {history,withdrawnAt:inv.withdrawn_at??(pipe?.status==="withdrawn"?withdrawal?.at??pipe.updated_at:null),withdrawnSide:inv.withdrawn_at?"seller":pipe?.status==="withdrawn"?"buyer":null,expiresAt:pipe?.nda_expires_at??null};
+}
+export const withdrawInvitation=createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).inputValidator(d=>z.object({id:z.string().uuid()}).parse(d)).handler(async({data,context})=>{
+ await (await import("./plan-access.server")).requireRole(context.userId,["seller"]);
+ const sb=await admin();const {data:inv}=await sb.from("listing_invitations").select("startup_id").eq("id",data.id).maybeSingle();
+ if(!inv||!(await sellerStartupIds(context.userId)).includes(inv.startup_id))throw new Error("Invitation not found");
+ const {data:result,error}=await sb.rpc("nda_withdraw_commit",{_id:data.id,_actor:context.userId,_side:"seller"});
+ if(error)throw new Error(error.message);
+ const {sendAlert}=await import("./email-alerts.server");
+ await sendAlert({alert:"nda_invitation_withdrawn",role:"buyer",userIds:result.users.filter((id:string)=>id!==context.userId),vars:{"listing code name":result.listing,date:new Date(result.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"Asia/Bangkok"}),pipeline:result.id},refKey:result.id});
+ return {ok:true};
+});

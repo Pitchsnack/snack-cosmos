@@ -8,8 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/use-notifications";
 import { cn } from "@/lib/utils";
+import {ndaNotificationCopy} from '@/lib/nda-notification-copy';
+import {useTranslation} from '@/i18n/language';
 
 export function NotificationCenter() {
+  const {language}=useTranslation();
   const [open, setOpen] = useState(false);
   const { data, markRead, markAllRead } = useNotifications();
   const items = data?.notifications ?? [];
@@ -64,10 +67,10 @@ export function NotificationCenter() {
                   <Badge variant="outline" className="h-4 px-1 text-[10px]">
                     {n.type}
                   </Badge>
-                  <div className="mt-1 break-words font-medium leading-snug">{n.title}</div>
+                  <div className="mt-1 break-words font-medium leading-snug">{ndaNotificationCopy(n,language==='th').title}</div>
                   {n.message && (
                     <p className="mt-0.5 break-words text-xs text-muted-foreground">
-                      {n.message}
+                      {ndaNotificationCopy(n,language==='th').message}
                     </p>
                   )}
                   {n.linkUrl && (<a href={n.linkUrl} onClick={() => !n.isRead && markRead(n.id)} className="mt-0.5 text-xs block font-semibold text-[#2563EB]">View it</a>)}

@@ -6,15 +6,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/use-notifications";
 import { cn } from "@/lib/utils";
+import {ndaNotificationCopy} from '@/lib/nda-notification-copy';
+import {useTranslation} from '@/i18n/language';
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   head: () => ({
-    meta: [{ title: "Notifications — SnackPortal2" }],
+    meta: [{ title: "Notifications — PitchSnack" },{name:'description',content:'Your PitchSnack deal and account notifications.'},{property:'og:title',content:'Notifications — PitchSnack'},{property:'og:description',content:'Your PitchSnack deal and account notifications.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}],
   }),
   component: NotificationsPage,
 });
 
 function NotificationsPage() {
+  const {language}=useTranslation();
   const { data, markRead, markAllRead, isLoading } = useNotifications();
   const items = data?.notifications ?? [];
 
@@ -59,10 +62,10 @@ function NotificationsPage() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <Badge variant="outline">{n.type}</Badge>
-                <span className="truncate font-medium">{n.title}</span>
+                <span className="truncate font-medium">{ndaNotificationCopy(n,language==='th').title}</span>
               </div>
               {n.message && (
-                <p className="mt-1 text-sm text-muted-foreground">{n.message}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{ndaNotificationCopy(n,language==='th').message}</p>
               )}
               {n.linkUrl && (<a href={n.linkUrl} onClick={() => !n.isRead && markRead(n.id)} className="mt-1 text-sm block font-semibold text-[#2563EB]">View it</a>)}
 <div className="mt-1 text-xs text-muted-foreground">
