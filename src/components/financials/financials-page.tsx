@@ -20,7 +20,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StatementTable } from "@/components/financials/statement-table";
-import { RatiosTable } from "@/components/financials/ratios-table";
+import { CompanyProfileCard } from "./company-profile-card";
+import { ReportsHub } from "@/components/reports/reports-hub";
+import { FinancialReportView } from "@/components/financials/financial-report-view";
+import { useTranslation } from "@/i18n/language";
 import { ValuationTab } from "@/components/financials/valuation-tab";
 import { CompanyRiskReport } from "@/components/financials/company-risk-report";
 import { FinancialsOverview } from "@/components/financials/financials-overview";
@@ -53,114 +56,6 @@ const REMARKS = [
   "The accounts showing in the statement depend on the accounting format submitted.",
 ];
 
-function CompanyProfileCard({
-  data,
-  years,
-  activeYear,
-  onSelectYear,
-}: {
-  data: StartupFinancials;
-  years: number[];
-  activeYear: number | undefined;
-  onSelectYear: (year: number) => void;
-}) {
-  const p = data.profile;
-  const statusText = (p.status ?? "").toLowerCase();
-  const operating =
-    statusText === "active" ||
-    statusText === "operating" ||
-    p.status === "ยังดำเนินกิจการอยู่";
-  const rows: [string, string, boolean?][][] = [
-    [
-      ["Registered Type", p.registeredType ?? DASH],
-      ["Status", p.status ?? DASH, true],
-      ["Registered Date", p.registeredDate ?? DASH],
-    ],
-    [
-      ["Registered Capital", fmtCapital(p.registeredCapital) ?? DASH],
-      ["Last Registered ID", p.registeredNumber ?? DASH],
-      ["Business Size", p.businessSize ?? DASH],
-    ],
-  ];
-
-  return (
-    <div className="rounded-[13px] border border-[#E5E7EB] bg-white px-5 py-4">
-      <div className="flex items-start gap-4">
-        <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center overflow-hidden rounded-[11px] bg-[#EAF1FD]" style={{ color: NAVY }}>
-          {data.logoUrl ? (
-            <img
-              src={data.logoUrl}
-              alt={`${data.startupName} logo`}
-              className="h-full w-full object-contain"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
-          ) : (
-            <FinIcon name="building" className="h-[21px] w-[21px]" />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          {/* Registered names exactly as filed: Thai at title size, English
-              beside it in smaller grey letters, wrapping as a whole. */}
-          <div className="mb-3 flex flex-wrap items-baseline gap-x-[10px] border-b border-[#EFF1F4] pb-2">
-            <span className="text-[15.5px] font-bold" style={{ color: "#151A28" }}>
-              {data.legalNameTh || data.registeredName || data.startupName}
-            </span>
-            {data.legalNameEn ? (
-              <span className="text-[14px] font-medium" style={{ color: "#6A7181" }}>
-                {data.legalNameEn}
-              </span>
-            ) : null}
-          </div>
-          <div className="grid gap-y-2 gap-x-7 md:[grid-template-columns:1fr_1fr_1.15fr]">
-            {rows.map((col, i) => (
-              <div key={i} className="grid [align-content:start] gap-x-[18px] gap-y-1.5 [grid-template-columns:auto_1fr]">
-                {col.map(([k, v, isStatus]) => (
-                  <div key={k} className="contents">
-                    <div className="whitespace-nowrap py-0.5 text-[12.5px] font-semibold text-[#0F1B33]">{k}</div>
-                    <div
-                      className="py-0.5 text-[12.5px] text-[#374151]"
-                      style={isStatus && v !== DASH ? { color: operating ? "#16A34A" : "#EA8A0B", fontWeight: 600 } : undefined}
-                    >
-                      {v}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))}
-            <div>
-              <div className="mb-1.5 text-[12.5px] font-semibold text-[#0F1B33]">
-                Fiscal Year (submitted financial statement)
-              </div>
-              <div className="mb-1 flex flex-wrap gap-x-3.5 gap-y-1">
-                {years.length === 0 ? (
-                  <span className="text-[12.5px] text-muted-foreground">{DASH}</span>
-                ) : (
-                  [...years]
-                    .sort((a, b) => b - a)
-                    .map((y) => (
-                      <button
-                        key={y}
-                        type="button"
-                        onClick={() => onSelectYear(y)}
-                        className={`text-[12.5px] ${y === activeYear ? "font-bold underline" : "font-medium"}`}
-                        style={{ color: BLUE }}
-                      >
-                        {y}
-                      </button>
-                    ))
-                )}
-              </div>
-              <div className="text-[11.5px] text-muted-foreground">(click to display financial statements)</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function StartupFinancialsPage({
   id,
   workspace = "startups",
@@ -181,6 +76,7 @@ export function StartupFinancialsPage({
   section?: "financials" | "valuation";
   initialProfileEdit?: boolean;
 }) {
+  const { language } = useTranslation();
   const fetchFinancials = useServerFn(getStartupFinancials);
   const clearFinancials = useServerFn(clearStartupFinancials);
   const enrichFinancials = useServerFn(autoEnrichFinancials);
@@ -195,8 +91,7 @@ export function StartupFinancialsPage({
   // Statements with that statement selected.
   const STATEMENT_TABS = ["income", "position", "cash-flow"] as const;
   const legacy = STATEMENT_TABS.find((v) => v === initialTab || `${v}-statement` === initialTab);
-  const [tabState, setTab] = useState(legacy ? "statements" : (initialTab === 'company-info' ? 'overview' : initialTab ?? "overview"));
-  const tab = section === "valuation" ? "valuation" : section === "financials" && tabState === "valuation" ? "overview" : tabState;
+  const tab = section === "valuation" || initialTab === "valuation" ? "valuation" : "statements";
   const [statementTab, setStatementTab] = useState<string>(() => {
     if (legacy) return legacy;
     if (typeof window !== "undefined") {
@@ -274,10 +169,14 @@ export function StartupFinancialsPage({
 
 
 
+  if (initialTab === "ratios" || initialTab === "financial-ratios" || initialTab === "pnl") {
+    return <ReportsHub mode={workspace === "my-startups" ? "seller" : "admin"} companyId={id} initialReport={initialTab === "pnl" ? "pnl" : "statements"} initialReportTab={initialTab}/>;
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-[60vh] bg-[#F4F6FA] p-6">
-        <HatSkeleton lines={6} headMessage="Loading financial overview…" delay={0} />
+        <HatSkeleton lines={6} headMessage="Loading financial statements…" delay={0} />
       </div>
     );
   }
@@ -313,7 +212,7 @@ export function StartupFinancialsPage({
             </Link>
           </Button>}
           <h1 className="text-[25px] font-bold tracking-[-0.015em]" style={{ color: NAVY }}>
-            {section === "valuation" ? "Indicative Valuation" : "Financial Overview"}
+            {section === "valuation" ? "Indicative Valuation" : language === "th" ? "งบการเงิน" : "Financial Statements"}
           </h1>
           <p className="mt-0.5 text-[13px] text-muted-foreground">
             Juristic Name :{" "}
@@ -417,125 +316,7 @@ export function StartupFinancialsPage({
         </div>
       ) : (
         <div className="rounded-[10px] border border-[#EAECEF] bg-white pt-3">
-          {section !== "valuation" && <MainTabBar
-            value={tab}
-            onChange={setTab}
-            tabs={[
-              { value: "overview", label: "Overview", icon: "grid" },
-              {
-                value: "statements",
-                label: "Financial Statements",
-                icon: "document",
-                count: 3,
-                dividerBefore: true,
-              },
-              { value: "ratios", label: "Financial Ratios", icon: "percent" },
-              ...(section === "financials"
-                ? []
-                : [{ value: "valuation", label: "Valuation", icon: "tag" as const, dividerBefore: true }]),
-              ...(section ? [] : [{ value: "risk", label: "Company Risk", icon: "shield" as const }]),
-            ]}
-          />}
-
-          {tab === "statements" && (
-            <SubTabRow
-              value={statementTab}
-              onChange={setStatementTab}
-              tabs={[
-                { value: "income", label: "Income Statement", icon: "trend" },
-                { value: "position", label: "Financial Position", icon: "scales" },
-                {
-                  value: "cash-flow",
-                  label: "Cash Flow",
-                  icon: "flow",
-                  ...(hasCashFlow
-                    ? {}
-                    : { dot: "grey" as const, dotTitle: "No data in the filing" }),
-                },
-              ]}
-              meta={
-                <>
-                  <span>
-                    Source <MetaValue>DBD filings</MetaValue>
-                  </span>
-                  <span>
-                    Amounts in <MetaValue>{data.currency}</MetaValue>
-                  </span>
-                  <span>
-                    Latest <MetaValue>FY{activeYear ?? "—"}</MetaValue>
-                  </span>
-                </>
-              }
-            />
-          )}
-
-          <div className={tab === "valuation" ? "hidden" : "px-[18px] pb-[18px]"}>
-            {tab === "overview" && (
-              <div className="pt-4">
-                <FinancialsOverview
-                  year={activeYear}
-                  years={years}
-                  currency={data.currency}
-                  income={data.income}
-                  position={data.position}
-                  ratios={data.ratios}
-                />
-              </div>
-            )}
-
-            {tab === "statements" && statementTab === "income" && (
-              <div className="space-y-3">
-                <PageTitle
-                  title="Income Statement"
-                  sub="revenue, costs and profit, year by year"
-                />
-                <StatementTable years={years} rows={INCOME_ROWS} items={data.income} />
-                <Remarks />
-              </div>
-            )}
-
-            {tab === "statements" && statementTab === "position" && (
-              <div className="space-y-3">
-                <PageTitle
-                  title="Financial Position"
-                  sub="assets, liabilities and equity at each year end"
-                />
-                <StatementTable years={years} rows={POSITION_ROWS} items={data.position} />
-                <Remarks />
-              </div>
-            )}
-
-            {tab === "statements" && statementTab === "cash-flow" && (
-              <div className="space-y-3">
-                <PageTitle
-                  title="Cash Flow"
-                  sub="cash in and out of operations, investment and financing"
-                />
-                <StatementTable
-                  years={years}
-                  items={data.cashFlow}
-                  sections={CASH_FLOW_SECTIONS.map((s) => ({ title: s.title, rows: s.rows }))}
-                />
-                <Remarks />
-              </div>
-            )}
-
-            {tab === "ratios" && (
-              <div className="space-y-3 pt-4">
-                <h2 className="text-lg font-semibold">
-                  Major Financial Ratios for the year {range}
-                </h2>
-                <RatiosTable years={years} ratios={data.ratios} />
-              </div>
-            )}
-
-            {tab === "risk" && (
-              <div className="pt-4">
-                <CompanyRiskReport startupId={id} />
-              </div>
-            )}
-
-          </div>
+          {tab === "statements" && <FinancialReportView data={data} report="statements" year={activeYear} tab={statementTab} onTab={setStatementTab}/>}
 
           {tab === "valuation" && (
             <ValuationTab

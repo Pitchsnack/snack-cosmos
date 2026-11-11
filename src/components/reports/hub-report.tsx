@@ -5,7 +5,7 @@ import {getHubReport} from '@/lib/reports-hub.functions';
 import type {HubData,HubRow} from '@/lib/reports-hub';
 import {VerificationReport} from '@/components/company-verification/report';
 import {ValuationTab} from '@/components/financials/valuation-tab';
-import {FinancialsOverview} from '@/components/financials/financials-overview';
+import {FinancialReportHeader} from '@/components/financials/financial-report-view';
 import {StatementTable} from '@/components/financials/statement-table';
 import {INCOME_ROWS,POSITION_ROWS} from '@/lib/financials';
 import {buildRiskReport} from '@/lib/company-risk';
@@ -17,6 +17,7 @@ export type HubReportProps={hub:HubData;row:HubRow;tab?:string;onTab?:(t:string)
 
 /** Every report in the hub scrolls sideways instead of squeezing; the Expand button and the box above stay fixed outside. */
 export function HubReport(props:HubReportProps){
+ if(props.row.key==='statements'||props.row.key==='pnl')return <HubReportContent {...props}/>;
  return <ReportScroll expandHint><HubReportContent {...props}/></ReportScroll>;
 }
 
@@ -33,6 +34,5 @@ function HubReportContent({hub,row,tab:tabProp,onTab}:HubReportProps){
  const f=d.financials;if(!f)return null;
  if(row.key==='valuation')return <ValuationTab startupId={hub.companyId} startupName={hub.company} workspace="my-startups" year={f.years.at(-1)} ratios={f.ratios} income={f.income} position={f.position} cashFlow={f.cashFlow} readOnly reportData={d.valuation}/>;
  if(row.key==='risk'){const r=buildRiskReport(f);return <article className="hub-risk"><h2>{c('Company risk','ความเสี่ยงบริษัท')}</h2><p className="hub-muted">{r.year?year(r.year):'—'}</p><div className="hub-risk-grade"><b>{r.level??c('Not enough data','ข้อมูลไม่เพียงพอ')}</b><span>{r.score==null?'—':`${Math.round(r.score)}/100`}</span></div>{r.pillars.map(p=><section key={p.key} className="hub-chain"><h3>{p.label}</h3><b>{p.value}</b><p>{p.note}</p></section>)}{r.summary.map((s,i)=><section key={i} className="hub-chain"><h3>{s.title}</h3><p>{s.text}</p></section>)}</article>;}
- if(row.key==='pnl')return <FinancialsOverview years={f.years} currency={f.currency} income={f.income} position={f.position} ratios={f.ratios}/>;
- return <article><h2>{c('Financial statements','งบการเงิน')} · {row.years} {c('years','ปี')}</h2><div className="hub-report-tabs" role="tablist">{[['income',c('Income statement','งบกำไรขาดทุน')],['position',c('Balance sheet','งบแสดงฐานะการเงิน')]].map(([key,label])=><Button key={key} variant={tab===key?'secondary':'ghost'} role="tab" aria-selected={tab===key} onClick={()=>setTab(key)}>{label}</Button>)}</div><StatementTable years={f.years.map(y=>y)} rows={tab==='income'?INCOME_ROWS:POSITION_ROWS} items={tab==='income'?f.income:f.position}/></article>;
+ return <FinancialReportHeader data={f} report={row.key==='pnl'?'pnl':'statements'} tab={tab} onTab={setTab}/>;
 }

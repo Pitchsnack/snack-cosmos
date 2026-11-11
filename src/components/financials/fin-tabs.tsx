@@ -7,6 +7,7 @@
  * Icons are inline SVG — no dependency.
  */
 import { useEffect, useRef } from "react";
+import { Button } from '@/components/ui/button';
 
 export type TabIconName =
   | "grid"
@@ -144,6 +145,15 @@ export function MainTabBar({
     <div
       ref={barRef}
       role="tablist"
+      onKeyDown={e => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+        const buttons = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+        const index = buttons.indexOf(e.target as HTMLButtonElement);
+        if (index < 0) return;
+        e.preventDefault();
+        const next = buttons[(index + (e.key === 'ArrowRight' ? 1 : buttons.length - 1)) % buttons.length];
+        next?.click(); next?.focus();
+      }}
       className="mx-3 flex gap-1 overflow-x-auto rounded-[10px] border border-[#E3E8F0] bg-[#F1F4F9] p-[5px]"
     >
       {tabs.map((t) => {
@@ -151,10 +161,11 @@ export function MainTabBar({
         return (
           <div key={t.value} className="contents">
             {t.dividerBefore && <span className="my-2 mx-[3px] w-px shrink-0 bg-[#DDE3EC]" />}
-            <button
+            <Button variant="ghost"
               type="button"
               role="tab"
               aria-selected={on}
+              tabIndex={on ? 0 : -1}
               onClick={() => onChange(t.value)}
               className={`flex h-[38px] shrink-0 items-center gap-[7px] whitespace-nowrap rounded-[7px] px-[14px] text-[13px] font-medium ${
                 on
@@ -173,7 +184,7 @@ export function MainTabBar({
                   {t.count}
                 </span>
               )}
-            </button>
+            </Button>
           </div>
         );
       })}

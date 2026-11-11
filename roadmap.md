@@ -1,5 +1,11 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Statements-only financial report and P&L ratios
+- [x] Update shared and legacy viewers, sample, expanded views and PDF printing without changing report access.
+- [x] Move report descriptions and route old ratios links only when P&L is accessible.
+- [x] 32 tests pass; signed-in Control My reports and buyer Pipeline, EN/TH, phone, Expand and print section visibility verified.
+- [ ] Separate non-Control seller/buyer, View as, seller per-buyer and Admin modal live checks require suitable sessions or reliable populated opening controls; actual PDF page layout and Compare (only one shared report) remain unverified.
+
 ## Review alert on every page
 - [x] Mount one shared seller/buyer alert in the authenticated top-bar layout; remove the All deals copy and exclude Admin/advisors.
 - [x] Preserve folding across navigation, refresh live counts every five seconds and make LOI/NDA review actions work from every eligible page.

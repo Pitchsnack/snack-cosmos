@@ -64,6 +64,18 @@
 
 /* ReportScroll: a report never squeezes; below its minimum width the body scrolls sideways inside its own box */
 .rs-wrap{min-width:0}
+.financial-report-section[data-active=false]{display:none}
+@media print{
+ body:has(.financial-report-views)>*{visibility:hidden}
+ .financial-report-views,.financial-report-views *,article:has(.financial-report-views),article:has(.financial-report-views) *,.hub-report:has(.financial-report-views),.hub-report:has(.financial-report-views) *{visibility:visible}
+ .financial-report-section[data-active=false]{display:block}
+ .financial-screen-controls,.hub-expand-btn{display:none!important}
+ .financial-report-section{break-before:page}
+ .financial-report-section:first-of-type{break-before:auto}
+ body:has(.hub-expand) .reports-hub{display:none!important}
+ .hub-expand{position:static!important;width:100%!important;height:auto!important;max-height:none!important;box-shadow:none!important;transform:none!important}
+ .hub-expand-body{overflow:visible!important}
+}
 .rs-note{display:flex;align-items:center;gap:6px;margin:0 0 8px;font-size:12.5px;color:var(--muted-foreground)}
 .rs-box{position:relative}
 .rs{overflow-x:auto;scrollbar-width:thin;scrollbar-color:#C9CED8 transparent;padding-bottom:6px}

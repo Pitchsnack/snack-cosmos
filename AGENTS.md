@@ -70,3 +70,5 @@
 - Either-side LOI transitions lock and validate party/revision in pipeline_transition; pipeline.functions.ts owns notifications and private valuation uploads/signing in a dedicated no-client-policy bucket. Workflow dates never reinterpret legacy milestones.
 
 
+
+- FinancialReportView owns statements-only and P&L overview/ratios sections for all report hosts; print includes all owned sections, and legacy ratio links resolve through the existing P&L access DTO so statements never unlock ratios.

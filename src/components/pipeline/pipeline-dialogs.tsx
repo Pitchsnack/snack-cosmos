@@ -12,7 +12,11 @@ import { cn } from "@/lib/utils";
 import { ProfileBox } from "./profile-box";
 import { STEPS, currentStep } from "@/lib/pipeline-state";
 import type { SampleReportData } from "@/lib/sample-report";
-import { FinancialsOverview } from "@/components/financials/financials-overview";
+import { FinancialReportHeader } from "@/components/financials/financial-report-view";
+import { ReportsHubWindow } from "@/components/reports/reports-hub";
+import { RATIO_GROUPS } from "@/lib/financials";
+import type { StartupFinancials } from "@/lib/financials.functions";
+import { useTranslation } from "@/i18n/language";
 import { ReportScroll } from "@/components/reports/report-scroll";
 import { StatementTable } from "@/components/financials/statement-table";
 import { RatiosTable } from "@/components/financials/ratios-table";
@@ -122,12 +126,15 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
   const data = sample?.data ?? q.data;
   const isLoading = !sample && q.isLoading;
   const error = sample ? null : q.error;
-  const [tab, setTab] = useState<"fin" | "val">(initialTab);
+  const { language } = useTranslation();
+  const [tab, setTab] = useState<"fin" | "val" | "pnl">(initialTab);
   const [allRatios, setAllRatios] = useState(false);
   const [valTab, setValTab] = useState<"summary" | "methods" | "adjustments" | "peers">("summary");
-  const [finTab, setFinTab] = useState<"overview" | "statements" | "ratios">("overview");
 
-  const company = sample ? sample.company : p.parties.sellerCompany;
+
+  if (!sample && pRow) return <ReportsHubWindow mode="buyer" pipelineId={pRow.id} initialReport={initialTab === 'val' ? 'valuation' : 'statements'} onClose={onClose}/>;
+  if (!sample) return null;
+  const company = sample.company;
   const cashOf = (y: number) => sample?.cash[y] ?? null;
   const debtOf = (y: number) => sample?.debt[y] ?? null;
   const years = data?.years ?? [];
@@ -156,7 +163,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
       </div>
       <div className="px-6 pt-4">
         <div role="tablist" onKeyDown={tabArrowNav} className="inline-flex gap-1 rounded-[10px] border border-[#E3E8F0] bg-[#F1F4F9] p-[5px]">
-          {([["fin", "Financial report"], ["val", "Estimated valuation"]] as const).map(([k, l]) => {
+          {([["fin", language === "th" ? "งบการเงิน" : "Financial Statements"], ["pnl", language === "th" ? "การวิเคราะห์กำไรขาดทุน" : "P&L Analysis"], ["val", "Estimated valuation"]] as const).map(([k, l]) => {
             const off = k === "val" && !data?.valuationShared;
             const on = tab === k;
             return (
@@ -181,101 +188,7 @@ export function ReportViewer({ p: pRow, seller, viewerName, onClose, sample, ini
           {isLoading && <div className="py-16 text-center text-[#6B7280]">Loading report…</div>}
           {error && <div className="py-16 text-center text-[#6B7280]">{(error as Error).message}</div>}
           {data && !years.length && <div className="py-16 text-center text-[#6B7280]">The verified figures have not been published for this business yet.</div>}
-          {data && years.length > 0 && tab === "fin" && m && (
-            <>
-              <div className="sticky top-0 z-10 -mx-6 mb-1 border-b border-[#EAECEF] bg-white px-6 pb-[14px] pt-[10px]">
-                <div role="tablist" onKeyDown={tabArrowNav} className="inline-flex gap-0.5 rounded-[9px] border border-[#DCE3EF] bg-white p-[3px]">
-                  {([["overview", "Overview"], ["statements", "Financial Statements"], ["ratios", "Financial Ratios"]] as const).map(([k, l]) => (
-                    <button key={k} type="button" role="tab" aria-selected={finTab === k} tabIndex={finTab === k ? 0 : -1} onClick={() => setFinTab(k)}
-                      className={cn("h-[30px] whitespace-nowrap rounded-[6px] px-3 text-[12.5px] font-medium", finTab === k ? "bg-[#F6A823] text-[#0E162F] shadow-[inset_0_0_0_1px_#DD971F]" : "text-[#5B6576] hover:bg-[#F1F4F9]")}>{l}</button>
-                  ))}
-                </div>
-              </div>
-              {!sample && data.full && finTab === "overview" && (
-                <div className="pt-3"><ReportScroll><FinancialsOverview years={years} currency="THB" income={data.full.income} position={data.full.position} ratios={data.full.ratios} /></ReportScroll></div>
-              )}
-              {!sample && data.full && finTab === "statements" && (
-                <div className="space-y-5 pt-3">
-                  <Caption>Income statement</Caption>
-                  <StatementTable years={years} rows={INCOME_ROWS} items={data.full.income} />
-                  <Caption>Financial position</Caption>
-                  <StatementTable years={years} rows={POSITION_ROWS} items={data.full.position} />
-                  {data.full.cashFlow.length > 0 && (<>
-                    <Caption>Cash flow</Caption>
-                    <StatementTable years={years} items={data.full.cashFlow} sections={CASH_FLOW_SECTIONS.map((x) => ({ title: x.title, rows: x.rows }))} />
-                  </>)}
-                </div>
-              )}
-              {!sample && data.full && finTab === "ratios" && (
-                <div className="pt-3"><RatiosTable years={years} ratios={data.full.ratios} /></div>
-              )}
-              {(sample || !data.full) && finTab === "overview" && (<>
-              <Caption>Key finance summary · FY{last}</Caption>
-              <div className="grid grid-cols-4 gap-3">
-                {([
-                  ["Revenue", mn(m.revenue), growth != null ? `${growth >= 0 ? "+" : ""}${growth.toFixed(1)}% vs FY${String(prev).slice(-2)}` : "—"],
-                  ["EBITDA", mn(m.ebitda), `${pct(margin(m.ebitda, m.revenue))} margin`],
-                  ["Net profit", mn(m.net), `${pct(margin(m.net, m.revenue))} margin`],
-                  sample ? ["Net debt/(cash)", mn((debtOf(last) ?? 0) - (cashOf(last) ?? 0)), "Interest-bearing debt less cash"] : ["Net debt/(cash)", "—", "Not in the filed statements"],
-                ] as const).map(([k, v, s]) => (
-                  <div key={k} className="rounded-[12px] border border-[#E5E7EB] bg-white/80 p-3">
-                    <div className="text-[12px] text-[#6B7280]">{k}</div>
-                    <div className="mt-1 text-[20px] font-bold tabular-nums">{v}</div>
-                    <div className="text-[11.5px] text-[#6B7280]">{s}</div>
-                  </div>
-                ))}
-              </div>
-              </>)}
-              {(sample || !data.full) && finTab === "statements" && (<>
-              <Caption>Income statement · ฿ million</Caption>
-              <FigTable years={years} yl={yl} rows={[
-                ["Revenue", (y) => metrics(data, y).revenue, null],
-                ["Gross profit", (y) => metrics(data, y).gross, (y) => margin(metrics(data, y).gross, metrics(data, y).revenue)],
-                ["EBITDA", (y) => metrics(data, y).ebitda, (y) => margin(metrics(data, y).ebitda, metrics(data, y).revenue)],
-                ["Net profit", (y) => metrics(data, y).net, (y) => margin(metrics(data, y).net, metrics(data, y).revenue)],
-              ]} />
-              <Caption>Balance sheet · ฿ million</Caption>
-              <FigTable years={years} yl={yl} rows={[
-                ["Total assets", (y) => metrics(data, y).assets, null],
-                ["Cash", cashOf, null],
-                ["Interest-bearing debt", debtOf, null],
-                ["Total liabilities", (y) => metrics(data, y).liabilities, null],
-                ["Equity", (y) => metrics(data, y).equity, null],
-              ]} />
-              </>)}
-              {(sample || !data.full) && finTab === "ratios" && (<>
-              <Caption>Financial ratios · FY{last}</Caption>
-              <div className="grid grid-cols-4 gap-3">
-                {(allRatios ? data.ratios : data.ratios.slice(0, 8)).map((r) => (
-                  <div key={r.code} className="rounded-[12px] border border-[#E5E7EB] bg-white/80 p-3">
-                    <div className="line-clamp-2 text-[11.5px] text-[#6B7280]">{r.label.replace(/\s*\((%|times)\)/, "")}</div>
-                    <div className="mt-1 text-[16px] font-bold tabular-nums">{r.value == null ? "—" : r.unit === "percent" ? pct(r.value) : `${r.value.toFixed(2)}×`}</div>
-                  </div>
-                ))}
-              </div>
-              {data.ratios.length > 8 && (
-                <div className="mt-2 text-[12px] text-[#6B7280]">
-                  Showing {allRatios ? data.ratios.length : 8} of {data.ratios.length} ratios ·{" "}
-                  <button className="font-semibold text-[#2563EB]" onClick={() => setAllRatios(!allRatios)}>{allRatios ? "Show fewer" : "Show all"}</button>
-                </div>
-              )}
-              </>)}
-              {finTab === "overview" && (<>
-              <Caption>Analyst notes</Caption>
-              {sample ? (
-                <ul className="list-disc space-y-1 pl-5 text-[13px] text-[#374151]">
-                  <li>Revenue grew every year with steady gross margins; growth driven by new customers and higher order values.</li>
-                  <li>One-off costs shown below EBITDA · related-party rent restated at market rate.</li>
-                  <li>This is a sample with made-up figures. Your report uses your own DBD filings.</li>
-                </ul>
-              ) : <ul className="list-disc space-y-1 pl-5 text-[13px] text-[#374151]">
-                <li>EBITDA shown as profit before tax plus interest; depreciation is not split out in the filed statements.</li>
-                <li>Cash and interest-bearing debt are not reported separately in the DBD filing.</li>
-              </ul>}
-              <p className="mt-2 text-[12px] text-[#6B7280]">Sources: DBD filings FY{years[0]}–{last} · audited statements · checked by PitchSnack analysts.</p>
-              </>)}
-            </>
-          )}
+          {data && years.length > 0 && (tab === "fin" || tab === "pnl") && <ReportScroll><FinancialReportHeader key={tab} data={sampleFinancials(sample)} report={tab === "pnl" ? "pnl" : "statements"}/></ReportScroll>}
           {sample && tab === "val" && (() => {
             const v = sample.valuation;
             const lastEbitda = last ? metrics(sample.data, last).ebitda : null;
@@ -660,4 +573,10 @@ function tabArrowNav(e: React.KeyboardEvent<HTMLDivElement>) {
   const i = tabs.indexOf(document.activeElement as HTMLButtonElement);
   const next = tabs[(i + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length];
   if (next) { e.preventDefault(); next.focus(); next.click(); }
+}
+
+function sampleFinancials(sample: SampleReportData): StartupFinancials {
+  const r = sample.data;
+  const items = (source: ReportData['income']) => Object.entries(source).flatMap(([code, amounts], order) => Object.entries(amounts).map(([y, amount]) => ({ fiscal_year: Number(y), item_code: code, item_label: code, amount, percent_change: null, display_order: order, is_total: false })));
+  return { startupId: 'sample', startupName: sample.company, registeredName: sample.legalName, legalNameEn: sample.legalName, legalNameTh: null, logoUrl: null, currency: 'THB', years: r.years, statements: [], profile: { registeredType: null, status: null, registeredDate: r.info?.founded ?? null, registeredCapital: r.info?.capital == null ? null : String(r.info.capital), registeredNumber: r.info?.registration ?? null, businessSize: null }, income: items(r.income), position: items(r.position), cashFlow: [], ratios: r.ratios.map((ratio, i) => ({ fiscal_year: r.years.at(-1) ?? 0, ratio_category: RATIO_GROUPS.find(group => group.rows.some(row => row.code === ratio.code))?.category ?? '', ratio_code: ratio.code, ratio_label: ratio.label, value: ratio.value, unit: ratio.unit ?? '', display_order: i })) };
 }

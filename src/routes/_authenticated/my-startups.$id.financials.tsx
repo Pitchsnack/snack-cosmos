@@ -7,17 +7,17 @@ import { StartupNotFound } from "@/components/startups/startup-not-found";
 export const Route = createFileRoute("/_authenticated/my-startups/$id/financials")({
   head: () => ({
     meta: [
-      { title: "My Startup Financials — SnackPortal2" },
+      { title: "My Startup Financials — PitchSnack" },
       {
         name: "description",
         content:
-          "Track revenue, profitability, balance sheet strength and key financial ratios for your startup.",
+          "View your company’s filed income statements, balance sheets and cash flow. Financial ratios are in P&L analysis.",
       },
-      { property: "og:title", content: "My Startup Financials — SnackPortal2" },
+      { property: "og:title", content: "My Startup Financials — PitchSnack" },
       {
         property: "og:description",
         content:
-          "Track revenue, profitability, balance sheet strength and key financial ratios for your startup.",
+          "View your company’s filed income statements, balance sheets and cash flow. Financial ratios are in P&L analysis.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
