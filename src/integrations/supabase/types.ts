@@ -6471,7 +6471,7 @@ export type Database = {
         Insert: {
           created_at?: string
           device_hash?: string | null
-          email: string
+          email?: string
           id?: string
           ip_hash?: string | null
           reg_no: string
@@ -6487,6 +6487,39 @@ export type Database = {
           reg_no?: string
           result?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      signup_reg_prechecks: {
+        Row: {
+          check_row_id: string | null
+          created_at: string
+          done_at: string | null
+          id: string
+          reg_no: string
+          result: Json | null
+          status: string
+          token_hash: string
+        }
+        Insert: {
+          check_row_id?: string | null
+          created_at?: string
+          done_at?: string | null
+          id?: string
+          reg_no: string
+          result?: Json | null
+          status?: string
+          token_hash: string
+        }
+        Update: {
+          check_row_id?: string | null
+          created_at?: string
+          done_at?: string | null
+          id?: string
+          reg_no?: string
+          result?: Json | null
+          status?: string
+          token_hash?: string
         }
         Relationships: []
       }

@@ -11,7 +11,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { buyOrderInvite } from "@/lib/buy-orders.functions";
 import { getSignupState, saveSignupAnswers, saveSignupSector } from "@/lib/signup.functions";
-import { confirmRegCompany, getRegState, rejectRegCompany, runRegCheck, savePendingSignup, sendSetupRequest, type RegCheck, type RegCompany } from "@/lib/signup-reg.functions";
+import { confirmRegCompany, getRegState, rejectRegCompany, runRegCheck, startRegPrecheck, savePendingSignup, sendSetupRequest, type RegCheck, type RegCompany } from "@/lib/signup-reg.functions";
 import { digitsOnly, isValidThaiReg, normWebsite, REG_CHANGES, signupSteps, type SignupStepKey as StepKey } from "@/lib/thai-reg";
 import { COUNTRIES } from "@/lib/investor-bands";
 import { R, type SetupReason } from "@/components/login/signup-reg-copy";
@@ -34,6 +34,11 @@ import { sc } from '@/i18n/sidebar-share';
 const LANG_KEY = "ps-home-lang";
 const PENDING_KEY = "ps-signup-pending";
 const DEVICE_KEY = "ps-device-id";
+const PRE_KEY = "ps-signup-pre";
+/** The sign-up session id that holds the background company check (random, browser-only). */
+const readPre = () => { try { return localStorage.getItem(PRE_KEY) ?? undefined; } catch { return undefined; } };
+const clearPre = () => { try { localStorage.removeItem(PRE_KEY); } catch { /* noop */ } };
+function newPre() { const id = crypto.randomUUID() + crypto.randomUUID().slice(0, 8); try { localStorage.setItem(PRE_KEY, id); } catch { /* noop */ } return id; }
 const FONT_URL = "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600;700&family=Noto+Serif+Thai:wght@600;700&display=swap";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const WEB_RE = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(\/\S*)?$/i;
@@ -121,6 +126,7 @@ function SignupInner() {
   const fetchReg = useServerFn(getRegState);
   const savePending = useServerFn(savePendingSignup);
   const runCheck = useServerFn(runRegCheck);
+  const startPre = useServerFn(startRegPrecheck);
   const rejectCo = useServerFn(rejectRegCompany);
   const confirmCo = useServerFn(confirmRegCompany);
   const sendSetup = useServerFn(sendSetupRequest);
@@ -214,10 +220,21 @@ function SignupInner() {
 
   /** The check: runs on the server only once the email is confirmed. */
   async function startCheck(newReg?: string) {
-    setDlg("verifying"); setCheckBusy(true);
+    setCheckBusy(true);
+    // A finished background check opens at once; "Verifying…" shows only while one is still running.
+    const pre = newReg ? undefined : readPre();
+    if (newReg || !pre) setDlg("verifying");
+    const slow = pre && !newReg ? setTimeout(() => setDlg((d) => d ?? "verifying"), 700) : undefined;
     let r: RegCheck;
-    try { r = await runCheck({ data: { deviceId: deviceId(), ...(newReg ? { newReg } : {}) } }); }
-    catch { r = { status: "unavailable" }; }
+    for (;;) {
+      try { r = await runCheck({ data: { deviceId: deviceId(), ...(newReg ? { newReg } : {}), ...(pre ? { pre } : {}) } }); }
+      catch { r = { status: "unavailable" }; }
+      if (r.status !== "running") break;
+      setDlg("verifying");
+      await new Promise((res) => setTimeout(res, 3000));
+    }
+    if (slow) clearTimeout(slow);
+    if (!newReg) clearPre();
     setCheckBusy(false);
     if (newReg && (r.status === "found" || r.status === "not_found")) { setChanges((c) => c + 1); setReg(newReg); setFix(null); setRegLocked(true); }
     if (r.status === "found" || r.status === "not_found") setTried((l) => Array.from(new Set([...l, r.reg])));
@@ -358,6 +375,8 @@ function SignupInner() {
   function confirmNumber() {
     setDlg(null); setRegLocked(true);
     if (fix) { void startCheck(reg); return; }
+    // The first check starts on the server now; the next steps never wait for it.
+    void startPre({ data: { token: newPre(), deviceId: deviceId(), reg } }).catch(() => { /* retried at Confirm email */ });
     go(nextOf("company"));
   }
 
@@ -487,7 +506,7 @@ function SignupInner() {
       const res = await confirmCo();
       const { data } = await supabase.auth.getSession();
       if (data.session) setPersona(data.session.user.id, res.role);
-      writePending(null);
+      writePending(null); clearPre();
       await qc.invalidateQueries();
       goHome(res.role);
     } catch { setCheckBusy(false); setDlg("unavailable"); }

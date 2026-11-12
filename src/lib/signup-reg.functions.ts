@@ -22,7 +22,8 @@ export type RegCheck =
   | { status: "not_found"; reg: string }
   | { status: "rejected"; reg: string }
   | { status: "limit" }
-  | { status: "unavailable" };
+  | { status: "unavailable" }
+  | { status: "running"; reg: string };
 export type RegState = {
   confirmed: boolean; registered: boolean; reg: string | null; changes: number; tried: string[];
   check: RegCheck | null; pending: PendingPayload | null; email: string;
@@ -98,10 +99,76 @@ async function translateAddress(th: string): Promise<string | null> {
   } catch { return null; }
 }
 
+async function deviceLimit(sb: any, deviceId: string) {
+  const { getRequestHeader } = await import("@tanstack/react-start/server");
+  const ip = getRequestHeader("cf-connecting-ip") ?? getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+  const deviceHash = await sha(`d:${deviceId}`);
+  const ipHash = ip ? await sha(`i:${ip}`) : null;
+  const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+  const { count } = await sb.from("signup_reg_checks").select("id", { count: "exact", head: true }).gte("created_at", since).neq("result", "unavailable")
+    .or(ipHash ? `device_hash.eq.${deviceHash},ip_hash.eq.${ipHash}` : `device_hash.eq.${deviceHash}`);
+  return { over: (count ?? 0) >= 5, deviceHash, ipHash };
+}
+
+/** One register lookup; the held check keeps `raw` server-side only. */
+async function lookupCheck(reg: string): Promise<any> {
+  const { lookupDbdFinancials } = await import("./financials/dbd-provider.server");
+  let outcome: any;
+  try { outcome = await lookupDbdFinancials({ registeredNumber: reg }); }
+  catch (e: any) { outcome = { status: "unavailable", detail: String(e?.message ?? e) }; }
+  const found = outcome.status === "ok" || outcome.status === "no_financials";
+  if (found) {
+    const company = companyFrom(outcome);
+    if (company.addressTh && !company.addressEn) {
+      const en = await translateAddress(company.addressTh);
+      if (en) { company.addressEn = en; company.translated = true; }
+    }
+    return { status: "found", reg, company, raw: outcome };
+  }
+  return outcome.status === "not_found" ? { status: "not_found", reg } : { status: "unavailable" };
+}
+
+const PRE_STALE_MS = 4 * 60_000;
+
+/**
+ * Continue on Your company → "Confirm and continue": the check starts on the server while the
+ * visitor fills in the next steps. Keyed by a random id kept in the browser; the result is held
+ * server-side and never returned here (company details only after the email is confirmed).
+ */
+export const startRegPrecheck = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ token: z.string().min(16).max(80), deviceId: z.string().min(8).max(80), reg: z.string().regex(/^\d{13}$/) }).parse(d))
+  .handler(async ({ data }): Promise<{ status: "running" | "done" }> => {
+    if (!isValidThaiReg(data.reg)) throw new Error("This registration number isn't valid.");
+    const sb = await admin();
+    // Abandoned sign-ups: held results are discarded.
+    await sb.from("signup_reg_prechecks").delete().lt("created_at", new Date(Date.now() - 2 * 3600_000).toISOString());
+    const tokenHash = await sha(`p:${data.token}`);
+    const { data: cur } = await sb.from("signup_reg_prechecks").select("id, reg_no, status, created_at").eq("token_hash", tokenHash).maybeSingle();
+    if (cur && cur.reg_no === data.reg && (cur.status === "done" || Date.now() - Date.parse(cur.created_at) < PRE_STALE_MS)) return { status: cur.status };
+    if (cur) await sb.from("signup_reg_prechecks").delete().eq("id", cur.id);
+    const lim = await deviceLimit(sb, data.deviceId);
+    if (lim.over) {
+      await sb.from("signup_reg_prechecks").insert({ token_hash: tokenHash, reg_no: data.reg, status: "done", result: { status: "limit" }, done_at: new Date().toISOString() });
+      return { status: "done" };
+    }
+    // Counts against the sign-up and the device when it starts; the email is added once known.
+    const { data: row } = await sb.from("signup_reg_checks").insert({ email: "", device_hash: lim.deviceHash, ip_hash: lim.ipHash, reg_no: data.reg, result: "running" }).select("id").single();
+    const { data: pre, error } = await sb.from("signup_reg_prechecks").insert({ token_hash: tokenHash, reg_no: data.reg, check_row_id: row?.id ?? null }).select("id").single();
+    if (error || !pre) return { status: "running" };
+    const check = await lookupCheck(data.reg);
+    const result = check.status;
+    if (row?.id) {
+      if (result === "unavailable") await sb.from("signup_reg_checks").delete().eq("id", row.id);
+      else await sb.from("signup_reg_checks").update({ result }).eq("id", row.id);
+    }
+    await sb.from("signup_reg_prechecks").update({ status: "done", result: check, done_at: new Date().toISOString() }).eq("id", pre.id);
+    return { status: "done" };
+  });
+
 /** Runs the check for the held number, or for a corrected number (`newReg`). */
 export const runRegCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ deviceId: z.string().min(8).max(80), newReg: z.string().regex(/^\d{13}$/).optional() }).parse(d))
+  .inputValidator((d) => z.object({ deviceId: z.string().min(8).max(80), newReg: z.string().regex(/^\d{13}$/).optional(), pre: z.string().min(16).max(80).optional() }).parse(d))
   .handler(async ({ data, context }): Promise<RegCheck> => {
     const sb = await admin();
     const uid = context.userId;
@@ -126,39 +193,39 @@ export const runRegCheck = createServerFn({ method: "POST" })
     }
     if (!isValidThaiReg(reg)) throw new Error("This registration number isn't valid.");
 
-    // Limits, before any lookup: 3 per email (all sign-ups), 5 per device in any 24 hours.
-    const { getRequestHeader } = await import("@tanstack/react-start/server");
-    const ip = getRequestHeader("cf-connecting-ip") ?? getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
-    const deviceHash = await sha(`d:${data.deviceId}`);
-    const ipHash = ip ? await sha(`i:${ip}`) : null;
-    const since = new Date(Date.now() - 24 * 3600_000).toISOString();
-    const [{ count: byEmail }, { count: byDevice }] = await Promise.all([
-      sb.from("signup_reg_checks").select("id", { count: "exact", head: true }).eq("email", email).neq("result", "unavailable"),
-      sb.from("signup_reg_checks").select("id", { count: "exact", head: true }).gte("created_at", since).neq("result", "unavailable")
-        .or(ipHash ? `device_hash.eq.${deviceHash},ip_hash.eq.${ipHash}` : `device_hash.eq.${deviceHash}`),
-    ]);
-    if ((byEmail ?? 0) >= 3 || (byDevice ?? 0) >= 5) return { status: "limit" };
-
-    const { lookupDbdFinancials } = await import("./financials/dbd-provider.server");
-    let outcome: any;
-    try { outcome = await lookupDbdFinancials({ registeredNumber: reg }); }
-    catch (e: any) { outcome = { status: "unavailable", detail: String(e?.message ?? e) }; }
-    const found = outcome.status === "ok" || outcome.status === "no_financials";
-    const result = found ? "found" : outcome.status === "not_found" ? "not_found" : "unavailable";
-    await sb.from("signup_reg_checks").insert({ user_id: uid, email, device_hash: deviceHash, ip_hash: ipHash, reg_no: reg, result });
-    // Register didn't answer: nothing counts, nothing changes; the user may try again.
-    if (result === "unavailable") return { status: "unavailable" };
-
-    const tried = Array.from(new Set([...(a.reg_tried ?? []), reg]));
-    let check: any;
-    if (found) {
-      const company = companyFrom(outcome);
-      if (company.addressTh && !company.addressEn) {
-        const en = await translateAddress(company.addressTh);
-        if (en) { company.addressEn = en; company.translated = true; }
+    // A check already started in the background for this number.
+    let check: any = null;
+    if (!data.newReg && data.pre) {
+      const { data: pre } = await sb.from("signup_reg_prechecks").select("id, reg_no, status, result, check_row_id, created_at").eq("token_hash", await sha(`p:${data.pre}`)).maybeSingle();
+      if (pre && pre.reg_no === reg) {
+        if (pre.status === "running" && Date.now() - Date.parse(pre.created_at) < PRE_STALE_MS) return { status: "running", reg };
+        const r = pre.status === "done" ? pre.result : null;
+        if (r && r.status !== "unavailable") {
+          // The email is known now: count the check against it; over 3, the result isn't shown.
+          const q = sb.from("signup_reg_checks").select("id", { count: "exact", head: true }).eq("email", email).neq("result", "unavailable");
+          const { count } = await (pre.check_row_id ? q.neq("id", pre.check_row_id) : q);
+          if (pre.check_row_id) await sb.from("signup_reg_checks").update({ email, user_id: uid }).eq("id", pre.check_row_id);
+          await sb.from("signup_reg_prechecks").delete().eq("id", pre.id);
+          if (r.status === "limit" || (count ?? 0) >= 3) return { status: "limit" };
+          check = r;
+        } else await sb.from("signup_reg_prechecks").delete().eq("id", pre.id);
       }
-      check = { status: "found", reg, company, raw: outcome };
-    } else check = { status: "not_found", reg };
+    }
+
+    if (!check) {
+      // Limits, before any lookup: 3 per email (all sign-ups), 5 per device in any 24 hours.
+      const [lim, { count: byEmail }] = await Promise.all([
+        deviceLimit(sb, data.deviceId),
+        sb.from("signup_reg_checks").select("id", { count: "exact", head: true }).eq("email", email).neq("result", "unavailable"),
+      ]);
+      if ((byEmail ?? 0) >= 3 || lim.over) return { status: "limit" };
+      check = await lookupCheck(reg);
+      await sb.from("signup_reg_checks").insert({ user_id: uid, email, device_hash: lim.deviceHash, ip_hash: lim.ipHash, reg_no: reg, result: check.status });
+      // Register didn't answer: nothing counts, nothing changes; the user may try again.
+      if (check.status === "unavailable") return { status: "unavailable" };
+    }
+    const found = check.status === "found";
+    const tried = Array.from(new Set([...(a.reg_tried ?? []), reg]));
     await sb.from("signup_answers").update({ reg_no: reg, reg_changes: changes, reg_tried: tried, reg_check: check, updated_at: new Date().toISOString() }).eq("user_id", uid);
     return found ? { status: "found", reg, company: check.company } : { status: "not_found", reg };
   });

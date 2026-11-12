@@ -981,6 +981,13 @@
       "when": 1794488198099,
       "tag": "0139_registration_number_lock",
       "breakpoints": true
+    },
+    {
+      "idx": 140,
+      "version": "7",
+      "when": 1794508088394,
+      "tag": "0140_signup_reg_prechecks",
+      "breakpoints": true
     }
   ]
 }

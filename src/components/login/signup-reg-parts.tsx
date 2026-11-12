@@ -44,6 +44,7 @@ export function ConfirmRegDialog({ open, lang, reg, change, onCancel, onConfirm 
       <h2>{R.cTitle[lang]}</h2>
       <p className="sr-lead">{change > 0 ? <>{tx(lang, R.cChange, { k: change })}{change >= 2 ? ` ${R.cLast[lang]}` : ""}</> : R.cLead[lang]}</p>
       <div className="sr-numbox"><small>{R.regLabel[lang]}</small><b>{reg}</b></div>
+      {change === 0 && <p className="sr-cwarn">{R.cWarn[lang]}</p>}
       <div className="sr-btns"><button type="button" className="sr-btn" onClick={onCancel}>{R.cancel[lang]}</button>
         <button ref={main} type="button" className="sr-btn navy" onClick={onConfirm}>{R.confirmGo[lang]}</button></div>
     </SrDialog>

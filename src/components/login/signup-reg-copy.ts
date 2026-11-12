@@ -41,8 +41,9 @@ export const R = {
   // Account
   accFor: c("บัญชีสำหรับ: {role} · {company} · เลขทะเบียน {number}", "Account for: {role} · {company} · Reg. no. {number}"),
   // Pop-ups
-  cTitle: c("ยืนยันเลขทะเบียนนิติบุคคลของท่าน", "Confirm your registration number"),
-  cLead: c("กรุณาตรวจสอบให้ถูกต้อง เราใช้ข้อมูลนี้เพื่อระบุและยืนยันตัวตนของบริษัทอย่างเป็นทางการ", "Please check this carefully. We use this information for official company identification and verification."),
+  cTitle: c("ยืนยันเลขทะเบียนนิติบุคคลของท่าน", "Confirm your business registration number"),
+  cLead: c("เราใช้ข้อมูลนี้เพื่อระบุและยืนยันตัวตนของบริษัทอย่างเป็นทางการ", "We use this information for official company identification and verification."),
+  cWarn: c("กรุณาตรวจสอบให้ถูกต้อง ท่านจะไม่สามารถแก้ไขเลขทะเบียนนิติบุคคลได้หลังจากขั้นตอนนี้", "Please check this carefully. You won’t be able to change the business registration number after this step."),
   cChange: c("นี่คือการแก้ไขครั้งที่ {k} จาก 2 ครั้ง เราจะยืนยันบริษัทของท่านอีกครั้ง", "This is change {k} of 2. We'll verify your company again."),
   cLast: c("หลังจากนี้จะแก้ไขไม่ได้อีก", "After this, you can't change it again."),
   cancel: c("ยกเลิก", "Cancel"), confirmGo: c("ยืนยันและดำเนินการต่อ", "Confirm and continue"),
