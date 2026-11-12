@@ -287,11 +287,15 @@ export const confirmRegCompany = createServerFn({ method: "POST" })
 
     const now = new Date().toISOString();
     const addrEn = co.addressEn ?? null;
+    // The register gives one line; split it into the wizards' own address fields.
+    const { splitThaiAddress } = await import("./thai-address");
+    const sp = splitThaiAddress(co.addressTh);
+    const parts = { address_line1: sp.street || null, address_line2: sp.unit || null, address_city_district: sp.district || null, address_province_state: sp.province || null, postal_code: sp.postal || null };
     if (a.role === "seller") {
       const { data: st } = await sb.from("startups").select("setup_from_signup").eq("id", pid).maybeSingle();
       await sb.from("startups").update({
         registered_number: a.reg_no, reg_locked_at: now, registered_name: co.nameTh ?? co.nameEn, registered_date: co.regDate ?? co.regDateTh, registered_status: co.statusTh,
-        business_address_th: co.addressTh, ...(addrEn ? { business_address: addrEn } : {}), year_founded: year ? Number(year) : null,
+        business_address_th: co.addressTh, ...(addrEn ? { business_address: addrEn } : {}), ...parts, ...(sp.province ? { city: sp.province } : {}), year_founded: year ? Number(year) : null,
         company_size: p.company.size ? SZ_SELLER[p.company.size] ?? null : null, ...(logoPath ? { logo_url: logoPath } : {}),
         setup_from_signup: add(st?.setup_from_signup, "reg", "year", "size", "sector", "address", ...(logoPath ? ["logo"] : [])), updated_at: now,
       }).eq("id", pid);
@@ -299,7 +303,7 @@ export const confirmRegCompany = createServerFn({ method: "POST" })
       const { data: iv } = await sb.from("investors").select("wizard").eq("id", pid).maybeSingle();
       const w = iv?.wizard ?? {};
       await sb.from("investors").update({
-        registration_no: a.reg_no, reg_locked_at: now, country: p.company.country, address_th: co.addressTh, ...(addrEn ? { business_address: addrEn } : {}),
+        registration_no: a.reg_no, reg_locked_at: now, country: p.company.country, address_th: co.addressTh, ...(addrEn ? { business_address: addrEn } : {}), ...parts,
         ...(a.buyer_relation === "individual" ? {} : { year_founded: year ? Number(year) : null }), ...(logoPath ? { logo_url: logoPath } : {}),
         wizard: { ...w, from_signup: add(w.from_signup, "reg", "year", "address", ...(logoPath ? ["logo"] : [])) }, updated_at: now,
       }).eq("id", pid);
@@ -309,6 +313,7 @@ export const confirmRegCompany = createServerFn({ method: "POST" })
       const ws = f?.wizard_state ?? {};
       await sb.from("advisor_firms").update({
         registration_no: a.reg_no, reg_locked_at: now, country: p.company.country, address_th: co.addressTh, year_founded: year ? Number(year) : null,
+        addr_street: sp.street || null, addr_unit: sp.unit || null, addr_district: sp.district || null, addr_province: sp.province || null, addr_postal: sp.postal || null,
         legal_name: co.nameEn ?? co.nameTh, thai_name: co.nameTh, dbd_name: co.nameTh ?? co.nameEn, dbd_status: co.statusTh, dbd_registered_on: co.regDate, dbd_checked_at: now,
         ...(logoPath ? { logo_path: logoPath, logo_source: "upload" } : {}),
         setup_answered: add(f?.setup_answered, ...(logoPath ? ["logo"] : [])),

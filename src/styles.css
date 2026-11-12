@@ -35,6 +35,8 @@
 .company-name-lock { color: var(--company-copy-lock); }
 :root { --licence-error: #B42318; --licence-error-border: #E39A92; --licence-error-ring: rgba(180,35,24,.10); --licence-issuer: #6B7280; --licence-landmark: #8A90A0; }
 .dark { --licence-error: #FDA29B; --licence-error-border: #B42318; --licence-issuer: var(--muted-foreground); --licence-landmark: var(--muted-foreground); }
+:root { --setup-band: #EEF0F3; }
+.dark { --setup-band: var(--muted); }
 .advisor-licence-invalid { border-color: var(--licence-error-border); box-shadow: 0 0 0 3px var(--licence-error-ring); }
 .advisor-licence-error { margin-top: 6px; font-size: 12.5px; font-weight: 500; color: var(--licence-error); }
 .advisor-licence-issuer { display: flex; align-items: flex-start; gap: 6px; margin-top: 7px; font-size: 12.5px; line-height: 1.45; color: var(--licence-issuer); }

@@ -122,6 +122,8 @@ export function sellerSkips(d: SellerDraft, fromSignup: string[] = []): Set<stri
   // Website always shows: the URL alone no longer completes this question.
   if (f.has("year") && f.has("size") && validFoundedYear(d.year) && d.size) s.add("founded");
   if (f.has("sector") && d.sector) s.add("sector");
+  // The company check confirmed name, number and address at sign-up: skip while all still hold a value.
+  if (f.has("address") && !!d.name.trim() && /^\d{13}$/.test(d.reg) && addrComplete(d.addr)) s.add("name");
   if (d.noUpload) s.add("photos");
   return s;
 }

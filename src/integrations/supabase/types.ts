@@ -590,6 +590,8 @@ export type Database = {
           advisor_verification: string
           assigned_admin_id: string | null
           city: string | null
+          contact_name: string | null
+          contact_position: string | null
           country: string | null
           created_at: string
           dbd_capital: number | null
@@ -615,6 +617,7 @@ export type Database = {
           live_since: string | null
           logo_path: string | null
           logo_source: string | null
+          long_description: string | null
           media: Json
           more_info_at: string | null
           more_info_by: string | null
@@ -671,6 +674,8 @@ export type Database = {
           advisor_verification?: string
           assigned_admin_id?: string | null
           city?: string | null
+          contact_name?: string | null
+          contact_position?: string | null
           country?: string | null
           created_at?: string
           dbd_capital?: number | null
@@ -696,6 +701,7 @@ export type Database = {
           live_since?: string | null
           logo_path?: string | null
           logo_source?: string | null
+          long_description?: string | null
           media?: Json
           more_info_at?: string | null
           more_info_by?: string | null
@@ -752,6 +758,8 @@ export type Database = {
           advisor_verification?: string
           assigned_admin_id?: string | null
           city?: string | null
+          contact_name?: string | null
+          contact_position?: string | null
           country?: string | null
           created_at?: string
           dbd_capital?: number | null
@@ -777,6 +785,7 @@ export type Database = {
           live_since?: string | null
           logo_path?: string | null
           logo_source?: string | null
+          long_description?: string | null
           media?: Json
           more_info_at?: string | null
           more_info_by?: string | null

@@ -77,7 +77,7 @@ export function PhotosQ({ media, d, set, L, sectorLine }: { media: WizardMedia; 
   );
   return (
     <div>
-      <AttachmentCard value={m} onChange={(x) => void onChange(x)} name={media.facts.name} sectorLine={sectorLine} />
+      <AttachmentCard value={m} onChange={(x) => void onChange(x)} name={media.facts.name} sectorLine={sectorLine} wideAdd />
       {ok ? (
         <p className="mt-[18px] flex items-center gap-1.5 text-[13.5px] font-semibold text-[#15803D]"><CircleCheck className="h-4 w-4" />{L("Your logo and photos are added. You can change them later in My Company.", "เพิ่มโลโก้และรูปภาพแล้ว ท่านเปลี่ยนได้ภายหลังที่บริษัทของฉัน")}</p>
       ) : (

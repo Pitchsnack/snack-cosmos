@@ -23,12 +23,14 @@ export function attachmentMissing(m: EntityMediaState) {
   return (filled(m.logo) ? 0 : 1) + (m.slots.some(filled) ? 0 : 1);
 }
 
-export function AttachmentCard({ value, onChange, name, sectorLine, intro, showGuidance = true }: {
+export function AttachmentCard({ value, onChange, name, sectorLine, intro, showGuidance = true, wideAdd = false }: {
   value: EntityMediaState; onChange: (m: EntityMediaState) => void; name: string; sectorLine: string;
   /** Text above the card; null hides it. Defaults to the seller wording. */
   intro?: string | null;
   /** Wizards supply their own role-specific checklist and guidance. */
   showGuidance?: boolean;
+  /** Setup wizards: one full-width "+ Upload photos…" tile under the photos already added. */
+  wideAdd?: boolean;
 }) {
   const tr = useTr();
   const hasLogo = filled(value.logo);
@@ -77,12 +79,22 @@ export function AttachmentCard({ value, onChange, name, sectorLine, intro, showG
                 {sectorLine && <div className="mt-[2px] truncate text-[13px] text-[#6A7181] dark:text-muted-foreground">{sectorLine}</div>}
               </div>
             </div>
+            {wideAdd ? (<>
+              {photos > 0 && <div className="mt-4 grid grid-cols-3 gap-[10px] max-sm:gap-2">
+                {value.slots.map((s, i) => filled(s) ? (
+                  <Space key={i} kind="photo" slot={s} label={tr(`Add photo ${i + 1}`, `เพิ่มรูปภาพที่ ${i + 1}`)} removeLabel={tr(`Remove photo ${i + 1}`, `ลบรูปภาพที่ ${i + 1}`)}
+                    onFile={(f) => { const ok = take(f); if (ok) addPhoto(ok); }} onRemove={() => removePhoto(i)} />
+                ) : null)}
+              </div>}
+              {photos < 3 && <WideAdd label={tr("Upload photos that show your business, such as your premises, factory, office, products, equipment, team, or operations.", "อัปโหลดรูปภาพที่แสดงถึงธุรกิจของคุณ เช่น สถานที่ตั้ง โรงงาน สำนักงาน สินค้า อุปกรณ์ ทีมงาน หรือการดำเนินงาน")}
+                onFile={(f) => { const ok = take(f); if (ok) addPhoto(ok); }} />}
+            </>) : (
             <div className="mt-4 grid grid-cols-3 gap-[10px] max-sm:gap-2">
               {value.slots.map((s, i) => (
                 <Space key={i} kind="photo" slot={s} label={tr(`Add photo ${i + 1}`, `เพิ่มรูปภาพที่ ${i + 1}`)} removeLabel={tr(`Remove photo ${i + 1}`, `ลบรูปภาพที่ ${i + 1}`)}
                   onFile={(f) => { const ok = take(f); if (ok) addPhoto(ok); }} onRemove={() => removePhoto(i)} />
               ))}
-            </div>
+            </div>)}
           </div>
           {miss && <p className="mt-[10px] text-[12.5px] text-[#DC2626]">{miss}</p>}
         </div>
@@ -141,6 +153,23 @@ function Space({ kind, slot, label, removeLabel, onFile, onRemove }: {
           over && "border-[#8A90A0] bg-[#FAFAFB]")}>
         <Plus className={kind === "logo" ? "h-4 w-4" : "h-[18px] w-[18px]"} />
         <span className={kind === "logo" ? "text-[11px]" : "text-[12.5px] max-sm:hidden"}>{kind === "logo" ? tr("Logo", "โลโก้") : tr("Add photo", "เพิ่มรูปภาพ")}</span>
+      </button>
+      <input ref={input} type="file" accept="image/*" className="hidden" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
+    </>
+  );
+}
+
+function WideAdd({ label, onFile }: { label: string; onFile: (f: File | undefined) => void }) {
+  const input = useRef<HTMLInputElement>(null);
+  const [over, setOver] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => input.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={(e) => { e.preventDefault(); setOver(false); onFile(e.dataTransfer.files?.[0]); }}
+        className={cn("mt-[10px] flex w-full flex-col items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] border-dashed border-[#CBD1DA] bg-card px-5 py-5 text-center text-[13px] leading-[1.5] text-[#6A7181] outline-none hover:border-[#8A90A0] hover:bg-[#FAFAFB] hover:text-[#4B5563] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4338CA] dark:border-border dark:hover:bg-muted",
+          over && "border-[#8A90A0] bg-[#FAFAFB]")}>
+        <Plus className="h-[18px] w-[18px]" />
+        <span className="max-w-[56ch]">{label}</span>
       </button>
       <input ref={input} type="file" accept="image/*" className="hidden" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
     </>

@@ -7,6 +7,9 @@ import { SELLER_SECTOR_EXAMPLES } from '@/lib/seller-sector-examples';
 import { useTranslation } from '@/i18n/language';
 
 import { displayedStrengths, fillEmptyStrengths, strengthCount, strengthRows, STRENGTH_MAX, wizardStrengthIdeas } from '@/lib/seller-strengths';
+import { Loading } from "@/components/ui/PitchSnackLoader";
+import { SectionBand, SectionHeading } from "@/components/setup/section-band";
+const readDomainOf = (u: string) => u.trim().replace(/^https?:\/\//i, "").replace(/^www\./i, "").split(/[/?#]/)[0] ?? "";
 import type { WebsiteField } from '@/lib/seller-website-enrich';
 export type { WebsiteField } from '@/lib/seller-website-enrich';
 export type ReadingState = 'waiting' | 'reading' | 'found' | 'empty';
@@ -54,9 +57,9 @@ function Strengths({d,set,auto,edit,th}: {d:SellerDraft;set:(p:Partial<SellerDra
   } catch(error) { toast.error(error instanceof Error ? error.message : L('Could not suggest strengths.','ไม่สามารถแนะนำจุดแข็งได้')); }
  };
  return <section className="seller-tag-section seller-strengths" aria-labelledby="sw-strength-label">
-  <div className="seller-field-label"><span id="sw-strength-label">{L('Key Business Strengths','จุดแข็งหลักของธุรกิจ')}<em>*</em>{auto && <AutoFilled/>}</span><div className="seller-strength-tools"><small>{count}/3</small><Button variant="unstyled" size="unstyled" className="seller-strength-suggest" aria-label={L('Suggest key business strengths','แนะนำจุดแข็งหลักของธุรกิจ')} disabled={count===3} onClick={suggest}><Sparkles size={15}/>{L('Suggest','แนะนำ')}</Button></div></div>
+  <div className="seller-field-label"><span id="sw-strength-label">{L('Strength 1, 2 and 3','จุดแข็งที่ 1, 2 และ 3')}<em>*</em>{auto && <AutoFilled/>}</span><div className="seller-strength-tools"><small>{count}/3</small><Button variant="unstyled" size="unstyled" className="seller-strength-suggest" aria-label={L('Suggest key business strengths','แนะนำจุดแข็งหลักของธุรกิจ')} disabled={count===3} onClick={suggest}><Sparkles size={15}/>{L('Suggest','แนะนำ')}</Button></div></div>
   <p className="seller-field-hint" id="sw-strength-hint">{th ? <>บอก<b className="seller-strength-three">สาม</b>สิ่งที่ทำให้ธุรกิจของท่านโดดเด่น โดยเน้นจุดแข็งหรือข้อได้เปรียบที่ผู้ซื้อให้ความสำคัญ</> : <>Share <b className="seller-strength-three">three</b> things that make your business stand out. Focus on the strengths or advantages a buyer would value.</>}</p>
-  <div className="seller-strength-rows" role="group" aria-labelledby="sw-strength-label" aria-describedby="sw-strength-hint">{shown.map((value,i)=><label className="seller-strength-row" key={i}><span aria-hidden className={`seller-strength-mark ${value.trim() ? 'is-filled' : i===3 ? 'is-optional' : ''}`}>{value.trim() ? <Check size={13} strokeWidth={3}/> : i+1}</span><input ref={node=>{refs.current[i]=node;}} value={value} maxLength={STRENGTH_MAX} lang={th?'th':'en'} aria-label={i===3 ? L('Strength 4 (optional)','จุดแข็งข้อที่ 4 (ไม่บังคับ)') : L(`Strength ${i+1}`,`จุดแข็งข้อที่ ${i+1}`)} aria-describedby="sw-strength-hint" aria-required={i<3} placeholder={placeholders[i]} onChange={event=>{const rows=strengthRows(th?d.highlightsTh:d.highlights);rows[i]=event.target.value;edit();set(th?{highlightsTh:rows}:{highlights:rows});}} onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();refs.current[i+1]?.focus();}}}/></label>)}</div>
+  <div className="seller-strength-rows" role="group" aria-labelledby="sw-strength-label" aria-describedby="sw-strength-hint">{shown.map((value,i)=><label className="seller-strength-row" key={i}><span aria-hidden className={`seller-strength-mark ${value.trim() ? 'is-filled' : i===3 ? 'is-optional' : ''}`}>{value.trim() ? <Check size={13} strokeWidth={3}/> : i+1}</span><input ref={node=>{refs.current[i]=node;}} value={value} maxLength={STRENGTH_MAX} lang={th?'th':'en'} aria-label={i===3 ? L('Strength 4 (optional)','จุดแข็งข้อที่ 4 (ไม่บังคับ)') : L(`Strength ${i+1}`,`จุดแข็งที่ ${i+1}`)} aria-describedby="sw-strength-hint" aria-required={i<3} placeholder={placeholders[i]} onChange={event=>{const rows=strengthRows(th?d.highlightsTh:d.highlights);rows[i]=event.target.value;edit();set(th?{highlightsTh:rows}:{highlights:rows});}} onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();refs.current[i+1]?.focus();}}}/></label>)}</div>
  </section>;
 }
 export function SellerWebsiteFields({d, set, marks, edit, reading, readingStates, openSector}: {d: SellerDraft; set: (p: Partial<SellerDraft>) => void; marks: Partial<Record<WebsiteField, boolean>>; edit: (key: WebsiteField) => void; reading: boolean; readingStates?: ReadingState[]; openSector: () => void}) {
@@ -67,17 +70,31 @@ export function SellerWebsiteFields({d, set, marks, edit, reading, readingStates
  const long = th ? d.longDescriptionTh || d.longDescription || '' : d.longDescription || d.longDescriptionTh || '';
  const products = th ? d.productTagsTh?.length ? d.productTagsTh : d.productTags ?? [] : d.productTags?.length ? d.productTags : d.productTagsTh ?? [];
  const markets = th ? d.marketTagsTh?.length ? d.marketTagsTh : d.marketTags ?? [] : d.marketTags?.length ? d.marketTags : d.marketTagsTh ?? [];
- if(reading) return <ul className="seller-reading" aria-live="polite">{[L('Short description','คำอธิบายสั้น'),L('Long description','คำอธิบายแบบยาว'),L('Products and services','สินค้าและบริการ'),L('Markets','ตลาด'),L('Key Business Strengths','จุดแข็งหลักของธุรกิจ')].map((label,i) => {const state=readingStates?.[i] ?? (i===0?'reading':'waiting');return <li key={label} data-state={state}>{state==='found' ? <Check size={18}/> : state==='reading' ? <Loader2 className="motion-safe:animate-spin" size={18}/> : <Circle size={18}/>}{label}{state==='found' && <small>{L('found','พบแล้ว')}</small>}</li>;})}</ul>;
- const text = (key: 'shortDescription'|'longDescription', value: string, label: string, placeholder: string, limit: number) => <div>
-  <div className="seller-field-label"><label htmlFor={`sw-${key}`}>{label}<em>*</em>{marks[key] && <AutoFilled/>}</label><small className={value.length > limit ? 'text-destructive' : ''}>{value.length.toLocaleString('en')}/{limit.toLocaleString('en')}</small></div>
+ if(reading) return <div className="grid min-h-[340px] place-items-center rounded-[12px] bg-muted/60 px-6"><Loading size="lg" message={L(`Reading ${readDomainOf(d.web)}… We'll fill in your description, tags and business highlights.`,`กำลังอ่าน ${readDomainOf(d.web)}… เราจะกรอกคำอธิบาย แท็ก และจุดเด่นของธุรกิจให้คุณ`)}/></div>;
+ const text = (key: 'shortDescription'|'longDescription', value: string, label: string, placeholder: string, limit: number, rest?: string) => <div>
+  <div className="seller-field-label"><label htmlFor={`sw-${key}`}>{label}{rest && <span className="font-normal text-muted-foreground"> — {rest}</span>}<em>*</em>{marks[key] && <AutoFilled/>}</label><small className={value.length > limit ? 'text-destructive' : ''}>{value.length.toLocaleString('en')}/{limit.toLocaleString('en')}</small></div>
   <textarea id={`sw-${key}`} className={`seller-description ${key === 'longDescription' ? 'is-long' : ''}`} aria-required value={value} placeholder={placeholder} onChange={e => {edit(key); set({[th ? `${key}Th` : key]: e.target.value});}}/>
  </div>;
- return <div className="seller-description-fields">
-  {text('shortDescription',short,L('Short description','คำอธิบายสั้น'),L('One sentence: what you make or do, and for whom.','หนึ่งประโยค: ท่านผลิตหรือทำอะไร และทำให้ใคร'),SELLER_DESCRIPTION_LIMITS.short)}
-  {text('longDescription',long,L('Long description','คำอธิบายแบบยาว'),L('What the business does, since when, how it sells and who its customers are.','ธุรกิจทำอะไร เริ่มตั้งแต่เมื่อไร ขายอย่างไร และลูกค้าคือใคร'),SELLER_DESCRIPTION_LIMITS.long)}
-  <Tags label={L('Product & Service Tags','แท็กสินค้าและบริการ')} required value={products} onChange={v => {edit('productTags');set(th ? {productTagsTh:v}:{productTags:v});}} auto={marks.productTags} examples={sector?.products.map(pick) ?? []} sector={sector ? th ? sector.thai : sector.sector : null} openSector={openSector} th={th}/>
-  <Tags label={L('Market Tags','แท็กตลาด')} value={markets} onChange={v => {edit('marketTags');set(th ? {marketTagsTh:v}:{marketTags:v});}} auto={marks.marketTags} examples={[]} who={sector?.who.map(pick) ?? []} where={[L('Thailand','ประเทศไทย'), d.addr.province, L('ASEAN','อาเซียน'),L('Worldwide','ทั่วโลก')].filter(Boolean)} sector={sector ? th ? sector.thai : sector.sector : null} openSector={openSector} th={th}/>
-  <Strengths d={d} set={set} auto={marks.highlights} edit={()=>edit('highlights')} th={th}/>
+ const bleed = '-mx-6 sm:-mx-9';
+ return <div className="seller-description-fields-grouped">
+  <SectionBand bleed={bleed}/>
+  <section aria-labelledby="sw-tell-h"><SectionHeading id="sw-tell-h">{L('Tell buyers about your business','บอกผู้ซื้อเกี่ยวกับธุรกิจของคุณ')}</SectionHeading>
+   <div className="grid gap-[14px]">
+    {text('shortDescription',short,L('Short description','คำอธิบายสั้น'),L('One sentence: what you make or do, and for whom.','หนึ่งประโยค: ท่านผลิตหรือทำอะไร และทำให้ใคร'),SELLER_DESCRIPTION_LIMITS.short,L('a one-line summary','สรุปในหนึ่งบรรทัด'))}
+    {text('longDescription',long,L('Long description','คำอธิบายแบบยาว'),L('What the business does, since when, how it sells and who its customers are.','ธุรกิจทำอะไร เริ่มตั้งแต่เมื่อไร ขายอย่างไร และลูกค้าคือใคร'),SELLER_DESCRIPTION_LIMITS.long,L('a fuller overview','ภาพรวมที่ละเอียดขึ้น'))}
+   </div>
+  </section>
+  <SectionBand bleed={bleed}/>
+  <section aria-labelledby="sw-tags-h"><SectionHeading id="sw-tags-h">{L('Add keywords that describe your business','เพิ่มคีย์เวิร์ดที่อธิบายธุรกิจของคุณ')}</SectionHeading>
+   <div className="grid gap-[14px]">
+    <Tags label={L('Product & Service Tags','แท็กสินค้าและบริการ')} required value={products} onChange={v => {edit('productTags');set(th ? {productTagsTh:v}:{productTags:v});}} auto={marks.productTags} examples={sector?.products.map(pick) ?? []} sector={sector ? th ? sector.thai : sector.sector : null} openSector={openSector} th={th}/>
+    <Tags label={L('Market Tags','แท็กตลาด')} value={markets} onChange={v => {edit('marketTags');set(th ? {marketTagsTh:v}:{marketTags:v});}} auto={marks.marketTags} examples={[]} who={sector?.who.map(pick) ?? []} where={[L('Thailand','ประเทศไทย'), d.addr.province, L('ASEAN','อาเซียน'),L('Worldwide','ทั่วโลก')].filter(Boolean)} sector={sector ? th ? sector.thai : sector.sector : null} openSector={openSector} th={th}/>
+   </div>
+  </section>
+  <SectionBand bleed={bleed}/>
+  <section aria-labelledby="sw-hl-h"><SectionHeading id="sw-hl-h">{L('Business highlights','จุดเด่นของธุรกิจ')}</SectionHeading>
+   <Strengths d={d} set={set} auto={marks.highlights} edit={()=>edit('highlights')} th={th}/>
+  </section>
  </div>;
 }
 export function websiteMissing(d: SellerDraft, th: boolean) {

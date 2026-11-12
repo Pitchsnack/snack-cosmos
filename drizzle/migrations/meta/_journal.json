@@ -988,6 +988,13 @@
       "when": 1794508088394,
       "tag": "0140_signup_reg_prechecks",
       "breakpoints": true
+    },
+    {
+      "idx": 141,
+      "version": "7",
+      "when": 1794518912837,
+      "tag": "0141_advisor_long_description_contact",
+      "breakpoints": true
     }
   ]
 }

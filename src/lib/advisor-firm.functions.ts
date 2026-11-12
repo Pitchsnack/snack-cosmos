@@ -60,7 +60,7 @@ function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: an
     id: r.id, refNo: r.ref_no, name: r.name ?? "", firmType: r.firm_type ?? "", logoPath: r.logo_path, logoUrl: r.logo_path ? urls.get(r.logo_path) ?? null : null,
     logoSource: r.logo_source ?? null,
     media: (Array.isArray(r.media) ? r.media : []).map((m: any) => ({ slot: m.slot, path: m.image_path, url: urls.get(m.image_path) ?? null })),
-    description: r.description, descriptionTh: r.description_th ?? null, yearFounded: r.year_founded, city: r.city, country: r.country,
+    description: r.description, descriptionTh: r.description_th ?? null, longDescription: r.long_description ?? null, contactName: r.contact_name ?? null, contactPosition: r.contact_position ?? null, yearFounded: r.year_founded, city: r.city, country: r.country,
     services: r.services ?? [], fees, feeDetails, dealBand: r.deal_size_band ?? null,
     teamSize: r.team_size, languages: r.languages ?? [], sectors: r.sectors ?? [], sectorAgnostic: !!r.sector_agnostic, sectorPicks: r.sector_picks ?? null,
     legalName: r.legal_name, thaiName: r.thai_name, englishName: r.english_name ?? null, registrationNo: r.registration_no,
@@ -210,7 +210,7 @@ export const saveAdvisorWizard = createServerFn({ method: "POST" })
       languages: z.array(z.string().max(40)).max(20), sectors: z.array(z.string().max(80)).max(60), sector_agnostic: z.boolean(), sector_picks: z.object({ types: z.array(z.string().max(30)).max(5), kinds: z.record(z.string().max(20), z.array(z.string().max(30)).max(20)), other: z.array(z.string().max(80)).max(40) }).nullable(), email: nz(120), phone: nz(30), logo_path: nz(300), logo_source: z.enum(["upload", "enrich"]).nullable(),
       media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(300) })).max(3),
       setup_reached: z.enum(["type", "name", "web", "services", "deal", "team", "sectors", "contact", "logo", "desc", "review"]),
-      description: nz(300), setup_answered: z.array(z.string().max(20)).max(20), wizard_state: z.object({ fromSignup: z.array(z.string().max(20)).max(10).optional(), feeVisited: z.boolean().optional(), enrichSig: z.string().optional(), enrich: z.any().optional() }),
+      description: nz(300), long_description: nz(4000), contact_name: nz(120), contact_position: nz(120), setup_answered: z.array(z.string().max(20)).max(20), wizard_state: z.object({ fromSignup: z.array(z.string().max(20)).max(10).optional(), feeVisited: z.boolean().optional(), enrichSig: z.string().optional(), enrich: z.any().optional() }),
     }).partial(),
     fees: z.record(z.string().max(60), FeeIn).optional(),
   }).parse(d))

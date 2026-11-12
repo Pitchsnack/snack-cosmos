@@ -19,12 +19,12 @@ function toState(m: StepMedia): EntityMediaState {
  * The seller wizard's Logo and photos step for any profile: the Attachment card,
  * a note line, the checklist and Why add them. Each change uploads and saves as it finishes.
  */
-export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sectorLine, note, why, L }: {
+export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sectorLine, note, why, L, wideAdd = false }: {
   initial: StepMedia;
   getUrl: UploadFn;
   persist: (logoPath: string | null, media: { slot: 1 | 2 | 3; image_path: string }[]) => Promise<unknown>;
   onCount: (hasLogo: boolean, photos: number) => void;
-  name: string; sectorLine: string; note: React.ReactNode; why: string[]; L: L;
+  name: string; sectorLine: string; note: React.ReactNode; why: string[]; L: L; wideAdd?: boolean;
 }) {
   const [m, setM] = useState<EntityMediaState>(() => toState(initial));
   const [count, setCount] = useState({ logo: !!initial.logoPath, photos: initial.slots.length });
@@ -57,7 +57,7 @@ export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sector
   return (
     <div>
       <div className="max-[599px]:[&_.attachment-card]:p-[14px]">
-        <AttachmentCard value={m} onChange={(x) => void onChange(x)} name={name} sectorLine={sectorLine} intro={null} showGuidance={false} />
+        <AttachmentCard value={m} onChange={(x) => void onChange(x)} name={name} sectorLine={sectorLine} intro={null} showGuidance={false} wideAdd={wideAdd} />
       </div>
       <p className="mt-2.5 flex items-start gap-1.5 text-[13px] text-[#6B7280] dark:text-muted-foreground">{note}</p>
       {ok ? (
@@ -65,8 +65,8 @@ export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sector
       ) : (
         <>
           <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px]">
-            {dot(count.logo, L("Logo", "โลโก้"))}{dot(count.photos > 0, L("At least 1 photo", "รูปภาพอย่างน้อย 1 รูป"))}
-            <span className="text-[#6B7280]">{L("Both are needed to continue.", "ต้องมีทั้งสองอย่างจึงจะไปต่อได้")}</span>
+            {!(wideAdd && count.logo) && dot(count.logo, L("Logo", "โลโก้"))}{dot(count.photos > 0, L("At least 1 photo", "รูปภาพอย่างน้อย 1 รูป"))}
+            {!(wideAdd && count.logo) && <span className="text-[#6B7280]">{L("Both are needed to continue.", "ต้องมีทั้งสองอย่างจึงจะไปต่อได้")}</span>}
           </div>
           <div className="mt-[22px] rounded-[12px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4 dark:border-border dark:bg-[#16283A]">
             <p className="text-[14.5px] font-bold">{L("Why add them", "ทำไมต้องเพิ่ม")}</p>

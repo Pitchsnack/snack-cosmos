@@ -59,6 +59,9 @@ export async function doFinish(uid: string, data: FinishInput) {
       return { role: a.role as SignupRole, profileId: pid };
     }
     let profileId: string | null = null;
+    // Contact defaults from the account: sign-in email and the name typed at sign-up (changeable later).
+    const acctEmail = u.user.email ?? null;
+    const acctName = [a.first_name, a.last_name].map((x: string | null) => (x ?? "").trim()).filter(Boolean).join(" ") || null;
 
     // `fromSignup` lists the fields sign-up answered; the setup wizards hide them while they still hold a value.
     if (a.role === "advisor") {
@@ -68,6 +71,7 @@ export async function doFinish(uid: string, data: FinishInput) {
       const { data: f, error } = await sb.from("advisor_firms").insert({
         owner_user_id: uid, status: "draft", name: data.name, firm_type: a.first_answer, country: "Thailand",
         website: web, year_founded: y, team_size: team, setup_answered: [], wizard_state: { fromSignup },
+        email: acctEmail, contact_name: acctName,
       }).select("id").single();
       if (error) throw new Error(error.message);
       profileId = f.id;
@@ -92,10 +96,25 @@ export async function doFinish(uid: string, data: FinishInput) {
       }).eq("id", investorId);
       if (error) throw new Error(error.message);
       if (rel) await sb.from("buyer_profiles").update({ buyer_relation: rel }).eq("user_id", uid);
+      if (acctEmail) await sb.from("investors").update({ email: acctEmail }).eq("id", investorId).is("email", null);
+      // A firm's first Team member starts as the person who signed up; individuals are the profile themselves.
+      if (!individual && acctName) {
+        const { data: bp } = await sb.from("buyer_profiles").select("people").eq("user_id", uid).maybeSingle();
+        if (bp && !(Array.isArray(bp.people) && bp.people.length)) await sb.from("buyer_profiles").update({ people: [{ name: acctName, role: "", email: acctEmail ?? "", phone: "" }] }).eq("user_id", uid);
+      }
       profileId = investorId;
     } else if (a.role === "seller") {
       const { ensureSellerDraftFromSignup } = await import("@/lib/seller-setup.server");
       profileId = await ensureSellerDraftFromSignup(sb, uid, { ...a, profile_id: null, company: { name: data.name, year: data.year, size: data.size, website: web } });
+      if (profileId) {
+        if (acctEmail) await sb.from("startups").update({ email: acctEmail }).eq("id", profileId).is("email", null);
+        // The person who signed up becomes the first founder (name only; position left to fill in).
+        if (acctName) {
+          const { data: st } = await sb.from("startups").select("tenant_id").eq("id", profileId).maybeSingle();
+          const { count } = await sb.from("startup_founders").select("id", { count: "exact", head: true }).eq("startup_id", profileId);
+          if (st && !count) await sb.from("startup_founders").insert({ startup_id: profileId, tenant_id: st.tenant_id, full_name: acctName, display_order: 0 });
+        }
+      }
     }
 
     const { error } = await sb.from("signup_answers").update({

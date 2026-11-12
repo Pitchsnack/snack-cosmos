@@ -8,6 +8,8 @@ import { WebsiteCheckLink } from "@/components/startups/website-check-link";
 import { SellerWebsiteFields, websiteMissing, type WebsiteField, type ReadingState } from "./seller-website-fields";
 import { strengthCount } from '@/lib/seller-strengths';
 import { FounderEditor } from "./founder-editor";
+import { ContinueBlockedLine, continueBlockedLine } from "@/components/setup/continue-blocked";
+import { FilledFrom } from "@/components/setup/filled-from";
 import { autoEnrichAdapter } from "@/lib/auto-enrich/auto-enrich-adapter";
 import { founderRevenueLabel } from "@/lib/founder-story";
 import { toast } from "sonner";
@@ -16,7 +18,7 @@ import { SellerTypeQuestion } from "@/components/common/business-type-question";
 import type { SectorPick } from "@/lib/business-types";
 import { AddressBox } from "@/components/advisor/advisor-firm-fields";
 import { DealQ, HandoverQ, PhotosQ, PriceQ, type WizardMedia } from "@/components/startups/seller-listing-questions";
-import { LISTING_KEYS } from "@/lib/seller-wizard";
+import { LISTING_KEYS, validFoundedYear } from "@/lib/seller-wizard";
 import { bandInText, bandOf, fmtThb } from "@/lib/asking-price";
 import { addressLine, needCls, useFocusNeeded } from "@/components/common/need-fill";
 import {
@@ -101,7 +103,8 @@ export function SellerWizard({
   const skipRef = useRef<HTMLButtonElement | null>(null);
   const fwdRef = useRef<HTMLButtonElement | null>(null);
   const focusTitle = useRef(false);
-  const [webExpanded, setWebExpanded] = useState(false);
+  // The website from sign-up opens the full page at once (descriptions, tags, highlights).
+  const [webExpanded, setWebExpanded] = useState(() => (fromSignup.includes("web") && isValidUrl(initial.web)) || !!(initial.shortDescription?.trim() || initial.longDescription?.trim() || initial.shortDescriptionTh?.trim()));
   const [reading, setReading] = useState(false);
   const [readingStates,setReadingStates] = useState<ReadingState[]>(['reading','waiting','waiting','waiting','waiting']);
   const [readDomain, setReadDomain] = useState("");
@@ -217,20 +220,20 @@ export function SellerWizard({
       const nextMarks=merged.marks; const patch={...merged.patch,web:url};
       const keys: WebsiteField[]=['shortDescription','longDescription','productTags','marketTags','highlights'];
       const states:ReadingState[]=keys.map(key=>nextMarks[key] ? 'found' : 'empty');
-      const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if(!reduced) {
-        for(let i=0;i<keys.length;i++) {
-          setReadingStates(states.map((state,j)=>j<i ? state : j===i ? 'reading' : 'waiting'));
-          await new Promise(resolve=>window.setTimeout(resolve,220));
-        }
-        setReadingStates(states);
-        await new Promise(resolve=>window.setTimeout(resolve,250));
-      }
+      void states;
       set(patch); setMarks(prev => ({...prev,...nextMarks})); setReadDone(true);
+      requestAnimationFrame(() => document.getElementById("sw-shortDescription")?.focus());
       if (!Object.keys(nextMarks).length) toast.warning(L("Auto Enrich found nothing new. Fill in the remaining fields.", "Auto Enrich ไม่พบข้อมูลใหม่ กรุณากรอกช่องที่เหลือ"));
     } catch(e) {toast.error(e instanceof Error ? e.message : L("Auto Enrich failed.","Auto Enrich อ่านเว็บไซต์ไม่ได้"));}
     finally {readingRef.current = false; setReading(false);}
   }
+  // Read the sign-up website once as soon as the Website page opens while its fields are still empty.
+  const autoRead = useRef(false);
+  useEffect(() => {
+    if (autoRead.current || cur.id !== "web" || !webExpanded || !isValidUrl(d.web) || readDone || reading) return;
+    if (d.shortDescription?.trim() || d.longDescription?.trim() || d.shortDescriptionTh?.trim() || d.longDescriptionTh?.trim()) return;
+    autoRead.current = true; void runEnrich();
+  }, [cur.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const editWebsiteField = (key: WebsiteField) => setMarks(p => ({...p,[key]:false}));
   const editRow = (n: number) => {setFull(n); focusTitle.current = true; go(n); if(STEPS[n]?.id === "web") setWebExpanded(true);};
   const allLic = [...WIZARD_LICENCES, ...d.licences.filter((l) => !WIZARD_LICENCES.some((w) => w.name === l.name))];
@@ -258,9 +261,10 @@ export function SellerWizard({
           <p className="flex items-start gap-2 text-[13px] text-destructive"><Lock className="mt-0.5 h-3.5 w-3.5" />{tr("Your company identity stays confidential until you approve the buyer's NDA.")}</p>
         </div>
       ) },
-    web: { t: webExpanded ? reading ? L(`Reading ${readDomain}…`, `กำลังอ่าน ${readDomain}…`) : readDone ? L(`Check what we found on ${readDomain}`, `ตรวจสอบข้อมูลที่พบจาก ${readDomain}`) : L("Describe your business", "อธิบายธุรกิจของท่าน") : L("What is your company website?", "เว็บไซต์ของบริษัทคืออะไร"),
-      h: webExpanded ? reading ? L("Auto Enrich is reading your website. This takes a few seconds.", "Auto Enrich กำลังอ่านเว็บไซต์ของท่าน ใช้เวลาสักครู่") : readDone ? L("Auto Enrich read your website. Change anything that isn't right.", "Auto Enrich อ่านเว็บไซต์ของท่านแล้ว แก้ไขส่วนที่ไม่ถูกต้องได้") : L("You have no website, so auto-fill can't suggest these. Fill them in yourself.", "ท่านไม่มีเว็บไซต์ ระบบจึงแนะนำข้อมูลเหล่านี้ให้ไม่ได้ กรุณากรอกเอง") : L("Optional, but auto-fill needs it.", "ไม่บังคับ แต่การกรอกข้อมูลอัตโนมัติต้องใช้เว็บไซต์นี้"),
+    web: { t: webExpanded ? L("Describe your business", "อธิบายธุรกิจของท่าน") : L("What is your company website?", "เว็บไซต์ของบริษัทคืออะไร"),
+      h: webExpanded ? d.web.trim() ? L("Buyers read these on your profile.", "ผู้ซื้อจะอ่านข้อมูลเหล่านี้ในโปรไฟล์ของท่าน") : L("You have no website, so auto-fill can't suggest these. Fill them in yourself.", "ท่านไม่มีเว็บไซต์ ระบบจึงแนะนำข้อมูลเหล่านี้ให้ไม่ได้ กรุณากรอกเอง") : L("Optional, but auto-fill needs it.", "ไม่บังคับ แต่การกรอกข้อมูลอัตโนมัติต้องใช้เว็บไซต์นี้"),
       body: <div>
+        {readDone && !reading && readDomain && <FilledFrom domain={readDomain} L={L}/>}
         <label htmlFor="sw-web" className={fieldLbl}>{L("Company website","เว็บไซต์บริษัท")}</label>
         <div className="seller-web-field flex gap-2">
           <input id="sw-web" ref={webRef} className={inp} value={d.web} readOnly={reading} maxLength={2048} onChange={e => set({web:e.target.value})} onKeyDown={e => {if(e.key === "Enter" && isValidUrl(d.web)) {e.preventDefault(); void runEnrich();}}} placeholder="www.yourcompany.com"/>
@@ -379,6 +383,18 @@ export function SellerWizard({
   useFocusNeeded(cardRef, `${cur.id}:${full ?? ""}`);
   const q = cur.id === "name" ? { ...Q.name, body: Q.nameBody?.body } : Q[cur.id];
   if (!q) return null;
+  // Continue off: name what's missing (Website, Licences and the founder keep their own messages).
+  const lang: "en" | "th" = th ? "th" : "en";
+  const missingNow: string[] = cur.id === "name" ? [
+      !d.name.trim() && L("Company name", "ชื่อบริษัท"), !/^\d{13}$/.test(d.reg) && L("Registration number", "เลขทะเบียนนิติบุคคล"),
+      !d.addr.street.trim() && L("No. and street", "เลขที่และถนน"), !d.addr.district.trim() && L("City/District", "เขต/อำเภอ"),
+      !d.addr.province && L("Province", "จังหวัด"), !/^\d{5}$/.test(d.addr.postal) && L("Postal code", "รหัสไปรษณีย์"),
+    ].filter((x): x is string => !!x)
+    : cur.id === "founded" ? [!validFoundedYear(d.year) && L("Year founded", "ปีที่ก่อตั้ง"), !d.size && L("Company size", "ขนาดบริษัท")].filter((x): x is string => !!x)
+    : cur.id === "price" ? [L("Asking price", "ราคาที่ต้องการขาย")] : [];
+  const blockedText = reading || valid[cur.id] || cur.id === "review" ? null
+    : cur.id === "photos" ? (d.hasLogo ? continueBlockedLine([], lang, true) : null)
+    : continueBlockedLine(missingNow, lang);
 
   return (
     <div className="wiz seller-setup -m-4 min-h-[calc(100vh-54px)] text-[15px] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
@@ -427,12 +443,13 @@ export function SellerWizard({
                   advance();
                 }}
                 className={cur.id === "web" ? "seller-action seller-action-primary" : "rounded-[10px] bg-primary px-6 py-3 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted"}>
-                {setupText(cur.id === "review" ? tr("Continue") : reading ? L("Reading…","กำลังอ่าน…") : full != null ? tr("Back to review") : tr("Continue"))}
+                {setupText(cur.id === "review" ? L("Finish setup","เสร็จสิ้นการตั้งค่า") : reading ? L("Reading…","กำลังอ่าน…") : full != null ? tr("Back to review") : tr("Continue"))}
 
               </Button>
             </div>
           </div>
           {cur.id === "web" && webExpanded && !reading && <p className="seller-website-left" aria-live="polite">{websiteMissing(d,th)}</p>}
+          {cur.id !== "web" && <ContinueBlockedLine text={blockedText} />}
         </div>
         {confirmExit && (
           <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(17,24,39,.45)] p-4" onClick={() => setConfirmExit(false)}>

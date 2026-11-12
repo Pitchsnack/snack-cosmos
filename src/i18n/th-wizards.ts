@@ -72,6 +72,7 @@ export const TH_WIZARDS: Record<string, string> = {
   "Back": "ย้อนกลับ",
   "Skip": "ข้าม",
   "Continue to auto-fill": "ดำเนินการต่อเพื่อกรอกข้อมูลอัตโนมัติ",
+  "Finish setup": "เสร็จสิ้นการตั้งค่า",
   "Checking…": "กำลังตรวจสอบ…",
   "Back to review": "กลับไปหน้าตรวจสอบ",
   "Continue": "ดำเนินการต่อ",

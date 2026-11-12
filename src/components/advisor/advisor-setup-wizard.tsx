@@ -12,6 +12,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Check, Circle, ExternalLink, Eye, Globe, Info, Landmark, Loader2, Newspaper, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { LogoPhotosStep } from "@/components/common/logo-photos-step";
+import { ContinueBlockedLine, continueBlockedLine } from "@/components/setup/continue-blocked";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { FirmCard } from "@/components/advisor/advisor-firm-card";
 import { ADVISOR_FIRMS_KEY } from "@/components/advisor/advisor-my-company";
@@ -31,7 +32,7 @@ import { cn } from "@/lib/utils";
 type A = {
   type: string; country: string; city: string; name: string; year: string; reg: string; addr: Addr; web: string;
   services: string[]; fees: Record<string, FeeDetail>; deal: string; team: string; langs: string[]; sectors: string[]; picks: SectorPicks; agnostic: boolean; email: string; phone: string;
-  logo: LogoState; photos: number; desc: string;
+  logo: LogoState; photos: number; desc: string; long: string; cname: string; cpos: string;
 };
 const SECTION: Record<WizardQ, string> = {
   type: "About the firm", name: "About the firm", web: "About the firm", services: "Services and fees",
@@ -48,6 +49,7 @@ function fromFirm(f: AdvisorFirm): A {
     web: f.website ?? "", services: f.services, fees: { ...f.feeDetails }, deal: f.dealBand ?? "",
     team: f.teamSize ? String(f.teamSize) : "", langs: f.languages, sectors: f.sectors, picks: normPicks(f.sectorPicks), agnostic: !!f.sectorAgnostic, email: f.email ?? "", phone: f.phone ?? "",
     logo: { path: f.logoPath, url: f.logoUrl, name: null, sizeKb: null, source: f.logoSource }, photos: f.media?.length ?? 0, desc: f.description ?? "",
+    long: f.longDescription ?? "", cname: f.contactName ?? "", cpos: f.contactPosition ?? "",
   };
 }
 /** Auto Enrich ran on these details (website compared without http(s):// or www., which saving may add). */
@@ -120,7 +122,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     desc: descError(a.desc),
   };
   const fieldsOf: Record<WizardQ, string[]> = {
-    type: ["type"], name: ["country", "name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: ["web"],
+    type: ["type"], name: ["country", "name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: ["web", "desc"],
     services: ["services"], deal: ["deal"], team: ["team", "langs"], sectors: ["sectors"], contact: ["email", "phone"], logo: ["logo"], desc: ["desc"], review: [],
   };
   const qValid = (id: WizardQ) => fieldsOf[id].every((k) => !errors[k]);
@@ -128,7 +130,9 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const isAnswered = useCallback((id: string) => questionAnswered(id, qValid(id as WizardQ), ["deal", "logo"], STEPS, reached), [a, reached]); // eslint-disable-line react-hooks/exhaustive-deps
   const requiredOk = WIZARD_QS.filter((q) => q !== "deal" && q !== "logo").every((q) => qValid(q));
 
-  const skipOf = (x: A) => advisorSkips(fromSignup, { type: x.type, web: x.web, year: x.year, team: x.team, sectors: x.sectors, agnostic: x.agnostic, logo: !!firm.logoPath });
+  // Name, number and address confirmed at sign-up: the question is skipped while all hold a value.
+  const nameDoneOf = (x: A) => { const th = x.country === "Thailand"; const e = addrErrors(x.addr, th, x.city); return !!x.country && !nameError(x.name) && !yearError(x.year) && (!th || /^\d{13}$/.test(x.reg)) && !e.street && !e.district && !e.province && !e.postal; };
+  const skipOf = (x: A) => advisorSkips(fromSignup, { type: x.type, web: x.web, year: x.year, team: x.team, sectors: x.sectors, agnostic: x.agnostic, logo: !!firm.logoPath, nameDone: nameDoneOf(x) });
   const skipSet = skipOf(a);
   const [cur, setCur] = useState<WizardQ>(() => {
     const sk = skipOf(fromFirm(firm));
@@ -414,7 +418,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           </div>
         </div>
       ) },
-    web: { req: true, t: tr("What is your firm's website?"), h: tr("We use it to fill in your profile. Sellers and buyers can open it from your profile."),
+    web: { req: true, t: L("Website and description", "เว็บไซต์และคำอธิบาย"), h: L("Sellers and buyers read your short description on your card and the long one on your profile.", "ผู้ขายและผู้ซื้ออ่านคำอธิบายสั้นบนการ์ด และคำอธิบายแบบยาวในโปรไฟล์ของท่าน"),
       body: (
         <div>
           <label className={lbl} htmlFor="w-web">{tr("Website URL")}<Req /></label>
@@ -429,6 +433,22 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           {(touched.webTyped && a.web.trim() || forced.web) && errors.web ? <p className="mt-1.5 text-[13px] text-[#B42318]">{errors.web}</p>
             : webOpened ? <p className="mt-1.5 flex items-center gap-1 text-[13px] text-[#15803D]"><Check className="h-3.5 w-3.5" />{L(`Opened ${webOpened} in a new tab. Make sure it is your firm.`, `เปิด ${webOpened} ในแท็บใหม่แล้ว โปรดตรวจสอบว่าเป็นเว็บไซต์ของบริษัทท่าน`)}</p>
             : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Click Check website to open it in a new tab and make sure it is your firm.")}</p>}
+          <div className="mt-6">
+            <label className={lbl} htmlFor="w-desc">{L("Short description", "คำอธิบายสั้น")}<Req /><span className="ml-1.5 font-normal text-[#9CA3AF]">{tr("30 to 300 characters")}</span></label>
+            <textarea id="w-desc" aria-required rows={3} maxLength={300} placeholder={tr("e.g. Corporate law firm helping Thai founders sell their companies, from due diligence to signing.")}
+              className={cn(inp, "h-auto py-3", forced.desc && errors.desc && errCls)} value={a.desc}
+              onChange={(e) => set({ desc: e.target.value }, { description: e.target.value || null })} />
+            <div className="mt-1 flex justify-between text-[12.5px]">
+              <span className="text-[#B42318]">{(forced.desc || (touched.desc && a.desc.trim())) && errors.desc}</span>
+              <span className="text-[#6B7280]">{a.desc.length} / 300</span>
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className={lbl} htmlFor="w-long">{L("Long description", "คำอธิบายแบบยาว")}<span className="ml-1.5 font-normal text-[#9CA3AF]">{L("Optional", "ไม่บังคับ")}</span></label>
+            <textarea id="w-long" rows={6} maxLength={4000} className={cn(inp, "h-auto min-h-[140px] py-3")} value={a.long}
+              placeholder={L("Who you help, how you work and the deals you have done.", "ท่านช่วยใคร ทำงานอย่างไร และดีลที่เคยทำ")}
+              onChange={(e) => set({ long: e.target.value }, { long_description: e.target.value || null })} />
+          </div>
         </div>
       ) },
     services: { req: true, t: tr("Which professional services does your firm provide?"), h: tr("Pick all that apply, and say how you charge for each. Sellers and buyers filter Browse advisors by these, and see every fee on your profile."),
@@ -518,6 +538,16 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     contact: { req: true, t: tr("How can sellers and buyers reach you?"), h: tr("Your email and phone show on your profile, so sellers and buyers can contact you directly."),
       body: (
         <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={lbl} htmlFor="w-cname">{L("Contact person", "ผู้ติดต่อ")}<span className="ml-1.5 font-normal text-[#9CA3AF]">{L("Optional", "ไม่บังคับ")}</span></label>
+              <input id="w-cname" maxLength={120} className={inp} value={a.cname} onChange={(e) => set({ cname: e.target.value }, { contact_name: e.target.value || null })} />
+            </div>
+            <div>
+              <label className={lbl} htmlFor="w-cpos">{L("Position", "ตำแหน่ง")}<span className="ml-1.5 font-normal text-[#9CA3AF]">{L("Optional", "ไม่บังคับ")}</span></label>
+              <input id="w-cpos" maxLength={120} placeholder={L("e.g. Managing Partner", "เช่น หุ้นส่วนผู้จัดการ")} className={inp} value={a.cpos} onChange={(e) => set({ cpos: e.target.value }, { contact_position: e.target.value || null })} />
+            </div>
+          </div>
           <div>
             <label className={lbl} htmlFor="w-email">{tr("Email")}<Req /></label>
             <input id="w-email" aria-required type="email" maxLength={120} placeholder="hello@yourfirm.com" className={cn(inp, show("email") && errCls)} value={a.email} onBlur={blur("email")}
@@ -564,12 +594,21 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
         </div>
       ) },
     review: { req: false, t: tr("Review your answers"), h: tr("Check them, then we'll fill in the rest of your profile."),
-      body: <Review a={a} errors={errors} invalid={WIZARD_QS.filter(k => k !== "deal" && k !== "logo" && !qValid(k))} missingNames={WIZARD_QS.filter(k => k !== "deal" && k !== "logo" && !qValid(k)).map(k => L(...ADVISOR_STEP_NAMES[k].full))} onEdit={(id) => { setFromReview(true); setFull(id); goTo(id); }} /> },
+      body: <Review a={a} errors={errors} invalid={WIZARD_QS.filter(k => k !== "deal" && k !== "logo" && !qValid(k))} missingNames={WIZARD_QS.filter(k => k !== "deal" && k !== "logo" && !qValid(k)).map(k => L(...ADVISOR_STEP_NAMES[k].full))} onEdit={(id) => { const t = (id === "desc" ? "web" : id) as WizardQ; setFromReview(true); setFull(t); goTo(t); }} /> },
   };
   const q = Q[cur];
-  const continueLabel = cur === "review" ? tr("Continue to auto-fill") : fromProfile && cur === "services" ? tr("Back to your profile") : fromReview ? tr("Back to review") : tr("Continue");
+  const continueLabel = cur === "review" ? tr("Finish setup") : fromProfile && cur === "services" ? tr("Back to your profile") : fromReview ? tr("Back to review") : tr("Continue");
   const continueOk = cur === "review" ? requiredOk : qValid(cur);
   const optional = cur === "deal" || cur === "logo";
+  // Continue off: name what's missing (choice questions keep their own messages).
+  const FIELD_LABEL: Record<string, [string, string]> = {
+    country: ["Country", "ประเทศ"], name: ["Firm name", "ชื่อบริษัท"], year: ["Year founded", "ปีที่ก่อตั้ง"], reg: ["Registration number", "เลขทะเบียนนิติบุคคล"], city: ["City", "เมือง"],
+    "a-street": thai ? ["No. and street", "เลขที่และถนน"] : ["Street and number", "ถนนและเลขที่"], "a-district": ["City/District", "เขต/อำเภอ"], "a-province": ["Province", "จังหวัด"], "a-postal": ["Postal code", "รหัสไปรษณีย์"],
+    web: ["Website", "เว็บไซต์"], team: ["Team size", "จำนวนทีมงาน"], langs: ["Languages", "ภาษา"], email: ["Email address", "อีเมล"], phone: ["Phone", "เบอร์โทรศัพท์"],
+    desc: a.desc.trim() ? ["Short description (at least 30 characters)", "คำอธิบายสั้น (อย่างน้อย 30 ตัวอักษร)"] : ["Short description", "คำอธิบายสั้น"],
+  };
+  const blockedText = continueOk || optional || cur === "review" ? null
+    : continueBlockedLine(fieldsOf[cur].filter((k) => errors[k] && FIELD_LABEL[k]).map((k) => L(...FIELD_LABEL[k]!)), L("en", "th") as "en" | "th");
 
   // ---------------- layout ----------------
   const topBar = (
@@ -638,6 +677,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
                 <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!continueOk && !optional} onClick={tryContinue}>{continueLabel}</button>
               </div>
             </div>
+            <ContinueBlockedLine text={blockedText} />
           </div>
           <p className="mt-[18px] text-center text-[14px] text-[#6B7280]">{tr("Everything you add here is open to sellers and buyers on PitchSnack, apart from your full address, so they can compare firms and choose one.")}</p>
         </div>

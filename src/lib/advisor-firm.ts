@@ -136,7 +136,7 @@ export type AdvisorFirm = {
   id: string; refNo: string; name: string; firmType: string; logoPath: string | null; logoUrl: string | null; logoSource: "upload" | "enrich" | null;
   /** Up to 3 photos (slot 1–3), shown after the NDA-free card. */
   media?: { slot: number; path: string; url: string | null }[];
-  description: string | null; descriptionTh?: string | null; yearFounded: number | null; city: string | null; country: string | null;
+  description: string | null; descriptionTh?: string | null; longDescription?: string | null; contactName?: string | null; contactPosition?: string | null; yearFounded: number | null; city: string | null; country: string | null;
   services: string[]; fees: Record<string, string>; feeDetails: Record<string, FeeDetail>;
   dealBand: string | null; teamSize: number | null;
   languages: string[]; sectors: string[]; sectorAgnostic?: boolean; sectorPicks?: { types: string[]; kinds: Record<string, string[]>; other: string[] } | null;
@@ -238,13 +238,15 @@ export function setupProgress(answered: string[], skip?: Set<string>): { n: numb
   return { n: done.length, N: qs.length, first };
 }
 
-export type AdvisorSkipVals = { type: string; web: string; year: string; team: string; sectors?: string[]; agnostic?: boolean; logo?: boolean };
+export type AdvisorSkipVals = { type: string; web: string; year: string; team: string; sectors?: string[]; agnostic?: boolean; logo?: boolean; nameDone?: boolean };
 /** Questions sign-up fully answered (only while the value is still there); the name stays in its question. */
 export function advisorSkips(fromSignup: string[] | undefined, v: AdvisorSkipVals): Set<string> {
   const f = new Set(fromSignup ?? []);
   const s = new Set<string>();
   if (f.has("type") && v.type) s.add("type");
-  if (f.has("web") && v.web.trim()) s.add("web");
+  // Website always shows and holds both descriptions, so the separate description question never shows.
+  s.add("desc");
+  if (f.has("address") && v.nameDone) s.add("name");
   if (f.has("sectors") && (v.agnostic || (v.sectors ?? []).length > 0)) s.add("sectors");
   // Sign-up's Logo step answered it; the wizard doesn't ask again while the logo is there.
   if (f.has("logo") && v.logo) s.add("logo");
@@ -258,9 +260,9 @@ export function advisorHidden(fromSignup: string[] | undefined, v: AdvisorSkipVa
   if (f.has("team") && Number(v.team) >= 1) h.add("team");
   return h;
 }
-export function advisorSkipsFor(f: { firmType?: string | null; website?: string | null; yearFounded?: number | null; teamSize?: number | null; wizard?: unknown; sectors?: string[] | null; sectorAgnostic?: boolean | null }) {
+export function advisorSkipsFor(f: { firmType?: string | null; website?: string | null; yearFounded?: number | null; teamSize?: number | null; wizard?: unknown; sectors?: string[] | null; sectorAgnostic?: boolean | null }, nameDone?: boolean) {
   const fs = (f.wizard as { fromSignup?: string[] } | null)?.fromSignup;
-  return advisorSkips(fs, { type: f.firmType ?? "", web: f.website ?? "", year: f.yearFounded ? String(f.yearFounded) : "", team: f.teamSize ? String(f.teamSize) : "", sectors: f.sectors ?? [], agnostic: !!f.sectorAgnostic });
+  return advisorSkips(fs, { type: f.firmType ?? "", web: f.website ?? "", year: f.yearFounded ? String(f.yearFounded) : "", team: f.teamSize ? String(f.teamSize) : "", sectors: f.sectors ?? [], agnostic: !!f.sectorAgnostic, nameDone });
 }
 
 export type WizardState = {
@@ -272,12 +274,12 @@ export type WizardState = {
 export function advisorSetupProgress(f: AdvisorFirm) {
   const valid: Record<WizardQ, boolean> = {
     type: !!f.firmType, name: !!f.country && !nameError(f.name) && !yearError(String(f.yearFounded ?? "")) && (f.country !== "Thailand" || /^\d{13}$/.test(f.registrationNo ?? "")) && addressDone(f),
-    web: !webError(f.website ?? ""), services: !!f.services.length && f.services.every(s => !!feeWords(f.feeDetails[s] ?? newFee())),
+    web: !webError(f.website ?? "") && !descError(f.description ?? ""), services: !!f.services.length && f.services.every(s => !!feeWords(f.feeDetails[s] ?? newFee())),
     deal: !!f.dealBand, team: !teamSizeError(String(f.teamSize ?? "")) && !!f.languages.length,
     sectors: !!f.sectorAgnostic || (!!f.sectorPicks?.types.length && (!f.sectorPicks.types.includes("other") || !!f.sectorPicks.other.length)),
     contact: !emailError(f.email ?? "") && !phoneError(f.phone ?? ""), logo: !!f.logoPath && !!f.media?.length,
     desc: !descError(f.description ?? ""), review: false,
   };
   const order = [...WIZARD_QS, "review"];
-  return setupProgress(WIZARD_QS.filter(k => questionAnswered(k, valid[k], ["deal", "logo"], order, f.setupReached)), advisorSkipsFor(f));
+  return setupProgress(WIZARD_QS.filter(k => questionAnswered(k, valid[k], ["deal", "logo"], order, f.setupReached)), advisorSkipsFor(f, valid.name));
 }

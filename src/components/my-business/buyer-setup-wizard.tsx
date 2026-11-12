@@ -21,6 +21,10 @@ import { typeTone } from "@/lib/buyer-profile";
 import { normalizeUrl, isValidUrl } from "@/lib/seller-wizard";
 import { createMyBuyerUploadUrl, saveBuyerMedia, saveBuyerWizard } from "@/lib/buyer-investor.functions";
 import { LogoPhotosStep } from "@/components/common/logo-photos-step";
+import { ContinueBlockedLine, continueBlockedLine } from "@/components/setup/continue-blocked";
+import { SectionBand, SectionHeading, DashLabel, DESC_LABELS } from "@/components/setup/section-band";
+import { FilledFrom } from "@/components/setup/filled-from";
+import { Loading } from "@/components/ui/PitchSnackLoader";
 import { AddressBox, addrErrors, type Addr } from "@/components/advisor/advisor-firm-fields";
 import { investorEnrichAdapter, type EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
 import { buyerInvestorKey, BuyerInformationForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
@@ -183,13 +187,17 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const upUrl = useServerFn(createMyBuyerUploadUrl);
   const saveMedia = useServerFn(saveBuyerMedia);
   const fromSignup = data.investor.wizard?.from_signup;
-  const skipOf = (x: A) => buyerSkips(fromSignup, { role: x.role, type: x.type, web: x.web, year: x.year, name: x.name, actsFor: x.acts, sectors: x.sectors });
+  // The logo from sign-up is in place: the step asks only for the photos.
+  const signupLogo = !!fromSignup?.includes("logo") && med.logo;
+  // Name, number and address confirmed at sign-up: the question is skipped while all hold a value.
+  const nameDoneOf = (x: A) => { const th = x.country === "Thailand"; const e = addrErrors(x.addr, th, x.addr.district); return !!x.country && x.name.trim().length >= 2 && (x.role === "individual" || (!yearError(x.year) && !regError(x.reg, x.country))) && !e.street && !e.district && !e.province && !e.postal; };
+  const skipOf = (x: A) => buyerSkips(fromSignup, { role: x.role, type: x.type, web: x.web, year: x.year, name: x.name, actsFor: x.acts, sectors: x.sectors, nameDone: nameDoneOf(x) });
   const skipSet = skipOf(a);
   // A question opened from Review shows all its fields under its full title.
   const [full, setFull] = useState<QId | null>(null);
   const stepsAll = useMemo(() => stepsFor(a.role), [a.role]);
   // Firm buyers answer the Description on the Website step.
-  const profileStep: QId = data.buyer.relation === "individual" ? "desc" : "web";
+  const profileStep: QId = "web";
   const [cur, setCur] = useState<QId>(() => {
     if (startAt === "deal") return "rev";
     if (startAt === "desc" && profileStep === "web") return "web";
@@ -209,9 +217,11 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const [fromReview, setFromReview] = useState(false);
   const [fromProfile] = useState(startAt === "desc" && setupDone);
   // Website step: the card shows more (short and long description) once Continue runs Auto Enrich.
-  const [webOpen, setWebOpen] = useState(startAt === "desc" && profileStep === "web");
+  // The descriptions show at once when the website came from sign-up (or there's none to read, for an Individual Investor).
+  const [webOpen, setWebOpen] = useState(() => (startAt === "desc") || data.buyer.relation === "individual" || (!!fromSignup?.includes("web") && isValidUrl(data.investor.website_url ?? "")) || !!(data.buyer.description?.trim() || data.investor.short_description?.trim()));
   const [reading, setReading] = useState(false);
   const [readFailed, setReadFailed] = useState(false);
+  const [readDone, setReadDone] = useState(false);
   const [marks, setMarks] = useState<{ desc?: boolean; about?: boolean }>({});
   const readingRef = useRef(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -260,7 +270,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     name: a.name.trim().length >= 2 ? null : tr("Add your firm's name."),
     year: individual ? null : yearError(a.year),
     reg: individual ? null : regError(a.reg, a.country),
-    web: isValidUrl(a.web) ? null : tr("Enter a valid website address, e.g. www.yourfirm.com"),
+    web: isValidUrl(a.web) || (individual && !a.web.trim()) ? null : tr("Enter a valid website address, e.g. www.yourfirm.com"),
     aum: a.aum ? null : tr("Choose one to continue."),
     ticket: a.ticket ? null : tr("Choose one to continue."),
     rev: a.rev ? null : tr("Choose one, or click Skip."),
@@ -270,12 +280,12 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     desc: descErr || (leaks.length ? "leak" : null),
     about: buyerAboutError(a.about, data.investor.short_description) ? L("Keep it to 80 words.", "โปรดเขียนไม่เกิน 80 คำ") : null,
     team: teamHasName(a.people) ? null : L("Add at least one team member's full name.", "กรุณากรอกชื่อ-นามสกุลของสมาชิกในทีมอย่างน้อย 1 คน"),
-    photos: med.logo && med.photos > 0 ? null : tr("Both are needed to continue."),
+    photos: med.logo && med.photos > 0 ? null : med.logo ? L("To continue, add at least 1 photo.", "เพิ่มรูปภาพอย่างน้อย 1 รูปเพื่อดำเนินการต่อ") : tr("Both are needed to continue."),
   };  const qRef = useRef<HTMLDivElement>(null);
   useFocusNeeded(qRef, `${phase}:${cur}`);
 
   const fieldsOf: Record<QId, string[]> = {
-    role: ["role"], type: ["type"], name: ["country", "name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: individual ? ["web"] : ["web", "desc", "about"], aum: ["aum"], ticket: ["ticket"],
+    role: ["role"], type: ["type"], name: ["country", "name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: ["web", "desc", "about"], aum: ["aum"], ticket: ["ticket"],
     rev: ["rev"], deals: ["deals", "stages"], sectors: ["sectors"], photos: ["photos"], desc: ["desc"], team: ["team"], review: [],
   };
   const qValid = (id: QId) => fieldsOf[id].every((k) => !errors[k]);
@@ -327,10 +337,17 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       if (!before.desc.trim() || marks.desc) { patch.desc = singleLineDescription(shortFrom(bio)); server.description = patch.desc; m.desc = true; }
       if (!before.about.trim() || marks.about) { patch.about = capWords(bio, 80); server.short_description = patch.about; m.about = true; }
       if (Object.keys(patch).length) { setA((p) => ({ ...p, ...patch })); queue(server); }
-      setMarks(m);
+      setMarks(m); setReadDone(true);
+      requestAnimationFrame(() => document.getElementById("w-desc")?.focus());
     } catch { setReadFailed(true); }
     finally { readingRef.current = false; setReading(false); }
   }
+  // The website from sign-up is read as soon as the wizard opens; typed descriptions are never replaced.
+  const autoRead = useRef(false);
+  useEffect(() => {
+    if (autoRead.current || !webOpen || !isValidUrl(a.web) || a.desc.trim() || a.about.trim()) return;
+    autoRead.current = true; void runEnrich();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const markAnswered = (id: QId) => {
     if (id === "review" || answered.includes(id)) return answered;
@@ -369,6 +386,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const tryContinue = () => {
     if (cur === "review") { if (allValid) void flush().then(() => setPhase("enrich")); return; }
     if (cur === "web" && !individual && !webOpen) { if (isValidUrl(a.web)) void runEnrich(); return; }
+    // A website typed here (none at sign-up) is read at Continue, once, while both descriptions are empty.
+    if (cur === "web" && isValidUrl(a.web) && !readDone && !readFailed && !a.desc.trim() && !a.about.trim()) { void runEnrich(); return; }
     if (!qValid(cur)) { setForced(Object.fromEntries(fieldsOf[cur].map((k) => [k, true]))); return; }
     advance(cur);
   };
@@ -560,17 +579,18 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           <p className="flex items-start gap-2 text-[13px] font-medium text-[#B42318]"><Lock className="mt-0.5 h-[15px] w-[15px] flex-none" />{tr("Your firm's identity stays confidential until a seller approves your NDA.")}</p>
         </div>
       ) },
-    web: individual ? { req: true, t: tr("What is your firm's website?"), h: L("Auto-fill reads it to fill in your firm's description.", "ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์เพื่อกรอกคำอธิบายบริษัทของท่าน"), body: webRow(false) } : !webOpen
+    web: !webOpen
       ? { req: true, t: tr("What is your firm's website?"), h: L("Auto-fill reads it to fill in your firm's description.", "ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์เพื่อกรอกคำอธิบายบริษัทของท่าน"), body: webRow(false) }
       : { req: false,
-        t: reading ? L(`Reading ${webDomain}…`, `กำลังอ่าน ${webDomain}…`) : readFailed ? L("Describe your firm", "อธิบายบริษัทของท่าน") : L(`Check what we found on ${webDomain}`, `ตรวจสอบข้อมูลที่พบจาก ${webDomain}`),
-        h: reading ? L("Auto Enrich is reading your website. This takes a few seconds.", "Auto Enrich กำลังอ่านเว็บไซต์ของท่าน ใช้เวลาสักครู่") : readFailed ? L("Auto Enrich couldn't read your website. Fill these in yourself, or try Auto Enrich again.", "Auto Enrich อ่านเว็บไซต์ของท่านไม่ได้ กรุณากรอกเอง หรือลองใช้ Auto Enrich อีกครั้ง") : L("Auto Enrich read your website. Change anything that isn't right.", "Auto Enrich อ่านเว็บไซต์ของท่านแล้ว แก้ไขส่วนที่ไม่ถูกต้องได้"),
-        body: <div>{webRow(true)}<div className="seller-website-more">{reading ? (
-          <ul className="seller-reading" aria-live="polite">{[L("Short description", "คำอธิบายสั้น"), L("Long description", "คำอธิบายแบบยาว")].map((x) => <li key={x}><Loader2 className="motion-safe:animate-spin" size={18} />{x}</li>)}</ul>
+        t: individual ? L("Your website and what you invest in", "เว็บไซต์ของคุณและสิ่งที่คุณลงทุน") : L("Website and descriptions", "เว็บไซต์และคำอธิบาย"),
+        h: readFailed ? L("Auto Enrich couldn't read your website. Fill these in yourself, or try Auto Enrich again.", "Auto Enrich อ่านเว็บไซต์ของท่านไม่ได้ กรุณากรอกเอง หรือลองใช้ Auto Enrich อีกครั้ง") : L("Sellers read these on your profile.", "ผู้ขายจะอ่านข้อมูลเหล่านี้ในโปรไฟล์ของท่าน"),
+        body: <div>{readDone && !reading && webDomain && <FilledFrom domain={webDomain} L={L} />}{webRow(true)}<div className="seller-website-more"><SectionBand bleed="-mx-[18px] sm:-mx-10" />{reading ? (
+          <div className="grid min-h-[340px] place-items-center rounded-[12px] bg-muted/60 px-6"><Loading size="lg" message={L(`Reading ${webDomain}… We'll fill in your short and long description.`, `กำลังอ่าน ${webDomain}… เราจะกรอกคำอธิบายสั้นและคำอธิบายแบบยาวให้คุณ`)} /></div>
         ) : (
-          <div className="seller-description-fields">
+          <div className="grid gap-[14px]">
+            <SectionHeading>{individual ? L("Tell sellers about yourself", "บอกผู้ขายเกี่ยวกับตัวคุณ") : L("Tell sellers about your firm", "บอกผู้ขายเกี่ยวกับบริษัทของคุณ")}</SectionHeading>
             <div>
-              <div className="seller-field-label"><label htmlFor="w-desc">{L("Short description", "คำอธิบายสั้น")}{marks.desc && <AutoFilled />}</label><small className={descriptionWords(a.desc) > 25 ? "!text-[#DC2626]" : ""}>{descriptionWords(a.desc)} / 25 {L("words", "คำ")}</small></div>
+              <div className="seller-field-label"><label htmlFor="w-desc"><DashLabel main={L(...DESC_LABELS.short.main)} rest={L(...DESC_LABELS.short.rest)} />{marks.desc && <AutoFilled />}</label><small className={descriptionWords(a.desc) > 25 ? "!text-[#DC2626]" : ""}>{descriptionWords(a.desc)} / 25 {L("words", "คำ")}</small></div>
               <p className="mb-2 text-[13px] text-[#6B7280] dark:text-muted-foreground">{L("1–2 sentences. Sellers see it on your card before an NDA, so ", "1–2 ประโยค ผู้ขายจะเห็นข้อความนี้บนการ์ดของท่านก่อนลงนาม NDA ")}<b className="font-medium text-[#DC2626]">{L("leave out your firm's name, website and contact details.", "โปรดอย่าระบุชื่อบริษัท เว็บไซต์ และข้อมูลติดต่อ")}</b></p>
               <textarea id="w-desc" className={`seller-description !h-[96px] ${(touched.desc || forced.desc) && descErr ? errCls : ""}`} value={a.desc} placeholder={L("What kind of investor you are, what you invest in, and how.", "ท่านเป็นนักลงทุนประเภทใด ลงทุนในอะไร และลงทุนอย่างไร")}
                 onBlur={() => setTouched((t) => ({ ...t, desc: true }))}
@@ -580,7 +600,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
               {leaks.length > 0 && <p className="mt-2 rounded-[10px] border border-[#F3D9A6] bg-[#FFF4E0] px-3.5 py-2.5 text-[13px] text-[#8A5A06]">{tr("Your description mentions")} <b>{leaks.join(", ")}</b>{setupText(". Sellers read it before an NDA, so leave out names, websites and contact details.")}</p>}
             </div>
             <div>
-              <div className="seller-field-label"><label htmlFor="w-about">{L("Long description", "คำอธิบายแบบยาว")}{marks.about && <AutoFilled />}</label><small className={descriptionWords(a.about) > 80 ? "!text-[#DC2626]" : ""}>{descriptionWords(a.about)} / 80 {L("words", "คำ")}</small></div>
+              <div className="seller-field-label"><label htmlFor="w-about"><DashLabel main={L(...DESC_LABELS.long.main)} rest={L(...DESC_LABELS.long.rest)} />{marks.about && <AutoFilled />}</label><small className={descriptionWords(a.about) > 80 ? "!text-[#DC2626]" : ""}>{descriptionWords(a.about)} / 80 {L("words", "คำ")}</small></div>
               <p className="mb-2 text-[13px] text-[#6B7280] dark:text-muted-foreground">{L("Sellers see it after they approve your NDA.", "ผู้ขายจะเห็นหลังจากอนุมัติ NDA ของท่าน")}</p>
               <textarea id="w-about" className={`seller-description !h-[190px] ${errors.about ? errCls : ""}`} value={a.about} placeholder={L("Your firm, its funds, its team, what it buys and what it brings to a business.", "บริษัทของท่าน กองทุน ทีมงาน กิจการที่ต้องการซื้อ และสิ่งที่ท่านช่วยเสริมให้ธุรกิจได้")}
                 onChange={(e) => { setMarks((m) => ({ ...m, about: false })); set({ about: e.target.value }, { short_description: e.target.value }); }} />
@@ -612,9 +632,9 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         <ManyTypeQuestion picks={a.picks} agnostic={a.sectors.includes(SECTOR_AGNOSTIC)} words={buyerWords(L)} error={forced.sectors ? errors.sectors : null}
           onChange={(p, ag) => { const v = ag ? [SECTOR_AGNOSTIC] : picksToSectors(p); set({ sectors: v, picks: p }, { preferred_industries: v, sector_picks: ag ? null : p }); }} />
       ) },
-    photos: { req: true, t: tr("Add your logo and photos"), h: tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA."),
+    photos: { req: true, t: signupLogo ? L("Add photos of your firm", "เพิ่มรูปภาพของบริษัท") : tr("Add your logo and photos"), h: signupLogo ? L("Your logo from sign-up is already in place. Add at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA.", "โลโก้จากการสมัครใส่ไว้แล้ว เพิ่มรูปภาพอย่างน้อย 1 รูป (สูงสุด 3 รูป) ของสำนักงาน ทีมงาน หรือพอร์ตการลงทุนของท่าน ผู้ขายจะเห็นแบบนี้หลังจากอนุมัติ NDA ของท่าน") : tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA."),
       body: (
-        <LogoPhotosStep L={L} name={a.name || tr("Your firm")}
+        <LogoPhotosStep L={L} wideAdd name={a.name || tr("Your firm")}
           sectorLine={[typeLabel(agent ? a.acts[0] ?? "" : a.type), [a.city || a.addr.province, a.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
           initial={{ logoPath: data.investor.logo_path, logoUrl: data.investor.logo_signed_url, slots: data.investor.media.map((m) => ({ slot: m.slot, path: m.image_path, url: m.url })) }}
           getUrl={({ kind, ext }) => upUrl({ data: { kind, ext, investor_id: data.investor.id } })}
@@ -655,8 +675,17 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         onEdit={(id) => { setFromReview(true); setFull(id); if (id === "web" && !individual) { setWebOpen(true); setReadFailed(false); } goTo(id); }} /> },
   };
   const q = Q[step.id];
-  const continueLabel = cur === "review" ? "Continue to auto-fill" : fromProfile && cur === profileStep ? "Back to your profile" : fromReview ? "Back to review" : tr("Continue");
+  const continueLabel = cur === "review" ? tr("Finish setup") : fromProfile && cur === profileStep ? "Back to your profile" : fromReview ? "Back to review" : tr("Continue");
   const continueOk = cur === "review" ? allValid : cur === "web" && !individual && !webOpen ? isValidUrl(a.web) : !reading && qValid(cur);
+  // Continue off: name what's missing (choice questions keep their own messages).
+  const FIELD_LABEL: Record<string, [string, string]> = {
+    country: ["Country", "ประเทศ"], name: [individual ? "Full name" : "Firm name", individual ? "ชื่อ-นามสกุล" : "ชื่อบริษัท"], year: ["Year founded", "ปีที่ก่อตั้ง"], reg: ["Registration number", "เลขทะเบียนนิติบุคคล"],
+    "a-street": thai ? ["No. and street", "เลขที่และถนน"] : ["Street and number", "ถนนและเลขที่"], "a-district": ["City/District", "เขต/อำเภอ"], "a-province": ["Province", "จังหวัด"], "a-postal": ["Postal code", "รหัสไปรษณีย์"],
+    web: ["Website", "เว็บไซต์"], desc: ["Short description", "คำอธิบายสั้น"], about: ["Long description", "คำอธิบายแบบยาว"], team: ["Full name", "ชื่อ-นามสกุล"],
+  };
+  const blockedText = continueOk || reading || cur === "review" ? null
+    : cur === "photos" ? (med.logo ? continueBlockedLine([], L("en", "th") as "en" | "th", true) : null)
+    : continueBlockedLine(fieldsOf[cur].filter((k) => errors[k] && errors[k] !== "leak" && FIELD_LABEL[k]).map((k) => L(...FIELD_LABEL[k]!)), L("en", "th") as "en" | "th");
 
   // ---------------- layout ----------------
   const topBar = (
@@ -712,6 +741,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
                 <button type="button" className={`${btnP} flex-1 sm:flex-none`} disabled={!continueOk} onClick={tryContinue}>{setupText(continueLabel)}</button>
               </div>
             </div>
+            <ContinueBlockedLine text={blockedText} />
           </div>
           <p className="mt-[18px] text-center text-[14px] text-[#6B7280]">{individual ? tr("Your firm's name, website and exact figures stay private until a seller approves your NDA.") : tr("Your firm's name, website, logo, photos and exact figures stay private until a seller approves your NDA.")}</p>
         </div>
@@ -753,7 +783,7 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, mi
         [tr("Registration number"), a.reg, "name", thai ? "req" : "opt", errors.reg, "🔒 After NDA"] as Row,
       ] : []),
       ...(shown.has("sectors") ? [[tr("Industries"), a.sectors.includes(SECTOR_AGNOSTIC) ? "Sector agnostic" : a.sectors.join(", "), "sectors", "req", errors.sectors] as Row] : []),
-      individual ? [tr("Website"), a.web, "web", "opt", errors.web, "🔒 After NDA"] as Row
+      individual ? [L("Website and description", "เว็บไซต์และคำอธิบาย"), [a.web, a.desc.trim()].filter(Boolean).join(" · "), "web", "opt", errors.web || errors.about || (errors.desc ? "fix" : null)] as Row
         : [L("Firm website and description", "เว็บไซต์และคำอธิบายบริษัท"), [a.web, a.desc.trim()].filter(Boolean).join(" · "), "web", "req", errors.web || errors.about || (errors.desc ? "fix" : null)] as Row,
     ]],
     [tr("Fund & ticket"), [

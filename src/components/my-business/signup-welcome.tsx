@@ -39,6 +39,7 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
   const qc = useQueryClient();
   const { language } = useTranslation();
   const lang: "en" | "th" = language === "th" ? "th" : "en";
+  const navigate = useNavigate();
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const seenSent = useRef(false);
@@ -64,6 +65,14 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
     queryKey: ["seller-setup", sellerId], enabled: !!sellerId, queryFn: () => fetchSetup({ data: { id: sellerId! } }), retry: false,
   });
 
+  // Create business profile opens the wizard of the profile made at sign-up, never via the banner.
+  const openSignupWizard = () => {
+    const pid = mine?.profile_id;
+    if (!pid) return;
+    if (role === "seller") void navigate({ to: "/my-startups/setup/$id", params: { id: pid } });
+    else if (role === "buyer") void navigate({ to: "/buyer/company/$id/setup", params: { id: pid } });
+    else void navigate({ to: "/advisor/company/$id/setup", params: { id: pid } });
+  };
   if (!mine) return null;
   const c = mine.company;
   const draft: SellerDraft | null = setup ? { ...emptyDraft(), highlights:setup.highlights,highlightsTh:setup.highlightsTh, shortDescription:setup.shortDescription,longDescription:setup.longDescription,productTags:setup.productTags,marketTags:setup.marketTags,shortDescriptionTh:setup.shortDescriptionTh,longDescriptionTh:setup.longDescriptionTh,productTagsTh:setup.productTagsTh,marketTagsTh:setup.marketTagsTh,founders:setup.founders, role: setup.role, name: setup.name, reg: setup.reg, web: setup.web, year: setup.year, city: setup.city,
@@ -106,7 +115,7 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
           <p className="sr-mc">{R.mcA[lang].replace("{name}", mine.first_name || "")}<br />{R.wB[lang]}</p>
           <WelcomeDialog open={welcomeOpen} lang={lang} name={mine.first_name || ""}
             onClose={() => setWelcomeOpen(false)}
-            onCreate={() => { setWelcomeOpen(false); setTimeout(() => document.querySelector<HTMLElement>("[data-setup-start]")?.click(), 50); }} />
+            onCreate={() => { setWelcomeOpen(false); openSignupWizard(); }} />
         </div>
       )}
 

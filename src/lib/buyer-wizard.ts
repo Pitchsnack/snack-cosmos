@@ -25,23 +25,22 @@ export const ALL_STEPS: { id: QId; sec: string }[] = [
 /** Firm buyers answer the Description on the Website step; only an Individual Investor keeps the Description step. */
 export function stepsFor(rel: BuyerRelation | null) {
   // Question 2 (type) asks a Corporate Enterprise one type and a representative one or more; AUM is corporate only.
-  // Logo and photos: firm buyers only (never an Individual Investor).
-  return ALL_STEPS.filter((s) => (s.id === "type" ? rel !== "individual" : s.id === "aum" ? rel === "corporate" || rel == null : s.id === "photos" ? rel !== "individual" : s.id === "desc" ? rel === "individual" : true));
+  // Logo and photos: firm buyers only (never an Individual Investor). Every buyer answers the descriptions on the Website page.
+  return ALL_STEPS.filter((s) => (s.id === "type" ? rel !== "individual" : s.id === "aum" ? rel === "corporate" || rel == null : s.id === "photos" ? rel !== "individual" : s.id === "desc" ? false : true));
 }
 
 /** Old furthest-step keys mapped onto the new order: Industries -> Deal type, Description -> Photos (firm buyers). */
 export function normalizeBuyerReached(rel: BuyerRelation | null, reached: string | null | undefined): string | null {
   if (!reached) return null;
   if (reached === "sectors") return "deals";
-  if (reached === "desc" && rel !== "individual") return "photos";
+  if (reached === "desc") return rel === "individual" ? "team" : "photos";
   return reached;
 }
 
 /** The Website step for a firm buyer also holds the short and long descriptions (both optional, both must pass their rules). */
 export function buyerWebValid(web: string, desc: string, about: string, name: string, firm: boolean): boolean {
   // Individual Investors may leave the website blank; a typed one must still be valid.
-  if (!firm) return !web.trim() || isValidUrl(web);
-  if (!isValidUrl(web)) return false;
+  if (firm ? !isValidUrl(web) : !!web.trim() && !isValidUrl(web)) return false;
   return !(desc.trim() && descriptionError(desc)) && !descriptionLeaks(desc, name, web).length && !buyerAboutError(about, null);
 }
 
@@ -57,7 +56,7 @@ export function wizardProgress(rel: BuyerRelation | null, answered: string[] | u
 }
 
 /** Values the skip rules look at. */
-export type BuyerSkipVals = { role: BuyerRelation | null; type: string; web: string; year: string; name: string; actsFor?: string[]; sectors?: string[] };
+export type BuyerSkipVals = { role: BuyerRelation | null; type: string; web: string; year: string; name: string; actsFor?: string[]; sectors?: string[]; nameDone?: boolean };
 
 /**
  * Questions sign-up fully answered (skipped by Continue, Back and the counts).
@@ -69,9 +68,9 @@ export function buyerSkips(fromSignup: string[] | undefined, v: BuyerSkipVals): 
   const s = new Set<QId>();
   if (f.has("role") && v.role) s.add("role");
   if (f.has("type") && (v.role === "agent" ? (v.actsFor ?? []).length > 0 : !!v.type && v.type !== "Individual Investor")) s.add("type");
-  // A firm buyer always sees Website: it holds the two descriptions.
-  if (f.has("web") && v.web.trim() && v.role === "individual") s.add("web");
+  // Website always shows: it holds the two descriptions.
   if (f.has("sectors") && (v.sectors ?? []).length > 0) s.add("sectors");
+  if (f.has("address") && v.nameDone) s.add("name");
   return s;
 }
 
@@ -105,7 +104,6 @@ export function buyerProgressFor(rel: BuyerRelation | null, iv: {
   wizard?: { answered?: string[]; from_signup?: string[] } | null;
 } | null | undefined, buyer?: { deal_types: string[]; description: string }, people?: { name: string }[]) {
   const type = iv?.investor_type ?? "", acts = iv?.acts_for_types ?? [];
-  const skip = buyerSkips(iv?.wizard?.from_signup, {role: rel, type, web: iv?.website_url ?? "", year: iv?.year_founded ? String(iv.year_founded) : "", name: iv?.investor_name ?? "", actsFor: acts, sectors: iv?.preferred_industries ?? []});
   const country = iv?.country ?? "Thailand", thai = country === "Thailand";
   const desc = buyer?.description ?? "";
   const valid: Record<QId, boolean> = {
@@ -119,6 +117,7 @@ export function buyerProgressFor(rel: BuyerRelation | null, iv: {
     team: teamHasName(people),
     review: false,
   };
+  const skip = buyerSkips(iv?.wizard?.from_signup, {role: rel, type, web: iv?.website_url ?? "", year: iv?.year_founded ? String(iv.year_founded) : "", name: iv?.investor_name ?? "", actsFor: acts, sectors: iv?.preferred_industries ?? [], nameDone: valid.name});
   const order = stepsFor(rel).map(s => s.id);
   const answered = order.filter(k => k !== "review" && setupAnswered(k, valid[k], ["rev", "desc"], order, normalizeBuyerReached(rel, iv?.setup_reached)));
   return buyerProgress(rel, answered, skip);

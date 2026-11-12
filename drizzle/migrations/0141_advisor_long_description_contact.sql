@@ -1,0 +1,1 @@
+ALTER TABLE public.advisor_firms ADD COLUMN IF NOT EXISTS long_description text, ADD COLUMN IF NOT EXISTS contact_name text, ADD COLUMN IF NOT EXISTS contact_position text;
