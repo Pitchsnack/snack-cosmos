@@ -7,9 +7,9 @@ export const S = {
   title: c("PitchSnack · สมัครใช้งาน", "PitchSnack · Sign up"),
   intro: c("สร้างบัญชีในไม่กี่นาที แล้วเริ่มตั้งค่าโปรไฟล์ของท่านได้ทันที", "Create your account in a few minutes, then set up your profile straight away."),
   points: {
-    none: [c("ชื่อของท่านเป็นความลับ จนกว่าท่านจะเลือกเปิดเผย", "Your name stays private until you choose to share it"), c("ผู้ขายและผู้ซื้อทุกรายตรวจสอบกับทะเบียน", "Every seller and buyer checked against the official register"), c("ไม่ถือเงิน และไม่เข้าข้างฝ่ายใด", "No funds held, no side taken")],
+    none: [c("ชื่อของท่านเป็นความลับ จนกว่าท่านจะเลือกเปิดเผย", "Your name stays private until you choose to share it"), c("ผู้ขายและผู้ซื้อทุกรายผ่านการยืนยันตัวตน", "Every seller and buyer is verified"), c("ไม่ถือเงิน และไม่เข้าข้างฝ่ายใด", "No funds held, no side taken")],
     seller: [c("ผู้ซื้อเห็นเพียงโปรไฟล์ไม่ระบุชื่อ จนกว่าท่านจะอนุมัติ NDA", "Buyers see an anonymous profile until you approve their NDA"), c("ไม่มีสัญญาผูกขาด ถอนประกาศได้ทุกเมื่อ", "No exclusivity. Withdraw at any time"), c("เริ่มต้นได้ฟรีด้วยแผน Entry", "Start free on the Entry plan")],
-    buyer: [c("ผู้ขายทุกรายตรวจสอบกับทะเบียน DBD", "Every seller checked against the DBD register"), c("เห็นงบการเงินที่ยื่นจริงก่อนการแนะนำ", "Filed accounts before an introduction"), c("ผู้ซื้อจ่ายเพียงค่าสมาชิก ไม่มีค่าธรรมเนียมเมื่อปิดดีล", "Buyers pay a subscription only, never a completion fee")],
+    buyer: [c("ผู้ขายทุกรายผ่านการยืนยันตัวตน", "Every seller is verified"), c("เห็นงบการเงินที่ยื่นจริงก่อนการแนะนำ", "Filed accounts before an introduction"), c("ผู้ซื้อจ่ายเพียงค่าสมาชิก ไม่มีค่าธรรมเนียมเมื่อปิดดีล", "Buyers pay a subscription only, never a completion fee")],
     advisor: [c("ตรา Verified advisor ที่ลูกค้าไว้วางใจ", "A Verified advisor badge clients trust"), c("แสดงค่าบริการในแบบของท่าน", "Show your fees your way"), c("ข้อมูลลูกค้าของท่านเป็นความลับ", "Your clients stay confidential")],
   },
   progress: c("ขั้นตอน {n} จาก {N}", "Step {n} of {N}"),
@@ -27,7 +27,7 @@ export const S = {
   pickMany: c("กรุณาเลือกอย่างน้อยหนึ่งข้อเพื่อไปต่อ", "Choose at least one to continue"),
   // step 1
   s1Title: c("สร้างบัญชี PitchSnack", "Create your PitchSnack account"),
-  s1Line: c("บอกเราก่อนว่าท่านมาที่ PitchSnack เพื่ออะไร", "Which best describes you?"),
+  s1Line: c("คุณเป็นผู้ใช้งานประเภทใดบน PitchSnack?", "First, tell us about yourself."),
   s1Legend: c("ท่านคือใคร", "Who are you?"),
   roles: {
     seller: [c("ฉันเป็นเจ้าของกิจการ", "I’m a business owner"), c("และต้องการขายบริษัทของฉัน", "and looking to sell my company.")],
@@ -36,8 +36,8 @@ export const S = {
   },
   // step 2
   s2: {
-    seller: [c("ท่านกำลังขายกิจการของใคร", "Whose business are you selling?"), c("เราใช้ข้อนี้เพื่อรู้ว่าใครเป็นผู้อนุมัติคำขอ NDA จากผู้ซื้อ", "We use it to know who approves buyers’ NDA requests.")],
-    buyer: [c("ข้อใดตรงกับท่านมากที่สุด", "Which best describes you?"), c("เราใช้ข้อนี้เพื่อยืนยันตัวตนของท่าน และเพื่อรู้ว่าใครดำเนินการแทนผู้ซื้อได้", "We use it to verify you and to know who can act for the buyer.")],
+    seller: [c("คุณกำลังขายธุรกิจของตัวเองหรือเป็นตัวแทนขายให้ผู้อื่น?", "Whose business are you selling?"), c("เราใช้ข้อนี้เพื่อรู้ว่าใครเป็นผู้อนุมัติคำขอ NDA จากผู้ซื้อ", "We use it to know who approves buyers’ NDA requests.")],
+    buyer: [c("คุณเป็นผู้ใช้งานประเภทใด?", "Which best describes you?"), c("เราใช้ข้อนี้เพื่อยืนยันตัวตนของท่าน และเพื่อรู้ว่าใครดำเนินการแทนผู้ซื้อได้", "We use it to verify you and to know who can act for the buyer.")],
     advisor: [c("ข้อใดตรงกับประเภทธุรกิจของท่านมากที่สุด", "Which type of firm best describes your business?"), c("ผู้ขายและผู้ซื้อจะเห็นข้อนี้บนการ์ดของท่าน ใต้ชื่อบริษัท", "Sellers and buyers see it on your card, under your firm’s name.")],
   },
   // buyer type step (word joiner keeps นักลงทุน whole)
@@ -47,8 +47,8 @@ export const S = {
   nameHintAgent: c("กรอกชื่อบริษัทของท่านเอง ไม่ใช่ชื่อลูกค้า", "Enter your own firm’s name, not a client’s."),
   privacyAgent: c("ผู้ขายจะเห็นชื่อและเว็บไซต์ของท่านหลังอนุมัติ NDA ของท่านแล้วเท่านั้น ก่อนหน้านั้นจะเห็นเพียงประเภทนักลงทุนที่ท่านดำเนินการแทน", "Sellers see your name and website only once they approve your NDA. Until then, they see the investor types you act for."),
   // step 3
-  s3Title: c("ข้อมูลบัญชีของท่าน", "Your account details"),
-  s3Line: c("ใช้อีเมลที่ทำงาน เราจะส่งรหัสยืนยันไปที่อีเมลนี้", "Use your work email. We’ll send a confirmation code to it."),
+  s3Title: c("ข้อมูลบัญชีของคุณ", "Your account details"),
+  s3Line: c("กรุณาใช้อีเมลที่ทำงานของคุณ เราจะส่งรหัสยืนยันไปยังอีเมลนี้", "Use your work email. We’ll send a confirmation code to it."),
   chipFor: c("บัญชีสำหรับ:", "Account for:"),
   chipRole: { seller: c("ขายกิจการ", "Selling a business"), buyer: c("ซื้อกิจการ", "Buying a business"), advisor: c("ที่ปรึกษา / พาร์ทเนอร์", "Adviser / partner") },
   change: c("เปลี่ยน", "Change"),
@@ -67,7 +67,7 @@ export const S = {
   taken: c("อีเมลนี้มีบัญชีอยู่แล้ว", "This email already has an account."),
   other: c("ไม่สามารถดำเนินการได้ในขณะนี้ กรุณาลองอีกครั้ง", "Something went wrong. Please try again."),
   // step 4
-  s4Title: c("ยืนยันอีเมลของท่าน", "Confirm your email"),
+  s4Title: c("ยืนยันอีเมลของคุณ", "Confirm your email"),
   s4A: c("เราส่งรหัส 6 หลักไปที่ ", "We sent a 6-digit code to "), s4B: c(" กรอกรหัสเพื่อยืนยันว่าเป็นอีเมลของท่าน", ". Enter it to confirm the address is yours."),
   codeLegend: c("รหัสยืนยัน 6 หลัก", "6-digit confirmation code"),
   confirm: c("ยืนยัน", "Confirm"), confirming: c("กำลังยืนยัน…", "Confirming…"),
@@ -84,7 +84,7 @@ export const S = {
   cont: c("ต่อไป", "Continue"), saving: c("กำลังบันทึก…", "Saving…"),
   stepSec: { seller: c("กลุ่มอุตสาหกรรม", "Sector"), buyer: c("อุตสาหกรรม", "Industries"), advisor: c("กลุ่มอุตสาหกรรม", "Sectors") },
   s7: {
-    seller: [c("ธุรกิจของท่านทำอะไร", "What does your business do?"), c("เลือกข้อที่ใกล้เคียงที่สุด เราจะจัดธุรกิจของท่านไว้ในกลุ่มอุตสาหกรรมที่ถูกต้องสำหรับผู้ซื้อ", "Pick the closest match. We’ll put you in the right sector for buyers.")],
+    seller: [c("ธุรกิจของคุณอยู่ในอุตสาหกรรมใด?", "What type of business is it?"), c("เลือกข้อที่ใกล้เคียงที่สุด เราจะจัดธุรกิจของท่านไว้ในกลุ่มอุตสาหกรรมที่ถูกต้องสำหรับผู้ซื้อ", "Pick the closest match. We’ll put you in the right sector for buyers.")],
     buyer: [c("ท่านลงทุนในอุตสาหกรรมใดบ้าง", "Which industries do you invest in?"), c("เลือกประเภทธุรกิจได้สูงสุด 5 ประเภท หรือเลือก “ไม่จำกัดอุตสาหกรรม” หากท่านพิจารณาทุกอุตสาหกรรม", "Pick up to 5 types of business, or Sector agnostic if you look at every industry.")],
     advisor: [c("ท่านเชี่ยวชาญกลุ่มอุตสาหกรรมใด", "Which sectors do you know best?"), c("เลือกประเภทธุรกิจได้สูงสุด 5 ประเภท หรือเลือก “ไม่จำกัดอุตสาหกรรม” หากท่านทำงานในทุกอุตสาหกรรม ผู้ขายและผู้ซื้อจะเห็นข้อมูลนี้บนการ์ดของท่าน", "Pick up to 5 types of business, or Sector agnostic if you work across every industry. Sellers and buyers see them on your card.")],
   },

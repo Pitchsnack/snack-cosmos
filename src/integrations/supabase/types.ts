@@ -631,6 +631,7 @@ export type Database = {
           published_headline_th: string | null
           published_listing_name: string | null
           ref_no: string
+          reg_locked_at: string | null
           registration_no: string | null
           review_checklist: string[]
           review_draft: Json | null
@@ -711,6 +712,7 @@ export type Database = {
           published_headline_th?: string | null
           published_listing_name?: string | null
           ref_no?: string
+          reg_locked_at?: string | null
           registration_no?: string | null
           review_checklist?: string[]
           review_draft?: Json | null
@@ -791,6 +793,7 @@ export type Database = {
           published_headline_th?: string | null
           published_listing_name?: string | null
           ref_no?: string
+          reg_locked_at?: string | null
           registration_no?: string | null
           review_checklist?: string[]
           review_draft?: Json | null
@@ -2226,7 +2229,9 @@ export type Database = {
           name: string
           phone: string | null
           reference: string
+          reg_tried: string[] | null
           role: string
+          setup_reason: string | null
           status: string
           topic: string
           user_id: string | null
@@ -2243,7 +2248,9 @@ export type Database = {
           name: string
           phone?: string | null
           reference: string
+          reg_tried?: string[] | null
           role: string
+          setup_reason?: string | null
           status?: string
           topic: string
           user_id?: string | null
@@ -2260,7 +2267,9 @@ export type Database = {
           name?: string
           phone?: string | null
           reference?: string
+          reg_tried?: string[] | null
           role?: string
+          setup_reason?: string | null
           status?: string
           topic?: string
           user_id?: string | null
@@ -4486,6 +4495,7 @@ export type Database = {
           preferred_stages: string[] | null
           prepared_at: string | null
           prepared_by: string | null
+          reg_locked_at: string | null
           registration_no: string | null
           revenue_max_m: number | null
           revenue_min_band: string | null
@@ -4553,6 +4563,7 @@ export type Database = {
           preferred_stages?: string[] | null
           prepared_at?: string | null
           prepared_by?: string | null
+          reg_locked_at?: string | null
           registration_no?: string | null
           revenue_max_m?: number | null
           revenue_min_band?: string | null
@@ -4620,6 +4631,7 @@ export type Database = {
           preferred_stages?: string[] | null
           prepared_at?: string | null
           prepared_by?: string | null
+          reg_locked_at?: string | null
           registration_no?: string | null
           revenue_max_m?: number | null
           revenue_min_band?: string | null
@@ -6378,8 +6390,15 @@ export type Database = {
           investor_types: string[]
           last_name: string | null
           news_opt_in: boolean
+          pending: Json | null
           profile_id: string | null
           provider: string | null
+          reg_changes: number
+          reg_check: Json | null
+          reg_no: string | null
+          reg_reason: string | null
+          reg_tried: string[]
+          registered_at: string | null
           role: string
           terms_accepted_at: string | null
           updated_at: string
@@ -6396,8 +6415,15 @@ export type Database = {
           investor_types?: string[]
           last_name?: string | null
           news_opt_in?: boolean
+          pending?: Json | null
           profile_id?: string | null
           provider?: string | null
+          reg_changes?: number
+          reg_check?: Json | null
+          reg_no?: string | null
+          reg_reason?: string | null
+          reg_tried?: string[]
+          registered_at?: string | null
           role: string
           terms_accepted_at?: string | null
           updated_at?: string
@@ -6414,13 +6440,53 @@ export type Database = {
           investor_types?: string[]
           last_name?: string | null
           news_opt_in?: boolean
+          pending?: Json | null
           profile_id?: string | null
           provider?: string | null
+          reg_changes?: number
+          reg_check?: Json | null
+          reg_no?: string | null
+          reg_reason?: string | null
+          reg_tried?: string[]
+          registered_at?: string | null
           role?: string
           terms_accepted_at?: string | null
           updated_at?: string
           user_id?: string
           welcome_seen_at?: string | null
+        }
+        Relationships: []
+      }
+      signup_reg_checks: {
+        Row: {
+          created_at: string
+          device_hash: string | null
+          email: string
+          id: string
+          ip_hash: string | null
+          reg_no: string
+          result: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_hash?: string | null
+          email: string
+          id?: string
+          ip_hash?: string | null
+          reg_no: string
+          result: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_hash?: string | null
+          email?: string
+          id?: string
+          ip_hash?: string | null
+          reg_no?: string
+          result?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -6963,6 +7029,7 @@ export type Database = {
           prepared_by: string | null
           product_tags: string[]
           product_tags_th: string[] | null
+          reg_locked_at: string | null
           region: string | null
           registered_capital: string | null
           registered_date: string | null
@@ -7032,6 +7099,7 @@ export type Database = {
           prepared_by?: string | null
           product_tags?: string[]
           product_tags_th?: string[] | null
+          reg_locked_at?: string | null
           region?: string | null
           registered_capital?: string | null
           registered_date?: string | null
@@ -7101,6 +7169,7 @@ export type Database = {
           prepared_by?: string | null
           product_tags?: string[]
           product_tags_th?: string[] | null
+          reg_locked_at?: string | null
           region?: string | null
           registered_capital?: string | null
           registered_date?: string | null
@@ -8329,6 +8398,10 @@ export type Database = {
           _source_note: string
         }
         Returns: Json
+      }
+      dbd_store_save_signup: {
+        Args: { _data: Json; _raw: Json; _reg: string; _user: string }
+        Returns: undefined
       }
       discovery_public_rows: { Args: never; Returns: Json }
       discovery_record_view: {
