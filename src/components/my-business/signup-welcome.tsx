@@ -1,5 +1,7 @@
 import { setupText } from "@/i18n/language";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { R } from "@/components/login/signup-reg-copy";
+import { WelcomeDialog } from "@/components/login/signup-reg-parts";
 import { useNavigate } from "@tanstack/react-router";
 import { StepBar, type StepItem } from "@/components/common/step-bar";
 import { useTranslation } from "@/i18n/language";
@@ -35,6 +37,11 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
   const ensureDraft = useServerFn(ensureMySellerDraft);
   const fetchSetup = useServerFn(getSellerSetup);
   const qc = useQueryClient();
+  const { language } = useTranslation();
+  const lang: "en" | "th" = language === "th" ? "th" : "en";
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const seenSent = useRef(false);
   const { data } = useQuery({ queryKey: ["signup-state"], queryFn: () => fetchState(), staleTime: 60_000 });
   const a = data?.answers;
   const mine = a && a.done_at && a.role === role ? a : null;
@@ -47,6 +54,12 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
     asked.current = true;
     ensureDraft().then((r) => { if (r.id) { void qc.invalidateQueries({ queryKey: ["signup-state"] }); void qc.invalidateQueries(); } }).catch(() => {});
   }, [mine, role, ensureDraft, qc]);
+  // The welcome lines and pop-up show on the first visit only: marked seen as soon as they show.
+  useEffect(() => {
+    if (!mine || mine.welcome_seen_at || seenSent.current) return;
+    seenSent.current = true; setShowWelcome(true); setWelcomeOpen(true);
+    void dismiss().catch(() => {});
+  }, [mine, dismiss]);
   const { data: setup } = useQuery({
     queryKey: ["seller-setup", sellerId], enabled: !!sellerId, queryFn: () => fetchSetup({ data: { id: sellerId! } }), retry: false,
   });
@@ -88,14 +101,12 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
 
   return (
     <div className="mb-4 space-y-4">
-      {!mine.welcome_seen_at && (
-        <div className="flex items-center gap-2 rounded-xl bg-[#ECFDF3] py-[9px] pl-3.5 pr-2 text-sm font-semibold text-[#15803D] dark:bg-[#183326] dark:text-[#6FD08C]">
-          <Check className="h-[17px] w-[17px]" />
-          <span className="flex-1">{setupText("Welcome,")} {mine.first_name || "there"}{setupText(". Start your setup below, or look around first.")}</span>
-          <button aria-label={setupText("Close")} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-black/5"
-            onClick={async () => { qc.setQueryData(["signup-state"], { ...data, answers: { ...mine, welcome_seen_at: new Date().toISOString() } }); await dismiss(); }}>
-            <X className="h-4 w-4" />
-          </button>
+      {showWelcome && (
+        <div className="sr">
+          <p className="sr-mc">{R.mcA[lang].replace("{name}", mine.first_name || "")}<br />{R.wB[lang]}</p>
+          <WelcomeDialog open={welcomeOpen} lang={lang} name={mine.first_name || ""}
+            onClose={() => setWelcomeOpen(false)}
+            onCreate={() => { setWelcomeOpen(false); setTimeout(() => document.querySelector<HTMLElement>("[data-setup-start]")?.click(), 50); }} />
         </div>
       )}
 
@@ -185,8 +196,8 @@ export function SellerSetupBanner({ setup }: { setup: Awaited<ReturnType<typeof 
         </p>
       </div>
       <div className="flex flex-col items-end gap-1.5 max-[599px]:order-last max-[599px]:w-full md:col-start-3 md:row-start-1">
-        <button type="button" data-tour-btn onClick={() => open(next)} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3E56] px-4 text-sm font-semibold text-white hover:opacity-90 max-[599px]:w-full">
-          {setupText(sellerDone ? "Continue setup" : "Start setup")} <ArrowRight className="h-4 w-4" />
+        <button type="button" data-tour-btn data-setup-start onClick={() => open(next)} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3E56] px-4 text-sm font-semibold text-white hover:opacity-90 max-[599px]:w-full">
+          {setupText(sellerDone ? "Continue setup" : "Create business profile")} <ArrowRight className="h-4 w-4" />
         </button>
       </div>
       {/* The step bar runs from the text's left edge to the button's right edge. */}

@@ -129,3 +129,5 @@
 - [x] Removed Expand all / Collapse all from All deals, Deal watchlist and History; Sort unchanged.
 - [x] All deals / Deal watchlist open with only the first card open; per-card toggles stay independent; deep-linked deal still opens.
 - [x] Verified live (buyer view, 8 cards): no link EN/TH, first card open on load and after reload, independent toggles; 52 pipeline tests pass, build OK.
+
+- [x] Company-first sign-up with registration check (Nov 12 brief)

@@ -199,6 +199,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const steps = stepsAll.filter((s) => !skipSet.has(s.id) || s.id === full || s.id === cur);
   const hiddenF = full === "name" ? new Set<string>() : buyerHiddenFields(fromSignup, { role: a.role, type: a.type, web: a.web, year: a.year, name: a.name });
   const nameShort = !!fromSignup?.includes("name") && full !== "name";
+  // Confirmed at sign-up: only PitchSnack can change it.
+  const regLocked = !!fromSignup?.includes("reg");
   const nextAfter = (x: A, from: QId): QId => {
     const all = stepsFor(x.role); const sk = skipOf(x);
     const i = all.findIndex((s) => s.id === from);
@@ -540,8 +542,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
               <label className={lbl} htmlFor="w-reg">{thai ? <>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<Req /></> : <>{tr("Company registration number")}<Opt /></>}</label>
               <input id="w-reg" aria-required={thai} {...(errors.reg ? { "data-need": "1" } : {})} className={`${inp} ${errors.reg ? "need-fill" : ""} ${show("reg") ? errCls : ""}`} value={a.reg} inputMode={thai ? "numeric" : undefined}
                 maxLength={thai ? 13 : 50} placeholder={thai ? setupText("13 digits") : ""}
-                onBlur={() => setTouched((t) => ({ ...t, reg: true }))}
-                onChange={(e) => { const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value; set({ reg: v }, { registration_no: v }); }} />
+                onBlur={() => setTouched((t) => ({ ...t, reg: true }))} readOnly={regLocked} aria-readonly={regLocked || undefined} style={regLocked ? { background: "#F3F4F6" } : undefined}
+                onChange={(e) => { if (regLocked) return; const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value; set({ reg: v }, { registration_no: v }); }} />
               <Err m={show("reg")} />
               <p className="mt-2.5 flex items-start gap-2 text-[13px] text-[#434A5C] dark:text-muted-foreground">
                 <ShieldCheck className="mt-0.5 h-[15px] w-[15px] flex-none text-[#15803D]" />

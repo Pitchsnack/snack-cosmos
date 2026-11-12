@@ -343,6 +343,7 @@ export const TH_COMPANY_SETUP: Record<string, string> = {
   "Start setup": "เริ่มตั้งค่า",
   "Continue setup": "ตั้งค่าต่อ",
   "Start setup →": "เริ่มตั้งค่า →",
+  "Create business profile": "สร้างโปรไฟล์ธุรกิจ",
   "Continue setup →": "ตั้งค่าต่อ →",
   "Set up your business": "ตั้งค่าธุรกิจของท่าน",
   "Finish setup to publish": "ตั้งค่าให้เสร็จเพื่อเผยแพร่",

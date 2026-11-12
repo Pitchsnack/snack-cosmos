@@ -591,7 +591,7 @@ export function SetupBanner({ n, N, onOpen }: { n: number; N: number; onOpen: ()
     <div data-tour-banner data-tour-n={N} data-tour-m={3} className="mb-4 flex flex-col gap-3 rounded-[14px] border border-[#CFD2FB] bg-[#EEF0FF] px-[18px] py-4 min-[860px]:flex-row min-[860px]:items-center dark:border-[#2E3570] dark:bg-[#1B2140]">
       <div className="hidden h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-card text-[#4338CA] min-[860px]:grid"><Flag className="h-5 w-5" /></div>
       <div className="min-w-0 flex-1">
-        <div className="text-[14.5px] font-bold">{setupText(n === 0 ? "Set up your investor profile" : "Finish setting up your investor profile")}</div>
+        <div className="text-[14.5px] font-bold">{setupText(n === 0 ? "Set up your business profile" : "Finish setting up your investor profile")}</div>
         <p className="mt-0.5 text-[13px] text-muted-foreground">
           {setupText(all ? `All ${N} questions are answered. Check your profile and save it, then publish it to Browse investors.`
             : `Sellers can't find your profile yet. Answer ${N} short questions. It takes about 3 minutes and saves as you go.`)}
@@ -601,7 +601,7 @@ export function SetupBanner({ n, N, onOpen }: { n: number; N: number; onOpen: ()
           <div className="h-1 w-32 overflow-hidden rounded-full bg-card"><div className="h-full bg-[#1E2A4A] dark:bg-[#818CF8]" style={{ width: `${(n / N) * 100}%` }} /></div>
         </div>
       </div>
-      <Button size="sm" data-tour-btn className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={onOpen}>{setupText(n === 0 ? "Start setup →" : "Continue setup →")}</Button>
+      <Button size="sm" data-tour-btn data-setup-start className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={onOpen}>{setupText(n === 0 ? "Create business profile" : "Continue setup →")}</Button>
     </div>
   );
 }

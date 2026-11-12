@@ -246,8 +246,8 @@ export function SellerWizard({
           <div><label className={fieldLbl}>{tr("Company name")}</label>
             <input className={`${inp} ${needCls(!d.name.trim())}`} data-need={!d.name.trim() ? "1" : undefined} aria-required value={d.name} maxLength={255} autoFocus onChange={(e) => set({ name: e.target.value })} placeholder={setupText("e.g. Siam Foods Co., Ltd.")} /></div>
           <div><label className={fieldLbl}>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}</label>
-            <input className={`${inp} ${needCls(!/^\d{13}$/.test(d.reg))}`} data-need={!/^\d{13}$/.test(d.reg) ? "1" : undefined} aria-required inputMode="numeric" value={d.reg} maxLength={13}
-              onChange={(e) => set({ reg: e.target.value.replace(/\D/g, "").slice(0, 13) })} placeholder={setupText("13 digits")} />
+            <input className={`${inp} ${needCls(!/^\d{13}$/.test(d.reg))}`} data-need={!/^\d{13}$/.test(d.reg) ? "1" : undefined} aria-required inputMode="numeric" value={d.reg} maxLength={13} readOnly={fromSignup.includes("reg")} style={fromSignup.includes("reg") ? { background: "#F3F4F6" } : undefined}
+              onChange={(e) => { if (fromSignup.includes("reg")) return; set({ reg: e.target.value.replace(/\D/g, "").slice(0, 13) }); }} placeholder={setupText("13 digits")} />
             <p className="mt-1.5 text-[13px] text-muted-foreground">{setupText("Used to verify your company.")}{d.reg && d.reg.length !== 13 ? L(` ${d.reg.length}/13 digits.`, ` ${d.reg.length}/13 หลัก`) : ""}</p></div>
           <div className="pt-2">
             <AddressBox a={d.addr} thai city={d.addr.district} onChange={setAddr} need stars={false}

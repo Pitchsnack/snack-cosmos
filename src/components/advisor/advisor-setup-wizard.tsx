@@ -128,7 +128,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const isAnswered = useCallback((id: string) => questionAnswered(id, qValid(id as WizardQ), ["deal", "logo"], STEPS, reached), [a, reached]); // eslint-disable-line react-hooks/exhaustive-deps
   const requiredOk = WIZARD_QS.filter((q) => q !== "deal" && q !== "logo").every((q) => qValid(q));
 
-  const skipOf = (x: A) => advisorSkips(fromSignup, { type: x.type, web: x.web, year: x.year, team: x.team, sectors: x.sectors, agnostic: x.agnostic });
+  const skipOf = (x: A) => advisorSkips(fromSignup, { type: x.type, web: x.web, year: x.year, team: x.team, sectors: x.sectors, agnostic: x.agnostic, logo: !!firm.logoPath });
   const skipSet = skipOf(a);
   const [cur, setCur] = useState<WizardQ>(() => {
     const sk = skipOf(fromFirm(firm));
@@ -137,6 +137,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const hiddenF = advisorHidden(fromSignup, { type: a.type, web: a.web, year: a.year, team: a.team });
   const hid = (k: string, q: WizardQ) => full !== q && hiddenF.has(k);
   const nameShort = !!fromSignup?.includes("name") && full !== "name";
+  // Confirmed at sign-up: only PitchSnack can change it.
+  const regLocked = !!fromSignup?.includes("reg");
   const shown = STEPS.filter((q) => q === "review" || !skipSet.has(q) || q === full || q === cur);
   // After the first render, resume at the first question that's unanswered or no longer valid.
   const resumed = useRef(false);
@@ -395,8 +397,8 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
             <label className={lbl} htmlFor="w-reg">{thai ? <>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<Req /></> : <>{tr("Company registration number")}<Opt /></>}</label>
             <input id="w-reg" data-f="reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? tr("13 digits") : undefined}
               className={cn(inp, errors.reg && "need-fill", show("reg") && errCls)} {...(errors.reg ? { "data-need": "1" } : {})}
-              value={a.reg} onBlur={blur("reg")}
-              onChange={(e) => { const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value.slice(0, 50); set({ reg: v }, { registration_no: v || null }); }} />
+              value={a.reg} onBlur={blur("reg")} readOnly={regLocked} aria-readonly={regLocked || undefined} style={regLocked ? { background: "#F3F4F6" } : undefined}
+              onChange={(e) => { if (regLocked) return; const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value.slice(0, 50); set({ reg: v }, { registration_no: v || null }); }} />
             <Err m={show("reg")} />
             <p className="mt-2 flex gap-1.5 text-[13px] text-[#B42318]">
               <ShieldCheck className="mt-[1px] h-[15px] w-[15px] shrink-0" />

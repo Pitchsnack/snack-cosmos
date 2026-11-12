@@ -238,7 +238,7 @@ export function setupProgress(answered: string[], skip?: Set<string>): { n: numb
   return { n: done.length, N: qs.length, first };
 }
 
-export type AdvisorSkipVals = { type: string; web: string; year: string; team: string; sectors?: string[]; agnostic?: boolean };
+export type AdvisorSkipVals = { type: string; web: string; year: string; team: string; sectors?: string[]; agnostic?: boolean; logo?: boolean };
 /** Questions sign-up fully answered (only while the value is still there); the name stays in its question. */
 export function advisorSkips(fromSignup: string[] | undefined, v: AdvisorSkipVals): Set<string> {
   const f = new Set(fromSignup ?? []);
@@ -246,6 +246,8 @@ export function advisorSkips(fromSignup: string[] | undefined, v: AdvisorSkipVal
   if (f.has("type") && v.type) s.add("type");
   if (f.has("web") && v.web.trim()) s.add("web");
   if (f.has("sectors") && (v.agnostic || (v.sectors ?? []).length > 0)) s.add("sectors");
+  // Sign-up's Logo step answered it; the wizard doesn't ask again while the logo is there.
+  if (f.has("logo") && v.logo) s.add("logo");
   return s;
 }
 /** Sign-up fields hidden inside questions that still show. */
