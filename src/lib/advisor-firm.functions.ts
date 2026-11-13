@@ -262,7 +262,7 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
     const row = {
       ...(data.media ? { media: data.media } : {}),
       name: data.name, firm_type: data.firmType, logo_path: data.logoPath, logo_source: data.logoPath ? data.logoSource ?? "upload" : null,
-      description: data.description, ...(data.descriptionTh !== undefined ? { description_th: data.descriptionTh || null } : {}), year_founded: data.yearFounded, city: data.city, country: data.country, services: data.services,
+      description: data.description, ...(data.descriptionTh !== undefined ? { description_th: data.descriptionTh || null } : {}), long_description: data.longDescription || null, contact_name: data.contactName || null, contact_position: data.contactPosition || null, year_founded: data.yearFounded, city: data.city, country: data.country, services: data.services,
       deal_size_band: data.dealBand, team_size: data.teamSize,
       languages: data.languages, sectors: data.sectors, ...(data.sectorAgnostic === undefined ? {} : { sector_agnostic: data.sectorAgnostic }), ...(data.legalName === undefined ? {} : { legal_name: data.legalName }), thai_name: data.thaiName,
       ...(data.englishName === undefined ? {} : { english_name: data.englishName }),

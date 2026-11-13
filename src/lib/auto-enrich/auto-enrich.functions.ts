@@ -152,12 +152,8 @@ async function fetchViaFirecrawl(url: string, maxChars: number): Promise<string 
   }
 }
 
-export const enrichStartupFromUrl = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
-    z.object({ websiteUrl: z.string().url() }).parse(input),
-  )
-  .handler(async ({ data, context }): Promise<EnrichResult> => {
+export async function readStartupWebsite(websiteUrl: string, context?: unknown): Promise<EnrichResult> {
+    const data = { websiteUrl };
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("Auto Enrich is not configured (missing API key).");
 
@@ -320,4 +316,9 @@ export const enrichStartupFromUrl = createServerFn({ method: "POST" })
       headquartersPhoneCc: hqPhoneCc,
     };
     return parsed;
-  });
+}
+
+export const enrichStartupFromUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ websiteUrl: z.string().url() }).parse(input))
+  .handler(async ({ data, context }): Promise<EnrichResult> => readStartupWebsite(data.websiteUrl, context));

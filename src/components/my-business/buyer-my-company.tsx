@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BuyerBrowseCard, BuyerCover, TypeIcon, shortCityTh, type CardPart } from "@/components/marketplace/buyer-browse-card";
 import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing, withdrawBuyerProfile } from "@/lib/buyer-profile.functions";
 import { registerBuyerCompany } from "@/lib/approvals-one-step.functions";
+import { startProfileEnrichment } from "@/lib/website-enrichment.functions";
 import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approval/review-company-dialog";
 import { SentForApprovalDialog } from "@/components/approval/sent-for-approval";
 import { WithdrawDialog } from "@/components/approval/withdraw-dialog";
@@ -157,6 +158,7 @@ type Layout = "profiles" | ViewMode;
 export function BuyerMyCompany() {
   useTranslation(); // re-render every text at once on language change
   const fetchMe = useServerFn(getMyBuyerProfile);
+  const startEnrichment = useServerFn(startProfileEnrichment);
   const { data, isLoading, isFetching, refetch, error } = useQuery({ queryKey: KEY, queryFn: () => fetchMe(), meta: { pageLoading: true } });
   const [view, setView] = useState<View>("public");
   const [edit, setEdit] = useState<Section | null>(null);
@@ -206,7 +208,11 @@ export function BuyerMyCompany() {
   const openProfile = () => setPanelOpen(true);
   const iv = inv.data?.investor;
   const prog = buyerProgressFor((inv.data?.buyer.relation ?? null) as BuyerRelation | null, iv, inv.data?.buyer, inv.data?.people);
-  const openWizard = () => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: {} });
+  const openWizard = () => {
+    if (!iv) return;
+    if (iv.website_url) void startEnrichment({ data: { role: "buyer", id: iv.id, website: iv.website_url } }).catch(() => {});
+    void navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: {} });
+  };
   const setup = iv && !iv.setup_done_at ? { label: prog.n === 0 ? "Start setup" : "Continue setup", onClick: openWizard } : null;
   const pill = <BuyerPill p={p} org={org} onItem={onItem} setup={setup} />;
   const profilePanel = (
@@ -487,11 +493,16 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const rel = (inv.data?.buyer.relation ?? null) as BuyerRelation | null;
   const prog = buyerProgressFor(rel, iv, inv.data?.buyer, inv.data?.people);
   const setupDone = !!iv?.setup_done_at;
-  const openWizard = (q?: string) => iv && navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
+  const openWizard = (q?: string) => {
+    if (!iv) return;
+    if (iv.website_url) void startEnrichment({ data: { role: "buyer", id: iv.id, website: iv.website_url } }).catch(() => {});
+    void navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
+  };
   const leaks = descriptionLeaks(p.description ?? "", org.name ?? "", org.website ?? "");
   const since = p.status === "live" && p.live_since ? `Live since ${fmtDateL(p.live_since, language)}` : p.status === "paused" ? `Paused since ${fmtDateL(p.updated_at ?? p.live_since ?? new Date().toISOString(), language)}` : "Not published yet";
   // One-step approval: Register your company opens the review pop-up.
   const registerFn = useServerFn(registerBuyerCompany);
+  const startEnrichment = useServerFn(startProfileEnrichment);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [sentOpen, setSentOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);

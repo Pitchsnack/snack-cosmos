@@ -97,10 +97,10 @@ export async function doFinish(uid: string, data: FinishInput) {
       if (error) throw new Error(error.message);
       if (rel) await sb.from("buyer_profiles").update({ buyer_relation: rel }).eq("user_id", uid);
       if (acctEmail) await sb.from("investors").update({ email: acctEmail }).eq("id", investorId).is("email", null);
-      // A firm's first Team member starts as the person who signed up; individuals are the profile themselves.
-      if (!individual && acctName) {
+      // The person who signed up is the first investment contact for firms and individuals.
+      if (acctName) {
         const { data: bp } = await sb.from("buyer_profiles").select("people").eq("user_id", uid).maybeSingle();
-        if (bp && !(Array.isArray(bp.people) && bp.people.length)) await sb.from("buyer_profiles").update({ people: [{ name: acctName, role: "", email: acctEmail ?? "", phone: "" }] }).eq("user_id", uid);
+        if (bp && !(Array.isArray(bp.people) && bp.people.length)) await sb.from("buyer_profiles").update({ people: [{ name: acctName, role: individual ? "Individual investor" : "", role_th: individual ? "นักลงทุนรายบุคคล" : "", email: acctEmail ?? "", phone: "" }] }).eq("user_id", uid);
       }
       profileId = investorId;
     } else if (a.role === "seller") {
@@ -108,11 +108,12 @@ export async function doFinish(uid: string, data: FinishInput) {
       profileId = await ensureSellerDraftFromSignup(sb, uid, { ...a, profile_id: null, company: { name: data.name, year: data.year, size: data.size, website: web } });
       if (profileId) {
         if (acctEmail) await sb.from("startups").update({ email: acctEmail }).eq("id", profileId).is("email", null);
-        // The person who signed up becomes the first founder (name only; position left to fill in).
-        if (acctName) {
+        // Owners are founders; an authorised agent is a contact, not necessarily a founder.
+        const founderPosition = a.first_answer === "owner" ? "Owner" : a.first_answer === "family_owner" ? "Family business owner" : null;
+        if (acctName && founderPosition) {
           const { data: st } = await sb.from("startups").select("tenant_id").eq("id", profileId).maybeSingle();
           const { count } = await sb.from("startup_founders").select("id", { count: "exact", head: true }).eq("startup_id", profileId);
-          if (st && !count) await sb.from("startup_founders").insert({ startup_id: profileId, tenant_id: st.tenant_id, full_name: acctName, display_order: 0 });
+          if (st && !count) await sb.from("startup_founders").insert({ startup_id: profileId, tenant_id: st.tenant_id, full_name: acctName, position: founderPosition, contact_email: acctEmail ?? null, contact_phone: null, display_order: 0 });
         }
       }
     }

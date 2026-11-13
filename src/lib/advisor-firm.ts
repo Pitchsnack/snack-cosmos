@@ -274,10 +274,10 @@ export type WizardState = {
 export function advisorSetupProgress(f: AdvisorFirm) {
   const valid: Record<WizardQ, boolean> = {
     type: !!f.firmType, name: !!f.country && !nameError(f.name) && !yearError(String(f.yearFounded ?? "")) && (f.country !== "Thailand" || /^\d{13}$/.test(f.registrationNo ?? "")) && addressDone(f),
-    web: !webError(f.website ?? "") && !descError(f.description ?? ""), services: !!f.services.length && f.services.every(s => !!feeWords(f.feeDetails[s] ?? newFee())),
+    web: !webError(f.website ?? "") && !descError(f.description ?? "") && !!f.longDescription?.trim(), services: !!f.services.length && f.services.every(s => !!feeWords(f.feeDetails[s] ?? newFee())),
     deal: !!f.dealBand, team: !teamSizeError(String(f.teamSize ?? "")) && !!f.languages.length,
     sectors: !!f.sectorAgnostic || (!!f.sectorPicks?.types.length && (!f.sectorPicks.types.includes("other") || !!f.sectorPicks.other.length)),
-    contact: !emailError(f.email ?? "") && !phoneError(f.phone ?? ""), logo: !!f.logoPath && !!f.media?.length,
+    contact: !!f.contactName?.trim() && !emailError(f.email ?? "") && !phoneError(f.phone ?? ""), logo: !!f.logoPath && !!f.media?.length,
     desc: !descError(f.description ?? ""), review: false,
   };
   const order = [...WIZARD_QS, "review"];

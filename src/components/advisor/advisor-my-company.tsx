@@ -38,6 +38,7 @@ import { StatusPill } from "@/components/marketplace/buyer-browse-card";
 import { FirmCard, FirmLogo, ServiceChip, Stars, VerifiedAdvisorChip } from "@/components/advisor/advisor-firm-card";
 import { myFirmViews } from "@/lib/advisor-enquiries.functions";
 import { createAdvisorDraft, getMapsEmbedKey, listMyAdvisorFirms, saveAdvisorServices, setAdvisorFirmStatus } from "@/lib/advisor-firm.functions";
+import { startProfileEnrichment } from "@/lib/website-enrichment.functions";
 import {
   ADVISOR_SERVICES, dealBandLabels, firmChecklist, fullAddress, mapQuery, mergeServiceOrder, reviewStats, advisorSetupProgress, advisorSkipsFor,
   type AdvisorFirm, type EditSection,
@@ -340,6 +341,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
   const qc = useQueryClient();
   const openEdit = useOpenEdit();
   const setStatusFn = useServerFn(setAdvisorFirmStatus);
+  const startEnrichment = useServerFn(startProfileEnrichment);
   const [svcOpen, setSvcOpen] = useState(false);
   const [addrOpen, setAddrOpen] = useState(false);
   const svcBtn = useRef<HTMLButtonElement>(null);
@@ -385,7 +387,10 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
   const edit = (s: EditSection) => openEdit(f.id, s);
   const navigate = useNavigate();
   const inSetup = !f.setupDoneAt;
-  const openSetup = () => navigate({ to: "/advisor/company/$id/setup", params: { id: f.id } });
+  const openSetup = () => {
+    if (f.website) void startEnrichment({ data: { role: "advisor", id: f.id, website: f.website } }).catch(() => {});
+    void navigate({ to: "/advisor/company/$id/setup", params: { id: f.id } });
+  };
 
   async function changeStatus(status: "live" | "paused") {
     setBusy(true);
@@ -730,8 +735,8 @@ function AboutSection({ f, onEdit }: { f: AdvisorFirm; onEdit?: () => void }) {
         <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#6B7280]">{tr("About")}</div>
         {onEdit && <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={onEdit}><Pencil className="h-3.5 w-3.5" />{setupText("Edit")}</Button>}
       </div>
-      {f.description
-        ? <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#374151] dark:text-foreground/80">{f.description}</p>
+      {f.longDescription || f.description
+        ? <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#374151] dark:text-foreground/80">{f.longDescription || f.description}</p>
         : <p className="text-[14px] text-[#9CA3AF]">{tr("No description yet.")}</p>}
     </section>
   );

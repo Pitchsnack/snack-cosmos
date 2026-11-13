@@ -15,6 +15,9 @@ import { buyerSkips, shownSteps } from "@/lib/buyer-wizard";
 import { WIZARD_QS, advisorSkips } from "@/lib/advisor-firm";
 import { SELLER_OPTS, BUYER_OPTS, BUYER_REL_OPTS, ADVISOR_OPTS } from "@/components/login/signup-copy";
 import { typeLabel } from "@/lib/investor-bands";
+import { startProfileEnrichment } from "@/lib/website-enrichment.functions";
+
+const cWebsite = (value: unknown) => typeof value === "string" ? value.trim() : "";
 
 const ADVISOR_SEC: Record<string, string> = {
   type: "About the firm", name: "About the firm", web: "About the firm", services: "Services and fees",
@@ -36,6 +39,7 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
   const dismiss = useServerFn(dismissWelcome);
   const ensureDraft = useServerFn(ensureMySellerDraft);
   const fetchSetup = useServerFn(getSellerSetup);
+  const startEnrichment = useServerFn(startProfileEnrichment);
   const qc = useQueryClient();
   const { language } = useTranslation();
   const lang: "en" | "th" = language === "th" ? "th" : "en";
@@ -69,6 +73,8 @@ export function SignupWelcome({ role, setupDone }: { role: "seller" | "buyer" | 
   const openSignupWizard = () => {
     const pid = mine?.profile_id;
     if (!pid) return;
+    const site = cWebsite(mine.company?.website);
+    if (site) void startEnrichment({ data: { role, id: pid, website: site } }).catch(() => {});
     if (role === "seller") void navigate({ to: "/my-startups/setup/$id", params: { id: pid } });
     else if (role === "buyer") void navigate({ to: "/buyer/company/$id/setup", params: { id: pid } });
     else void navigate({ to: "/advisor/company/$id/setup", params: { id: pid } });
@@ -195,6 +201,11 @@ export function SellerSetupBanner({ setup }: { setup: Awaited<ReturnType<typeof 
   const ri = stepIdx(setup.reached);
   const lineTo = Math.max(0, keys.filter((k) => stepIdx(k) <= ri).length - 1 + (setup.reached === "review" ? 1 : 0));
   const next = firstUnanswered(draft, setup.fromSignup);
+  const startEnrichment = useServerFn(startProfileEnrichment);
+  const start = () => {
+    if (setup.web.trim()) void startEnrichment({ data: { role: "seller", id: setup.id, website: setup.web } }).catch(() => {});
+    open(next);
+  };
   return (
     <div data-tour-banner data-tour-n={sellerN} data-tour-m={3} className="flex flex-col gap-4 rounded-[14px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4 dark:border-[#2B4763] dark:bg-[#16283A] md:grid md:grid-cols-[40px_minmax(0,1fr)_auto] md:gap-x-4 md:gap-y-0">
       <span className="hidden h-10 w-10 place-items-center rounded-lg bg-white md:col-start-1 md:row-start-1 md:grid"><Flag className="h-5 w-5 text-[#2563EB]" /></span>
@@ -205,7 +216,7 @@ export function SellerSetupBanner({ setup }: { setup: Awaited<ReturnType<typeof 
         </p>
       </div>
       <div className="flex flex-col items-end gap-1.5 max-[599px]:order-last max-[599px]:w-full md:col-start-3 md:row-start-1">
-        <button type="button" data-tour-btn data-setup-start onClick={() => open(next)} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3E56] px-4 text-sm font-semibold text-white hover:opacity-90 max-[599px]:w-full">
+        <button type="button" data-tour-btn data-setup-start onClick={start} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#1E3E56] px-4 text-sm font-semibold text-white hover:opacity-90 max-[599px]:w-full">
           {setupText(sellerDone ? "Continue setup" : "Create business profile")} <ArrowRight className="h-4 w-4" />
         </button>
       </div>

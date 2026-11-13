@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { normalizeSellerStep, laterKey, websiteFieldsAnswered, websiteDescriptionFieldsAnswered } from "./seller-wizard";
+import { normalizeSellerStep, laterKey, websiteFieldsAnswered, websiteDescriptionFieldsAnswered, founderContactComplete } from "./seller-wizard";
 import { strengthRows } from './seller-strengths';
 import { FounderStorySchema, composeFounderBio } from "./founder-story";
 import type { SellerFounder } from "./seller-wizard";
@@ -58,6 +58,7 @@ function addrPatch(a: AddrT) {
 
 const SetupFounder = z.object({
   id:z.string().uuid().optional(), full_name:z.string().max(255), position:z.string().max(255).nullable().optional(),
+  email:z.string().max(200).optional(), phone:z.string().max(60).optional(),
   linkedin_url:z.string().max(2048).nullable().optional(), bio:z.string().max(5000).nullable().optional(),
   bio_story:FounderStorySchema.nullable().optional(), bio_th:z.string().max(5000).nullable().optional(),
   bio_story_th:FounderStorySchema.nullable().optional(), photo_url:z.string().max(2048).nullable().optional(),
@@ -81,7 +82,7 @@ async function saveWizardFounders(sb:any, id:string, userId:string, founders:z.i
   for(const [i,f] of founders.entries()) {
     // Empty new cards are unsaved UI drafts; named founders use the existing private table.
     if(!f.full_name.trim()) continue;
-    const patch={startup_id:id,tenant_id:st.tenant_id,full_name:f.full_name.trim(),position:f.position ?? null,linkedin_url:f.linkedin_url ?? null,
+    const patch={startup_id:id,tenant_id:st.tenant_id,full_name:f.full_name.trim(),position:f.position ?? null,contact_email:f.email?.trim() || null,contact_phone:f.phone?.trim() || null,linkedin_url:f.linkedin_url ?? null,
       bio:f.bio_story?.mode === "lines" ? composeFounderBio(f.bio_story):f.bio ?? null,bio_story:f.bio_story ?? null,
       bio_th:f.bio_story_th?.mode === "lines" ? composeFounderBio(f.bio_story_th):f.bio_th ?? null,bio_story_th:f.bio_story_th ?? null,
       photo_url:f.photo_url ?? null,display_order:i};
@@ -142,7 +143,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       sb.from("startup_ownership").select("seller_relation").eq("startup_id", data.id).maybeSingle(),
       sb.from("hidden_profiles").select("deal_type, owner_stays, handover_months, asking_price, asking_price_thb, code_name, highlights, highlights_th").eq("startup_id", data.id).maybeSingle(),
       sb.from("startup_media").select("slot, image_url").eq("startup_id", data.id).order("slot"),
-      sb.from("startup_founders").select("id,full_name,position,linkedin_url,bio,bio_story,bio_th,bio_story_th,photo_url").eq("startup_id",data.id).order("display_order"),
+      sb.from("startup_founders").select("id,full_name,position,contact_email,contact_phone,linkedin_url,bio,bio_story,bio_th,bio_story_th,photo_url").eq("startup_id",data.id).order("display_order"),
     ]);
     if (!s) throw new Error("Business unavailable");
     const [{data:ownerRow},{data:ownerProfile}] = await Promise.all([sb.from("users").select("first_name,last_name").eq("id",s.created_by ?? context.userId).maybeSingle(),sb.from("user_profiles").select("title").eq("user_id",s.created_by ?? context.userId).maybeSingle()]);
@@ -164,7 +165,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       shortDescription:s.short_description ?? "",longDescription:s.long_description ?? "",productTags:s.product_tags ?? [],marketTags:s.market_tags ?? [],
       shortDescriptionTh:s.short_description_th ?? "",longDescriptionTh:s.long_description_th ?? "",productTagsTh:s.product_tags_th ?? [],marketTagsTh:s.market_tags_th ?? [],
       highlights:strengthRows(hp?.highlights),highlightsTh:strengthRows(hp?.highlights_th),
-      founders:founders ?? [],owner:{fullName:[ownerRow?.first_name,ownerRow?.last_name].filter(Boolean).join(" "),position:ownerProfile?.title ?? ""},
+      founders:(founders ?? []).map((f:any) => ({ ...f, email: f.contact_email ?? "", phone: f.contact_phone ?? "" })),owner:{fullName:[ownerRow?.first_name,ownerRow?.last_name].filter(Boolean).join(" "),position:ownerProfile?.title ?? ""},
       listing: {
         deal: DEALS.includes(hp?.deal_type) ? hp.deal_type : null, stays: hp?.owner_stays ?? null, months: hp?.handover_months ?? null,
         price: thbOf(hp), name: hp?.code_name && !/^project\b/i.test(hp.code_name) ? hp.code_name : "",
@@ -206,7 +207,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     if (data.addr) { Object.assign(patch, addrPatch(data.addr)); if (data.addr.province) patch.city = data.addr.province; }
     if (data.name.trim()) patch.startup_name = data.name.trim();
     if (data.done) patch.setup_done_at = new Date().toISOString();
-    if (data.done && (!websiteFieldsAnswered(data as never) || !data.founders?.some(f=>f.full_name.trim()))) throw new Error("Complete your business descriptions, product tags, three key business strengths and founder name before finishing.");
+    if (data.done && (!websiteFieldsAnswered(data as never) || !founderContactComplete(data.founders?.[0]))) throw new Error("Complete your business descriptions, product tags, three key business strengths and founder name, valid email address and phone number before finishing.");
     if (data.reached) {
       const { data: cur } = await sb.from("startups").select("setup_reached").eq("id", data.id).single();
       const key=laterKey(cur?.setup_reached,data.reached);

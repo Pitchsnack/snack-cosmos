@@ -59,7 +59,12 @@
 .seller-strength-mark.is-filled {border:0;background:var(--seller-strength-success-bg);color:var(--seller-strength-success-ink);}
 .seller-autofill-info {margin-top:22px;border:1px solid var(--seller-setup-info-line);border-radius:12px;background:var(--seller-setup-info-bg);padding:16px 18px;color:var(--foreground);font-size:14px;}
 .seller-website-left {margin-top:10px;text-align:right;font-size:13.5px;color:var(--muted-foreground);}
-.seller-founded-row {display:grid;grid-template-columns:2fr 3fr;gap:16px;}
+.seller-founded-row {display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:20px;}
+.seller-company-identity {display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:20px;align-items:start;}
+.seller-web-field {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;}
+.seller-web-field.is-initial {grid-template-columns:minmax(0,1fr) auto auto;}
+.seller-no-website-inline {min-height:50px;padding:0 16px;border:1px solid var(--border);border-radius:12px;color:var(--foreground);font-size:14px;font-weight:600;white-space:nowrap;}
+@media(min-width:768px) {.seller-setup .seller-wizard-card {padding:40px;} .seller-setup .seller-web-field .seller-enrich-button {min-width:174px;}}
 .seller-founded-input {display:flex;align-items:center;gap:10px;height:54px;padding:0 16px;border:1px solid var(--input);border-radius:12px;background:var(--card);color:var(--muted-foreground);}
 .seller-founded-input input,.seller-founded-input select {height:100%;width:100%;min-width:0;flex:1;border:0;outline:0;background:var(--card);color:var(--foreground);font-size:16px;}
 .seller-founded-input.has-error {border-color:var(--destructive);}
@@ -70,5 +75,5 @@
 .seller-setup .seller-action-primary:disabled {opacity:.5;cursor:not-allowed;}
 .seller-setup {background:var(--background);color:var(--foreground);}
 .seller-setup .seller-wizard-card {background:var(--card);border-color:var(--border);}
-@media(max-width:599px) { .seller-tag-section {padding:14px;} .seller-tag-entry {flex-basis:100%;} .seller-market-row {display:block;} .seller-market-row > b {display:block;margin-bottom:4px;padding:0;width:auto;} .seller-founded-row {grid-template-columns:1fr;} .seller-review-row > span {width:100px;} .seller-enrich-button {font-size:13px;padding:0 12px;} .seller-setup-actions {flex-wrap:wrap;} }
+@media(max-width:599px) { .seller-tag-section {padding:14px;} .seller-tag-entry {flex-basis:100%;} .seller-market-row {display:block;} .seller-market-row > b {display:block;margin-bottom:4px;padding:0;width:auto;} .seller-founded-row,.seller-company-identity,.seller-web-field.is-initial {grid-template-columns:1fr;} .seller-review-row > span {width:100px;} .seller-enrich-button {font-size:13px;padding:0 12px;} .seller-setup-actions {flex-wrap:wrap;} }
 @media(prefers-reduced-motion:reduce) {.seller-website-more {animation:none;}}

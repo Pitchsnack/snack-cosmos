@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { WebsiteCheckLink } from "@/components/startups/website-check-link";
 import { SellerWebsiteFields, websiteMissing, type WebsiteField, type ReadingState } from "./seller-website-fields";
 import { strengthCount } from '@/lib/seller-strengths';
-import { FounderEditor } from "./founder-editor";
+import { FounderEditor, PositionMultiSelect } from "./founder-editor";
 import { ContinueBlockedLine, continueBlockedLine } from "@/components/setup/continue-blocked";
 import { FilledFrom } from "@/components/setup/filled-from";
-import { autoEnrichAdapter } from "@/lib/auto-enrich/auto-enrich-adapter";
+import { useWebsiteEnrichment } from "@/components/setup/use-website-enrichment";
+import { ContactPersonFields } from "@/components/setup/contact-person-fields";
+import { SectionBand, SectionHeading } from "@/components/setup/section-band";
 import { founderRevenueLabel } from "@/lib/founder-story";
-import { toast } from "sonner";
 import { mergeWebsiteEnrich } from "@/lib/seller-website-enrich";
 import { SellerTypeQuestion } from "@/components/common/business-type-question";
 import type { SectorPick } from "@/lib/business-types";
@@ -87,7 +88,11 @@ export function SellerWizard({
 }) {
   const th = useTranslation().language === "th"; // re-render on language change
   const L = (en: string, t: string) => (th ? t : en);
-  const [d, setD] = useState<SellerDraft>(() => ({...initial, reached: normalizeSellerStep(initial.reached), founders: initial.founders?.length ? initial.founders : [{full_name:owner?.fullName ?? "", position:owner?.position ?? null}]}));
+  const [d, setD] = useState<SellerDraft>(() => ({...initial, reached: normalizeSellerStep(initial.reached), founders: initial.founders?.length ? initial.founders : [{
+    full_name: initial.role === "owner" || initial.role === "family_owner" ? owner?.fullName ?? "" : "",
+    position: initial.role === "owner" ? "Owner" : initial.role === "family_owner" ? "Family business owner" : null,
+    email: initial.role === "owner" || initial.role === "family_owner" ? initial.founders?.[0]?.email ?? "" : "",
+  }]}));
   /** Step 1's wording in the current language; the stored answer is always the key. */
   const roleLabel = () => { const r = SELLER_RELATIONS.find((x) => x.value === d.role); return r ? L(...r.label) : ""; };
   const [otherLic, setOtherLic] = useState("");
@@ -105,12 +110,12 @@ export function SellerWizard({
   const focusTitle = useRef(false);
   // The website from sign-up opens the full page at once (descriptions, tags, highlights).
   const [webExpanded, setWebExpanded] = useState(() => (fromSignup.includes("web") && isValidUrl(initial.web)) || !!(initial.shortDescription?.trim() || initial.longDescription?.trim() || initial.shortDescriptionTh?.trim()));
-  const [reading, setReading] = useState(false);
-  const [readingStates,setReadingStates] = useState<ReadingState[]>(['reading','waiting','waiting','waiting','waiting']);
-  const [readDomain, setReadDomain] = useState("");
-  const [readDone, setReadDone] = useState(false);
+  const enrichment = useWebsiteEnrichment("seller", media?.startupId ?? "", d.web, fromSignup.includes("web") && isValidUrl(d.web));
+  const reading = enrichment.state.status === "running" && isValidUrl(d.web);
+  const readDone = enrichment.state.status === "done";
+  const readDomain = enrichment.state.domain;
+  const readingStates: ReadingState[] = Array.from({ length: 5 }, () => readDone ? "found" : "reading");
   const [marks, setMarks] = useState<Partial<Record<WebsiteField, boolean>>>({});
-  const readingRef = useRef(false);
   const timer = useRef<number | null>(null);
   const savedTimer = useRef<number | null>(null);
   const firstRun = useRef(true);
@@ -142,7 +147,7 @@ export function SellerWizard({
   // The address's province answers "where is the company" (the business's City).
   const setAddr = (p: Partial<SellerAddr>) => setD((x) => { const addr = { ...x.addr, ...p }; return { ...x, addr, city: addr.province }; });
   const go = (n: number) => {
-    if (STEPS[n]?.id === "web") setWebExpanded(false);
+    if (STEPS[n]?.id === "web") setWebExpanded(isValidUrl(d.web) || !!(d.shortDescription?.trim() || d.longDescription?.trim()));
     set({ step: Math.max(0, Math.min(STEPS.length - 1, n)) });
   };
   /** Step after `from`: back to Review when opened from it, else the next question that shows. */
@@ -209,31 +214,22 @@ export function SellerWizard({
     <p className="mt-3 flex items-start gap-2 text-[13px] text-muted-foreground"><Lock className="mt-0.5 h-[15px] w-[15px] shrink-0" />{L("Buyers can't see your website until you approve their NDA.", "ผู้ซื้อจะไม่เห็นเว็บไซต์ของท่าน จนกว่าท่านจะอนุมัติ NDA ของผู้ซื้อ")}</p>
   );
   async function runEnrich() {
-    if (!isValidUrl(d.web) || readingRef.current) return;
-    readingRef.current = true; setReading(true); setWebExpanded(true); setReadDone(false);
-    setReadingStates(['reading','waiting','waiting','waiting','waiting']);
-    const url = normalizeUrl(d.web); const domain = new URL(url).hostname.replace(/^www\./, ""); setReadDomain(domain);
-    const before = d; const wasAuto = {...marks};
-    try {
-      const r = await autoEnrichAdapter.enrichStartup({websiteUrl:url});
-      const merged = mergeWebsiteEnrich(before,r as Record<string,unknown>,wasAuto,th);
-      const nextMarks=merged.marks; const patch={...merged.patch,web:url};
-      const keys: WebsiteField[]=['shortDescription','longDescription','productTags','marketTags','highlights'];
-      const states:ReadingState[]=keys.map(key=>nextMarks[key] ? 'found' : 'empty');
-      void states;
-      set(patch); setMarks(prev => ({...prev,...nextMarks})); setReadDone(true);
-      requestAnimationFrame(() => document.getElementById("sw-shortDescription")?.focus());
-      if (!Object.keys(nextMarks).length) toast.warning(L("Auto Enrich found nothing new. Fill in the remaining fields.", "Auto Enrich ไม่พบข้อมูลใหม่ กรุณากรอกช่องที่เหลือ"));
-    } catch(e) {toast.error(e instanceof Error ? e.message : L("Auto Enrich failed.","Auto Enrich อ่านเว็บไซต์ไม่ได้"));}
-    finally {readingRef.current = false; setReading(false);}
+    if (!isValidUrl(d.web) || reading) return;
+    setWebExpanded(true);
+    await enrichment.start(d.web, true);
   }
-  // Read the sign-up website once as soon as the Website page opens while its fields are still empty.
-  const autoRead = useRef(false);
+  const appliedRead = useRef<string | null>(null);
   useEffect(() => {
-    if (autoRead.current || cur.id !== "web" || !webExpanded || !isValidUrl(d.web) || readDone || reading) return;
-    if (d.shortDescription?.trim() || d.longDescription?.trim() || d.shortDescriptionTh?.trim() || d.longDescriptionTh?.trim()) return;
-    autoRead.current = true; void runEnrich();
-  }, [cur.id]); // eslint-disable-line react-hooks/exhaustive-deps
+    const state = enrichment.state;
+    if (state.status === "running") setWebExpanded(true);
+    if (state.status !== "done" || !state.websiteKey || appliedRead.current === state.websiteKey) return;
+    appliedRead.current = state.websiteKey;
+    const merged = mergeWebsiteEnrich(d, state.result ?? {}, marks, th);
+    if (Object.keys(merged.patch).length) set(merged.patch);
+    setMarks((prev) => ({ ...prev, ...merged.marks }));
+    setWebExpanded(true);
+    if (Object.keys(merged.marks).length) requestAnimationFrame(() => document.getElementById("sw-shortDescription")?.focus());
+  }, [enrichment.state.status, enrichment.state.websiteKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const editWebsiteField = (key: WebsiteField) => setMarks(p => ({...p,[key]:false}));
   const editRow = (n: number) => {setFull(n); focusTitle.current = true; go(n); if(STEPS[n]?.id === "web") setWebExpanded(true);};
   const allLic = [...WIZARD_LICENCES, ...d.licences.filter((l) => !WIZARD_LICENCES.some((w) => w.name === l.name))];
@@ -246,12 +242,14 @@ export function SellerWizard({
     nameBody: { t: "",
       body: (
         <div className="space-y-4">
+          <div className="seller-company-identity">
           <div><label className={fieldLbl}>{tr("Company name")}</label>
             <input className={`${inp} ${needCls(!d.name.trim())}`} data-need={!d.name.trim() ? "1" : undefined} aria-required value={d.name} maxLength={255} autoFocus onChange={(e) => set({ name: e.target.value })} placeholder={setupText("e.g. Siam Foods Co., Ltd.")} /></div>
           <div><label className={fieldLbl}>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}</label>
             <input className={`${inp} ${needCls(!/^\d{13}$/.test(d.reg))}`} data-need={!/^\d{13}$/.test(d.reg) ? "1" : undefined} aria-required inputMode="numeric" value={d.reg} maxLength={13} readOnly={fromSignup.includes("reg")} style={fromSignup.includes("reg") ? { background: "#F3F4F6" } : undefined}
               onChange={(e) => { if (fromSignup.includes("reg")) return; set({ reg: e.target.value.replace(/\D/g, "").slice(0, 13) }); }} placeholder={setupText("13 digits")} />
             <p className="mt-1.5 text-[13px] text-muted-foreground">{setupText("Used to verify your company.")}{d.reg && d.reg.length !== 13 ? L(` ${d.reg.length}/13 digits.`, ` ${d.reg.length}/13 หลัก`) : ""}</p></div>
+          </div>
           <div className="pt-2">
             <AddressBox a={d.addr} thai city={d.addr.district} onChange={setAddr} need stars={false}
               show={(k) => (touched[k] ? ({ street: !d.addr.street.trim() ? "Add the number and street." : null, district: !d.addr.district.trim() ? "Add the city or district." : null, province: !d.addr.province ? "Choose the province or state." : null, postal: !d.addr.postal ? "Add the postal code." : /^\d{5}$/.test(d.addr.postal) ? null : tr("The postal code has 5 digits."), unit: null } as Record<string, string | null>)[k] ?? null : null)}
@@ -265,14 +263,15 @@ export function SellerWizard({
       h: webExpanded ? d.web.trim() ? L("Buyers read these on your profile.", "ผู้ซื้อจะอ่านข้อมูลเหล่านี้ในโปรไฟล์ของท่าน") : L("You have no website, so auto-fill can't suggest these. Fill them in yourself.", "ท่านไม่มีเว็บไซต์ ระบบจึงแนะนำข้อมูลเหล่านี้ให้ไม่ได้ กรุณากรอกเอง") : L("Optional, but auto-fill needs it.", "ไม่บังคับ แต่การกรอกข้อมูลอัตโนมัติต้องใช้เว็บไซต์นี้"),
       body: <div>
         {readDone && !reading && readDomain && <FilledFrom domain={readDomain} L={L}/>}
+        {enrichment.state.status === "failed" && <p className="mb-4 text-sm text-destructive">{L("Auto Enrich couldn't read your website. Fill these in yourself, or try Auto Enrich again.", "Auto Enrich อ่านเว็บไซต์ของท่านไม่ได้ กรุณากรอกเอง หรือลอง Auto Enrich อีกครั้ง")}</p>}
         <label htmlFor="sw-web" className={fieldLbl}>{L("Company website","เว็บไซต์บริษัท")}</label>
-        <div className="seller-web-field flex gap-2">
+        <div className={`seller-web-field ${webExpanded ? "is-expanded" : "is-initial"}`}>
           <input id="sw-web" ref={webRef} className={inp} value={d.web} readOnly={reading} maxLength={2048} onChange={e => set({web:e.target.value})} onKeyDown={e => {if(e.key === "Enter" && isValidUrl(d.web)) {e.preventDefault(); void runEnrich();}}} placeholder="www.yourcompany.com"/>
-          {webExpanded ? <Button variant="unstyled" size="unstyled" className="seller-enrich-button" disabled={!isValidUrl(d.web) || reading} onClick={() => void runEnrich()}>{reading ? <Loader2 className="motion-safe:animate-spin" size={17}/> : <Sparkles size={17}/>} {reading ? L("Reading…","กำลังอ่าน…") : "Auto Enrich"}</Button> : <WebsiteCheckLink valid={isValidUrl(d.web)} url={normalizeUrl(d.web)} label={L("Check website","ตรวจสอบเว็บไซต์")} hint={L("Checks whether the website link you entered opens correctly.","ใช้เพื่อตรวจสอบว่าลิงก์เว็บไซต์ที่กรอกถูกต้องและเปิดใช้งานได้")}/>}
+          {webExpanded ? <Button variant="unstyled" size="unstyled" className="seller-enrich-button" disabled={!isValidUrl(d.web) || reading} onClick={() => void runEnrich()}>{reading ? <Loader2 className="motion-safe:animate-spin" size={17}/> : <Sparkles size={17}/>} {reading ? L("Reading…","กำลังอ่าน…") : "Auto Enrich"}</Button> : <><WebsiteCheckLink valid={isValidUrl(d.web)} url={normalizeUrl(d.web)} label={L("Check website","ตรวจสอบเว็บไซต์")} hint={L("Checks whether the website link you entered opens correctly.","ใช้เพื่อตรวจสอบว่าลิงก์เว็บไซต์ที่กรอกถูกต้องและเปิดใช้งานได้")}/><Button variant="unstyled" size="unstyled" className="seller-no-website-inline" onClick={() => {set({web:""}); setWebExpanded(true);}}>{L("No company website", "ไม่มีเว็บไซต์บริษัท")}</Button></>}
         </div>
         {webExpanded ? <>
           {!reading && !readDone && <p className="seller-field-hint">{L("Have a website after all? Type it and click Auto Enrich to fill these in.","มีเว็บไซต์ใช่ไหม? พิมพ์เว็บไซต์แล้วคลิก Auto Enrich เพื่อกรอกข้อมูลเหล่านี้ให้")}</p>}
-          <div className="seller-website-more"><SellerWebsiteFields d={d} set={set} marks={marks} edit={editWebsiteField} reading={reading} readingStates={readingStates} openSector={() => openStep("sector")}/></div>
+          <div className="seller-website-more"><SectionBand bleed="-mx-6 sm:-mx-9" /><SectionHeading>{L("Company description", "คำอธิบายบริษัท")}</SectionHeading><SellerWebsiteFields d={d} set={set} marks={marks} edit={editWebsiteField} reading={reading} readingStates={readingStates} openSector={() => openStep("sector")}/></div>
         </> : <div className="seller-autofill-info">
           <p className="flex items-center gap-2 font-bold"><Sparkles size={18}/>{L("Auto-fill reads your website","ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์ของท่าน")}</p>
           <ul className="mt-2.5 space-y-1.5">{[L("Suggests your company description and corporate information","แนะนำคำอธิบายบริษัทและข้อมูลบริษัทให้"),L("Takes a few seconds, and you can change anything later","ใช้เวลาไม่กี่วินาที และท่านแก้ไขได้ทุกอย่างภายหลัง")].map(x => <li key={x} className="flex gap-2"><CheckIcon size={15}/>{x}</li>)}</ul>{privacy}
@@ -328,8 +327,11 @@ export function SellerWizard({
     price: { t: L("What is your estimated asking price?", "ราคาที่ท่านต้องการโดยประมาณคือเท่าใด"), h: L("An estimate is fine. You can change it later.", "ประมาณการได้ ท่านเปลี่ยนได้ภายหลัง"),
       body: <PriceQ d={d} set={set} L={L} th={th} /> },
     founder: {t:L("Tell buyers about the founder","เล่าให้ผู้ซื้อรู้จักผู้ก่อตั้ง"),h:L("Buyers read this after you approve their NDA. Your name, the year founded and the sales are filled in from your answers: click a highlighted part to change it.","ผู้ซื้อจะอ่านส่วนนี้หลังจากท่านอนุมัติ NDA ชื่อของท่าน ปีที่ก่อตั้ง และยอดขาย กรอกไว้ให้จากคำตอบของท่าน คลิกส่วนที่ไฮไลต์เพื่อแก้ไข"),body:<>
-      <FounderEditor value={d.founders ?? []} onChange={founders => set({founders})} tenantId={media?.tenantId} startupId={media?.startupId} year={d.year} sales={founderRevenueLabel(d.rev ?? "",th ? "th":"en")} salesFor={lang => founderRevenueLabel(d.rev ?? "",lang)} requiredName keepOne/>
-      {!ok.founder && <p className="mt-2 text-[13px] text-destructive">{L("Add the founder's full name.","กรุณากรอกชื่อ-นามสกุลของผู้ก่อตั้ง")}</p>}
+      <FounderEditor value={d.founders ?? []} onChange={founders => set({founders})} tenantId={media?.tenantId} startupId={media?.startupId} year={d.year} sales={founderRevenueLabel(d.rev ?? "",th ? "th":"en")} salesFor={lang => founderRevenueLabel(d.rev ?? "",lang)} requiredName keepOne
+        contactFields={(f, i) => <ContactPersonFields idPrefix={`seller-founder-${i}`} phoneRequired value={{ name: f.full_name, position: f.position ?? "", email: f.email ?? "", phone: f.phone ?? "" }}
+          positionControl={<PositionMultiSelect language={th ? "th" : "en"} value={(f.position ?? "").split(",").map((x) => x.trim()).filter(Boolean)} onChange={(next) => set({ founders: (d.founders ?? []).map((x, n) => n === i ? { ...x, position: next.join(", ") || null } : x) })} />}
+          onChange={(key, value) => set({ founders: (d.founders ?? []).map((x, n) => n === i ? { ...x, [key === "name" ? "full_name" : key]: value } : x) })} />} />
+      {!ok.founder && <p className="mt-2 text-[13px] text-destructive">{L("Add the founder's full name, a valid email address and phone number.","กรุณากรอกชื่อ-นามสกุล อีเมลที่ถูกต้อง และเบอร์โทรศัพท์ของผู้ก่อตั้ง")}</p>}
       <p className="mt-3 text-[13px] text-muted-foreground">{L("PitchSnack checks the owner's name against your company's list of directors, and the year founded and the sales against your company's records.","PitchSnack ตรวจสอบชื่อเจ้าของกับรายชื่อกรรมการบริษัท และปีที่ก่อตั้งกับยอดขายตามข้อมูลบริษัทของท่าน")}</p>
     </>},
     review: { t: tr("Review your answers"), h: tr("Next, we'll auto-fill the rest of your profile. You can edit everything afterwards."),
@@ -373,7 +375,8 @@ export function SellerWizard({
             );
           })}
         </div>
-        <div className="seller-review-row mt-5"><span>{L(...STEP_FULL.founder)}</span><b className={ok.founder ? "" : "text-destructive"}>{d.founders?.filter(f => f.full_name.trim()).map(f => f.full_name).join(", ") || L("Not answered","ยังไม่ได้ตอบ")}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === "founder"))}>{ok.founder ? tr("Edit") : L("Answer","ตอบคำถาม")}</Button></div>
+        <div className="seller-review-row mt-5"><span>{L(...STEP_FULL.founder)}</span><b className={d.founders?.[0]?.full_name.trim() ? "" : "text-destructive"}>{d.founders?.filter(f => f.full_name.trim()).map(f => f.full_name).join(", ") || L("Not answered","ยังไม่ได้ตอบ")}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === "founder"))}>{ok.founder ? tr("Edit") : L("Answer","ตอบคำถาม")}</Button></div>
+        <div className="seller-review-row"><span>{L("Contact email and phone", "อีเมลและเบอร์โทรศัพท์")}</span><b className={ok.founder ? "" : "text-destructive"}>{[d.founders?.[0]?.email, d.founders?.[0]?.phone].filter(Boolean).join(" · ") || L("Not answered","ยังไม่ได้ตอบ")}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === "founder"))}>{ok.founder ? tr("Edit") : L("Answer","ตอบคำถาม")}</Button></div>
         {blockers.length > 0 && (
           <p className="mt-[18px] text-[13.5px] text-destructive">{L(`Answer ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][0] : STEP_SHORT[k][0]), false)} before you continue.`, `กรุณาตอบ ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][1] : STEP_SHORT[k][1]), true)} ก่อนไปต่อ`)}</p>
         )}
@@ -429,7 +432,7 @@ export function SellerWizard({
             )}
             {cur.id === "web" && <>
               <span className="seller-actions-spacer" />
-              {!webExpanded && <Button variant="unstyled" size="unstyled" className="seller-action seller-action-no-website" ref={skipRef} onClick={() => {set({web:""}); setWebExpanded(true); setReadDone(false);}}>{L("No company website", "ไม่มีเว็บไซต์บริษัท")}</Button>}
+
             </>}
             <div className={cur.id === "web" ? "contents" : "ml-auto flex items-center gap-2.5"}>
               {pos > 0 && (

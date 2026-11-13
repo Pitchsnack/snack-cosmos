@@ -36,7 +36,7 @@ import { SetSectorPicker } from "@/components/common/set-sector-picker";
 import { cn } from "@/lib/utils";
 
 export type FirmForm = {
-  name: string; firmType: string; logo: LogoState; media: EntityMediaState; description: string; descriptionTh: string; yearFounded: string;
+  name: string; firmType: string; logo: LogoState; media: EntityMediaState; description: string; descriptionTh: string; longDescription: string; contactName: string; contactPosition: string; yearFounded: string;
   city: string; country: string; services: string[]; fees: Record<string, FeeDetail>;
   dealBand: string; teamSize: string; languages: string[]; sectors: string[]; sectorAgnostic: boolean;
   legalName: string; thaiName: string; registrationNo: string; addr: Addr;
@@ -62,7 +62,7 @@ export const toFirmForm = (f: AdvisorFirm | null): FirmForm => ({
     logo: { ...EMPTY_SLOT, persistedPath: f?.logoPath ?? null, signedUrl: f?.logoUrl ?? null },
     slots: [1, 2, 3].map((n) => { const m = f?.media?.find((x) => x.slot === n); return { ...EMPTY_SLOT, persistedPath: m?.path ?? null, signedUrl: m?.url ?? null }; }) as EntityMediaState["slots"],
   },
-  description: f?.description ?? "", descriptionTh: f?.descriptionTh ?? "", yearFounded: f?.yearFounded ? String(f.yearFounded) : "",
+  description: f?.description ?? "", descriptionTh: f?.descriptionTh ?? "", longDescription: f?.longDescription ?? "", contactName: f?.contactName ?? "", contactPosition: f?.contactPosition ?? "", yearFounded: f?.yearFounded ? String(f.yearFounded) : "",
   city: f?.city ?? "", country: f?.country ?? "Thailand", services: f?.services ?? [],
   fees: Object.fromEntries((f?.services ?? []).map((s) => [s, f?.feeDetails[s] ?? newFee()])),
   dealBand: f?.dealBand ?? "", teamSize: f?.teamSize ? String(f.teamSize) : "", languages: f?.languages ?? [], sectors: f?.sectors ?? [], sectorAgnostic: !!f?.sectorAgnostic,
@@ -199,6 +199,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
     ["city", cityError(thai ? f.addr.province : f.city, f.country)],
     ["year", yearError(f.yearFounded)],
     ["desc", descError(f.description || f.descriptionTh)],
+    ["long", f.longDescription.trim() ? null : "Add a long description."],
+    ["contactName", f.contactName.trim() ? null : "Add the contact person's full name."],
     ["teamSize", teamSizeError(f.teamSize)],
     ["legalName", null],
     ["reg", thai && !/^\d{13}$/.test(f.registrationNo) ? "The registration number has 13 digits." : null],
@@ -255,7 +257,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       await save({
         data: {
           id: created?.id ?? firm?.id ?? null, name: f.name.trim(), firmType: f.firmType, logoPath: up.logoPath, logoSource: logoChanged ? "upload" : f.logo.source, media: up.media,
-          description: f.description.trim() || f.descriptionTh.trim(), descriptionTh: f.descriptionTh.trim() || null, yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
+          description: f.description.trim() || f.descriptionTh.trim(), descriptionTh: f.descriptionTh.trim() || null, longDescription: f.longDescription.trim(), contactName: f.contactName.trim(), contactPosition: f.contactPosition.trim() || null, yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
           dealBand: f.dealBand || null, teamSize: f.teamSize ? Number(f.teamSize) : null, languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
           englishName: nul(f.englishName ?? ""), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),
@@ -357,9 +359,14 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           limitMsg="Pick up to 5 sectors, or Sector agnostic."
           agnostic={{ on: f.sectorAgnostic, onToggle: (on) => set("sectorAgnostic", on), line: "I work with companies in every industry",
             summary: <>{setupText("Sellers and buyers see")} <b className="text-foreground">{setupText("Sector agnostic")}</b>{setupText("on your card.")}</> }} /></F>
-        <F label={<>{setupText("Description")}<LangTag /></>} req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={setupText(`${descV.length} / 300 · your card shows 3 lines`)} htmlFor="fe-desc">
+        <F label={<>{setupText("Short description")}<LangTag /></>} req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={setupText(`${descV.length} / 300 · your card shows 3 lines`)} htmlFor="fe-desc">
           <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} lang={tl} value={descV} onBlur={blur("desc")} onChange={(e) => setDesc(e.target.value)} />
         </F>
+        <F label={setupText("Long description")} req err={show("long")} htmlFor="fe-long">
+          <Textarea id="fe-long" aria-required className={cn("min-h-[140px] text-[14px]", show("long") && errB)} maxLength={4000} rows={6} value={f.longDescription} onBlur={blur("long")} onChange={(e) => set("longDescription", e.target.value)} />
+        </F>
+        <CompactFields><F label={setupText("Full name")} req err={show("contactName")} htmlFor="fe-contact-name"><Input id="fe-contact-name" aria-required className={cn(inp, show("contactName") && errB)} maxLength={120} value={f.contactName} onBlur={blur("contactName")} onChange={(e) => set("contactName", e.target.value)} /></F>
+          <F label={setupText("Current Position")} opt htmlFor="fe-contact-position"><Input id="fe-contact-position" className={inp} maxLength={120} value={f.contactPosition} onChange={(e) => set("contactPosition", e.target.value)} /></F></CompactFields>
 </EditSec>}
         {visible("address") && <EditSec id="company" active={section === "company"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Address")} />{!setup ? <CompanyNameFields name={f.name} nameLabel="Company name" thaiName={f.thaiName} englishName={f.englishName ?? ""} onThaiName={v => set("thaiName", v)} onEnglishName={v => set("englishName", v)} onChangeCompany={() => { setTab("about"); setNameFocus(true); setTimeout(() => document.getElementById("fe-name")?.focus(), 100); }} /> : <CompactFields two>          <F label={setupText("Legal name")} opt tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
             hint={firm?.verifiedAt ? "Changing this sends your firm back to Admin for a check." : undefined}>

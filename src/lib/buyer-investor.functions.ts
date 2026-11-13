@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { optionalCompanyName } from "./company-name";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { buyerAboutError, descriptionChanged } from './buyer-description';
+import { buyerAboutError, buyerSetupDescriptionsComplete, descriptionChanged } from './buyer-description';
 import {
   AUM_KEYS, REV_KEYS, TICKET_KEYS, bandOf, descriptionError, sortActsFor, descriptionLeaks, regError, ticketColumns, yearError,
 } from "@/lib/investor-bands";
@@ -333,6 +333,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       (relation !== "individual" && yearError(data.year_founded?.toString() ?? "")) ||
       (!/^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(data.website_url ?? "") && "Enter a valid website address, e.g. www.yourfirm.com");
     if (!r.directory && problem) throw new Error(problem);
+    if (!r.directory && data.complete_setup && !buyerSetupDescriptionsComplete(data.description ?? r.p.description, data.short_description ?? stored?.short_description)) throw new Error("Add both a short description and a long description before finishing.");
     const own = (x?: string | null) => !x || /^https?:/.test(x) || x.includes(`/${investorId}/`);
     if (!own(data.logo_path) || (data.media ?? []).some((m) => !own(m.image_path))) throw new Error("Invalid file.");
     const n = (v?: string | null) => (v === undefined ? undefined : v || null);

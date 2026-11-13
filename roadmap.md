@@ -1,5 +1,12 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Setup wizard momentum follow-up
+- [x] Start one owner-gated website read at Create business profile; persist and poll its result for seller, buyer and advisor instead of reading again on reopen or Finish.
+- [x] Combine buyer/advisor website and descriptions, require both descriptions, add corrected contact-person rows and role-specific founder/team prefill.
+- [x] Prefill only owner/family-owner seller founders and individual-investor team members; preserve agents, founder IDs/stories and private access.
+- [x] Reuse sign-up logos with photo-only buyer upload steps; add shared loading, missing-field and review wording.
+- [ ] Finish seller layout spacing and full save/background-read tests; verify existing-account wizard screens without sign-up tests or new accounts.
+
 ## Statements-only financial report and P&L ratios
 - [x] Update shared and legacy viewers, sample, expanded views and PDF printing without changing report access.
 - [x] Move report descriptions and route old ratios links only when P&L is accessible.

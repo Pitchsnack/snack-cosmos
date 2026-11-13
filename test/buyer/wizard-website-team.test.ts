@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { stepsFor, normalizeBuyerReached, buyerWebValid, teamHasName } from "@/lib/buyer-wizard";
+import { buyerSetupDescriptionsComplete } from "@/lib/buyer-description";
 
 describe("buyer wizard: Industries first, Website with descriptions, Team", () => {
   it("firm buyer order has 12 steps with Industries after Company and Team before Review", () => {
@@ -19,6 +20,11 @@ describe("buyer wizard: Industries first, Website with descriptions, Team", () =
     expect(buyerWebValid("www.lakeshore.com", "Family office backing Thai firms.", "", "Lakeshore", true)).toBe(true);
     expect(buyerWebValid("www.lakeshore.com", "Lakeshore backs Thai firms.", "", "Lakeshore", true)).toBe(false);
     expect(buyerWebValid("www.lakeshore.com", "", Array(81).fill("word").join(" "), "Lakeshore", true)).toBe(false);
+  });
+  it("Finish requires both the short and long descriptions", () => {
+    expect(buyerSetupDescriptionsComplete("Short description", "")).toBe(false);
+    expect(buyerSetupDescriptionsComplete("", "Long description")).toBe(false);
+    expect(buyerSetupDescriptionsComplete("Short description", "Long description")).toBe(true);
   });
   it("Team needs at least one full name", () => {
     expect(teamHasName([{ name: " " }])).toBe(false);

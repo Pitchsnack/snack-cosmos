@@ -28,6 +28,9 @@ export function buyerAboutError(next: string | null | undefined, stored?: string
   return descriptionWords(next ?? '') > 80 ? 'Keep it to 80 words.' : null;
 }
 
+/** Both descriptions are required when the buyer finishes setup. */
+export const buyerSetupDescriptionsComplete = (short: string | null | undefined, long: string | null | undefined) => !!short?.trim() && !!long?.trim();
+
 /** A public-only suggestion: no names, website addresses or contact data. */
 export function suggestBuyerDescription(facts: { type: string; industries: string[]; geography: string[] }, lang: 'en' | 'th'): string {
   const industry = facts.industries.find(x => x !== 'Sector Agnostic');

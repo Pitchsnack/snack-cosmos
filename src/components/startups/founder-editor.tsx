@@ -18,6 +18,8 @@ import { toast } from "sonner";
 export interface FounderDraft {
   full_name: string;
   position?: string | null;
+  email?: string;
+  phone?: string;
   linkedin_url?: string | null;
   bio?: string | null;
   bio_story?: FounderStory | null;
@@ -38,9 +40,13 @@ interface Props {
   addOnOpen?: boolean;
   requiredName?: boolean;
   keepOne?: boolean;
+  /** Private setup contact details, rendered with the shared two-row layout. */
+  contactFields?: (founder: FounderDraft, index: number) => React.ReactNode;
 }
 
 const POSITION_OPTIONS = [
+  "Owner",
+  "Family business owner",
   "Founder",
   "Co-founder",
   "CEO",
@@ -177,14 +183,18 @@ function FounderPhoto({
   );
 }
 
-function PositionMultiSelect({
+export function PositionMultiSelect({
   value,
   onChange,
+  language,
 }: {
   value: string[];
   onChange: (next: string[]) => void;
+  language: "en" | "th";
 }) {
   const [open, setOpen] = useState(false);
+  const tr = (en: string, th: string) => language === "th" ? th : en;
+  const positionLabel = (value: string) => value === "Owner" ? tr("Owner", "เจ้าของกิจการ") : value === "Family business owner" ? tr("Family business owner", "เจ้าของธุรกิจครอบครัว") : tr(value, value);
   const toggle = (opt: string) => {
     if (value.includes(opt)) onChange(value.filter((v) => v !== opt));
     else onChange([...value, opt]);
@@ -201,11 +211,11 @@ function PositionMultiSelect({
         >
           <div className="flex flex-1 flex-wrap items-center gap-1 overflow-hidden">
             {value.length === 0 ? (
-              <span className="text-muted-foreground">Position</span>
+              <span className="text-muted-foreground">{tr("Current Position", "ตำแหน่งปัจจุบัน")}</span>
             ) : (
               value.map((v) => (
                 <Badge key={v} variant="secondary" className="h-5 gap-1 px-1.5 text-xs font-normal">
-                  {v}
+                  {positionLabel(v)}
                   <span
                     role="button"
                     tabIndex={-1}
@@ -233,7 +243,7 @@ function PositionMultiSelect({
               className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
             >
               <Checkbox checked={checked} onCheckedChange={() => toggle(opt)} />
-              <span>{opt}</span>
+              <span>{positionLabel(opt)}</span>
             </label>
           );
         })}
@@ -242,7 +252,7 @@ function PositionMultiSelect({
   );
 }
 
-export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", salesFor, addOnOpen, requiredName, keepOne }: Props) {
+export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", salesFor, addOnOpen, requiredName, keepOne, contactFields }: Props) {
   const {language} = useTranslation();
   const tr = (en: string, th: string) => (language === "th" ? th : en);
   const { lang: textLang, switchable } = useTextLang();
@@ -279,7 +289,7 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
     <div ref={root} className="min-w-0 space-y-3">
       {value.map((f, i) => (
         <div key={i} className="rounded-md border border-border bg-background p-3">
-          <div className="flex min-w-0 gap-3 max-sm:flex-col">
+          <div className={contactFields ? "flex min-w-0 flex-col gap-3" : "flex min-w-0 gap-3 max-sm:flex-col"}>
             <FounderPhoto
               path={f.photo_url}
               onChange={(p) => update(i, { photo_url: p })}
@@ -287,8 +297,9 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
               startupId={startupId}
             />
             <div className="min-w-0 flex-1 space-y-2">
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-                <Input
+              {contactFields?.(f, i)}
+              <div className={contactFields ? "" : "grid grid-cols-1 gap-2 md:grid-cols-3"}>
+                {!contactFields && <><Input
                   data-founder-name
                   data-edit-focus={addOnOpen && i === value.length - 1 ? "" : undefined}
                   aria-label={language === "th" ? "ชื่อผู้ก่อตั้ง" : "Founder name"}
@@ -300,9 +311,10 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
                   onChange={(e) => update(i, { full_name: e.target.value })}
                 />
                 <PositionMultiSelect
+                  language={language}
                   value={parsePositions(f.position)}
                   onChange={(next) => update(i, { position: next.join(", ") || null })}
-                />
+                /></>}
                 <Input
                   placeholder={tr("LinkedIn URL (optional)","LinkedIn URL (ไม่บังคับ)")}
                   value={f.linkedin_url ?? ""}

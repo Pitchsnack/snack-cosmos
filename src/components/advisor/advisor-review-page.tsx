@@ -36,7 +36,9 @@ export function setupMissing(f: FirmForm, thai: boolean): MissingItem[] {
   if (yearError(f.yearFounded)) out.push({ sec: "firm", label: tr("Year founded"), fieldId: "fe-year" });
   if (teamSizeError(f.teamSize)) out.push({ sec: "firm", label: tr("Team size"), fieldId: "fe-teamSize" });
   if (!f.languages.length) out.push({ sec: "firm", label: tr("Languages"), fieldId: "fe-langs" });
-  if (descError(f.description || f.descriptionTh)) out.push({ sec: "firm", label: tr("Description"), fieldId: "fe-desc" });
+  if (descError(f.description || f.descriptionTh)) out.push({ sec: "firm", label: tr("Short description"), fieldId: "fe-desc" });
+  if (!f.longDescription.trim()) out.push({ sec: "firm", label: tr("Long description"), fieldId: "fe-long" });
+  if (!f.contactName.trim()) out.push({ sec: "contact", label: tr("Full name"), fieldId: "fe-contact-name" });
   if (!f.services.length) out.push({ sec: "services", label: tr("Services") });
   for (const s of f.services) {
     if (feeError(s, f.fees[s] ?? newFee())) out.push({ sec: "services", label: tr("Fee for {service}").replace("{service}", tr(s)), fieldId: `fee-box-${s}` });
@@ -229,7 +231,8 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
           <Row label={tr("Team size")} value={f.teamSize ? `${f.teamSize} ${tr("people")}` : undefined} missingText={teamSizeError(f.teamSize) ? tr("Missing") : undefined} onAdd={() => open("firm", "fe-teamSize")} addName={tr("Team size")} />
           <Row label={tr("Typical deal size")} value={deal ? `${deal.usd} (${deal.thb})` : notSet} />
           <Row label={tr("Languages")} value={f.languages.length ? f.languages.map(tr).join(", ") : undefined} missingText={!f.languages.length ? tr("Missing") : undefined} onAdd={() => open("firm", "fe-langs")} addName={tr("Languages")} />
-          <Row label={tr("Description")} value={descV.trim() || undefined} missingText={descError(f.description || f.descriptionTh) ? tr("Missing") : undefined} onAdd={() => open("firm", "fe-desc")} addName={tr("Description")} />
+          <Row label={tr("Short description")} value={descV.trim() || undefined} missingText={descError(f.description || f.descriptionTh) ? tr("Missing") : undefined} onAdd={() => open("firm", "fe-desc")} addName={tr("Short description")} />
+          <Row label={tr("Long description")} value={f.longDescription.trim() || undefined} missingText={!f.longDescription.trim() ? tr("Missing") : undefined} onAdd={() => open("firm", "fe-long")} addName={tr("Long description")} />
           <Row label={tr("Logo and photos")} value={f.logo.url || photos.length ? (
             <span className="flex flex-wrap items-center gap-2">
               {f.logo.url && <img src={f.logo.url} alt="" className="h-[44px] w-[44px] rounded-[8px] border border-[#E3E6EB] bg-white object-contain dark:border-border" />}
@@ -284,6 +287,9 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
           </CF>
           <CF label={<span className="flex w-full items-baseline justify-between gap-2">{tr("Description")}<span className="text-[12.5px] font-normal text-[#9CA3AF]">{descV.length} / 300 · {tr("your card shows 3 lines")}</span></span>} req need={isMiss("fe-desc")} htmlFor="fe-desc">
             <Textarea id="fe-desc" aria-required aria-invalid={isMiss("fe-desc")} className={cn("h-[64px] text-[14px]", isMiss("fe-desc") && needCls)} maxLength={300} lang={tl} value={descV} onChange={(e) => setDesc(e.target.value)} />
+          </CF>
+          <CF label={tr("Long description")} req need={isMiss("fe-long")} htmlFor="fe-long">
+            <Textarea id="fe-long" aria-required aria-invalid={isMiss("fe-long")} className={cn("min-h-[120px] text-[14px]", isMiss("fe-long") && needCls)} maxLength={4000} value={f.longDescription} onChange={(e) => set("longDescription", e.target.value)} />
           </CF>
           <CF label={tr("Logo and photos")} opt>
             <div className="flex flex-wrap items-center gap-4 rounded-[12px] border border-[#E6E8EC] bg-white px-3 py-2.5 dark:border-border dark:bg-card">
@@ -363,7 +369,9 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
         onEdit={() => open("contact")} onDone={() => done("contact")}
         rows={<>
           <Row label={tr("Website")} value={f.website ? <span className="break-all text-[#2563EB]">{f.website}</span> : undefined} missingText={webError(f.website) ? tr("Missing") : undefined} onAdd={() => open("contact", "fe-web")} addName={tr("Website")} />
-          <Row label={tr("Email")} value={<span className="break-all">{f.email}</span>} />
+          <Row label={tr("Full name")} value={f.contactName || undefined} missingText={!f.contactName.trim() ? tr("Missing") : undefined} onAdd={() => open("contact", "fe-contact-name")} addName={tr("Full name")} />
+          <Row label={tr("Current Position")} value={f.contactPosition || notSet} />
+          <Row label={tr("Email address")} value={<span className="break-all">{f.email}</span>} />
           <Row label={tr("Phone")} value={f.phone} missingText={phoneError(f.phone) ? tr("Missing") : undefined} onAdd={() => open("contact", "fe-phone")} addName={tr("Phone")} />
           <Row label={tr("Based in")} value={basedIn || undefined}
             missingText={basedInMiss.length ? (basedIn ? tr("Missing: {names}").replace("{names}", basedInMiss.map((m) => m.label).join(", ")) : tr("Missing")) : undefined}
@@ -377,6 +385,10 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
             onAdd={() => open("contact", addrMiss[0]?.fieldId ?? "addr-street")} addName={tr("Business address")} />
         </>}>
         <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <CF label={tr("Full name")} req need={isMiss("fe-contact-name")} htmlFor="fe-contact-name"><Input id="fe-contact-name" aria-required className={cn(inpC, isMiss("fe-contact-name") && needCls)} maxLength={120} value={f.contactName} onChange={(e) => set("contactName", e.target.value)} /></CF>
+            <CF label={tr("Current Position")} opt htmlFor="fe-contact-position"><Input id="fe-contact-position" className={inpC} maxLength={120} value={f.contactPosition} onChange={(e) => set("contactPosition", e.target.value)} /></CF>
+          </div>
           <div className={grid}>
             <CF label={tr("Website")} req need={isMiss("fe-web")} htmlFor="fe-web">
               <Input id="fe-web" aria-required aria-invalid={isMiss("fe-web")} className={cn(inpC, isMiss("fe-web") && needCls)} maxLength={200} placeholder="https://www.yourfirm.com" value={f.website} onChange={(e) => set("website", e.target.value)} />

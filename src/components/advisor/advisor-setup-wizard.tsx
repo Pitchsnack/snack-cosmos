@@ -13,13 +13,19 @@ import { Check, Circle, ExternalLink, Eye, Globe, Info, Landmark, Loader2, Newsp
 import { toast } from "sonner";
 import { LogoPhotosStep } from "@/components/common/logo-photos-step";
 import { ContinueBlockedLine, continueBlockedLine } from "@/components/setup/continue-blocked";
+import { ContactPersonFields } from "@/components/setup/contact-person-fields";
+import { useWebsiteEnrichment } from "@/components/setup/use-website-enrichment";
+import { FilledFrom } from "@/components/setup/filled-from";
+import { Loading } from "@/components/ui/PitchSnackLoader";
+import { capWords, shortDescriptionFrom } from "@/lib/website-enrichment";
+import { SectionBand, SectionHeading, DashLabel, DESC_LABELS } from "@/components/setup/section-band";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { FirmCard } from "@/components/advisor/advisor-firm-card";
 import { ADVISOR_FIRMS_KEY } from "@/components/advisor/advisor-my-company";
 import { useFocusNeeded } from "@/components/common/need-fill";
 import { AddressBox, Err, FeeControl, LogoDrop, Opt, Req, addrErrors, logoFileError, nowrapPct, useLogoUpload, type Addr, type LogoState } from "@/components/advisor/advisor-firm-fields";
 import { FirmEditForm, type FirmForm, type SourceTag } from "@/components/advisor/advisor-firm-edit";
-import { createAdvisorUploadUrl, enrichAdvisorFirm, saveAdvisorWizard, type AdvisorEnrichResult } from "@/lib/advisor-firm.functions";
+import { createAdvisorUploadUrl, saveAdvisorWizard, type AdvisorEnrichResult } from "@/lib/advisor-firm.functions";
 import {
   ADVISOR_SERVICES, DEAL_BANDS, FIRM_TYPE_OPTIONS, LANGUAGES, WIZARD_QS, cityError, dealBandLabels, descError, emailError, feeWords,
   fullAddress, nameError, newFee, phoneError, teamSizeError, webError, type AdvisorFirm, type FeeDetail, type WizardQ,
@@ -118,12 +124,14 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     sectors: manyError(a.picks, a.agnostic, L),
     email: emailError(a.email),
     phone: phoneError(a.phone),
+    cname: a.cname.trim() ? null : L("Add the contact person's full name.", "กรุณากรอกชื่อ-นามสกุลของผู้ติดต่อ"),
     logo: a.logo.path && a.photos > 0 ? null : "hint",
     desc: descError(a.desc),
+    long: a.long.trim() ? null : L("Add a long description.", "กรุณากรอกคำอธิบายแบบยาว"),
   };
   const fieldsOf: Record<WizardQ, string[]> = {
-    type: ["type"], name: ["country", "name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: ["web", "desc"],
-    services: ["services"], deal: ["deal"], team: ["team", "langs"], sectors: ["sectors"], contact: ["email", "phone"], logo: ["logo"], desc: ["desc"], review: [],
+    type: ["type"], name: ["country", "name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: ["web", "desc", "long"],
+    services: ["services"], deal: ["deal"], team: ["team", "langs"], sectors: ["sectors"], contact: ["cname", "email", "phone"], logo: ["logo"], desc: ["desc"], review: [],
   };
   const qValid = (id: WizardQ) => fieldsOf[id].every((k) => !errors[k]);
   const show = (k: string) => ((touched[k] || forced[k]) && errors[k] && errors[k] !== "fee" && errors[k] !== "hint" ? errors[k] : null);
@@ -246,8 +254,35 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
       el?.focus();
     }, 0);
   };
+  const enrichment = useWebsiteEnrichment("advisor", firm.id, a.web, !!fromSignup?.includes("web") && isValidUrl(a.web));
+  const reading = enrichment.state.status === "running" && isValidUrl(a.web);
+  const [autoMarks, setAutoMarks] = useState<{ desc?: boolean; long?: boolean }>({});
+  const appliedRead = useRef<string | null>(null);
+  useEffect(() => {
+    const state = enrichment.state;
+    if (state.status !== "done" || !state.websiteKey || appliedRead.current === state.websiteKey) return;
+    appliedRead.current = state.websiteKey;
+    const bio = typeof state.result?.bio === "string" ? state.result.bio.trim() : "";
+    const patch: Partial<A> = {};
+    if (bio && !a.desc.trim()) patch.desc = shortDescriptionFrom(bio);
+    if (bio && !a.long.trim()) patch.long = capWords(bio, 80);
+    if (Object.keys(patch).length) setA((p) => ({ ...p, ...patch }));
+    setAutoMarks({ desc: state.filled?.includes("desc"), long: state.filled?.includes("long") });
+  }, [enrichment.state.status, enrichment.state.websiteKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const tryContinue = () => {
-    if (cur === "review") { if (requiredOk) void flush().then(() => setPhase("enrich")); return; }
+    if (cur === "review") {
+      if (!requiredOk) return;
+      void flush().then(async () => {
+        let latest = enrichment.state;
+        if (isValidUrl(a.web) && latest.status === "idle") latest = await enrichment.start(a.web);
+        if (latest.status === "running") { setPhase("enrich"); return; }
+        setEnrich((latest.result ?? null) as AdvisorEnrichResult | null);
+        setPhase("complete");
+      });
+      return;
+    }
+    if (cur === "web" && isValidUrl(a.web) && enrichment.state.status === "idle") { void enrichment.start(a.web); return; }
     if (cur === "deal" && !a.deal) { setHint(tr("Choose a range to continue, or Skip this question.")); return; }
     if (cur === "logo" && !qValid("logo")) { setHint(tr("Both are needed to continue.")); return; }
     if (!qValid(cur)) {
@@ -433,22 +468,29 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           {(touched.webTyped && a.web.trim() || forced.web) && errors.web ? <p className="mt-1.5 text-[13px] text-[#B42318]">{errors.web}</p>
             : webOpened ? <p className="mt-1.5 flex items-center gap-1 text-[13px] text-[#15803D]"><Check className="h-3.5 w-3.5" />{L(`Opened ${webOpened} in a new tab. Make sure it is your firm.`, `เปิด ${webOpened} ในแท็บใหม่แล้ว โปรดตรวจสอบว่าเป็นเว็บไซต์ของบริษัทท่าน`)}</p>
             : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Click Check website to open it in a new tab and make sure it is your firm.")}</p>}
-          <div className="mt-6">
-            <label className={lbl} htmlFor="w-desc">{L("Short description", "คำอธิบายสั้น")}<Req /><span className="ml-1.5 font-normal text-[#9CA3AF]">{tr("30 to 300 characters")}</span></label>
-            <textarea id="w-desc" aria-required rows={3} maxLength={300} placeholder={tr("e.g. Corporate law firm helping Thai founders sell their companies, from due diligence to signing.")}
-              className={cn(inp, "h-auto py-3", forced.desc && errors.desc && errCls)} value={a.desc}
-              onChange={(e) => set({ desc: e.target.value }, { description: e.target.value || null })} />
-            <div className="mt-1 flex justify-between text-[12.5px]">
-              <span className="text-[#B42318]">{(forced.desc || (touched.desc && a.desc.trim())) && errors.desc}</span>
-              <span className="text-[#6B7280]">{a.desc.length} / 300</span>
+          {enrichment.state.status === "done" && domain && <div className="mt-5"><FilledFrom domain={domain} L={L} /></div>}
+          <div className="mt-6"><SectionBand bleed="-mx-[18px] sm:-mx-10" /><SectionHeading>{L("Short description", "คำอธิบายสั้น")}</SectionHeading><p className="-mt-2 mb-4 text-sm text-muted-foreground">{L("On your card and at the top of your profile.", "แสดงบนการ์ดและด้านบนของโปรไฟล์")}</p></div>
+          {reading ? <div className="grid min-h-[300px] place-items-center rounded-[12px] bg-muted/60 px-6"><Loading size="lg" message={L("Auto Enrich is reading your website. It will fill the descriptions below.", "Auto Enrich กำลังอ่านเว็บไซต์และจะกรอกคำอธิบายด้านล่าง")} /></div> : <>
+            <div>
+              <label className={lbl} htmlFor="w-desc">{L("Short description", "คำอธิบายสั้น")}<Req />{autoMarks.desc && <span className="ml-2 text-xs font-semibold text-muted-foreground">{tr("Auto-filled")}</span>}<span className="ml-1.5 font-normal text-muted-foreground">{tr("30 to 300 characters")}</span></label>
+              <textarea id="w-desc" aria-required rows={3} maxLength={300} placeholder={tr("e.g. Corporate law firm helping Thai founders sell their companies, from due diligence to signing.")}
+                className={cn(inp, "h-auto py-3", forced.desc && errors.desc && errCls)} value={a.desc}
+                onChange={(e) => { setAutoMarks((m) => ({ ...m, desc: false })); set({ desc: e.target.value }, { description: e.target.value || null }); }} />
+              <div className="mt-1 flex justify-between text-[12.5px]">
+                <span className="text-destructive">{(forced.desc || (touched.desc && a.desc.trim())) && errors.desc}</span>
+                <span className="text-muted-foreground">{a.desc.length} / 300</span>
+              </div>
             </div>
-          </div>
-          <div className="mt-4">
-            <label className={lbl} htmlFor="w-long">{L("Long description", "คำอธิบายแบบยาว")}<span className="ml-1.5 font-normal text-[#9CA3AF]">{L("Optional", "ไม่บังคับ")}</span></label>
-            <textarea id="w-long" rows={6} maxLength={4000} className={cn(inp, "h-auto min-h-[140px] py-3")} value={a.long}
-              placeholder={L("Who you help, how you work and the deals you have done.", "ท่านช่วยใคร ทำงานอย่างไร และดีลที่เคยทำ")}
-              onChange={(e) => set({ long: e.target.value }, { long_description: e.target.value || null })} />
-          </div>
+            <div className="mt-6"><SectionHeading>{L("Long description", "คำอธิบายแบบยาว")}</SectionHeading><p className="-mt-2 mb-4 text-sm text-muted-foreground">{L("Who you help, how you work and the deals you have done.", "ท่านช่วยใคร ทำงานอย่างไร และดีลที่เคยทำ")}</p></div>
+            <div>
+              <label className={lbl} htmlFor="w-long"><DashLabel main={L(...DESC_LABELS.long.main)} rest={L(...DESC_LABELS.long.rest)} /><Req />{autoMarks.long && <span className="ml-2 text-xs font-semibold text-muted-foreground">{tr("Auto-filled")}</span>}</label>
+              <textarea id="w-long" rows={6} maxLength={4000} aria-required className={cn(inp, "h-auto min-h-[140px] py-3", forced.long && errors.long && errCls)} value={a.long}
+                placeholder={L("Who you help, how you work and the deals you have done.", "ท่านช่วยใคร ทำงานอย่างไร และดีลที่เคยทำ")}
+                onChange={(e) => { setAutoMarks((m) => ({ ...m, long: false })); set({ long: e.target.value }, { long_description: e.target.value || null }); }} />
+              {forced.long && errors.long && <p className="mt-1.5 text-[13px] text-destructive">{errors.long}</p>}
+            </div>
+          </>}
+          {enrichment.state.status === "failed" && <div className="mt-4 flex flex-wrap items-center gap-3"><p className="text-sm text-destructive">{L("Auto Enrich couldn't read your website. Fill these in yourself, or try Auto Enrich again.", "Auto Enrich อ่านเว็บไซต์ของท่านไม่ได้ กรุณากรอกเอง หรือลอง Auto Enrich อีกครั้ง")}</p><button type="button" className="text-sm font-semibold text-link underline" onClick={() => void enrichment.start(a.web, true)}>{L("Try Auto Enrich again", "ลอง Auto Enrich อีกครั้ง")}</button></div>}
         </div>
       ) },
     services: { req: true, t: tr("Which professional services does your firm provide?"), h: tr("Pick all that apply, and say how you charge for each. Sellers and buyers filter Browse advisors by these, and see every fee on your profile."),
@@ -537,29 +579,17 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
       ) },
     contact: { req: true, t: tr("How can sellers and buyers reach you?"), h: tr("Your email and phone show on your profile, so sellers and buyers can contact you directly."),
       body: (
-        <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className={lbl} htmlFor="w-cname">{L("Contact person", "ผู้ติดต่อ")}<span className="ml-1.5 font-normal text-[#9CA3AF]">{L("Optional", "ไม่บังคับ")}</span></label>
-              <input id="w-cname" maxLength={120} className={inp} value={a.cname} onChange={(e) => set({ cname: e.target.value }, { contact_name: e.target.value || null })} />
-            </div>
-            <div>
-              <label className={lbl} htmlFor="w-cpos">{L("Position", "ตำแหน่ง")}<span className="ml-1.5 font-normal text-[#9CA3AF]">{L("Optional", "ไม่บังคับ")}</span></label>
-              <input id="w-cpos" maxLength={120} placeholder={L("e.g. Managing Partner", "เช่น หุ้นส่วนผู้จัดการ")} className={inp} value={a.cpos} onChange={(e) => set({ cpos: e.target.value }, { contact_position: e.target.value || null })} />
-            </div>
-          </div>
-          <div>
-            <label className={lbl} htmlFor="w-email">{tr("Email")}<Req /></label>
-            <input id="w-email" aria-required type="email" maxLength={120} placeholder="hello@yourfirm.com" className={cn(inp, show("email") && errCls)} value={a.email} onBlur={blur("email")}
-              onChange={(e) => set({ email: e.target.value }, { email: e.target.value || null })} />
-            {show("email") ? <Err m={show("email")} /> : <p className="mt-1.5 text-[13px] text-[#6B7280]">{tr("Use a shared inbox, such as hello@ or deals@, so every enquiry reaches your team.")}</p>}
-          </div>
-          <div>
-            <label className={lbl} htmlFor="w-phone">{tr("Phone")}<Req /></label>
-            <input id="w-phone" aria-required maxLength={30} placeholder="+66 2 123 4567" className={cn(inp, show("phone") && errCls)} value={a.phone} onBlur={blur("phone")}
-              onChange={(e) => set({ phone: e.target.value }, { phone: e.target.value || null })} />
-            <Err m={show("phone")} />
-          </div>
+        <div>
+          <ContactPersonFields idPrefix="w-contact" phoneRequired inputClassName={inp}
+            value={{ name: a.cname, position: a.cpos, email: a.email, phone: a.phone }}
+            errors={{ name: !!show("cname"), email: !!show("email"), phone: !!show("phone") }}
+            onChange={(key, value) => {
+              if (key === "name") set({ cname: value }, { contact_name: value || null });
+              if (key === "position") set({ cpos: value }, { contact_position: value || null });
+              if (key === "email") set({ email: value }, { email: value || null });
+              if (key === "phone") set({ phone: value }, { phone: value || null });
+            }} />
+          <Err m={show("cname")} /><Err m={show("email")} /><Err m={show("phone")} />
         </div>
       ) },
     logo: { req: false, t: tr("Add your logo and photos"), h: tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your work. Sellers and buyers see them on your profile."),
@@ -598,13 +628,13 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   };
   const q = Q[cur];
   const continueLabel = cur === "review" ? tr("Finish setup") : fromProfile && cur === "services" ? tr("Back to your profile") : fromReview ? tr("Back to review") : tr("Continue");
-  const continueOk = cur === "review" ? requiredOk : qValid(cur);
+  const continueOk = cur === "review" ? requiredOk : !reading && qValid(cur);
   const optional = cur === "deal" || cur === "logo";
   // Continue off: name what's missing (choice questions keep their own messages).
   const FIELD_LABEL: Record<string, [string, string]> = {
     country: ["Country", "ประเทศ"], name: ["Firm name", "ชื่อบริษัท"], year: ["Year founded", "ปีที่ก่อตั้ง"], reg: ["Registration number", "เลขทะเบียนนิติบุคคล"], city: ["City", "เมือง"],
     "a-street": thai ? ["No. and street", "เลขที่และถนน"] : ["Street and number", "ถนนและเลขที่"], "a-district": ["City/District", "เขต/อำเภอ"], "a-province": ["Province", "จังหวัด"], "a-postal": ["Postal code", "รหัสไปรษณีย์"],
-    web: ["Website", "เว็บไซต์"], team: ["Team size", "จำนวนทีมงาน"], langs: ["Languages", "ภาษา"], email: ["Email address", "อีเมล"], phone: ["Phone", "เบอร์โทรศัพท์"],
+    web: ["Website", "เว็บไซต์"], long: ["Long description", "คำอธิบายแบบยาว"], cname: ["Full name", "ชื่อ-นามสกุล"], team: ["Team size", "จำนวนทีมงาน"], langs: ["Languages", "ภาษา"], email: ["Email address", "อีเมล"], phone: ["Phone", "เบอร์โทรศัพท์"],
     desc: a.desc.trim() ? ["Short description (at least 30 characters)", "คำอธิบายสั้น (อย่างน้อย 30 ตัวอักษร)"] : ["Short description", "คำอธิบายสั้น"],
   };
   const blockedText = continueOk || optional || cur === "review" ? null
@@ -683,7 +713,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
         </div>
       )}
       {phase === "enrich" && (
-        <Enrich firm={firm} a={a} header={header} card={card} btnO={btnO} btnP={btnP}
+        <Enrich firm={firm} a={a} enrichment={enrichment.state} header={header} card={card} btnO={btnO} btnP={btnP}
           onBack={() => { setPhase("q"); goTo("review"); }} onExit={() => void leave(true)}
           onDone={(r) => { setEnrich(r); void qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY }).then(() => setPhase("complete")); }} />
       )}
@@ -745,6 +775,8 @@ function Review({ a, errors, invalid, missingNames, onEdit }: { a: A; errors: Re
       [tr("Registration number"), a.reg || (thai ? miss : notSet), "name"],
       [tr("Business address"), addrOk && addrLine ? addrLine : miss, "name"],
       [tr("Website"), errors.web ? miss : a.web, "web"],
+      [tr("Short description"), errors.desc ? miss : a.desc, "web"],
+      [tr("Long description"), errors.long ? miss : a.long, "web"],
     ]],
     [tr("Services and fees"), [
       [tr("Services"), a.services.length ? a.services.map(tr).join(", ") : miss, "services"],
@@ -756,10 +788,11 @@ function Review({ a, errors, invalid, missingNames, onEdit }: { a: A; errors: Re
       [tr("Languages"), a.langs.length ? a.langs.map(tr).join(", ") : miss, "team"],
       [tr("Sectors"), a.agnostic ? tr("Sector agnostic") : a.sectors.length ? a.sectors.join(", ") : miss, "sectors"],
     ]],
-    [tr("Contact"), [[tr("Email"), errors.email ? miss : a.email, "contact"], [tr("Phone"), errors.phone ? miss : a.phone, "contact"]]],
+    [tr("Contact"), [[tr("Full name"), errors.cname ? miss : a.cname, "contact"], [tr("Current Position"), a.cpos || notSet, "contact"], [tr("Email"), errors.email ? miss : a.email, "contact"], [tr("Phone"), errors.phone ? miss : a.phone, "contact"]]],
     [tr("Your card"), [
       [tr("Logo and photos"), a.logo.path && a.photos ? (a.photos === 1 ? tr("Logo and 1 photo") : tr("Logo and {n} photos").replace("{n}", String(a.photos))) : notSet, "logo", false],
-      [tr("Description"), !a.desc.trim() ? miss : errors.desc ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b> : <span className="line-clamp-3">{a.desc}</span>, "desc"],
+      [tr("Short description"), !a.desc.trim() ? miss : errors.desc ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b> : <span className="line-clamp-3">{a.desc}</span>, "web"],
+      [tr("Long description"), !a.long.trim() ? miss : errors.long ? <b className="font-semibold text-[#B42318]">{tr("Needs a fix")}</b> : <span className="line-clamp-3">{a.long}</span>, "web"],
     ]],
   ];
   return (
@@ -785,27 +818,17 @@ function Review({ a, errors, invalid, missingNames, onEdit }: { a: A; errors: Re
 }
 
 type HeaderFn = (sec: string, right: string, pct: number) => React.ReactNode;
-function Enrich({ firm, a, header, card, btnO, btnP, onBack, onExit, onDone }: {
-  firm: AdvisorFirm; a: A; header: HeaderFn; card: string; btnO: string; btnP: string; onBack: () => void; onExit: () => void; onDone: (r: AdvisorEnrichResult | null) => void;
+function Enrich({ firm, a, enrichment, header, card, btnO, btnP, onBack, onExit, onDone }: {
+  firm: AdvisorFirm; a: A; enrichment: import("@/lib/website-enrichment").WebsiteEnrichmentDTO; header: HeaderFn; card: string; btnO: string; btnP: string; onBack: () => void; onExit: () => void; onDone: (r: AdvisorEnrichResult | null) => void;
 }) {
-  const run = useServerFn(enrichAdvisorFirm);
+  const { language } = useTranslation();
   const domain = normalizeUrl(a.web).replace(/^https?:\/\//, "").split("/")[0];
   const thaiReg = a.country === "Thailand" && /^\d{13}$/.test(a.reg);
-  const sig = `${normalizeUrl(a.web)}|${a.reg}|${a.name}`;
-  const cached = (firm.wizard as { enrichSig?: string; enrich?: AdvisorEnrichResult });
-  const reuse = cached.enrichSig && cached.enrich && sameEnrichSig(cached.enrichSig, a) ? cached.enrich : null;
-  const [res, setRes] = useState<AdvisorEnrichResult | null>(reuse);
-  const [step, setStep] = useState(reuse ? 9 : 0); // which source row is reading
-  const done = step >= 9;
+  const res = (enrichment.result ?? null) as AdvisorEnrichResult | null;
+  const done = enrichment.status !== "running";
   useEffect(() => {
-    if (reuse) return;
-    let off = false;
-    const t1 = window.setTimeout(() => !off && setStep((s) => Math.max(s, 1)), 900);
-    run({ data: { id: firm.id } })
-      .then((r) => { if (!off) { setRes(r); setStep(9); } })
-      .catch(() => { if (!off) setStep(9); });
-    return () => { off = true; window.clearTimeout(t1); };
-  }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (done) onDone(res);
+  }, [done]); // eslint-disable-line react-hooks/exhaustive-deps
   const rows: { icon: React.ReactNode; t: string; sub: string; found: string | null; show: boolean }[] = [
     { icon: <Globe className="h-4 w-4" />, t: tr("Your website"), sub: domain, found: res?.logo ? "Logo" : null, show: true },
     { icon: <Landmark className="h-4 w-4" />, t: tr("Company registry"), sub: `Registration ${a.reg}`, found: [res?.legalName && tr("Legal name"), res?.thaiName && tr("Thai name")].filter(Boolean).join(" and ") || null, show: thaiReg },
@@ -825,15 +848,15 @@ function Enrich({ firm, a, header, card, btnO, btnP, onBack, onExit, onDone }: {
         <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">
           {setupText(!done ? `We're reading ${domain} and public records. This takes a few seconds.` : n ? `We found ${n} detail${n === 1 ? "" : "s"}. Check them in the next step.` : tr("Nothing new to add. Check your profile in the next step."))}
         </p>
+        {!done && <div className="mb-6 grid min-h-[220px] place-items-center rounded-[12px] bg-muted/60 px-6"><Loading size="lg" message={language === "th" ? `กำลังอ่าน ${domain} และข้อมูลสาธารณะ ใช้เวลาสักครู่` : `We're reading ${domain} and public records. This takes a few seconds.`} /></div>}
         <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
-          {rows.map((r, i) => (
+          {rows.map((r) => (
             <div key={tr(r.t)} className="flex items-center gap-3 border-b border-[#F0F1F4] px-4 py-3 last:border-0 dark:border-border">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] bg-[#F3F4F6] text-[#6B7280] dark:bg-muted">{r.icon}</span>
               <div className="min-w-0 flex-1"><b className="block text-[14.5px] font-semibold">{tr(r.t)}</b><span className="text-[12.5px] text-[#6B7280]">{tr(r.sub)}</span></div>
               {done ? (r.found ? <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#15803D]"><Check className="h-4 w-4" />{r.found}</span>
                 : <span className="inline-flex items-center gap-1 text-[13px] text-[#6B7280]"><X className="h-4 w-4" />{tr("Nothing new found")}</span>)
-                : i <= step ? <span className="inline-flex items-center gap-1.5 text-[13px] text-[#6B7280]"><Loader2 className="h-4 w-4 animate-spin" />{tr("Reading…")}</span>
-                : <span className="inline-flex items-center gap-1.5 text-[13px] text-[#9CA3AF]"><Circle className="h-4 w-4 [stroke-dasharray:3_3]" />{tr("Waiting")}</span>}
+                : <span className="inline-flex items-center gap-1.5 text-[13px] text-[#9CA3AF]"><Circle className="h-4 w-4 [stroke-dasharray:3_3]" />{tr("Reading in the background")}</span>}
             </div>
           ))}
         </div>

@@ -5,13 +5,8 @@ import { buildCorpus, extractJson, inferHeadquarters } from "./scrape.server";
 import { buildInvestorPrompt, normalizeInvestorResult } from "./investor-enrich.server";
 import type { EnrichInvestorResult } from "./investor-enrich-types";
 
-export const enrichInvestorFromUrl = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ websiteUrl: z.string().url() }).parse(input))
-  .handler(async ({ data }): Promise<EnrichInvestorResult> => {
-    const { base, origin, corpus, corpusChars, pagesTried, pagesUsed } = await buildCorpus(
-      data.websiteUrl,
-    );
+export async function readInvestorWebsite(websiteUrl: string): Promise<EnrichInvestorResult> {
+    const { base, origin, corpus, corpusChars, pagesTried, pagesUsed } = await buildCorpus(websiteUrl);
     const { system, user } = buildInvestorPrompt(base, corpus);
     const { content } = await extractJson(system, user);
     let parsedRaw: unknown = {};
@@ -33,4 +28,9 @@ export const enrichInvestorFromUrl = createServerFn({ method: "POST" })
       headquartersPhoneCc: hq.phoneCc,
     };
     return parsed;
-  });
+}
+
+export const enrichInvestorFromUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ websiteUrl: z.string().url() }).parse(input))
+  .handler(async ({ data }): Promise<EnrichInvestorResult> => readInvestorWebsite(data.websiteUrl));

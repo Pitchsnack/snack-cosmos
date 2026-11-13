@@ -22,11 +22,13 @@ import { normalizeUrl, isValidUrl } from "@/lib/seller-wizard";
 import { createMyBuyerUploadUrl, saveBuyerMedia, saveBuyerWizard } from "@/lib/buyer-investor.functions";
 import { LogoPhotosStep } from "@/components/common/logo-photos-step";
 import { ContinueBlockedLine, continueBlockedLine } from "@/components/setup/continue-blocked";
+import { ContactPersonFields } from "@/components/setup/contact-person-fields";
 import { SectionBand, SectionHeading, DashLabel, DESC_LABELS } from "@/components/setup/section-band";
 import { FilledFrom } from "@/components/setup/filled-from";
 import { Loading } from "@/components/ui/PitchSnackLoader";
+import { useWebsiteEnrichment } from "@/components/setup/use-website-enrichment";
 import { AddressBox, addrErrors, type Addr } from "@/components/advisor/advisor-firm-fields";
-import { investorEnrichAdapter, type EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
+import type { EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
 import { buyerInvestorKey, BuyerInformationForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
 import {
   AUM_BANDS, COUNTRIES, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, THAI_PROVINCES_77,
@@ -85,7 +87,7 @@ function fromData(d: Data): A {
       return { street: (iv.address_line1 as string) ?? "", unit: (iv.address_line2 as string) ?? "", district: (iv.address_city_district as string) ?? "", province: prov || ((inv.country ?? "Thailand") === "Thailand" && inv.city ? inv.city : ""), postal: (iv.postal_code as string) ?? "" };
     })(),
     about: inv.short_description ?? "",
-    people: d.people.length ? d.people : [{ name: d.account.name, role: d.account.title, email: (d.account as { email?: string }).email ?? "", phone: "" }],
+    people: d.people.length ? d.people : [{ name: d.account.name, role: d.buyer.relation === "individual" ? "Individual investor" : d.account.title, role_th: d.buyer.relation === "individual" ? "นักลงทุนรายบุคคล" : "", email: (d.account as { email?: string }).email ?? "", phone: "" }],
     acts: d.buyer.relation === "agent" ? sortActsFor(inv.acts_for_types?.length ? inv.acts_for_types : inv.investor_type ? [inv.investor_type] : []) : [],
   };
 }
@@ -219,11 +221,11 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   // Website step: the card shows more (short and long description) once Continue runs Auto Enrich.
   // The descriptions show at once when the website came from sign-up (or there's none to read, for an Individual Investor).
   const [webOpen, setWebOpen] = useState(() => (startAt === "desc") || data.buyer.relation === "individual" || (!!fromSignup?.includes("web") && isValidUrl(data.investor.website_url ?? "")) || !!(data.buyer.description?.trim() || data.investor.short_description?.trim()));
-  const [reading, setReading] = useState(false);
-  const [readFailed, setReadFailed] = useState(false);
-  const [readDone, setReadDone] = useState(false);
+  const enrichment = useWebsiteEnrichment("buyer", data.investor.id, a.web, !!fromSignup?.includes("web") && isValidUrl(a.web));
+  const reading = enrichment.state.status === "running" && isValidUrl(a.web);
+  const readFailed = enrichment.state.status === "failed";
+  const readDone = enrichment.state.status === "done";
   const [marks, setMarks] = useState<{ desc?: boolean; about?: boolean }>({});
-  const readingRef = useRef(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [forced, setForced] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState<"idle" | "saving" | "saved">("idle");
@@ -277,9 +279,9 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     deals: a.deals.some((d) => DEAL_TYPES.includes(d)) || a.deals.length ? null : tr("Pick at least one deal type."),
     stages: !stagesShown || a.stages.length ? null : tr("Pick at least one stage."),
     sectors: manyError(a.picks, a.sectors.includes(SECTOR_AGNOSTIC), L),
-    desc: descErr || (leaks.length ? "leak" : null),
-    about: buyerAboutError(a.about, data.investor.short_description) ? L("Keep it to 80 words.", "โปรดเขียนไม่เกิน 80 คำ") : null,
-    team: teamHasName(a.people) ? null : L("Add at least one team member's full name.", "กรุณากรอกชื่อ-นามสกุลของสมาชิกในทีมอย่างน้อย 1 คน"),
+    desc: !a.desc.trim() ? L("Add a short description.", "กรุณากรอกคำอธิบายสั้น") : descErr || (leaks.length ? "leak" : null),
+    about: !a.about.trim() ? L("Add a long description.", "กรุณากรอกคำอธิบายแบบยาว") : buyerAboutError(a.about, data.investor.short_description) ? L("Keep it to 80 words.", "โปรดเขียนไม่เกิน 80 คำ") : null,
+    team: teamHasName(a.people) && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(a.people[0]?.email.trim() ?? "") ? null : L("Add the first person's full name and valid email address.", "กรุณากรอกชื่อ-นามสกุลและอีเมลที่ถูกต้องของบุคคลแรก"),
     photos: med.logo && med.photos > 0 ? null : med.logo ? L("To continue, add at least 1 photo.", "เพิ่มรูปภาพอย่างน้อย 1 รูปเพื่อดำเนินการต่อ") : tr("Both are needed to continue."),
   };  const qRef = useRef<HTMLDivElement>(null);
   useFocusNeeded(qRef, `${phase}:${cur}`);
@@ -325,29 +327,26 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   };
 
   async function runEnrich() {
-    if (!isValidUrl(a.web) || readingRef.current) return;
-    readingRef.current = true; setReading(true); setWebOpen(true); setReadFailed(false);
-    const before = a;
-    try {
-      const r = await investorEnrichAdapter.enrichInvestor({ websiteUrl: normalizeUrl(a.web) });
-      const bio = r?.bio?.trim() ?? "";
-      if (!bio) { setReadFailed(true); return; }
-      const patch: Partial<A> = {}; const server: Record<string, unknown> = {}; const m = { ...marks };
-      // Fill a field only while it's empty or still Auto-filled; typed text is kept.
-      if (!before.desc.trim() || marks.desc) { patch.desc = singleLineDescription(shortFrom(bio)); server.description = patch.desc; m.desc = true; }
-      if (!before.about.trim() || marks.about) { patch.about = capWords(bio, 80); server.short_description = patch.about; m.about = true; }
-      if (Object.keys(patch).length) { setA((p) => ({ ...p, ...patch })); queue(server); }
-      setMarks(m); setReadDone(true);
-      requestAnimationFrame(() => document.getElementById("w-desc")?.focus());
-    } catch { setReadFailed(true); }
-    finally { readingRef.current = false; setReading(false); }
+    if (!isValidUrl(a.web) || reading) return;
+    setWebOpen(true);
+    await enrichment.start(a.web, true);
   }
-  // The website from sign-up is read as soon as the wizard opens; typed descriptions are never replaced.
-  const autoRead = useRef(false);
+  // A finished background read appears in this open wizard without another request to the website.
+  const appliedRead = useRef<string | null>(null);
   useEffect(() => {
-    if (autoRead.current || !webOpen || !isValidUrl(a.web) || a.desc.trim() || a.about.trim()) return;
-    autoRead.current = true; void runEnrich();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const state = enrichment.state;
+    if (state.status === "running") setWebOpen(true);
+    if (state.status !== "done" || !state.websiteKey || appliedRead.current === state.websiteKey) return;
+    appliedRead.current = state.websiteKey;
+    const bio = typeof state.result?.bio === "string" ? state.result.bio.trim() : "";
+    const patch: Partial<A> = {};
+    if (bio && !a.desc.trim()) patch.desc = singleLineDescription(shortFrom(bio));
+    if (bio && !a.about.trim()) patch.about = capWords(bio, 80);
+    if (Object.keys(patch).length) setA((p) => ({ ...p, ...patch }));
+    setMarks({ desc: state.filled?.includes("desc"), about: state.filled?.includes("about") });
+    setWebOpen(true);
+    if (bio) requestAnimationFrame(() => document.getElementById("w-desc")?.focus());
+  }, [enrichment.state.status, enrichment.state.websiteKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const markAnswered = (id: QId) => {
     if (id === "review" || answered.includes(id)) return answered;
@@ -384,7 +383,17 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     goTo(nxt);
   };
   const tryContinue = () => {
-    if (cur === "review") { if (allValid) void flush().then(() => setPhase("enrich")); return; }
+    if (cur === "review") {
+      if (!allValid) return;
+      void flush().then(async () => {
+        let latest = enrichment.state;
+        if (isValidUrl(a.web) && latest.status === "idle") latest = await enrichment.start(a.web);
+        if (latest.status === "running") { setPhase("enrich"); return; }
+        setEnrichRes((latest.result ?? null) as EnrichInvestorResult | null);
+        setPhase("complete");
+      });
+      return;
+    }
     if (cur === "web" && !individual && !webOpen) { if (isValidUrl(a.web)) void runEnrich(); return; }
     // A website typed here (none at sign-up) is read at Continue, once, while both descriptions are empty.
     if (cur === "web" && isValidUrl(a.web) && !readDone && !readFailed && !a.desc.trim() && !a.about.trim()) { void runEnrich(); return; }
@@ -471,18 +480,19 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       <div className="rounded-[12px] border border-[#E9EBF0] bg-[#FBFBFD] p-4 dark:border-border dark:bg-muted/30">
         <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">{setupText("For verification · also visible to Admin")}</div>
         <div className="mb-3 text-[14px] font-semibold">{tr("Team members")}</div>
-        <div className="space-y-3">
+        <SectionHeading>{L("Investment Contact Person", "ผู้ติดต่อด้านการลงทุน")}</SectionHeading>
+        <div className="mt-3 space-y-3">
           {a.people.map((p, i) => {
             const bad = i === 0 && forced.team && !!errors.team;
             const upd = (k: keyof Person, v: string) => setPeople(a.people.map((x, j) => (j === i ? { ...x, [k]: v } : x)));
             return (
               <div key={i} className="flex items-start gap-3 rounded-[12px] border border-[#E9EBF0] bg-white p-3 dark:border-border dark:bg-card">
                 <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-[#EEF1F7] text-[14px] font-semibold text-[#1E2A4A] dark:bg-muted dark:text-foreground">{p.name.trim() ? initials(p.name) : <UserRound className="h-5 w-5" />}</span>
-                <div className="grid min-w-0 flex-1 gap-2 min-[600px]:grid-cols-2">
-                  <input data-team-name aria-label={L("Full name", "ชื่อ-นามสกุล")} aria-required className={`${inp} !h-[44px] ${bad ? errCls : ""}`} placeholder={L("Full name *", "ชื่อ-นามสกุล *")} value={p.name} maxLength={120} onChange={(e) => upd("name", e.target.value)} />
-                  <input aria-label={L("Position", "ตำแหน่ง")} className={`${inp} !h-[44px]`} placeholder={L("Position", "ตำแหน่ง")} value={p.role} maxLength={120} onChange={(e) => upd("role", e.target.value)} />
-                  <input aria-label={L("Email", "อีเมล")} type="email" className={`${inp} !h-[44px]`} placeholder={L("Email", "อีเมล")} value={p.email} maxLength={200} onChange={(e) => upd("email", e.target.value)} />
-                  <input aria-label={L("Phone (optional)", "โทรศัพท์ (ไม่บังคับ)")} className={`${inp} !h-[44px]`} placeholder={L("Phone (optional)", "โทรศัพท์ (ไม่บังคับ)")} value={p.phone} maxLength={60} onChange={(e) => upd("phone", e.target.value)} />
+                <div className="min-w-0 flex-1">
+                  <ContactPersonFields idPrefix={`team-${i}`} inputClassName={`${inp} !h-[44px]`}
+                    value={{ name: p.name, position: p.role, email: p.email, phone: p.phone }}
+                    errors={{ name: bad, email: i === 0 && forced.team && !!errors.team }}
+                    onChange={(key, value) => upd(key === "position" ? "role" : key, value)} />
                 </div>
                 {a.people.length > 1 && (
                   <button type="button" aria-label={L(`Remove ${p.name.trim() || "team member"}`, `ลบ ${p.name.trim() || "สมาชิก"}`)} onClick={() => setPeople(a.people.filter((_, j) => j !== i))}
@@ -632,7 +642,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         <ManyTypeQuestion picks={a.picks} agnostic={a.sectors.includes(SECTOR_AGNOSTIC)} words={buyerWords(L)} error={forced.sectors ? errors.sectors : null}
           onChange={(p, ag) => { const v = ag ? [SECTOR_AGNOSTIC] : picksToSectors(p); set({ sectors: v, picks: p }, { preferred_industries: v, sector_picks: ag ? null : p }); }} />
       ) },
-    photos: { req: true, t: signupLogo ? L("Add photos of your firm", "เพิ่มรูปภาพของบริษัท") : tr("Add your logo and photos"), h: signupLogo ? L("Your logo from sign-up is already in place. Add at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA.", "โลโก้จากการสมัครใส่ไว้แล้ว เพิ่มรูปภาพอย่างน้อย 1 รูป (สูงสุด 3 รูป) ของสำนักงาน ทีมงาน หรือพอร์ตการลงทุนของท่าน ผู้ขายจะเห็นแบบนี้หลังจากอนุมัติ NDA ของท่าน") : tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA."),
+    photos: { req: true, t: signupLogo ? (individual ? L("Add photos of you or your work", "เพิ่มรูปภาพของท่านหรือผลงานของท่าน") : L("Add photos of your firm", "เพิ่มรูปภาพของบริษัท")) : tr("Add your logo and photos"), h: signupLogo ? L("Your logo from sign-up is already in place. Add at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA.", "โลโก้จากการสมัครใส่ไว้แล้ว เพิ่มรูปภาพอย่างน้อย 1 รูป (สูงสุด 3 รูป) ของสำนักงาน ทีมงาน หรือพอร์ตการลงทุนของท่าน ผู้ขายจะเห็นแบบนี้หลังจากอนุมัติ NDA ของท่าน") : tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA."),
       body: (
         <LogoPhotosStep L={L} wideAdd name={a.name || tr("Your firm")}
           sectorLine={[typeLabel(agent ? a.acts[0] ?? "" : a.type), [a.city || a.addr.province, a.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
@@ -672,7 +682,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     review: { req: false, t: tr("Review your answers"), h: tr("Check them, then we'll fill in the rest of your profile."),
       body: <Review a={a} med={med} steps={stepsAll} errors={errors} individual={individual} thai={thai} stagesShown={stagesShown} corp={corp}
         missingNames={missingRequired.map(s => L(...BUYER_STEP_NAMES[s.id].full))}
-        onEdit={(id) => { setFromReview(true); setFull(id); if (id === "web" && !individual) { setWebOpen(true); setReadFailed(false); } goTo(id); }} /> },
+        onEdit={(id) => { setFromReview(true); setFull(id); if (id === "web" && !individual) setWebOpen(true); goTo(id); }} /> },
   };
   const q = Q[step.id];
   const continueLabel = cur === "review" ? tr("Finish setup") : fromProfile && cur === profileStep ? "Back to your profile" : fromReview ? "Back to review" : tr("Continue");
@@ -685,6 +695,10 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   };
   const blockedText = continueOk || reading || cur === "review" ? null
     : cur === "photos" ? (med.logo ? continueBlockedLine([], L("en", "th") as "en" | "th", true) : null)
+    : cur === "team" ? continueBlockedLine([
+        !a.people[0]?.name.trim() && L("Full name", "ชื่อ-นามสกุล"),
+        !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(a.people[0]?.email.trim() ?? "") && L("Email address", "อีเมล"),
+      ].filter((x): x is string => !!x), L("en", "th") as "en" | "th")
     : continueBlockedLine(fieldsOf[cur].filter((k) => errors[k] && errors[k] !== "leak" && FIELD_LABEL[k]).map((k) => L(...FIELD_LABEL[k]!)), L("en", "th") as "en" | "th");
 
   // ---------------- layout ----------------
@@ -747,7 +761,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         </div>
       )}
       {phase === "enrich" && (
-        <Enrich a={a} header={header} card={card} btnO={btnO} btnP={btnP} onBack={() => { setPhase("q"); goTo("review"); }} onExit={saveExit}
+        <Enrich a={a} enrichment={enrichment.state} header={header} card={card} btnO={btnO} btnP={btnP} onBack={() => { setPhase("q"); goTo("review"); }} onExit={saveExit}
           onDone={(r0) => {
             // Once the Website step is answered, Continue to auto-fill leaves the two descriptions alone.
             const r = r0 && !individual && qValid("web") ? { ...r0, bio: undefined } : r0;
@@ -778,6 +792,7 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, mi
         : [tr("Investor type"), WIZARD_TYPES.find((t) => t.value === a.type)?.label ?? a.type, "type", "req", errors.type] as Row] : []),
       [individual ? tr("Address") : tr("Business address"), [a.addr.street, a.addr.unit, a.addr.district, a.addr.province, a.addr.postal, a.country].filter(Boolean).join(", "), "name", "req", errors["a-street"] || errors["a-district"] || errors["a-province"] || errors["a-postal"]],
       [tr("Firm name"), a.name, "name", "req", errors.name, "🔒 After NDA"],
+      [tr("Email address"), a.people[0]?.email ?? "", "team", "req", errors.team],
       ...(!individual ? [
         [tr("Year founded"), a.year, "name", "req", errors.year, "🔒 After NDA"] as Row,
         [tr("Registration number"), a.reg, "name", thai ? "req" : "opt", errors.reg, "🔒 After NDA"] as Row,
@@ -833,20 +848,17 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, mi
 
 type HeaderFn = (sec: string, right: string, pct: number) => React.ReactNode;
 
-function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
-  a: A; header: HeaderFn; card: string; btnO: string; btnP: string; onBack: () => void; onExit: () => void; onDone: (r: EnrichInvestorResult | null) => void;
+function Enrich({ a, enrichment, header, card, btnO, btnP, onBack, onExit, onDone }: {
+  a: A; enrichment: import("@/lib/website-enrichment").WebsiteEnrichmentDTO; header: HeaderFn; card: string; btnO: string; btnP: string; onBack: () => void; onExit: () => void; onDone: (r: EnrichInvestorResult | null) => void;
 }) {
+  const L = useL();
   const domain = normalizeUrl(a.web).replace(/^https?:\/\//, "").split("/")[0];
   const thaiReg = a.country === "Thailand" && /^\d{13}$/.test(a.reg);
-  const [res, setRes] = useState<EnrichInvestorResult | null>(null);
-  const [state, setState] = useState<"running" | "done">("running");
+  const res = (enrichment.result ?? null) as EnrichInvestorResult | null;
+  const state = enrichment.status === "running" ? "running" : "done";
   useEffect(() => {
-    let off = false;
-    investorEnrichAdapter.enrichInvestor({ websiteUrl: normalizeUrl(a.web) })
-      .then((r) => { if (!off) { setRes(r); setState("done"); } })
-      .catch(() => { if (!off) setState("done"); });
-    return () => { off = true; };
-  }, [a.web]);
+    if (state === "done") onDone(res);
+  }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
   const found = (r: EnrichInvestorResult | null) => {
     const site = [r?.bio && "description", r?.yearFounded && a.role === "individual" && !a.year && "year founded"].filter(Boolean) as string[];
     return {
@@ -875,10 +887,11 @@ function Enrich({ a, header, card, btnO, btnP, onBack, onExit, onDone }: {
       <div className={card}>
         <h1 className="text-[21px] font-bold sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>{setupText(state === "done" ? "Your profile is filled in" : tr("Filling in your profile"))}</h1>
         <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{setupText(state === "done" ? `We found ${n} details. Check them in the next step.` : `We're reading ${domain} and public records. This takes a few seconds.`)}</p>
+        {state === "running" && <div className="mb-6 grid min-h-[220px] place-items-center rounded-[12px] bg-muted/60 px-6"><Loading size="lg" message={L(`We're reading ${domain} and public records. This takes a few seconds.`, `กำลังอ่าน ${domain} และข้อมูลสาธารณะ ใช้เวลาสักครู่`)} /></div>}
         <div className="rounded-[12px] border border-[#E9EBF0] dark:border-border">
           {sources.filter((s) => s[3]).map(([t, sub, what]) => (
             <div key={t} className="flex items-center gap-3 border-b border-[#F0F1F4] px-4 py-3 last:border-0 dark:border-border">
-              {state === "done" ? <Check className="h-5 w-5 text-[#15803D]" /> : <Loader2 className="h-5 w-5 animate-spin text-[#6B7280]" />}
+              {state === "done" ? <Check className="h-5 w-5 text-[#15803D]" /> : <span className="h-5 w-5" aria-hidden />}
               <div className="min-w-0 flex-1"><b className="block text-[14.5px] font-semibold">{t}</b><span className="text-[12.5px] text-[#6B7280]">{sub}</span></div>
               {state === "done" && <span className="text-[13px] text-[#434A5C] dark:text-muted-foreground">{setupText(what)}</span>}
             </div>

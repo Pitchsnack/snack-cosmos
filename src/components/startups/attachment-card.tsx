@@ -23,7 +23,7 @@ export function attachmentMissing(m: EntityMediaState) {
   return (filled(m.logo) ? 0 : 1) + (m.slots.some(filled) ? 0 : 1);
 }
 
-export function AttachmentCard({ value, onChange, name, sectorLine, intro, showGuidance = true, wideAdd = false }: {
+export function AttachmentCard({ value, onChange, name, sectorLine, intro, showGuidance = true, wideAdd = false, photosOnly = false }: {
   value: EntityMediaState; onChange: (m: EntityMediaState) => void; name: string; sectorLine: string;
   /** Text above the card; null hides it. Defaults to the seller wording. */
   intro?: string | null;
@@ -31,6 +31,8 @@ export function AttachmentCard({ value, onChange, name, sectorLine, intro, showG
   showGuidance?: boolean;
   /** Setup wizards: one full-width "+ Upload photos…" tile under the photos already added. */
   wideAdd?: boolean;
+  /** A sign-up logo is already present: this step asks only for photos. */
+  photosOnly?: boolean;
 }) {
   const tr = useTr();
   const hasLogo = filled(value.logo);
@@ -55,8 +57,8 @@ export function AttachmentCard({ value, onChange, name, sectorLine, intro, showG
     const slots = [kept[0] ?? EMPTY_SLOT, kept[1] ?? EMPTY_SLOT, kept[2] ?? EMPTY_SLOT] as EntityMediaState["slots"];
     onChange({ ...value, slots });
   };
-  const miss = !hasLogo && !photos ? tr("⚠ Missing: add your logo and at least one photo", "⚠ ยังขาด: เพิ่มโลโก้และรูปภาพอย่างน้อย 1 รูป")
-    : !hasLogo ? tr("⚠ Missing: add your logo", "⚠ ยังขาด: เพิ่มโลโก้ของท่าน")
+  const miss = !photosOnly && !hasLogo && !photos ? tr("⚠ Missing: add your logo and at least one photo", "⚠ ยังขาด: เพิ่มโลโก้และรูปภาพอย่างน้อย 1 รูป")
+    : !photosOnly && !hasLogo ? tr("⚠ Missing: add your logo", "⚠ ยังขาด: เพิ่มโลโก้ของท่าน")
     : !photos ? tr("⚠ Missing: add at least one photo", "⚠ ยังขาด: เพิ่มรูปภาพอย่างน้อย 1 รูป") : null;
   const introText = intro === undefined
     ? tr("Your logo and up to 3 photos of the premises, the team or the products. Buyers see them like this after you approve their NDA.",
@@ -72,8 +74,8 @@ export function AttachmentCard({ value, onChange, name, sectorLine, intro, showG
         <div className="min-w-0 flex-1">
           <div className="rounded-[14px] border border-[#E6E8EC] bg-card p-[18px] max-sm:p-[14px] dark:border-border">
             <div className="flex items-center gap-[14px]">
-              <Space kind="logo" slot={value.logo} label={tr("Add your logo", "เพิ่มโลโก้ของท่าน")} removeLabel={tr("Remove the logo", "ลบโลโก้")}
-                onFile={(f) => { const ok = take(f); if (ok) setLogo(ok); }} onRemove={() => setLogo(null)} />
+              {!photosOnly && <Space kind="logo" slot={value.logo} label={tr("Add your logo", "เพิ่มโลโก้ของท่าน")} removeLabel={tr("Remove the logo", "ลบโลโก้")}
+                onFile={(f) => { const ok = take(f); if (ok) setLogo(ok); }} onRemove={() => setLogo(null)} />}
               <div className="min-w-0">
                 <div className="truncate text-[16px] font-bold text-[#151A28] dark:text-foreground">{name.trim() || tr("Your company", "บริษัทของท่าน")}</div>
                 {sectorLine && <div className="mt-[2px] truncate text-[13px] text-[#6A7181] dark:text-muted-foreground">{sectorLine}</div>}

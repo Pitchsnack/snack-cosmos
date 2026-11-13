@@ -660,6 +660,7 @@ export type Database = {
           verified_by: string | null
           verified_snapshot: Json | null
           website: string | null
+          website_enrichment: Json | null
           wizard_state: Json
           year_founded: number | null
         }
@@ -744,6 +745,7 @@ export type Database = {
           verified_by?: string | null
           verified_snapshot?: Json | null
           website?: string | null
+          website_enrichment?: Json | null
           wizard_state?: Json
           year_founded?: number | null
         }
@@ -828,6 +830,7 @@ export type Database = {
           verified_by?: string | null
           verified_snapshot?: Json | null
           website?: string | null
+          website_enrichment?: Json | null
           wizard_state?: Json
           year_founded?: number | null
         }
@@ -4524,6 +4527,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           visibility: string
+          website_enrichment: Json | null
           website_url: string | null
           wizard: Json
           year_founded: number | null
@@ -4592,6 +4596,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           visibility?: string
+          website_enrichment?: Json | null
           website_url?: string | null
           wizard?: Json
           year_founded?: number | null
@@ -4660,6 +4665,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           visibility?: string
+          website_enrichment?: Json | null
           website_url?: string | null
           wizard?: Json
           year_founded?: number | null
@@ -6663,6 +6669,8 @@ export type Database = {
           bio_story: Json | null
           bio_story_th: Json | null
           bio_th: string | null
+          contact_email: string | null
+          contact_phone: string | null
           created_at: string
           display_order: number
           full_name: string
@@ -6679,6 +6687,8 @@ export type Database = {
           bio_story?: Json | null
           bio_story_th?: Json | null
           bio_th?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           display_order?: number
           full_name: string
@@ -6695,6 +6705,8 @@ export type Database = {
           bio_story?: Json | null
           bio_story_th?: Json | null
           bio_th?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           display_order?: number
           full_name?: string
@@ -7099,6 +7111,7 @@ export type Database = {
           updated_by: string | null
           url_key: string | null
           visibility: string
+          website_enrichment: Json | null
           website_url: string | null
           year_founded: number | null
         }
@@ -7169,6 +7182,7 @@ export type Database = {
           updated_by?: string | null
           url_key?: string | null
           visibility?: string
+          website_enrichment?: Json | null
           website_url?: string | null
           year_founded?: number | null
         }
@@ -7239,6 +7253,7 @@ export type Database = {
           updated_by?: string | null
           url_key?: string | null
           visibility?: string
+          website_enrichment?: Json | null
           website_url?: string | null
           year_founded?: number | null
         }

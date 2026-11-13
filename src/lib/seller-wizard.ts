@@ -178,6 +178,7 @@ export function foundedYearError(year: string, now = new Date().getFullYear()): 
 }
 export type SellerFounder = {
   id?: string; full_name: string; position?: string | null; linkedin_url?: string | null;
+  email?: string; phone?: string;
   bio?: string | null; bio_story?: FounderStory | null; bio_th?: string | null; bio_story_th?: FounderStory | null; photo_url?: string | null;
 };
 export function websiteDescriptionFieldsAnswered(d: SellerDraft) {
@@ -203,13 +204,18 @@ export const stepIdx = (k: string | null | undefined) => {
   const key = normalizeSellerStep(k);
   return key ? STEP_KEYS.indexOf(key) : -1;
 };
+export function founderContactComplete(f: SellerFounder | undefined): boolean {
+  if (!f?.full_name.trim()) return false;
+  const digits = (f.phone ?? "").replace(/\D/g, "");
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((f.email ?? "").trim()) && digits.length >= 9 && digits.length <= 15;
+}
 export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
   return {
     role: !!d.role, name: !!d.name.trim() && /^\d{13}$/.test(d.reg) && addrComplete(d.addr),
     sector: !!d.sector, web: websiteFieldsAnswered(d), founded: validFoundedYear(d.year) && !!d.size,
     rev: !!d.rev, lic: d.licences.length + d.iso.length > 0 || stepIdx(d.reached) > stepIdx("lic"),
     photos: !!d.hasLogo && (d.photos ?? 0) > 0, deal: !!d.deal, handover: d.stays === "yes" || d.stays === "no",
-    price: (d.price ?? 0) > 0, founder: !!d.founders?.some(f => f.full_name.trim()), review: false,
+    price: (d.price ?? 0) > 0, founder: founderContactComplete(d.founders?.[0]), review: false,
   };
 }
 export function sellerAnswered(d: SellerDraft): Record<StepKey, boolean> { return sellerValid(d); }
