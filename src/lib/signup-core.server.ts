@@ -113,7 +113,7 @@ export async function doFinish(uid: string, data: FinishInput) {
         if (acctName && founderPosition) {
           const { data: st } = await sb.from("startups").select("tenant_id").eq("id", profileId).maybeSingle();
           const { count } = await sb.from("startup_founders").select("id", { count: "exact", head: true }).eq("startup_id", profileId);
-          if (st && !count) await sb.from("startup_founders").insert({ startup_id: profileId, tenant_id: st.tenant_id, full_name: acctName, position: founderPosition, contact_email: acctEmail ?? null, contact_phone: null, display_order: 0 });
+          if (st && !count) await sb.from("startup_founders").insert({ startup_id: profileId, tenant_id: st.tenant_id, full_name: acctName, position: founderPosition, display_order: 0 });
         }
       }
     }

@@ -38,6 +38,8 @@ export type SellerSetup = {
   shortDescriptionTh: string; longDescriptionTh: string; productTagsTh: string[]; marketTagsTh: string[];
   highlights: string[]; highlightsTh: string[];
   founders: SellerFounder[]; owner: { fullName: string; position: string };
+  /** The profile's contact email and Contact number (About Company), shown under the first founder. */
+  contact: { email: string; phone: string };
   /** The listing's answers (empty until the listing exists). */
   listing: { deal: string | null; stays: "yes" | "no" | null; months: number | null; price: number | null; name: string };
   media: { logoPath: string | null; logoUrl: string | null; slots: { slot: number; path: string; url: string | null }[] };
@@ -82,13 +84,21 @@ async function saveWizardFounders(sb:any, id:string, userId:string, founders:z.i
   for(const [i,f] of founders.entries()) {
     // Empty new cards are unsaved UI drafts; named founders use the existing private table.
     if(!f.full_name.trim()) continue;
-    const patch={startup_id:id,tenant_id:st.tenant_id,full_name:f.full_name.trim(),position:f.position ?? null,contact_email:f.email?.trim() || null,contact_phone:f.phone?.trim() || null,linkedin_url:f.linkedin_url ?? null,
+    const patch={startup_id:id,tenant_id:st.tenant_id,full_name:f.full_name.trim(),position:f.position ?? null,linkedin_url:f.linkedin_url ?? null,
       bio:f.bio_story?.mode === "lines" ? composeFounderBio(f.bio_story):f.bio ?? null,bio_story:f.bio_story ?? null,
       bio_th:f.bio_story_th?.mode === "lines" ? composeFounderBio(f.bio_story_th):f.bio_th ?? null,bio_story_th:f.bio_story_th ?? null,
       photo_url:f.photo_url ?? null,display_order:i};
     const existingId = f.id && ids.has(f.id) ? f.id : !f.id ? old?.[i]?.id : null;
     if(existingId) {const {error}=await sb.from("startup_founders").update(patch).eq("id",existingId).eq("startup_id",id);if(error) throw new Error(error.message);keep.add(existingId);}
     else {const {data:r,error}=await sb.from("startup_founders").insert(patch).select("id").single();if(error) throw new Error(error.message);if(r) keep.add(r.id);}
+  }
+  // The first founder's Email address and Phone are the profile's own contact email and Contact number (About Company).
+  const lead = founders[0];
+  if(lead && (lead.email !== undefined || lead.phone !== undefined)) {
+    const c:Record<string,string|null> = {};
+    if(lead.email !== undefined) c.email = lead.email.trim() || null;
+    if(lead.phone !== undefined) c.contact_number = lead.phone.trim() || null;
+    const {error} = await sb.from("startups").update(c).eq("id",id); if(error) throw new Error(error.message);
   }
   const remove=(old ?? []).map((f:any)=>f.id).filter((id:string)=>!keep.has(id));
   if(remove.length) {const {error}=await sb.from("startup_founders").delete().eq("startup_id",id).in("id",remove);if(error) throw new Error(error.message);}
@@ -143,7 +153,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       sb.from("startup_ownership").select("seller_relation").eq("startup_id", data.id).maybeSingle(),
       sb.from("hidden_profiles").select("deal_type, owner_stays, handover_months, asking_price, asking_price_thb, code_name, highlights, highlights_th").eq("startup_id", data.id).maybeSingle(),
       sb.from("startup_media").select("slot, image_url").eq("startup_id", data.id).order("slot"),
-      sb.from("startup_founders").select("id,full_name,position,contact_email,contact_phone,linkedin_url,bio,bio_story,bio_th,bio_story_th,photo_url").eq("startup_id",data.id).order("display_order"),
+      sb.from("startup_founders").select("id,full_name,position,linkedin_url,bio,bio_story,bio_th,bio_story_th,photo_url").eq("startup_id",data.id).order("display_order"),
     ]);
     if (!s) throw new Error("Business unavailable");
     const [{data:ownerRow},{data:ownerProfile}] = await Promise.all([sb.from("users").select("first_name,last_name").eq("id",s.created_by ?? context.userId).maybeSingle(),sb.from("user_profiles").select("title").eq("user_id",s.created_by ?? context.userId).maybeSingle()]);
@@ -165,7 +175,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       shortDescription:s.short_description ?? "",longDescription:s.long_description ?? "",productTags:s.product_tags ?? [],marketTags:s.market_tags ?? [],
       shortDescriptionTh:s.short_description_th ?? "",longDescriptionTh:s.long_description_th ?? "",productTagsTh:s.product_tags_th ?? [],marketTagsTh:s.market_tags_th ?? [],
       highlights:strengthRows(hp?.highlights),highlightsTh:strengthRows(hp?.highlights_th),
-      founders:(founders ?? []).map((f:any) => ({ ...f, email: f.contact_email ?? "", phone: f.contact_phone ?? "" })),owner:{fullName:[ownerRow?.first_name,ownerRow?.last_name].filter(Boolean).join(" "),position:ownerProfile?.title ?? ""},
+      founders:(founders ?? []).map((f:any,i:number) => ({ ...f, email: i === 0 ? s.email ?? "" : "", phone: i === 0 ? s.contact_number ?? "" : "" })),contact:{email:s.email ?? "",phone:s.contact_number ?? ""},owner:{fullName:[ownerRow?.first_name,ownerRow?.last_name].filter(Boolean).join(" "),position:ownerProfile?.title ?? ""},
       listing: {
         deal: DEALS.includes(hp?.deal_type) ? hp.deal_type : null, stays: hp?.owner_stays ?? null, months: hp?.handover_months ?? null,
         price: thbOf(hp), name: hp?.code_name && !/^project\b/i.test(hp.code_name) ? hp.code_name : "",

@@ -210,8 +210,8 @@ export function fallbackSellerFounder(role: SellerRelation | null, fullName: str
 }
 export function founderContactComplete(f: SellerFounder | undefined): boolean {
   if (!f?.full_name.trim()) return false;
-  const digits = (f.phone ?? "").replace(/\D/g, "");
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((f.email ?? "").trim()) && digits.length >= 9 && digits.length <= 15;
+  // Same checks as About Company: Email address required, Phone optional.
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((f.email ?? "").trim());
 }
 export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
   return {

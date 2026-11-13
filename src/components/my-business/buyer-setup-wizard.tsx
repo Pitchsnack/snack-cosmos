@@ -452,13 +452,9 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       <label className={lbl} htmlFor="w-web">{L("Firm website", "เว็บไซต์บริษัท")}{!open && <Req />}</label>
       <div className="flex flex-col gap-2 sm:flex-row">
         <input id="w-web" aria-required autoFocus={!open} readOnly={reading} className={`${inp} ${(a.web.trim() || forced.web) && errors.web ? errCls : ""}`} value={a.web} maxLength={500} placeholder="www.yourfirm.com"
-          onKeyDown={(e) => { if (e.key === "Enter" && !individual && isValidUrl(a.web)) { e.preventDefault(); e.stopPropagation(); void runEnrich(); } }}
+          onKeyDown={(e) => { if (e.key === "Enter" && open) { e.preventDefault(); e.stopPropagation(); } }}
           onChange={(e) => { setWebOpened(false); set({ web: e.target.value }, isValidUrl(e.target.value) ? { website_url: normalizeUrl(e.target.value) } : {}); }} />
-        {open ? (
-          <button type="button" className="seller-enrich-button" disabled={!!errors.web || reading} onClick={() => void runEnrich()}>
-            {reading ? <Loader2 className="motion-safe:animate-spin" size={17} /> : <Sparkles size={17} />} {reading ? L("Reading…", "กำลังอ่าน…") : "Auto Enrich"}
-          </button>
-        ) : (
+        {open ? null : (
           <button type="button" disabled={!!errors.web}
             onClick={() => { window.open(normalizeUrl(a.web), "_blank", "noopener,noreferrer"); setWebOpened(true); }}
             className="inline-flex h-[50px] flex-none items-center justify-center gap-1.5 rounded-[12px] border border-[#DCDFE5] bg-white px-4 text-[15px] font-semibold text-[#1E2A4A] hover:border-[#1E2A4A] disabled:cursor-not-allowed disabled:text-[#C7CBD6] dark:border-border dark:bg-background dark:text-foreground">
@@ -593,7 +589,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       ? { req: true, t: tr("What is your firm's website?"), h: L("Auto-fill reads it to fill in your firm's description.", "ระบบกรอกข้อมูลอัตโนมัติจะอ่านเว็บไซต์เพื่อกรอกคำอธิบายบริษัทของท่าน"), body: webRow(false) }
       : { req: false,
         t: individual ? L("Your website and what you invest in", "เว็บไซต์ของคุณและสิ่งที่คุณลงทุน") : L("Website and descriptions", "เว็บไซต์และคำอธิบาย"),
-        h: readFailed ? L("Auto Enrich couldn't read your website. Fill these in yourself, or try Auto Enrich again.", "Auto Enrich อ่านเว็บไซต์ของท่านไม่ได้ กรุณากรอกเอง หรือลองใช้ Auto Enrich อีกครั้ง") : L("Sellers read these on your profile.", "ผู้ขายจะอ่านข้อมูลเหล่านี้ในโปรไฟล์ของท่าน"),
+        h: readFailed ? L("We couldn't read your website. Please fill these in yourself.", "เราไม่สามารถอ่านเว็บไซต์ของท่านได้ กรุณากรอกข้อมูลเหล่านี้ด้วยตนเอง") : L("Sellers read these on your profile.", "ผู้ขายจะอ่านข้อมูลเหล่านี้ในโปรไฟล์ของท่าน"),
         body: <div>{readDone && !reading && webDomain && <FilledFrom domain={webDomain} L={L} />}{webRow(true)}<div className="seller-website-more"><SectionBand bleed="-mx-[18px] sm:-mx-10" />{reading ? (
           <div className="grid min-h-[340px] place-items-center rounded-[12px] bg-muted/60 px-6"><Loading size="lg" message={L(`Reading ${webDomain}… We'll fill in your short and long description.`, `กำลังอ่าน ${webDomain}… เราจะกรอกคำอธิบายสั้นและคำอธิบายแบบยาวให้คุณ`)} /></div>
         ) : (

@@ -490,7 +490,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
               {forced.long && errors.long && <p className="mt-1.5 text-[13px] text-destructive">{errors.long}</p>}
             </div>
           </>}
-          {enrichment.state.status === "failed" && <div className="mt-4 flex flex-wrap items-center gap-3"><p className="text-sm text-destructive">{L("Auto Enrich couldn't read your website. Fill these in yourself, or try Auto Enrich again.", "Auto Enrich อ่านเว็บไซต์ของท่านไม่ได้ กรุณากรอกเอง หรือลอง Auto Enrich อีกครั้ง")}</p><button type="button" className="text-sm font-semibold text-link underline" onClick={() => void enrichment.start(a.web, true)}>{L("Try Auto Enrich again", "ลอง Auto Enrich อีกครั้ง")}</button></div>}
+          {enrichment.state.status === "failed" && <p className="mt-4 text-sm text-destructive">{L("We couldn't read your website. Please fill these in yourself.", "เราไม่สามารถอ่านเว็บไซต์ของท่านได้ กรุณากรอกข้อมูลเหล่านี้ด้วยตนเอง")}</p>}
         </div>
       ) },
     services: { req: true, t: tr("Which professional services does your firm provide?"), h: tr("Pick all that apply, and say how you charge for each. Sellers and buyers filter Browse advisors by these, and see every fee on your profile."),

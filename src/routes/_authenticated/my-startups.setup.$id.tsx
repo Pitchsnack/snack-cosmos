@@ -6,8 +6,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SellerWizard } from "@/components/startups/seller-wizard";
 import { getSellerSetup, getSellerIdentityReadiness, saveSellerSetup, applySellerEnrich, type SellerSetup } from "@/lib/seller-setup.functions";
-import { emptyDraft, firstUnanswered, listingPayload, SELLER_STEPS, normalizeSellerStep, type SellerDraft } from "@/lib/seller-wizard";
+import { emptyDraft, firstUnanswered, listingPayload, SELLER_STEPS, normalizeSellerStep, fallbackSellerFounder, type SellerDraft } from "@/lib/seller-wizard";
 import { z } from "zod";
+import { tr } from "@/i18n/language";
+import { SetupWizardLoading } from "@/components/setup/setup-wizard-loading";
 import { useSessionContext } from "@/hooks/use-session-context";
 
 export const Route = createFileRoute("/_authenticated/my-startups/setup/$id")({
@@ -33,7 +35,8 @@ function toDraft(s: SellerSetup, open?: string): SellerDraft {
     rev: s.rev, size: s.size, sector: s.sector, pick: s.pick, licences: s.licences as SellerDraft["licences"], iso: s.iso, addr: s.addr,
     reached: s.reached,
     shortDescription:s.shortDescription,longDescription:s.longDescription,productTags:s.productTags,marketTags:s.marketTags,
-    shortDescriptionTh:s.shortDescriptionTh,longDescriptionTh:s.longDescriptionTh,productTagsTh:s.productTagsTh,marketTagsTh:s.marketTagsTh,founders:s.founders,
+    shortDescriptionTh:s.shortDescriptionTh,longDescriptionTh:s.longDescriptionTh,productTagsTh:s.productTagsTh,marketTagsTh:s.marketTagsTh,
+    founders:s.founders.length ? s.founders : [{ ...fallbackSellerFounder(s.role, s.owner.fullName), email: s.contact.email, phone: s.contact.phone }],
     highlights:s.highlights,highlightsTh:s.highlightsTh,
     hasLogo: !!s.media.logoPath, photos: s.media.slots.length,
     deal: s.listing.deal, stays: s.listing.stays, months: s.listing.months, price: s.listing.price,
@@ -55,7 +58,7 @@ function Page() {
   const saveFn = useServerFn(saveSellerSetup);
   const fetchReadiness = useServerFn(getSellerIdentityReadiness);
   const applyFn = useServerFn(applySellerEnrich);
-  const { data, error } = useQuery({ queryKey: sellerSetupKey(id), queryFn: () => fetchFn({ data: { id } }), staleTime: 0 });
+  const { data, error, refetch } = useQuery({ queryKey: sellerSetupKey(id), queryFn: () => fetchFn({ data: { id } }), staleTime: 0 });
   const initial = useMemo(() => (data ? toDraft(data, openAt) : null), [data]); // eslint-disable-line react-hooks/exhaustive-deps
   const timer = useRef<number | null>(null);
   const [fill, setFill] = useState<string | null>(null);
@@ -80,8 +83,7 @@ function Page() {
   };
   const leave = () => { void qc.invalidateQueries(); navigate({ to: "/my-startups", search: { open: id } as never }); };
 
-  if (error) return <p className="p-8 text-sm text-muted-foreground">{(error as Error).message}</p>;
-  if (!data || !initial || !session?.user?.id) return null;
+  if (error || !data || !initial || !session?.user?.id) return <SetupWizardLoading title={tr("Set up your business")} error={error} onRetry={() => void refetch()} />;
   if (fill) return <SellerAutoFill id={id} web={fill} onDone={() => { void completed(); }} />;
   return (
     <SellerWizard

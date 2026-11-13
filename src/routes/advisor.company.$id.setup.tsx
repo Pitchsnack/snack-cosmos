@@ -1,3 +1,5 @@
+import { SetupWizardLoading } from "@/components/setup/setup-wizard-loading";
+import { tr } from "@/i18n/language";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyAdvisorFirms } from "@/components/advisor/advisor-my-company";
@@ -27,14 +29,14 @@ export const Route = createFileRoute("/advisor/company/$id/setup")({
 
 function SetupPage() {
   const { id } = Route.useParams();
-  const { data, error, isLoading } = useMyAdvisorFirms();
+  const { data, error, isLoading, refetch } = useMyAdvisorFirms();
   const fetchAdmin = useServerFn(getAdvisorFirmForAdmin);
   const adminFirm = useQuery({ queryKey: ["advisor-setup-admin", id], enabled: !!data && !data.some(f => f.id === id), retry: false,
     queryFn: () => fetchAdmin({ data: { id } }) });
-  if (error) return <p className="p-8 text-sm text-muted-foreground">Couldn't load your firm profile. Please refresh.</p>;
-  if (isLoading || !data) return <div className="min-h-screen bg-[#F6F7F9] dark:bg-background" />;
+  const frameTitle = tr("Firm Profile") + " " + tr("Setup Wizard");
+  if (error || isLoading || !data) return <SetupWizardLoading title={frameTitle} error={error} onRetry={() => void refetch()} />;
   const firm = data.find((f) => f.id === id) ?? adminFirm.data;
-  if (!firm && adminFirm.isFetching) return <div className="min-h-screen bg-background" />;
+  if (!firm && adminFirm.isFetching) return <SetupWizardLoading title={frameTitle} />;
   if (!firm) return <p className="p-8 text-sm text-muted-foreground">This firm profile isn't yours.</p>;
   return <AdvisorSetupWizard key={firm.id} firm={firm} />;
 }
