@@ -34,6 +34,12 @@ export function capWords(text: string, limit: number): string {
   return words.slice(0, limit).join(" ");
 }
 
+/** Reopening/Create reuses one read; only an explicit Auto Enrich retry may repeat it. */
+export function shouldReuseEnrichment(old: { status?: string; website_key?: string; updated_at?: string } | null, key: string, retry = false, now = Date.now()): boolean {
+  if (retry || old?.website_key !== key || !["running", "done", "failed"].includes(old.status ?? "")) return false;
+  return old.status !== "running" || now - Date.parse(old.updated_at ?? "") < 10 * 60_000;
+}
+
 export function enrichmentDto(row: { website_enrichment?: unknown; website?: unknown } | null): WebsiteEnrichmentDTO {
   const raw = (row?.website_enrichment ?? null) as { status?: string; website_key?: string; result?: Record<string, unknown>; filled?: string[] } | null;
   const key = raw?.website_key ?? null;

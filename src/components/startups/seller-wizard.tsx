@@ -19,7 +19,7 @@ import { SellerTypeQuestion } from "@/components/common/business-type-question";
 import type { SectorPick } from "@/lib/business-types";
 import { AddressBox } from "@/components/advisor/advisor-firm-fields";
 import { DealQ, HandoverQ, PhotosQ, PriceQ, type WizardMedia } from "@/components/startups/seller-listing-questions";
-import { LISTING_KEYS, validFoundedYear } from "@/lib/seller-wizard";
+import { LISTING_KEYS, validFoundedYear, fallbackSellerFounder } from "@/lib/seller-wizard";
 import { bandInText, bandOf, fmtThb } from "@/lib/asking-price";
 import { addressLine, needCls, useFocusNeeded } from "@/components/common/need-fill";
 import {
@@ -88,11 +88,7 @@ export function SellerWizard({
 }) {
   const th = useTranslation().language === "th"; // re-render on language change
   const L = (en: string, t: string) => (th ? t : en);
-  const [d, setD] = useState<SellerDraft>(() => ({...initial, reached: normalizeSellerStep(initial.reached), founders: initial.founders?.length ? initial.founders : [{
-    full_name: initial.role === "owner" || initial.role === "family_owner" ? owner?.fullName ?? "" : "",
-    position: initial.role === "owner" ? "Owner" : initial.role === "family_owner" ? "Family business owner" : null,
-    email: initial.role === "owner" || initial.role === "family_owner" ? initial.founders?.[0]?.email ?? "" : "",
-  }]}));
+  const [d, setD] = useState<SellerDraft>(() => ({...initial, reached: normalizeSellerStep(initial.reached), founders: initial.founders?.length ? initial.founders : [fallbackSellerFounder(initial.role, owner?.fullName ?? "")]}));
   /** Step 1's wording in the current language; the stored answer is always the key. */
   const roleLabel = () => { const r = SELLER_RELATIONS.find((x) => x.value === d.role); return r ? L(...r.label) : ""; };
   const [otherLic, setOtherLic] = useState("");

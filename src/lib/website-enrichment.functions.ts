@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { capWords, enrichmentDto, shortDescriptionFrom, websiteDomain, websiteKey, type WebsiteEnrichmentDTO } from "./website-enrichment";
+import { capWords, enrichmentDto, shortDescriptionFrom, shouldReuseEnrichment, websiteDomain, websiteKey, type WebsiteEnrichmentDTO } from "./website-enrichment";
 
 const Input = z.object({ role: z.enum(["seller", "buyer", "advisor"]), id: z.string().uuid(), website: z.string().trim().max(500).optional(), retry: z.boolean().optional() });
 type Input = z.infer<typeof Input>;
@@ -106,9 +106,7 @@ async function run(data: Input, context: { userId: string; supabase: any }): Pro
   if (!website) return { status: "idle", websiteKey: null, domain: null };
   const key = websiteKey(website);
   const old = (o.row.website_enrichment ?? null) as { status?: string; website_key?: string; updated_at?: string } | null;
-  if (!data.retry && old?.website_key === key && ["running", "done", "failed"].includes(old.status ?? "")) {
-    if (old.status !== "running" || Date.now() - Date.parse(old.updated_at ?? "") < 10 * 60_000) return enrichmentDto({ website_enrichment: o.row.website_enrichment });
-  }
+  if (shouldReuseEnrichment(old, key, data.retry)) return enrichmentDto({ website_enrichment: o.row.website_enrichment });
   const running = { status: "running", website_key: key, updated_at: new Date().toISOString() };
   const websiteColumn = data.role === "advisor" ? "website" : "website_url";
   let claim = o.sb.from(o.table).update({ website_enrichment: running, [websiteColumn]: website }).eq("id", data.id);

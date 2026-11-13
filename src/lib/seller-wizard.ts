@@ -204,6 +204,10 @@ export const stepIdx = (k: string | null | undefined) => {
   const key = normalizeSellerStep(k);
   return key ? STEP_KEYS.indexOf(key) : -1;
 };
+export function fallbackSellerFounder(role: SellerRelation | null, fullName: string): SellerFounder {
+  const owner = role === "owner" || role === "family_owner";
+  return { full_name: owner ? fullName : "", position: role === "owner" ? "Owner" : role === "family_owner" ? "Family business owner" : null, email: "", phone: "" };
+}
 export function founderContactComplete(f: SellerFounder | undefined): boolean {
   if (!f?.full_name.trim()) return false;
   const digits = (f.phone ?? "").replace(/\D/g, "");

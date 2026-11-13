@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SELLER_STEPS, STEP_KEYS, emptyDraft, sellerSkips, sellerValid, normalizeSellerStep, laterKey, foundedYearError, websiteFieldsAnswered } from '../../src/lib/seller-wizard';
+import { SELLER_STEPS, STEP_KEYS, emptyDraft, sellerSkips, sellerValid, normalizeSellerStep, laterKey, foundedYearError, websiteFieldsAnswered, fallbackSellerFounder } from '../../src/lib/seller-wizard';
 import { SELLER_SECTOR_EXAMPLES } from '../../src/lib/seller-sector-examples';
 import { SECTORS } from '../../src/lib/sectors';
 describe('seller setup replacement rules',()=>{
@@ -12,6 +12,7 @@ describe('seller setup replacement rules',()=>{
  it('requires four digits for 20',()=>expect(foundedYearError('20',2026)).toBe('digits'));
  it('rejects 1700',()=>expect(foundedYearError('1700',2026)).toBe('range'));
  it('requires year and size together',()=>{expect(sellerValid({...emptyDraft(),year:'2014'}).founded).toBe(false);expect(sellerValid({...emptyDraft(),year:'2014',size:'11-50'}).founded).toBe(true);});
+ it('prefills owners but leaves an agent founder empty',()=>{expect(fallbackSellerFounder('owner','Test Owner')).toMatchObject({full_name:'Test Owner',position:'Owner'});expect(fallbackSellerFounder('family_owner','Test Owner').position).toBe('Family business owner');expect(fallbackSellerFounder('agent','Test Agent')).toMatchObject({full_name:'',position:null});});
  it('requires the founder name, valid email and phone',()=>{expect(sellerValid({...emptyDraft(),founders:[{full_name:' '}]}).founder).toBe(false);expect(sellerValid({...emptyDraft(),founders:[{full_name:'Test Founder'}]}).founder).toBe(false);expect(sellerValid({...emptyDraft(),founders:[{full_name:'Test Founder',email:'owner@example.com',phone:'+66 81 234 5678'}]}).founder).toBe(true);});
  it('keeps Market Tags optional',()=>expect(websiteFieldsAnswered({...emptyDraft(),highlights:['First','Second','Third',''],shortDescription:'Description',longDescription:'Operations',productTags:['Packaging'],marketTags:[]})).toBe(true));
  it('uses existing 500 and 5000 description limits',()=>{const d={...emptyDraft(),highlights:['First','Second','Third',''],shortDescription:'x'.repeat(500),longDescription:'y'.repeat(5000),productTags:['Packaging']};expect(websiteFieldsAnswered(d)).toBe(true);expect(websiteFieldsAnswered({...d,shortDescription:'x'.repeat(501)})).toBe(false);expect(websiteFieldsAnswered({...d,longDescription:'y'.repeat(5001)})).toBe(false);});
