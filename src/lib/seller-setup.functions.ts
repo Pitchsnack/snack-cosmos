@@ -1,11 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { normalizeSellerStep, laterKey, websiteFieldsAnswered, websiteDescriptionFieldsAnswered, founderContactComplete } from "./seller-wizard";
+import { normalizeSellerStep, laterKey, websiteFieldsAnswered, websiteDescriptionFieldsAnswered, founderContactComplete, sellerListingValid } from "./seller-wizard";
 import { strengthRows } from './seller-strengths';
 import { FounderStorySchema, composeFounderBio } from "./founder-story";
 import type { SellerFounder } from "./seller-wizard";
-import { needsSellerIdentityTour } from './seller-listing-wording';
+import { needsSellerIdentityTour, sellerWordingChangedError } from './seller-listing-wording';
 
 /** Read only completion readiness, through the setup's existing access gate. */
 export const getSellerIdentityReadiness = createServerFn({ method: 'GET' })
@@ -41,7 +41,8 @@ export type SellerSetup = {
   /** The profile's contact email and Contact number (About Company), shown under the first founder. */
   contact: { email: string; phone: string };
   /** The listing's answers (empty until the listing exists). */
-  listing: { deal: string | null; stays: "yes" | "no" | null; months: number | null; price: number | null; name: string };
+  listing: { deal: string | null; stays: "yes" | "no" | null; months: number | null; price: number | null; name: string; headline: string; headlineTh: string; refNo: string; cover: string | null };
+  registeredName: string;
   media: { logoPath: string | null; logoUrl: string | null; slots: { slot: number; path: string; url: string | null }[] };
 };
 
@@ -114,17 +115,33 @@ const ListingInput = z.object({
   months: z.union([z.literal(1), z.literal(3), z.literal(6), z.literal(9), z.literal(12), z.literal(18), z.literal(24)]).nullable(),
   price: z.number().int().positive().max(999_999_999_999).nullable(),
   /** Sent only once it passed the name checks. */
-  name: z.string().trim().max(80).nullable(),
+  name: z.string().trim().max(255).nullable(),
+  headline: z.string().max(2000).optional(),
+  headlineTh: z.string().max(2000).optional(),
 });
 
 /** The listing questions save to the business's listing (made here if it isn't there yet), as the seller. */
 async function saveListingAnswers(userSb: any, startupId: string, userId: string, l?: z.infer<typeof ListingInput>, strengths?: {highlights?:string[];highlightsTh?:string[]}) {
-  const { data: cur, error: readError } = await userSb.from("hidden_profiles").select("id").eq("startup_id", startupId).maybeSingle();
+  const { data: cur, error: readError } = await userSb.from("hidden_profiles").select("id,code_name,suggested_listing_name,headline,headline_th").eq("startup_id", startupId).maybeSingle();
   if(readError) throw new Error(readError.message);
   const patch: Record<string, unknown> = l ? {
     deal_type: l.deal, owner_stays: l.stays, handover_months: l.stays === "yes" ? l.months ?? 6 : null,
     asking_price_thb: l.price, updated_by: userId,
   } : {updated_by:userId};
+  if (l) {
+    const { data: control, error: controlError } = await userSb.rpc('is_control', { _user_id: userId });
+    if (controlError) throw new Error(controlError.message);
+    const nameField = control ? 'code_name' : 'suggested_listing_name';
+    // Older callers send name:null and no identity twins: keep their saved wording untouched.
+    if (l.name !== null) patch[nameField] = l.name;
+    if (l.headline !== undefined) patch.headline = l.headline.trim();
+    if (l.headlineTh !== undefined) patch.headline_th = l.headlineTh.trim();
+    for (const [field, kind] of [[nameField, 'name'], ['headline', 'headline'], ['headline_th', 'headline']] as const) {
+      if (patch[field] === undefined) continue;
+      const error = sellerWordingChangedError(patch[field] as string | null, cur?.[field], kind);
+      if (error) throw new Error(error);
+    }
+  }
   if(strengths?.highlights !== undefined) patch.highlights=strengthRows(strengths.highlights).map(text=>text.trim());
   if(strengths?.highlightsTh !== undefined) patch.highlights_th=strengthRows(strengths.highlightsTh).map(text=>text.trim());
   if (!cur) {
@@ -151,11 +168,13 @@ export const getSellerSetup = createServerFn({ method: "GET" })
     const [{ data: s }, { data: o }, { data: hp }, { data: med }, {data:founders}] = await Promise.all([
       sb.from("startups").select("*").eq("id", data.id).single(),
       sb.from("startup_ownership").select("seller_relation").eq("startup_id", data.id).maybeSingle(),
-      sb.from("hidden_profiles").select("deal_type, owner_stays, handover_months, asking_price, asking_price_thb, code_name, highlights, highlights_th").eq("startup_id", data.id).maybeSingle(),
+      sb.from("hidden_profiles").select("deal_type, owner_stays, handover_months, asking_price, asking_price_thb, code_name, suggested_listing_name, headline, headline_th, ref_no, cover_art, highlights, highlights_th").eq("startup_id", data.id).maybeSingle(),
       sb.from("startup_media").select("slot, image_url").eq("startup_id", data.id).order("slot"),
       sb.from("startup_founders").select("id,full_name,position,linkedin_url,bio,bio_story,bio_th,bio_story_th,photo_url").eq("startup_id",data.id).order("display_order"),
     ]);
     if (!s) throw new Error("Business unavailable");
+    const { data: control, error: controlError } = await context.supabase.rpc('is_control', { _user_id: context.userId });
+    if (controlError) throw new Error(controlError.message);
     const [{data:ownerRow},{data:ownerProfile}] = await Promise.all([sb.from("users").select("first_name,last_name").eq("id",s.created_by ?? context.userId).maybeSingle(),sb.from("user_profiles").select("title").eq("user_id",s.created_by ?? context.userId).maybeSingle()]);
     const paths = [s.logo_url, ...(med ?? []).map((m: any) => m.image_url)].filter((x: any): x is string => !!x && !/^https?:/.test(x));
     const signed = new Map<string, string>();
@@ -167,6 +186,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
     const DEALS = ["Full acquisition", "Majority stake (above 51%)", "Minority stake (below 49%)"];
     return {
       id: s.id, name: s.startup_name ?? "", reg: s.registered_number ?? "", web: s.website_url ?? "",
+      registeredName: s.registered_name ?? '',
       year: s.year_founded ? String(s.year_founded) : "", city: s.city ?? "", rev: s.last_year_revenue ?? null,
       size: s.company_size ?? null, sector: s.sector ?? null, pick: (s.sector_pick ?? null) as { type: string; kind?: string } | null, licences: s.regulatory_licenses ?? [], iso: s.iso_standards ?? [],
       addr: { street: s.address_line1 ?? "", unit: s.address_line2 ?? "", district: s.address_city_district ?? "", province: s.address_province_state ?? s.city ?? "", postal: s.postal_code ?? "" },
@@ -178,7 +198,8 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       founders:(founders ?? []).map((f:any,i:number) => ({ ...f, email: i === 0 ? s.email ?? "" : "", phone: i === 0 ? s.contact_number ?? "" : "" })),contact:{email:s.email ?? "",phone:s.contact_number ?? ""},owner:{fullName:[ownerRow?.first_name,ownerRow?.last_name].filter(Boolean).join(" "),position:ownerProfile?.title ?? ""},
       listing: {
         deal: DEALS.includes(hp?.deal_type) ? hp.deal_type : null, stays: hp?.owner_stays ?? null, months: hp?.handover_months ?? null,
-        price: thbOf(hp), name: hp?.code_name && !/^project\b/i.test(hp.code_name) ? hp.code_name : "",
+        price: thbOf(hp), name: (control ? hp?.code_name : hp?.suggested_listing_name) ?? '',
+        headline: hp?.headline ?? '', headlineTh: hp?.headline_th ?? '', refNo: hp?.ref_no ?? '', cover: hp?.cover_art ?? null,
       },
       media: {
         logoPath: s.logo_url ?? null, logoUrl: s.logo_url ? signed.get(s.logo_url) ?? (/^https?:/.test(s.logo_url) ? s.logo_url : null) : null,
@@ -200,7 +221,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     iso: z.array(z.string().max(80)).max(20),
     addr: AddrInput.optional(),
     done: z.boolean().optional(),
-    reached: z.enum(["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "founded", "founder", "review"]).nullable().optional(),
+    reached: z.enum(["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "founded", "founder", "listing", "review"]).nullable().optional(),
     listing: ListingInput.optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
@@ -218,6 +239,12 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     if (data.name.trim()) patch.startup_name = data.name.trim();
     if (data.done) patch.setup_done_at = new Date().toISOString();
     if (data.done && (!websiteFieldsAnswered(data as never) || !founderContactComplete(data.founders?.[0]))) throw new Error("Complete your business descriptions, product tags, three key business strengths and founder name, valid email address and phone number before finishing.");
+    if (data.done) {
+      const { data: existing, error: existingError } = await sb.from('startups').select('setup_done_at,registered_name').eq('id', data.id).single();
+      if (existingError) throw new Error(existingError.message);
+      // Existing completed businesses retain their registration guard and after-wizard flow.
+      if (!existing?.setup_done_at && !sellerListingValid({ name: data.name, registeredName: existing?.registered_name, web: data.web, listingName: data.listing?.name ?? '', headline: data.listing?.headline, headlineTh: data.listing?.headlineTh })) throw new Error('Complete Listing name and Headline within their limits without revealing your company identity before finishing.');
+    }
     if (data.reached) {
       const { data: cur } = await sb.from("startups").select("setup_reached").eq("id", data.id).single();
       const key=laterKey(cur?.setup_reached,data.reached);
@@ -249,6 +276,7 @@ export const createMyBusiness = createServerFn({ method: "POST" })
     const { createSellerBusiness, sellerTenant } = await import("./seller-setup.server");
     const sb = await admin();
     if (!(await sellerTenant(sb, context.userId))) throw new Error("Only seller accounts can add a business here.");
+    if (!sellerListingValid({ name: data.name, web: data.web, listingName: data.listing?.name ?? '', headline: data.listing?.headline, headlineTh: data.listing?.headlineTh })) throw new Error('Complete Listing name and Headline before finishing.');
     const id = await createSellerBusiness(sb, context.userId, {
       name: data.name, relation: data.role, website: data.web.trim() || null, year: /^\d{4}$/.test(data.year) ? Number(data.year) : null,
       size: data.size, regNo: data.reg || null, city: data.city || null, revenue: data.rev, sector: data.sector,
@@ -326,14 +354,7 @@ export const applySellerEnrich = createServerFn({ method: "POST" })
         if (!error) found += 1;
       }
     }
-    // Listing view: its description and tags come from the private fields; the headline is stored, so draft it when empty.
-    const { data: hp } = await sb.from("hidden_profiles").select("id, headline").eq("startup_id", data.id).maybeSingle();
-    if (hp && !String(hp.headline ?? "").trim()) {
-      const { suggestHeadline } = await import("@/lib/public-listing");
-      const { data: s2 } = await sb.from("startups").select("*").eq("id", data.id).single();
-      const headline = suggestHeadline(s2).slice(0, 120);
-      if (headline) await sb.from("hidden_profiles").update({ headline, updated_by: context.userId }).eq("id", hp.id);
-    }
+    // Listing identity is seller-written; website enrichment never supplies it.
     return { found };
   });
 

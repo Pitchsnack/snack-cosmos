@@ -75,5 +75,8 @@
 .seller-setup .seller-action-primary:disabled {opacity:.5;cursor:not-allowed;}
 .seller-setup {background:var(--background);color:var(--foreground);}
 .seller-setup .seller-wizard-card {background:var(--card);border-color:var(--border);}
+.seller-listing-preview {min-width:0;overflow-wrap:anywhere;}
+.seller-listing-preview > div:first-child {color:var(--link);}
+.seller-listing-preview > div:nth-child(2) > div {color:var(--foreground);}
 @media(max-width:599px) { .seller-tag-section {padding:14px;} .seller-tag-entry {flex-basis:100%;} .seller-market-row {display:block;} .seller-market-row > b {display:block;margin-bottom:4px;padding:0;width:auto;} .seller-founded-row,.seller-company-identity,.seller-web-field.is-initial {grid-template-columns:1fr;} .seller-review-row > span {width:100px;} .seller-enrich-button {font-size:13px;padding:0 12px;} .seller-setup-actions {flex-wrap:wrap;} }
 @media(prefers-reduced-motion:reduce) {.seller-website-more {animation:none;}}

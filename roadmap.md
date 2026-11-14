@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Seller wizard Listing step
+- [x] Reuse Listing Identity wording fields and Buyer preview before Review; include unfinished setup progress and bilingual validation.
+- [x] Save to existing identity columns and enforce completion without changing completed businesses or other roles.
+- [x] Seller rules/handler tests and isolated EN/TH desktop/mobile browser checks; no accounts, sign-up tests or company edits. Live saved read-back deliberately not exercised because company writes are prohibited.
+
 ## Investor revenue highlight
 - [x] Use the existing buyer-blue tokens for valued Min. target revenue rows in both investor card implementations.
 - [x] Verified Browse investors, advisor Browse marketplace and My Company Buyer in Grid/Split/List; empty rows, values, secondary baht text and seller Asking price stay unchanged. Typecheck and preview build pass; no runtime errors.

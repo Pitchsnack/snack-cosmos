@@ -41,6 +41,7 @@ function toDraft(s: SellerSetup, open?: string): SellerDraft {
     hasLogo: !!s.media.logoPath, photos: s.media.slots.length,
     deal: s.listing.deal, stays: s.listing.stays, months: s.listing.months, price: s.listing.price,
     listingName: s.listing.name, nameOk: s.listing.name ? true : undefined,
+    headline: s.listing.headline, headlineTh: s.listing.headlineTh, registeredName: s.registeredName, setupDoneAt: s.setupDoneAt,
   };
   // Opens the step asked for, else the first question without an answer (skipped included), else Review.
   const key = normalizeSellerStep(open) ?? firstUnanswered(d, s.fromSignup);
@@ -90,6 +91,7 @@ function Page() {
       userId={session.user.id}
       initial={initial}
       owner={data.owner}
+      listingPreview={{ refNo: data.listing.refNo, cover: data.listing.cover }}
       fromSignup={data.fromSignup}
       persist={persist}
       media={{ startupId: id, tenantId: data.tenantId, initial: data.media, facts: { name: data.name, web: data.web } }}

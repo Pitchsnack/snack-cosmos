@@ -6,6 +6,8 @@
 import type { RegulatoryLicence } from "@/lib/compliance";
 import type { FounderStory } from "@/lib/founder-story";
 import { strengthCount, STRENGTH_MAX } from './seller-strengths';
+import { sellerWordingCount } from './seller-listing-wording';
+import { runIdentityCheck } from './hidden-profile';
 
 export type SellerRelation = "owner" | "family_owner" | "agent";
 
@@ -66,7 +68,7 @@ export const WIZARD_ISO = [
 
 export const WIZARD_QUESTION_TITLES = [
   "Your role", "Company name", "Business sector", "Company website and description", "Year founded and company size",
-  "Revenue", "Licences & certifications", "Logo and photos", "Deal type", "Owner handover", "Asking price (Estimate)", "About the founder",
+  "Revenue", "Licences & certifications", "Logo and photos", "Deal type", "Owner handover", "Asking price (Estimate)", "About the founder", "Listing name and headline",
 ];
 
 export type SellerAddr = { street: string; unit: string; district: string; province: string; postal: string };
@@ -86,9 +88,10 @@ export const SELLER_STEPS = [
   { id: "lic", sec: "Intangible assets" }, { id: "photos", sec: "Company images" },
   { id: "deal", sec: "Your listing" }, { id: "handover", sec: "Your listing" },
   { id: "price", sec: "Your listing" }, { id: "founder", sec: "About the founder" },
+  { id: "listing", sec: "Your listing" },
 ] as const;
 export const REVIEW_STEP = SELLER_STEPS.length;
-/** The four listing questions (all required, no Skip). Only Admin names a listing, outside the wizard. */
+/** Deal and media questions; the bilingual identity rows are reviewed separately. */
 export const LISTING_KEYS = ["photos", "deal", "handover", "price"] as const;
 export const DEAL_HINTS: Record<string, [string, string]> = {
   "Full acquisition": ["Sell the whole company", "ขายกิจการทั้งหมด"],
@@ -125,6 +128,7 @@ export function sellerSkips(d: SellerDraft, fromSignup: string[] = []): Set<stri
   // The company check confirmed name, number and address at sign-up: skip while all still hold a value.
   if (f.has("address") && !!d.name.trim() && /^\d{13}$/.test(d.reg) && addrComplete(d.addr)) s.add("name");
   if (d.noUpload) s.add("photos");
+  if (d.setupDoneAt) s.add("listing");
   return s;
 }
 /** Indexes of the questions that show. */
@@ -156,6 +160,7 @@ export const STEP_SHORT: Record<StepKey, [string, string]> = {
   web: ["Website", "เว็บไซต์"], founded: ["Founded & size", "ปีก่อตั้งและขนาด"], rev: ["Revenue", "รายได้"],
   lic: ["Licences", "ใบอนุญาต"], photos: ["Photos", "รูปภาพ"], deal: ["Deal type", "รูปแบบดีล"],
   handover: ["Handover", "ส่งมอบ"], price: ["Price", "ราคา"], founder: ["Founder", "ผู้ก่อตั้ง"], review: ["Review", "ตรวจสอบ"],
+  listing: ["Listing", "ชื่อประกาศ"],
 };
 export const STEP_FULL: Record<StepKey, [string, string]> = {
   role: ["Your role", "บทบาทของท่าน"], name: ["Company name, registration number and address", "ชื่อบริษัท เลขทะเบียน และที่อยู่"],
@@ -164,6 +169,7 @@ export const STEP_FULL: Record<StepKey, [string, string]> = {
   lic: ["Licences and certifications", "ใบอนุญาตและมาตรฐาน"], photos: ["Logo and photos", "โลโก้และรูปภาพ"],
   deal: ["Deal type", "รูปแบบดีล"], handover: ["Owner handover", "การส่งมอบงานของเจ้าของ"], price: ["Asking price (Estimate)", "ราคาที่ต้องการ (ประมาณการ)"],
   founder: ["About the founder", "เกี่ยวกับผู้ก่อตั้ง"], review: ["Review your answers", "ตรวจสอบข้อมูล"],
+  listing: ["Listing name and headline", "ชื่อประกาศและหัวข้อ"],
 };
 /** Edit information's existing limits, not the reference's illustrative counters. */
 export const SELLER_DESCRIPTION_LIMITS = { short: 500, long: 5000, tag: 50, tags: 5 } as const;
@@ -213,13 +219,25 @@ export function founderContactComplete(f: SellerFounder | undefined): boolean {
   // Same checks as About Company: Email address required, Phone optional.
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((f.email ?? "").trim());
 }
+export function sellerListingFindings(d: Pick<SellerDraft, 'listingName' | 'headline' | 'headlineTh' | 'name' | 'registeredName' | 'web'>) {
+  const findings = runIdentityCheck({ code_name: d.listingName ?? '', headline: d.headline ?? '', headline_th: d.headlineTh ?? '' }, { startup_name: d.name, registered_name: d.registeredName, website_url: d.web });
+  const contact = /[\w.+-]+@[\w.-]+\.[a-z]{2,}|(?:https?:\/\/|www\.)\S+|(?:\+?\d[\d ()-]{7,}\d)/i;
+  return { name: findings.some(f => f.field === 'code_name') || contact.test(d.listingName ?? ''), headline: findings.some(f => f.field === 'headline') || contact.test(`${d.headline ?? ''} ${d.headlineTh ?? ''}`) };
+}
+export function sellerListingValid(d: Pick<SellerDraft, 'listingName' | 'headline' | 'headlineTh' | 'name' | 'registeredName' | 'web' | 'nameOk'>) {
+  const findings = sellerListingFindings(d);
+  return !!d.listingName?.trim() && !!(d.headline?.trim() || d.headlineTh?.trim())
+    && !sellerWordingCount(d.listingName, 'name').over
+    && !sellerWordingCount(d.headline, 'headline').over && !sellerWordingCount(d.headlineTh, 'headline').over
+    && !findings.name && !findings.headline && d.nameOk !== false;
+}
 export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
   return {
     role: !!d.role, name: !!d.name.trim() && /^\d{13}$/.test(d.reg) && addrComplete(d.addr),
     sector: !!d.sector, web: websiteFieldsAnswered(d), founded: validFoundedYear(d.year) && !!d.size,
     rev: !!d.rev, lic: d.licences.length + d.iso.length > 0 || stepIdx(d.reached) > stepIdx("lic"),
     photos: !!d.hasLogo && (d.photos ?? 0) > 0, deal: !!d.deal, handover: d.stays === "yes" || d.stays === "no",
-    price: (d.price ?? 0) > 0, founder: founderContactComplete(d.founders?.[0]), review: false,
+    price: (d.price ?? 0) > 0, founder: founderContactComplete(d.founders?.[0]), listing: sellerListingValid(d), review: false,
   };
 }
 export function sellerAnswered(d: SellerDraft): Record<StepKey, boolean> { return sellerValid(d); }
@@ -274,6 +292,10 @@ export interface SellerDraft {
   /** Asking price (Estimate), whole baht. */
   price?: number | null;
   listingName?: string;
+  headline?: string;
+  headlineTh?: string;
+  registeredName?: string;
+  setupDoneAt?: string | null;
   /** false while a typed name is taken or names the company. */
   nameOk?: boolean;
   /** + Add My Business before the business exists: photos are added in My Company. */
@@ -339,6 +361,7 @@ export function draftToPrefill(d: SellerDraft): SellerPrefill {
 export function listingPayload(d: SellerDraft) {
   return {
     deal: (d.deal ?? null) as never, stays: d.stays ?? null, months: (d.stays === "yes" ? d.months ?? 6 : null) as never,
-    price: d.price && d.price > 0 ? d.price : null, name: null,
+    price: d.price && d.price > 0 ? d.price : null, name: d.listingName?.trim() ?? null,
+    headline: d.headline, headlineTh: d.headlineTh,
   };
 }

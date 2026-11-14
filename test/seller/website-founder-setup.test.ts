@@ -3,7 +3,7 @@ import { SELLER_STEPS, STEP_KEYS, emptyDraft, sellerSkips, sellerValid, normaliz
 import { SELLER_SECTOR_EXAMPLES } from '../../src/lib/seller-sector-examples';
 import { SECTORS } from '../../src/lib/sectors';
 describe('seller setup replacement rules',()=>{
- it('shows 13 steps including Review in the required order',()=>expect(STEP_KEYS).toEqual(['role','name','sector','web','founded','rev','lic','photos','deal','handover','price','founder','review']));
+ it('shows Listing after Founder and before Review',()=>expect(STEP_KEYS).toEqual(['role','name','sector','web','founded','rev','lic','photos','deal','handover','price','founder','listing','review']));
  it('Website always shows after signup',()=>expect(sellerSkips({...emptyDraft(),web:'example.com'},['web']).has('web')).toBe(false));
  it('combined founded/size skips only when both signup answers remain valid',()=>{expect(sellerSkips({...emptyDraft(),year:'2014',size:'11-50'},['year','size']).has('founded')).toBe(true);expect(sellerSkips({...emptyDraft(),year:'2014'},['year','size']).has('founded')).toBe(false);});
  it('maps both legacy reached keys to founded',()=>{expect(normalizeSellerStep('year')).toBe('founded');expect(normalizeSellerStep('size')).toBe('founded');});

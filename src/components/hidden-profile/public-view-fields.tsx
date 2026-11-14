@@ -450,7 +450,7 @@ function ListingNameField({ pd, refNo }: { pd: PublicDraftState; refNo?: string 
   );
 }
 
-function BuyerPreview({ d, sector, pickedImage, source, refNo }: { d: HiddenDraft; sector: string | null; pickedImage: string | null | undefined; source?: ListingSource; refNo?: string }) {
+export function BuyerPreview({ d, sector, pickedImage, source, refNo, wizard = false }: { d: HiddenDraft; sector: string | null; pickedImage: string | null | undefined; source?: ListingSource; refNo?: string; wizard?: boolean }) {
   const appTr = useTr();
   // The preview reads as a buyer with the app in the switch's language does.
   const { lang } = useTextLang();
@@ -466,9 +466,9 @@ function BuyerPreview({ d, sector, pickedImage, source, refNo }: { d: HiddenDraf
   const nameEl = <div className={cn("text-[14px] font-bold text-[#151A28] dark:text-foreground", !name && "font-semibold text-[#8A90A0]")}>{name || tr("Your listing name", "ชื่อประกาศของท่าน")}</div>;
   const headEl = (cls: string) => <div className={cn("text-[12px] text-[#4B5563] dark:text-muted-foreground", cls, !head && "font-semibold text-[#8A90A0]")}>{head || tr("Your headline", "หัวข้อของท่าน")}</div>;
   return (
-    <div aria-hidden className="pointer-events-none sm:sticky sm:top-4">
+    <div aria-hidden className={cn("pointer-events-none sm:sticky sm:top-4", wizard && "seller-listing-preview")}>
       {caption}
-      <div className="overflow-hidden rounded-xl border border-[#F6C77A] bg-background max-sm:hidden">
+      <div className={cn("overflow-hidden rounded-xl border border-[#F6C77A] bg-background", !wizard && "max-sm:hidden")}>
         <SectorArt sector={sector} imageId={pickedImage ?? null} className="h-[140px] w-full [&_img]:object-cover" />
         <div className="px-3 pb-[14px] pt-3">
           {nameEl}
@@ -481,7 +481,7 @@ function BuyerPreview({ d, sector, pickedImage, source, refNo }: { d: HiddenDraf
           </div>
         </div>
       </div>
-      <div className="hidden items-center gap-3 rounded-xl border border-[#F6C77A] bg-background p-[10px] max-sm:flex">
+      <div className={cn("hidden items-center gap-3 rounded-xl border border-[#F6C77A] bg-background p-[10px]", !wizard && "max-sm:flex")}>
         <SectorArt sector={sector} imageId={pickedImage ?? null} className="h-[50px] w-[88px] shrink-0 rounded-lg" />
         <div className="min-w-0">{nameEl}{headEl("mt-[2px] truncate")}</div>
       </div>
