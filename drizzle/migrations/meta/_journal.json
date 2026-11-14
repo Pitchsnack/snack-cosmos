@@ -1009,6 +1009,13 @@
       "when": 1794542652530,
       "tag": "0143_founder_contact_details",
       "breakpoints": true
+    },
+    {
+      "idx": 144,
+      "version": "7",
+      "when": 1794646723807,
+      "tag": "0144_migration",
+      "breakpoints": true
     }
   ]
 }
