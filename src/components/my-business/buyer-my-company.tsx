@@ -172,7 +172,6 @@ export function BuyerMyCompany() {
   const [selectedExtra, setSelectedExtra] = useState<string | null>(null);
   const buyerScrollReset = JSON.stringify([search,type,status,sector,hq,sort,favOnly]);
   useEffect(() => { setSelectedExtra(null); }, [buyerScrollReset]);
-  const [panelOpen, setPanelOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
   const [layout, setLayout] = useState<Layout>("profiles");
   const inv = useBuyerInvestor();
@@ -205,7 +204,12 @@ export function BuyerMyCompany() {
     && (!sector.trim() || p.sectors.some((x) => has(x, sector.trim().toLowerCase())))
     && (!hq.trim() || has(p.city, hq.trim().toLowerCase()) || has(p.country, hq.trim().toLowerCase()));
   const hasFilter = !!(q || type !== "all" || status !== "all" || sector || hq);
-  const openProfile = () => setPanelOpen(true);
+  const openInSplit = (id: string | null = null) => {
+    setSelectedExtra(id);
+    setView("private");
+    setLayout("split");
+  };
+  const openProfile = () => openInSplit();
   const iv = inv.data?.investor;
   const prog = buyerProgressFor((inv.data?.buyer.relation ?? null) as BuyerRelation | null, iv, inv.data?.buyer, inv.data?.people);
   const openWizard = () => {
@@ -317,7 +321,6 @@ export function BuyerMyCompany() {
           <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />{setupText("Refresh")}
         </Button>
       </div>
-      {(layout === "grid" || layout === "list") && extras}
       {!matches ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">{setupText("No companies match your filters")}</div>
       ) : layout === "profiles" ? (
@@ -331,15 +334,16 @@ export function BuyerMyCompany() {
             {view === "public" ? profilePanel : inv.data ? <BuyerPrivatePanel d={inv.data} view={view} onView={setView} /> : <Skeleton className="h-[520px]" />}
           </div>} />
       ) : layout === "grid" ? (
-        <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {isAdmin && <AdminInvestorProfiles ids={extraIds} part="directory" mode="grid" onSelect={openInSplit} />}
           <BuyerDirectoryItem p={p} org={org} mode="grid" selected={false} onClick={openProfile} />
         </div>
       ) : (
-        <BuyerDirectoryItem p={p} org={org} mode="list" selected={false} onClick={openProfile} />
+        <div className="space-y-4">
+          {isAdmin && <AdminInvestorProfiles ids={extraIds} part="directory" mode="list" onSelect={openInSplit} />}
+          <BuyerDirectoryItem p={p} org={org} mode="list" selected={false} onClick={openProfile} />
+        </div>
       )}
-      <Dialog open={panelOpen && (layout === "grid" || layout === "list")} onOpenChange={setPanelOpen}>
-        <DialogContent className="max-h-[85vh] max-w-[760px] overflow-y-auto">{profilePanel}</DialogContent>
-      </Dialog>
       <Dialog open={newOpen} onOpenChange={setNewOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>{setupText("Investor profile")}</DialogTitle></DialogHeader>
@@ -408,15 +412,15 @@ function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit, pill }: {
   </div>;
 }
 
-function BuyerDirectoryItem({ p, org, mode, selected, onClick }: {
-  p: BuyerProfile; org: BuyerOrg; mode: ViewMode; selected: boolean; onClick: () => void;
+export function BuyerDirectoryItem({ p, org, mode, selected, onClick, ticketLabel }: {
+  p: BuyerProfile; org: BuyerOrg; mode: ViewMode; selected: boolean; onClick: () => void; ticketLabel?: string | null;
 }) {
   const name = org.name || typeName(org.type);
   const initials = name.split(/\s+/).slice(0, 2).map((word) => word[0]?.toUpperCase()).join("");
-  const ticket = ticketRange(p.ticket_min, p.ticket_max);
+  const ticket = ticketLabel === undefined ? ticketRange(p.ticket_min, p.ticket_max) : ticketLabel;
   return <Button type="button" variant="outline" onClick={onClick}
-    className={cn("group relative flex h-auto w-full items-start justify-start gap-3 whitespace-normal rounded-lg border-border bg-card p-3 text-left shadow-card hover:border-accent hover:bg-card", mode === "grid" ? "min-h-[228px] flex-col" : mode === "split" ? "min-h-[180px] flex-col" : "min-h-[100px] flex-row items-center", selected && "border-accent ring-1 ring-accent/30")}>
-    <div className="flex w-full min-w-0 items-start gap-3">
+    className={cn("group relative flex h-auto w-full items-start justify-start gap-3 whitespace-normal rounded-lg border-border bg-card p-3 text-left shadow-card hover:border-accent hover:bg-card", mode === "grid" ? "h-full min-h-[228px] flex-col" : mode === "split" ? "min-h-[180px] flex-col" : "min-h-[100px] flex-col md:flex-row md:items-center", selected && "border-accent ring-1 ring-accent/30")}>
+    <div className={cn("flex min-w-0 items-start gap-3", mode === "list" ? "w-full md:w-[280px] md:shrink-0" : "w-full")}>
       <div className="flex h-12 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
         {p.logo_url ? <img src={p.logo_url} alt="" className="h-full w-full object-contain" /> : <span className="text-xs font-semibold text-muted-foreground">{initials}</span>}
       </div>
@@ -432,7 +436,7 @@ function BuyerDirectoryItem({ p, org, mode, selected, onClick }: {
         {p.sectors.length ? p.sectors.slice(0, 4).map((x) => <span key={x} className="rounded-full border border-transparent bg-muted/50 px-2 py-0.5 text-[10.5px] text-muted-foreground">{tr(x)}</span>) : <span className="text-[#9CA3AF]">{setupText("Sectors not added")}</span>}
       </div>
     </div>
-    <div className={cn("flex items-center gap-2 text-xs font-normal text-muted-foreground", mode === "list" ? "ml-auto shrink-0" : "mt-auto w-full justify-between")}>
+    <div className={cn("flex items-center gap-2 text-xs font-normal text-muted-foreground", mode === "list" ? "mt-auto w-full justify-between md:ml-auto md:mt-0 md:w-auto md:shrink-0" : "mt-auto w-full justify-between")}>
       <span className="inline-flex items-center gap-1">{ticket ? <><Coins className="h-3 w-3" /> {ticket}</> : <><MapPin className="h-3 w-3" /> {[p.city, p.country].filter(Boolean).map((v) => shortCityTh(tr(v!))).join(", ") || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</>}</span>
       <ArrowRight className="h-3.5 w-3.5 text-accent" />
     </div>

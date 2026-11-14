@@ -12,10 +12,11 @@ import { DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company
 import { addInvestorProfile, getBuyerInvestorById, listMyInvestorProfileIds } from "@/lib/buyer-investor.functions";
 import { BuyerInvestorEdit, buyerInvestorKey, type Data } from "@/components/my-business/buyer-investor-edit";
 import { buyerProgressFor, type BuyerRelation } from "@/lib/buyer-wizard";
-import { typeName } from "@/lib/investor-bands";
+import { bandText, typeName } from "@/lib/investor-bands";
 import { tr } from "@/i18n/language";
 import { cn } from "@/lib/utils";
-import { SetupBanner } from "@/components/my-business/buyer-my-company";
+import type { BuyerOrg, BuyerProfile } from "@/lib/buyer-profile";
+import { BuyerDirectoryItem, SetupBanner } from "@/components/my-business/buyer-my-company";
 
 export const INVESTOR_IDS_KEY = ["buyer-investor", "ids"];
 
@@ -51,13 +52,63 @@ export function AddInvestorProfileButton({ onClick, busy }: { onClick: () => voi
   );
 }
 
-/** Admin's extra investor profiles on Buyer › My Company, each opening its own panel, wizard and Edit profile. */
-export function AdminInvestorProfiles({ ids, openId, part, onSelect }: { ids: string[]; openId?: string; part?: "list" | "panel"; onSelect?: (id: string) => void }) {
-  if (!ids.length) return null;
-  return <div className="space-y-5">{ids.filter(id => part !== "panel" || id === openId).map((id) => <ExtraProfile key={id} id={id} open={openId === id} part={part} onSelect={onSelect} />)}</div>;
+function directoryCardData(d: Data, id: string): { p: BuyerProfile; org: BuyerOrg } {
+  const iv = d.investor;
+  const status = d.buyer.status === "live" || d.buyer.status === "paused" ? d.buyer.status : "draft";
+  return {
+    p: {
+      user_id: id,
+      ref_no: d.buyer.ref_no ?? "",
+      code_name: "",
+      headline: d.buyer.suggested_headline || null,
+      description: d.buyer.description || null,
+      show_name: true,
+      status,
+      live_since: null,
+      legal_name: iv.legal_name,
+      address: iv.business_address,
+      city: iv.city,
+      country: iv.country,
+      logo_url: iv.logo_signed_url,
+      private_description: iv.short_description,
+      aum_exact: iv.aum,
+      ticket_exact: [iv.min_ticket_size, iv.max_ticket_size].filter(Boolean).join(" – ") || null,
+      ticket_min: null,
+      ticket_max: null,
+      aum_value: null,
+      track_record: null,
+      decision_process: null,
+      pof_verified_at: null,
+      sectors: iv.preferred_industries,
+      stages: iv.preferred_stages,
+      deal_types: d.buyer.deal_types,
+      target_size: null,
+      geography: iv.investment_focus_raw.join(", ") || null,
+      people: d.people,
+      portfolio: iv.portfolio_extra.map((name) => ({ name, note: "" })),
+      profile_views_month: 0,
+      updated_at: iv.updated_at,
+    },
+    org: {
+      name: iv.investor_name,
+      type: iv.investor_type,
+      website: iv.website_url,
+      registrationNo: iv.registration_no,
+      verified: d.verification.status === "verified",
+      ndas: 0,
+      lois: 0,
+    },
+  };
 }
 
-function ExtraProfile({ id, open, part, onSelect }: { id: string; open: boolean; part?: "list" | "panel"; onSelect?: (id: string) => void }) {
+/** Admin's extra investor profiles on Buyer › My Company, each opening its own panel, wizard and Edit profile. */
+export function AdminInvestorProfiles({ ids, openId, part, mode = "grid", onSelect }: { ids: string[]; openId?: string; part?: "list" | "panel" | "directory"; mode?: "grid" | "list"; onSelect?: (id: string) => void }) {
+  if (!ids.length) return null;
+  const profiles = ids.filter(id => part !== "panel" || id === openId).map((id) => <ExtraProfile key={id} id={id} open={openId === id} part={part} mode={mode} onSelect={onSelect} />);
+  return part === "directory" ? <>{profiles}</> : <div className="space-y-5">{profiles}</div>;
+}
+
+function ExtraProfile({ id, open, part, mode = "grid", onSelect }: { id: string; open: boolean; part?: "list" | "panel" | "directory"; mode?: "grid" | "list"; onSelect?: (id: string) => void }) {
   const fetchById = useServerFn(getBuyerInvestorById);
   const navigate = useNavigate();
   const ref = useRef<HTMLDivElement | null>(null);
@@ -68,6 +119,10 @@ function ExtraProfile({ id, open, part, onSelect }: { id: string; open: boolean;
   if (!r.ok || !r.data) return null;
   const d = r.data;
   const iv = d.investor;
+  if (part === "directory") {
+    const { p, org } = directoryCardData(d, id);
+    return <BuyerDirectoryItem p={p} org={org} mode={mode} selected={false} ticketLabel={bandText(iv.ticket_band)} onClick={() => onSelect?.(id)} />;
+  }
   const rel = (d.buyer.relation ?? null) as BuyerRelation | null;
   const prog = buyerProgressFor(rel, iv, d.buyer, d.people);
   const individual = rel === "individual";
