@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Finish and submit three test profiles
+- [x] Complete buyer10, Sasu advisor and seller10 with authorised invented answers; no new accounts or sign-up tests.
+- [x] Submit all three through Register your company and verify each appears in the matching Admin approval queue.
+- [x] Record any validation blocker and leave submitted profiles awaiting Admin review; do not approve them.
+
 ## Seller wizard Listing step
 - [x] Reuse Listing Identity wording fields and Buyer preview before Review; include unfinished setup progress and bilingual validation.
 - [x] Save to existing identity columns and enforce completion without changing completed businesses or other roles.
