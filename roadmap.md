@@ -1,5 +1,9 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Investor revenue highlight
+- [x] Use the existing buyer-blue tokens for valued Min. target revenue rows in both investor card implementations.
+- [x] Verified Browse investors, advisor Browse marketplace and My Company Buyer in Grid/Split/List; empty rows, values, secondary baht text and seller Asking price stay unchanged. Typecheck and preview build pass; no runtime errors.
+
 ## Setup wizard momentum follow-up
 - [x] Start one owner-gated website read at Create business profile; persist and poll its result for seller, buyer and advisor instead of reading again on reopen or Finish.
 - [x] Combine buyer/advisor website and descriptions, require both descriptions, add corrected contact-person rows and role-specific founder/team prefill.

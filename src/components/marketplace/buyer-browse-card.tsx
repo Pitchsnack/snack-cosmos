@@ -98,8 +98,8 @@ function Figure({ label, band, empty, shade, wideSpan, big, part, onPart }: { pa
   const b = bandOf(band);
   const on = shade && !!b;
   return (
-    <div className={cn("min-w-0 px-[11px] pb-[9px] pt-[10px]", on ? "bg-[#FFF4E0] dark:bg-amber-950/40" : "bg-[#FAFBFC] dark:bg-muted/40", wideSpan && "col-span-2")}>
-      <dt className={cn("flex items-center gap-2 truncate", big ? "text-[12px]" : "text-[11.5px]", on ? "text-[#8A5A06] dark:text-amber-300" : "text-[#6B7280] dark:text-muted-foreground")}><span className="truncate">{label}</span>{part && <PartEdit k={part} onPart={onPart} />}</dt>
+    <div className={cn("min-w-0 px-[11px] pb-[9px] pt-[10px]", on ? "investor-revenue-highlight" : "bg-[#FAFBFC] dark:bg-muted/40", wideSpan && "col-span-2")}>
+      <dt className={cn("flex items-center gap-2 truncate", big ? "text-[12px]" : "text-[11.5px]", on ? "investor-revenue-highlight-label" : "text-[#6B7280] dark:text-muted-foreground")}><span className="truncate">{label}</span>{part && <PartEdit k={part} onPart={onPart} />}</dt>
       {b ? (
         <dd>
           <div className={cn("tabular-nums text-[#151A28] dark:text-foreground", big ? "text-[15px] font-semibold" : "text-[13.5px] font-bold")}>{nbspDash(b.label)}</div>
