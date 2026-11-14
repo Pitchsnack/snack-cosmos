@@ -62,7 +62,7 @@ export const CompleteFirmInput = z.object({
 /** Structural limits always apply; required completeness is only checked outside Draft. */
 export const DraftFirmInput = CompleteFirmInput.innerType().extend({
   name: z.string().trim().max(80), firmType: z.string().trim().max(60),
-  description: z.string().trim().max(300), longDescription: z.string().trim().max(4000), contactName: z.string().trim().max(120), contactPosition: z.string().trim().max(120).nullable().optional(), yearFounded: z.number().int().min(1800).max(YEAR_CEILING).nullable(),
+  description: z.string().trim().max(300), longDescription: z.string().trim().max(4000).optional(), contactName: z.string().trim().max(120).optional(), contactPosition: z.string().trim().max(120).nullable().optional(), yearFounded: z.number().int().min(1800).max(YEAR_CEILING).nullable(),
   city: z.string().trim().max(100), country: z.string().trim().max(100),
   services: z.array(z.string().max(60)).max(10), teamSize: z.number().int().min(1).max(99999).nullable(),
   legalName: z.string().trim().max(200), website: z.string().trim().max(200),

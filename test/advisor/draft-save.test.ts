@@ -7,7 +7,7 @@ describe("Advisor Draft saving", () => {
  test("live firms keep required completeness checks", () => { expect(advisorNeedsCompleteSave("live")).toBe(true); expect(CompleteFirmInput.safeParse(draft).success).toBe(false); });
  test("structural limits still reject oversized draft names", () => { expect(DraftFirmInput.safeParse({...draft, name: "x".repeat(81)}).success).toBe(false); });
  test("Edit information requires company name but not the retired second name", () => {
-  const complete = {...draft, legalName:undefined, name:"ABC Advisory Co., Ltd.", firmType:"M&A Advisor", description:"An advisory firm supporting business transactions.", yearFounded:2014, city:"Bangkok", services:["M&A"], teamSize:8, website:"https://example.com", email:"test@example.com", phone:"+6621234567", registrationNo:"0105548098615"};
+  const complete = {...draft, legalName:undefined, name:"ABC Advisory Co., Ltd.", firmType:"M&A Advisor", description:"An advisory firm supporting business transactions.", yearFounded:2014, city:"Bangkok", services:["M&A"], teamSize:8, website:"https://example.com", email:"test@example.com", phone:"+6621234567", registrationNo:"0105548098615", longDescription:"A longer description of the advisory firm.", contactName:"Somchai Test"};
   expect(EditCompleteFirmInput.safeParse(complete).success).toBe(true);
   expect(EditCompleteFirmInput.safeParse({...complete,name:""}).success).toBe(false);
   expect(CompleteFirmInput.safeParse(complete).success).toBe(false);

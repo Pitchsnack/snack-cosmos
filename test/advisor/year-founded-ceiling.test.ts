@@ -11,6 +11,7 @@ const FIRM = {
   teamSize: 8, languages: ["English"], sectors: [], legalName: "ABC Advisory Co., Ltd.",
   website: "https://example.com", email: "test@example.com", phone: "+6621234567",
   team: [], credentials: [], documents: [],
+  longDescription: "A longer description of the advisory firm.", contactName: "Somchai Test",
 };
 
 describe("Advisor year founded", () => {
