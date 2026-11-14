@@ -55,7 +55,7 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
   </div>;
   return <StandardBrowseCard title={name || cardValue(typeName(type, i.actsFor), language) || ''} subtitle={name ? cardValue(typeName(type, p?.acts_for_types ?? i.actsFor), language) || undefined : undefined}
     refNo={i.refNo} place={contactPlace(p?.city || i.city || p?.country || i.country, language)} description={p ? p.short_description || p.long_description : i.description}
-    status={cardNdaStatus(i.status)} hideStatus={hideStatus} newDays={i.newDays} managed={i.managed} topRight={topRight} selected={selected} onOpen={onClick} className={cn('standard-investor-card', className)} sourceType={i.type ?? i.codeName} tag={tag}
+    status={cardNdaStatus(i.status)} hideStatus={hideStatus} newDays={i.newDays} managed={i.managed} topRight={topRight} selected={selected} onOpen={onClick} className={className} sourceType={i.type ?? i.codeName} tag={tag}
     lastLogin={lastLoginStep ?? i.lastLoginStep} lastLoginTooltip={t('When the buyer last logged in to PitchSnack')}
     cover={(children) => p ? <div className="standard-card-private-cover">{photo ? <img src={photo} alt="" /> : <div className="standard-card-logo">{p.logo_signed_url ? <img src={p.logo_signed_url} alt="" /> : initials}</div>}{children}</div> : <BuyerCover type={i.type} src={i.coverUrl}>{children}</BuyerCover>}
     badges={[...(i.verified ? [{ label: 'Verified investor' }] : []), ...(i.proofOfFunds ? [{ label: 'Proof of funds' }] : [])]}

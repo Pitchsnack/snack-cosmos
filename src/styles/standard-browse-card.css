@@ -3,14 +3,13 @@
   --standard-edge: #E6E8EC; --standard-line: #EEF0F3; --standard-box: #FAFBFC; --standard-fit: #FFF4E0; --standard-fit-ink: #8A5A06;
   --standard-green: #15803D; --standard-green-bg: #ECFDF3; --standard-green-edge: #BBF7D0;
   --standard-request-bg: #FFFBEB; --standard-request-edge: #FDE68A; --standard-request-ink: #B45309;
-  --standard-buyer-revenue: #3B82F6;
   --standard-hidden-edge: #E5E7EB; --standard-hidden-ink: #4B5563; --standard-chip: #F1F2F5;
   --standard-market-bg: #ECFDF5; --standard-market-ink: #065F46;
   --standard-private-cover: linear-gradient(135deg, #E9EDF7, #D8DFF0); --standard-logo: #1D2854; --standard-white: #FFFFFF;
   --standard-shadow: 0 1px 2px rgba(16,24,40,.04); --standard-pill-shadow: 0 1px 2px rgba(16,24,40,.14);
   --standard-logo-shadow: 0 0 0 3px #FFFFFF, 0 6px 16px -6px rgba(16,24,40,.35);
 }
-.dark { --standard-ink: var(--foreground); --standard-copy: var(--foreground); --standard-muted: var(--muted-foreground); --standard-edge: var(--border); --standard-line: var(--border); --standard-box: var(--secondary); --standard-fit: color-mix(in srgb, var(--accent) 14%, var(--card)); --standard-fit-ink: var(--accent); --standard-buyer-revenue: #93C5FD; --standard-chip: var(--muted); }
+.dark { --standard-ink: var(--foreground); --standard-copy: var(--foreground); --standard-muted: var(--muted-foreground); --standard-edge: var(--border); --standard-line: var(--border); --standard-box: var(--secondary); --standard-fit: color-mix(in srgb, var(--accent) 14%, var(--card)); --standard-fit-ink: var(--accent); --standard-chip: var(--muted); }
 .standard-card-grid { display: grid; grid-template-columns: minmax(0,1fr); gap: 20px; align-items: start; }
 @media (min-width:701px) { .standard-card-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (min-width:1240px) { .standard-card-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
@@ -55,7 +54,6 @@
 .standard-card-fit-row { border-top:1px solid var(--standard-line); }
 .standard-card-fit { background:var(--standard-fit); }
 .standard-card-fit dt,.standard-card-fit .standard-card-second { color:var(--standard-fit-ink); }
-.standard-investor-card .standard-card-fit .standard-card-value:not(.standard-card-empty) { color:var(--standard-buyer-revenue); }
 .standard-card-text-row { display:flex; align-items:baseline; gap:10px; margin:0; padding:9px 12px 10px; height:38px; border-top:1px solid var(--standard-line); }
 .standard-card-text-row dt { flex:none; font-size:11.5px; color:var(--standard-muted); }
 .standard-card-focus-row,.investor-focus-row { margin:0; padding:9px 11px 10px; border-top:1px solid var(--standard-line); background:var(--card); min-height:71px; }
