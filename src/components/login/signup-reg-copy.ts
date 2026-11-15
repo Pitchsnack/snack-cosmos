@@ -20,6 +20,7 @@ export const R = {
   fixA: c("กรุณาแก้ไขเลขทะเบียนนิติบุคคล", "Correct the registration number."),
   fixNo: { company: c("เลขนี้เป็นของบริษัทอื่น กรอกเลข 13 หลักของบริษัทท่าน", "This number belongs to another company. Enter your company's 13-digit number."), firm: c("เลขนี้เป็นของบริษัทอื่น กรอกเลข 13 หลักของบริษัทท่าน", "This number belongs to another company. Enter your firm's 13-digit number.") },
   fixNf: { company: c("ไม่พบบริษัทที่ใช้เลขนี้ กรอกเลข 13 หลักของบริษัทท่าน", "We couldn't find a company with this number. Enter your company's 13-digit number."), firm: c("ไม่พบบริษัทที่ใช้เลขนี้ กรอกเลข 13 หลักของบริษัทท่าน", "We couldn't find a company with this number. Enter your firm's 13-digit number.") },
+  fixUnavailable: c("เรายังไม่ได้ตรวจสอบเลขนี้ กรุณาตรวจสอบและแก้ไขเลข 13 หลักหากจำเป็น", "We couldn't check this number. Check the 13 digits and correct them if needed."),
   boxNo: c("เลข {number} เป็นของบริษัทนี้ ซึ่งท่านแจ้งว่าไม่ใช่บริษัทของท่าน:", "{number} belongs to this company, which you said isn't yours:"),
   boxNf: c("ไม่พบบริษัทที่ใช้เลข {number}", "We couldn't find a company with {number}."),
   boxLeft: c("ตรวจสอบและแก้ไขเลขทะเบียน", "Check the number and change it."),

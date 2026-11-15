@@ -158,3 +158,8 @@
 - [x] Verified live (buyer view, 8 cards): no link EN/TH, first card open on load and after reload, independent toggles; 52 pipeline tests pass, build OK.
 
 - [x] Company-first sign-up with registration check (Nov 12 brief)
+
+## Registration lookup correction
+- [x] Build entity-aware register profile URLs for public companies, private companies and partnerships in the shared lookup used by every role.
+- [x] Add bilingual Edit Company Registration Number to the unavailable-register dialog and permit corrected pending numbers after unsuccessful checks.
+- [x] 73 sign-up/financial tests and isolated EN/TH dialog action checks pass; no accounts created or company data changed. Full external extraction was not rerun.

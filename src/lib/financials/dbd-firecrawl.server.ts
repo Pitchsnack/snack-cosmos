@@ -20,6 +20,7 @@ import type {
 } from "./dbd-provider.server";
 import { normalizeRegisteredName, normalizeRegisteredNumber, parseDbdNumber } from "./dbd-parse";
 import { hasAnyCompanyInfo, parseCompanyInfoTh } from "./dbd-company-info";
+import { dbdProfileUrl } from "./dbd-profile-url";
 
 const BASE = "https://datawarehouse.dbd.go.th";
 const FIRECRAWL = "https://api.firecrawl.dev/v2/scrape";
@@ -264,7 +265,7 @@ function parseCompany(html: string): DbdCompany | null {
   return {
     registeredNumber: number[1],
     registeredName: name ? name[1].trim() : null,
-    sourceReference: `${BASE}/company/profile/5${number[1]}`,
+    sourceReference: dbdProfileUrl(number[1]),
     ...(Object.values(profile).some(Boolean) ? { profile } : {}),
   };
 }
@@ -280,7 +281,7 @@ async function findByName(name: string): Promise<{ number: string } | null> {
     { type: "wait", milliseconds: 9000 },
   ]);
   if (!html) return null;
-  const m = html.match(/company\/profile\/5(\d{13})/);
+  const m = html.match(/company\/profile\/\d(\d{13})/);
   return m ? { number: m[1] } : null;
 }
 
@@ -306,7 +307,7 @@ async function lookup(input: {
     number = found.number;
   }
 
-  const profileUrl = `${BASE}/company/profile/5${number}`;
+  const profileUrl = dbdProfileUrl(number);
   const positionHtml = await scrape(profileUrl, financialActions(1));
   if (!positionHtml) return { status: "unavailable", detail: "DBD_UNREACHABLE" };
   if (/404 - Page not found|Oops!/.test(clean(positionHtml).slice(0, 500))) {

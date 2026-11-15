@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { isValidThaiReg, REG_CHANGES } from "@/lib/thai-reg";
+import { canCorrectRegistrationCheck, isValidThaiReg, REG_CHANGES } from "@/lib/thai-reg";
 
 /**
  * Sign-up company check (section 9). The account stays a pending sign-up — no role,
@@ -182,7 +182,7 @@ export const runRegCheck = createServerFn({ method: "POST" })
     let changes: number = a.reg_changes ?? 0;
     const held = a.reg_check as any;
     if (data.newReg) {
-      if (!held || !["not_found", "rejected"].includes(held.status)) throw new Error("Nothing to correct.");
+      if (!canCorrectRegistrationCheck(held)) throw new Error("Nothing to correct.");
       if (changes >= REG_CHANGES) throw new Error("You've used both changes.");
       if (data.newReg === a.reg_no) throw new Error("Change the registration number.");
       reg = data.newReg; changes += 1;

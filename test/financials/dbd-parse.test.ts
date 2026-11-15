@@ -8,6 +8,7 @@ import {
   parseFiscalYear,
   toBaht,
 } from "@/lib/financials/dbd-parse";
+import { dbdProfileUrl } from "@/lib/financials/dbd-profile-url";
 import {
   extractTables,
   parseSearchResults,
@@ -25,6 +26,17 @@ describe("DBD number parsing", () => {
     expect(parseDbdNumber("")).toBeNull();
     expect(parseDbdNumber("-")).toBeNull();
     expect(parseDbdNumber(null)).toBeNull();
+  });
+});
+
+describe("register profile URLs", () => {
+  it("uses the public-company entity prefix for 0107568000248", () => {
+    expect(dbdProfileUrl("0107568000248")).toBe("https://datawarehouse.dbd.go.th/company/profile/70107568000248");
+  });
+  it("uses the registration number's fourth digit for private companies and partnerships", () => {
+    expect(dbdProfileUrl("0105555078063")).toBe("https://datawarehouse.dbd.go.th/company/profile/50105555078063");
+    expect(dbdProfileUrl("0103569000010")).toBe("https://datawarehouse.dbd.go.th/company/profile/30103569000010");
+    expect(dbdProfileUrl("0102569000013")).toBe("https://datawarehouse.dbd.go.th/company/profile/20102569000013");
   });
 });
 
@@ -82,5 +94,11 @@ describe("table parsing", () => {
        <a href="/company/profile/0105548111222">EXAMPLE COMPANY (THAILAND) LIMITED</a>`,
     );
     expect(results.map((r) => r.registeredNumber)).toEqual(["0105555078063", "0105548111222"]);
+  });
+
+  it("preserves an entity-prefixed public-company profile link", () => {
+    const results = parseSearchResults('<a href="/company/profile/70107568000248">PUBLIC COMPANY LIMITED</a>');
+    expect(results[0]?.registeredNumber).toBe("0107568000248");
+    expect(results[0]?.sourceReference).toBe("https://datawarehouse.dbd.go.th/company/profile/70107568000248");
   });
 });

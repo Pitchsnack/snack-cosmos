@@ -110,7 +110,7 @@ function SignupPage() {
 }
 
 type Dlg = null | "confirm" | "verifying" | "found" | "nf" | "limit" | "contact" | "unavailable";
-type Fix = null | { why: "no" | "nf"; old: string; co?: RegCompany };
+type Fix = null | { why: "no" | "nf" | "unavailable"; old: string; co?: RegCompany };
 
 function SignupInner() {
   const navigate = useNavigate();
@@ -181,6 +181,7 @@ function SignupInner() {
   const [tried, setTried] = useState<string[]>([]);
   const [setupCard, setSetupCard] = useState<null | "check_failed" | "too_many">(null);
   const [checkBusy, setCheckBusy] = useState(false);
+  const [unavailableEdit, setUnavailableEdit] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -241,7 +242,10 @@ function SignupInner() {
     if (r.status === "found") { setFound(r.company); setDlg("found"); }
     else if (r.status === "not_found") setDlg((newReg ? changes + 1 : changes) < REG_CHANGES ? "nf" : "contact");
     else if (r.status === "rejected") { setFix({ why: "no", old: r.reg }); setDlg(null); setStep("company"); }
-    else setDlg(r.status === "limit" ? "limit" : "unavailable");
+    else {
+      setUnavailableEdit(r.status !== "limit");
+      setDlg(r.status === "limit" ? "limit" : "unavailable");
+    }
   }
 
   /** Answers move from the browser to the pending sign-up once the sign-in user exists. */
@@ -488,7 +492,7 @@ function SignupInner() {
 
   // ----- Pop-up answers -----
   const changesLeft = REG_CHANGES - changes;
-  function openFix(why: "no" | "nf", co?: RegCompany) {
+  function openFix(why: "no" | "nf" | "unavailable", co?: RegCompany) {
     setFix({ why, old: reg, co }); setRegLocked(false); setSameErr(false); setErr5({}); setDlg(null); setStep("company");
     setTimeout(() => { regRef.current?.focus(); regRef.current?.select(); }, 60);
   }
@@ -509,7 +513,7 @@ function SignupInner() {
       writePending(null); clearPre();
       await qc.invalidateQueries();
       goHome(res.role);
-    } catch { setCheckBusy(false); setDlg("unavailable"); }
+    } catch { setCheckBusy(false); setUnavailableEdit(false); setDlg("unavailable"); }
   }
   async function sendRequest(reason: SetupReason, v: { name: string; email: string; phone: string; company: string | null; country: string; note: string | null }) {
     await sendSetup({ data: { reason, role: role ?? "seller", lang, ...v } });
@@ -735,16 +739,17 @@ function SignupInner() {
                             onChange={(e) => { setReg(digitsOnly(e.target.value)); setErr5((x) => ({ ...x, reg: false })); setSameErr(false); }} />
                           {regLocked && <Lock size={16} aria-hidden />}</div>
                         {regLocked ? <p className="sr-hint">{t(R.regLocked)}</p>
-                          : fixHint ? <p className="sr-hint bad"><b>{t(R.fixA)}</b> {t(fix!.why === "no" ? R.fixNo[word] : R.fixNf[word])}</p>
+                          : fixHint ? <p className="sr-hint bad"><b>{t(R.fixA)}</b> {t(fix!.why === "no" ? R.fixNo[word] : fix!.why === "nf" ? R.fixNf[word] : R.fixUnavailable)}</p>
                           : <p className="sr-hint">{fill(R.regHint[word], { n: reg.length })}</p>}
                         {err5.reg && <Err text={R.regBad} />}
-                        {sameErr && <Err text={fix?.why === "no" ? R.sameNo : R.sameNf} />}
+                        {sameErr && <Err text={fix?.why === "no" ? R.sameNo : fix?.why === "nf" ? R.sameNf : R.fixUnavailable} />}
                         {fix && (
                           <div className="sr-warn">
                             {fix.why === "no" ? <>
                               <span>{fill(R.boxNo, { number: "\u0000" }).split("\u0000").map((part, i, arr) => <span key={i}>{part}{i < arr.length - 1 && <b>{fix.old}</b>}</span>)}</span>
                               {fix.co && <div className="sr-warn-in"><CompanyRows lang={lang} co={fix.co} /></div>}
-                            </> : <p style={{ margin: 0 }}>{fill(R.boxNf, { number: "\u0000" }).split("\u0000").map((part, i, arr) => <span key={i}>{part}{i < arr.length - 1 && <b>{fix.old}</b>}</span>)}</p>}
+                            </> : fix.why === "nf" ? <p style={{ margin: 0 }}>{fill(R.boxNf, { number: "\u0000" }).split("\u0000").map((part, i, arr) => <span key={i}>{part}{i < arr.length - 1 && <b>{fix.old}</b>}</span>)}</p>
+                              : <p style={{ margin: 0 }}>{t(R.fixUnavailable)}</p>}
                             <p style={{ margin: "6px 0 0" }}>{t(R.boxLeft)} <b>{changesLeft === 1 ? t(R.left1) : fill(R.left, { k: changesLeft })}</b></p>
                           </div>
                         )}
@@ -911,7 +916,8 @@ function SignupInner() {
       <NotFoundDialog open={dlg === "nf"} lang={lang} reg={reg} onEdit={() => openFix("nf")} onContact={() => { setDlg(null); setSetupCard("check_failed"); }} />
       <SimpleDialog open={dlg === "limit"} lang={lang} kind="limit" onMain={() => { setDlg(null); setSetupCard("too_many"); }} />
       <SimpleDialog open={dlg === "contact"} lang={lang} kind="contact" count={tried.length} onMain={() => { setDlg(null); setSetupCard("check_failed"); }} />
-      <SimpleDialog open={dlg === "unavailable"} lang={lang} kind="unavailable" busy={checkBusy} onMain={() => void startCheck()} />
+      <SimpleDialog open={dlg === "unavailable"} lang={lang} kind="unavailable" busy={checkBusy}
+        onMain={() => void startCheck(fix ? reg : undefined)} onEdit={unavailableEdit ? () => openFix("unavailable") : undefined} />
     </div>
   );
 }

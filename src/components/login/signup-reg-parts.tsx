@@ -123,7 +123,7 @@ export function NotFoundDialog({ open, lang, reg, onEdit, onContact }: { open: b
 }
 
 /** 6.5 Too many checks · 6.6 Please contact the team · register not answering (retry). */
-export function SimpleDialog({ open, lang, kind, count, onMain, busy }: { open: boolean; lang: Lang; kind: "limit" | "contact" | "unavailable"; count?: number; onMain: () => void; busy?: boolean }) {
+export function SimpleDialog({ open, lang, kind, count, onMain, onEdit, busy }: { open: boolean; lang: Lang; kind: "limit" | "contact" | "unavailable"; count?: number; onMain: () => void; onEdit?: () => void; busy?: boolean }) {
   const main = useRef<HTMLButtonElement>(null);
   const title = kind === "limit" ? R.limTitle[lang] : kind === "contact" ? R.pcTitle[lang] : R.unTitle[lang];
   return (
@@ -132,7 +132,10 @@ export function SimpleDialog({ open, lang, kind, count, onMain, busy }: { open: 
       {kind === "limit" && <><p className="sr-p">{R.limA[lang]}</p><p className="sr-p">{R.limB[lang]}</p></>}
       {kind === "contact" && <><p className="sr-p">{tx(lang, R.pcA, { count: count ?? 0 })}</p><p className="sr-p">{R.pcB[lang]}</p></>}
       {kind === "unavailable" && <p className="sr-p">{R.unA[lang]}</p>}
-      <div className="sr-btns end"><button ref={main} type="button" className="sr-btn navy" disabled={busy} onClick={onMain}>{kind === "unavailable" ? R.tryAgain[lang] : R.contact[lang]}</button></div>
+      <div className={`sr-btns${onEdit ? "" : " end"}`}>
+        {onEdit && <button type="button" className="sr-btn" disabled={busy} onClick={onEdit}>{R.edit[lang]}</button>}
+        <button ref={main} type="button" className="sr-btn navy" disabled={busy} onClick={onMain}>{kind === "unavailable" ? R.tryAgain[lang] : R.contact[lang]}</button>
+      </div>
     </SrDialog>
   );
 }

@@ -21,6 +21,7 @@
  * UI keeps the existing financial data untouched.
  */
 import type { DbdCompany, DbdLookupKey, DbdOutcome, DbdStatement } from "./dbd-provider.server";
+import { dbdProfileUrl } from "./dbd-profile-url";
 import {
   detectDbdUnit,
   mapDbdLabel,
@@ -146,7 +147,7 @@ export function parseStatementTables(
 export function parseSearchResults(html: string): DbdCompany[] {
   const out: DbdCompany[] = [];
   const seen = new Set<string>();
-  const linkRe = /<a[^>]+href="([^"]*profile[^"]*?(\d{13})[^"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
+  const linkRe = /<a[^>]+href="([^"]*profile\/\d?(\d{13})[^"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
   let m: RegExpExecArray | null;
   while ((m = linkRe.exec(html))) {
     const number = m[2];
@@ -207,7 +208,8 @@ async function lookup(input: {
   if (!company) return { status: "not_found" };
 
   // Financial profile page for the matched company only.
-  const profileUrl = company.sourceReference ?? `${BASE}/company/profile/${company.registeredNumber}`;
+  const profileUrl = company.sourceReference ?? (company.registeredNumber ? dbdProfileUrl(company.registeredNumber) : null);
+  if (!profileUrl) return { status: "not_found" };
   const profile = await getText(profileUrl).catch((e) => ({ ok: false, status: 0, body: String(e) }));
   if (looksRestricted(profile.body)) return { status: "unavailable", detail: "DBD_ACCESS_RESTRICTED" };
   if (!profile.ok) return { status: "unavailable", detail: `HTTP ${profile.status}` };

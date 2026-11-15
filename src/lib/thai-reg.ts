@@ -15,6 +15,11 @@ export const REG_CHANGES = 2;
 export const LOOKUPS_PER_EMAIL = 3;
 export const LOOKUPS_PER_DEVICE_24H = 5;
 
+/** A pending sign-up may correct its number after an unsuccessful check, never after a company was found. */
+export function canCorrectRegistrationCheck(held: { status?: unknown } | null | undefined): boolean {
+  return !held || held.status === "not_found" || held.status === "rejected" || held.status === "unavailable";
+}
+
 /** Website saved without https:// and without a trailing slash. */
 export const normWebsite = (s: string) => s.trim().replace(/^https?:\/\//i, "").replace(/\/+$/, "");
 
