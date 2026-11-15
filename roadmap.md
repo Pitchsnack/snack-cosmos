@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Seller Company row half and half
+- [x] Make Company name and Company Registration Number equal-width columns; keep the registration label on one line and the existing mobile stack.
+- [x] Verify EN/TH alignment at 1440px and 1280px, registration-error alignment and the 390px stack; capture the requested 1440px English screenshot.
+- [x] Buyer and advisor setup checked: neither places the firm name and registration number in one row, so no buyer or advisor row changed.
+
 ## Finish and submit three test profiles
 - [x] Complete buyer10, Sasu advisor and seller10 with authorised invented answers; no new accounts or sign-up tests.
 - [x] Submit all three through Register your company and verify each appears in the matching Admin approval queue.

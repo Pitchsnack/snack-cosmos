@@ -60,7 +60,7 @@
 .seller-autofill-info {margin-top:22px;border:1px solid var(--seller-setup-info-line);border-radius:12px;background:var(--seller-setup-info-bg);padding:16px 18px;color:var(--foreground);font-size:14px;}
 .seller-website-left {margin-top:10px;text-align:right;font-size:13.5px;color:var(--muted-foreground);}
 .seller-founded-row {display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:20px;}
-.seller-company-identity {display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:20px;align-items:start;}
+.seller-company-identity {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;}
 .seller-web-field {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;}
 .seller-web-field.is-initial {grid-template-columns:minmax(0,1fr) auto auto;}
 .seller-no-website-inline {min-height:50px;padding:0 16px;border:1px solid var(--border);border-radius:12px;color:var(--foreground);font-size:14px;font-weight:600;white-space:nowrap;}
