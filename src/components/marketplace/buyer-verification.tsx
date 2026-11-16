@@ -78,7 +78,7 @@ export function BuyerVerificationCard() {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="space-y-1"><Label className="text-[12px]">{label}</Label>{children}</div>;
+  return <div className="space-y-1"><Label className="text-[12px]">{label.endsWith(" *") ? <>{label.slice(0, -2)}<span className="text-destructive"> *</span></> : label}</Label>{children}</div>;
 }
 function Banner({ icon, tone, text }: { icon: React.ReactNode; tone: string; text: string }) {
   return <div className={`flex items-start gap-2 rounded-[10px] border px-3 py-2.5 text-[13px] ${tone}`}><span className="mt-0.5">{icon}</span>{text}</div>;

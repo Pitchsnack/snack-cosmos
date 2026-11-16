@@ -236,7 +236,7 @@ export function DealForm() {
     >
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-1.5 md:col-span-2">
-          <Label className="text-xs uppercase tracking-wide">Tenant *</Label>
+          <Label className="text-xs uppercase tracking-wide">Tenant<span className="text-destructive"> *</span></Label>
           <Select value={tenantId} onValueChange={setTenantId}>
             <SelectTrigger><SelectValue placeholder="Select tenant" /></SelectTrigger>
             <SelectContent>
@@ -308,12 +308,12 @@ export function DealForm() {
         </div>
 
         <div className="space-y-1.5 md:col-span-2">
-          <Label className="text-xs uppercase tracking-wide">Deal name *</Label>
+          <Label className="text-xs uppercase tracking-wide">Deal name<span className="text-destructive"> *</span></Label>
           <Input value={dealName} onChange={(e) => setDealName(e.target.value)} required />
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs uppercase tracking-wide">Startup *</Label>
+          <Label className="text-xs uppercase tracking-wide">Startup<span className="text-destructive"> *</span></Label>
           <Select value={startupId} onValueChange={setStartupId} disabled={depsDisabled || noStartups}>
             <SelectTrigger><SelectValue placeholder={startupsQ.isLoading ? "Loading…" : noStartups ? "No startups in this tenant" : "Select a startup"} /></SelectTrigger>
             <SelectContent>
@@ -324,7 +324,7 @@ export function DealForm() {
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs uppercase tracking-wide">Investor *</Label>
+          <Label className="text-xs uppercase tracking-wide">Investor<span className="text-destructive"> *</span></Label>
           <Select value={investorId} onValueChange={setInvestorId} disabled={depsDisabled || noInvestors}>
             <SelectTrigger><SelectValue placeholder={investorsQ.isLoading ? "Loading…" : noInvestors ? "No investors in this tenant" : "Select an investor"} /></SelectTrigger>
             <SelectContent>
@@ -374,7 +374,7 @@ export function DealForm() {
         <p className="mb-3 text-xs text-muted-foreground">Every deal must have one human Owning Agent and one Owning AI Agent.</p>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1.5">
-            <Label className="text-xs uppercase tracking-wide">Owning Agent *</Label>
+            <Label className="text-xs uppercase tracking-wide">Owning Agent<span className="text-destructive"> *</span></Label>
             <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={depsDisabled}>
               <SelectTrigger><SelectValue placeholder={humansQ.isLoading ? "Loading…" : "Select an agent"} /></SelectTrigger>
               <SelectContent>
@@ -385,7 +385,7 @@ export function DealForm() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs uppercase tracking-wide">Owning AI Agent *</Label>
+            <Label className="text-xs uppercase tracking-wide">Owning AI Agent<span className="text-destructive"> *</span></Label>
             <Select value={owningAiAgentId} onValueChange={setOwningAi} disabled={depsDisabled || noAi}>
               <SelectTrigger><SelectValue placeholder={aisQ.isLoading ? "Loading…" : noAi ? "No AI users in this tenant" : "Select an AI agent"} /></SelectTrigger>
               <SelectContent>
