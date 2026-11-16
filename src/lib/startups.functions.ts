@@ -410,7 +410,7 @@ export const getStartup = createServerFn({ method: "GET" })
       .select(`
         id, tenant_id, startup_name, website_url, linkedin_url, city, sector, business_model,
         short_description, long_description, status, visibility, created_at, updated_at,
-         logo_url, company_type, company_type_source, business_address, address_line1, address_line2, address_city_district, address_province_state, postal_code, registered_name, registered_number, company_size, last_year_revenue,
+         logo_url, company_type, company_type_source, business_address, address_line1, address_line2, address_city_district, address_province_state, postal_code, registered_name, registered_number, reg_locked_at, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
         product_tags, market_tags, regulatory_licenses, iso_standards, url_key, source_global_id, imported_at,
         short_description_th, long_description_th, product_tags_th, market_tags_th, thai_name, english_name,

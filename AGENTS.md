@@ -71,3 +71,4 @@
 
 
 
+- DBD-confirmed identity (registration number, company/Thai/English names, year founded) locks once reg_locked_at is set: zz_guard_locked_identity rejects non-Control changes on startups/investors/advisor_firms, zz_audit_locked_identity records Admin changes, admin-client saves call identity-lock.server.ts, and editors share identity-lock.tsx so every save path enforces one rule.
