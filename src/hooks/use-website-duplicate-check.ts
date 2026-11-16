@@ -59,7 +59,7 @@ export function useWebsiteDuplicateCheck(excludeId?: string) {
         );
         const byName = investorStartupLinksAdapter.checkStartupDuplicates(
           term,
-          rows.map((r) => ({ id: r.id, startup_name: r.startup_name, industry: r.industry })),
+          rows.map((r) => ({ id: r.id, startup_name: r.startup_name, sector: r.sector })),
         ).candidates;
 
         const merged: DuplicateCandidate[] = [

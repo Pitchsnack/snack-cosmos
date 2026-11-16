@@ -24,7 +24,7 @@ export interface ControlListParams {
   pageSize: number;
   q?: string;
   status?: "all" | DirectoryState;
-  /** Startups: industry. Investors: sector focus. */
+  /** Startups: SET sector. Investors: sector focus. */
   facet?: string;
   /** Investors only: investor type. */
   type?: string;
@@ -40,7 +40,7 @@ export interface ControlStartupRow {
   name: string;
   short_description: string | null;
   logo_url: string | null;
-  industry: string[];
+  sector: string | null;
   location: string | null;
   updated_at: string;
   directory_state: DirectoryState;

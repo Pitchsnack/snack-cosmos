@@ -283,7 +283,7 @@ export const getSharedDeal = createServerFn({ method: "GET" })
       supabaseAdmin.from("tenants").select("id, tenant_name").in("id", tenantIds),
       supabaseAdmin
         .from("startups")
-        .select("id, startup_name, country, industry, short_description")
+        .select("id, startup_name, country, sector, short_description")
         .eq("id", deal.startup_id)
         .maybeSingle(),
       supabaseAdmin

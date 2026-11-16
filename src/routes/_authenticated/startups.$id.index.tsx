@@ -110,7 +110,7 @@ function StartupDetailPage() {
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {s.investment_stage && <Badge variant="outline" className="border-accent/40 bg-accent/10 text-accent">{s.investment_stage}</Badge>}
-              {s.industry && <Badge variant="outline">{s.industry}</Badge>}
+              {s.sector && <Badge variant="outline">{s.sector}</Badge>}
               <Badge variant="outline">{s.status}</Badge>
               <Badge variant="outline">{s.visibility}</Badge>
               <RegistrationVerifiedSwitch startupId={s.id} />

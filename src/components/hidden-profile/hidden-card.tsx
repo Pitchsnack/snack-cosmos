@@ -72,8 +72,8 @@ export function HiddenCard({
   const showLive = isBuyerVisible(row) && !!row.live;
   const d = (showLive ? row.live : row) as HiddenDraft;
   const terms = showLive ? [] : identityTerms(s);
-  const industry = s.sector || s.industry?.[0] || "SME";
-  const tags = [industry, s.industry?.[1], d.deal_type].filter(Boolean) as string[];
+  const industry = s.sector || "SME";
+  const tags = [industry, d.deal_type].filter(Boolean) as string[];
   const rev = moneyRange(s.last_year_revenue);
   const statusText = status === "live" ? "Live" : status === "live_edited" ? "Live · edited" : "Draft";
 

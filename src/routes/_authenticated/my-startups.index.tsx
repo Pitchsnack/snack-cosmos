@@ -30,6 +30,7 @@ import { selectMyStartups } from "@/lib/publication/my-startups-membership";
 import { cn } from "@/lib/utils";
 import { CompanyScrollLayout } from "@/components/my-business/company-scroll-layout";
 import { MyBusinessProfiles } from "@/components/my-business/my-business-profiles";
+import { SECTORS } from "@/lib/sectors";
 
 const SORT = ["updated_desc","created_desc","name_asc","name_desc"] as const;
 const VIEW = ["profiles","grid","split","list"] as const;
@@ -39,7 +40,7 @@ const COMPANY_TYPES = ["SaaS","FinTech","Marketplace","AI","Hardware","Consumer"
 const searchSchema = z.object({
   q: z.string().optional(),
   stage: z.string().optional(),
-  industry: z.string().optional(),
+  sector: z.string().optional(),
   hq: z.string().optional(),
   ct: z.string().optional(),
   ptag: z.string().optional(),
@@ -98,7 +99,7 @@ function MyStartupsPageInner() {
   const view = oneCompany ? "profiles" : layoutView ?? "profiles";
   const selected = s.selected;
   const favOnly = !!s.fav;
-  const scrollReset = JSON.stringify([s.q,s.stage,s.industry,s.hq,s.ct,s.ptag,s.mtag,sort,favOnly]);
+  const scrollReset = JSON.stringify([s.q,s.stage,s.sector,s.hq,s.ct,s.ptag,s.mtag,sort,favOnly]);
   const { ids: favIds } = useFavoriteStartups();
 
   const [modalId, setModalId] = useState<string | null>(s.edit === "startup" ? null : s.panel ?? null);
@@ -119,7 +120,7 @@ function MyStartupsPageInner() {
   const pageSize = 100; // fetch enough to filter client-side to mine
 
   const { data, isLoading, isFetching, refetch } = useStartups({
-    search: s.q, stage: s.stage, industry: s.industry, headquarters: s.hq,
+    search: s.q, stage: s.stage, sector: s.sector, headquarters: s.hq,
     companyType: s.ct, productTag: s.ptag, marketTag: s.mtag,
     sort, page: 1, pageSize,
   });
@@ -162,7 +163,7 @@ function MyStartupsPageInner() {
   const update = (patch: Partial<typeof s>) =>
     navigate({ search: (prev: typeof s) => ({ ...prev, ...patch, page: 1 }) });
 
-  const hasFilter = !!(s.q || s.stage || s.industry || s.hq || s.ct || s.ptag || s.mtag);
+  const hasFilter = !!(s.q || s.stage || s.sector || s.hq || s.ct || s.ptag || s.mtag);
 
   if (oneCompany) {
     return (
@@ -242,13 +243,13 @@ function MyStartupsPageInner() {
           <Input
             value={s.q ?? ""}
             onChange={(e) => update({ q: e.target.value || undefined })}
-            placeholder={setupText("Search my startups by name, description, industry, HQ…")}
+            placeholder={setupText("Search my startups by name, description, sector, HQ…")}
             className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
           />
         </div>
         <FilterSelect label={setupText("Stage")} value={s.stage} options={STAGES} onChange={(v) => update({ stage: v })} />
         <FilterSelect label={setupText("Type")} value={s.ct} options={COMPANY_TYPES} onChange={(v) => update({ ct: v })} />
-        <Input value={s.industry ?? ""} onChange={(e) => update({ industry: e.target.value || undefined })} placeholder={setupText("Industry")} className="h-9 w-36" />
+        <FilterSelect label={setupText("Sector")} value={s.sector} options={SECTORS} onChange={(v) => update({ sector: v })} />
         <Input value={s.hq ?? ""} onChange={(e) => update({ hq: e.target.value || undefined })} placeholder={setupText("HQ")} className="h-9 w-32" />
         <Select value={sort} onValueChange={(v) => navigate({ search: (prev: typeof s) => ({ ...prev, sort: v as typeof SORT[number] }) })}>
           <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>

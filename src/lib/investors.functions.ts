@@ -795,7 +795,7 @@ export interface PortfolioStartupItem {
   logo_signed_url: string | null;
   short_description: string | null;
   website_url: string | null;
-  industry: string[];
+  sector: string | null;
   product_tags: string[];
   market_tags: string[];
   investment_stage: string | null;
@@ -832,7 +832,7 @@ export const getInvestorPortfolio = createServerFn({ method: "GET" })
     const { data: startupRows } = await supabase
       .from("startup_investors")
       .select(
-        "startups:startup_id(id, startup_name, logo_url, short_description, website_url, industry, product_tags, market_tags, investment_stage, headquarters, city, region)",
+        "startups:startup_id(id, startup_name, logo_url, short_description, website_url, sector, product_tags, market_tags, investment_stage, headquarters, city, region)",
       )
       .eq("investor_id", data.id);
 
@@ -845,7 +845,7 @@ export const getInvestorPortfolio = createServerFn({ method: "GET" })
 
     type SRaw = {
       id: string; startup_name: string; logo_url: string | null; short_description: string | null;
-      website_url: string | null; industry: string[] | null; product_tags: string[] | null;
+      website_url: string | null; sector: string | null; product_tags: string[] | null;
       market_tags: string[] | null; investment_stage: string | null;
       headquarters: string | null; city: string | null; region: string | null;
     };
@@ -877,7 +877,7 @@ export const getInvestorPortfolio = createServerFn({ method: "GET" })
         logo_signed_url: s.logo_url ? (signed[s.logo_url] ?? null) : null,
         short_description: s.short_description,
         website_url: s.website_url,
-        industry: s.industry ?? [],
+        sector: s.sector ?? null,
         product_tags: s.product_tags ?? [],
         market_tags: s.market_tags ?? [],
         investment_stage: s.investment_stage,

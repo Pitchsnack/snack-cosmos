@@ -129,7 +129,7 @@ function StartupInvestorsPage() {
               {s.investment_stage && <span>{s.investment_stage}</span>}
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {s.industry.slice(0, 3).map((i) => (
+              {(s.sector ? [s.sector] : []).map((i) => (
                 <Badge key={i} variant="outline" className="text-[10px]">
                   {i}
                 </Badge>

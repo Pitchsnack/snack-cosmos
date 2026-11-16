@@ -2,14 +2,14 @@
  * Startup Similarity Map — pure grouping / similarity logic.
  *
  * Discovery layer only: reads existing Startup Directory classifications
- * (industry, product_tags, market_tags). No new fields, no mutations.
+ * (sector, product_tags, market_tags). No new fields, no mutations.
  */
 import type { StartupListItem } from "@/lib/startups.functions";
 
 export type SimilarityMode = "industry" | "product" | "market" | "all";
 
 export const SIMILARITY_MODES: { value: SimilarityMode; label: string }[] = [
-  { value: "industry", label: "Industry" },
+  { value: "industry", label: "Sector" },
   { value: "product", label: "Product & Service Tags" },
   { value: "market", label: "Market Tags" },
   { value: "all", label: "All Combined" },
@@ -20,13 +20,13 @@ export const UNCLASSIFIED = "Unclassified";
 export function dimensionTags(s: StartupListItem, mode: SimilarityMode): string[] {
   switch (mode) {
     case "industry":
-      return s.industry ?? [];
+      return s.sector ? [s.sector] : [];
     case "product":
       return s.product_tags ?? [];
     case "market":
       return s.market_tags ?? [];
     case "all":
-      return [...(s.industry ?? []), ...(s.product_tags ?? []), ...(s.market_tags ?? [])];
+      return [...(s.sector ? [s.sector] : []), ...(s.product_tags ?? []), ...(s.market_tags ?? [])];
   }
 }
 
@@ -45,7 +45,7 @@ function jaccard(a: string[], b: string[]): number {
 /** 0–1 similarity between two startups for the active mode. */
 export function similarity(a: StartupListItem, b: StartupListItem, mode: SimilarityMode): number {
   if (mode !== "all") return jaccard(dimensionTags(a, mode), dimensionTags(b, mode));
-  const i = jaccard(a.industry ?? [], b.industry ?? []);
+  const i = jaccard(a.sector ? [a.sector] : [], b.sector ? [b.sector] : []);
   const p = jaccard(a.product_tags ?? [], b.product_tags ?? []);
   const m = jaccard(a.market_tags ?? [], b.market_tags ?? []);
   return i * 0.4 + p * 0.35 + m * 0.25;
@@ -92,6 +92,7 @@ export function buildClusters(rows: StartupListItem[], mode: SimilarityMode): Cl
   // so the canvas reads as an ecosystem of many small clusters instead of a few
   // giant boxes. Purely presentational grouping — no data-model change.
   const secondary: SimilarityMode[] = dim === "product" ? ["market", "industry"] : ["product", "market"];
+  // "industry" is the retained URL/mode key; its values now come only from SET sector.
   const refined: Cluster[] = [];
   const MAX = 9;
   for (const [key, members] of groups) {

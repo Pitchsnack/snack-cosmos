@@ -119,7 +119,7 @@ export const getProfileBox = createServerFn({ method: "GET" })
 
     // Buyer: the seller (the company's owning user), their company and listing.
     const [{ data: st }, { data: own }, { data: hp }] = await Promise.all([
-      sb.from("startups").select("startup_name, industry, city, address_province_state, year_founded, company_size, website_url, logo_url").eq("id", p.startup_id).maybeSingle(),
+      sb.from("startups").select("startup_name, sector, city, address_province_state, year_founded, company_size, website_url, logo_url").eq("id", p.startup_id).maybeSingle(),
       sb.from("startup_ownership").select("owning_agent_user_id").eq("startup_id", p.startup_id).maybeSingle(),
       sb.from("hidden_profiles").select("code_name, ref_no, deal_type").eq("id", p.hidden_profile_id).maybeSingle(),
     ]);
@@ -136,7 +136,7 @@ export const getProfileBox = createServerFn({ method: "GET" })
       kind: "private", side, person: per, listingId: p.startup_id,
       org: {
         name: st?.startup_name || hp?.code_name || hp?.ref_no || "Business",
-        line: [list(st?.industry), st?.address_province_state || st?.city].filter(Boolean).join(" · ") || null,
+        line: [st?.sector, st?.address_province_state || st?.city].filter(Boolean).join(" · ") || null,
         logoUrl: st?.logo_url || null, rows,
       },
     };

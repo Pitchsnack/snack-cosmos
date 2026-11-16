@@ -95,7 +95,7 @@ export function MapInfoPanel({
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-lg font-semibold leading-tight">{bizName(startup.startup_name)}</h2>
           <p className="truncate text-xs text-muted-foreground">
-            {[startup.industry?.[0], startup.investment_stage].filter(Boolean).join(" · ") || "—"}
+            {[startup.sector, startup.investment_stage].filter(Boolean).join(" · ") || "—"}
           </p>
           <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin className="h-3 w-3" />
@@ -153,8 +153,8 @@ export function MapInfoPanel({
             </p>
 
             <section className="space-y-1.5">
-              <h4 className="text-xs font-semibold">Industry</h4>
-              <Pills items={startup.industry ?? []} tone="industry" />
+              <h4 className="text-xs font-semibold">Sector</h4>
+              <Pills items={startup.sector ? [startup.sector] : []} tone="industry" />
             </section>
             <section className="space-y-1.5">
               <h4 className="text-xs font-semibold">Product &amp; Service Tags</h4>

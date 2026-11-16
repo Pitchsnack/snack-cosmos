@@ -527,7 +527,7 @@ export function SimilarityCanvas({
                   <text x={-HERO_WIDTH / 2 + 44} y={5} textAnchor="middle" fontSize={18} fontWeight={700} fill="var(--map-accent)">{monogram(selected.startup_name)}</text>
                 )}
                 <text x={-HERO_WIDTH / 2 + 84} y={-8} fontSize={17} fontWeight={600} fill="var(--foreground)">{selected.startup_name.length > 20 ? `${selected.startup_name.slice(0, 19)}…` : selected.startup_name}</text>
-                <text x={-HERO_WIDTH / 2 + 84} y={13} fontSize={12} fill="var(--muted-foreground)">{[selected.industry?.[0], selected.region, selected.investment_stage].filter(Boolean).join(" · ") || "Startup"}</text>
+                <text x={-HERO_WIDTH / 2 + 84} y={13} fontSize={12} fill="var(--muted-foreground)">{[selected.sector, selected.region, selected.investment_stage].filter(Boolean).join(" · ") || "Startup"}</text>
                 <rect x={HERO_WIDTH / 2 - 70} y={-35} width={56} height={20} rx={10} fill="color-mix(in oklab, var(--map-accent) 12%, var(--card))" />
                 <text x={HERO_WIDTH / 2 - 42} y={-21} textAnchor="middle" fontSize={11} fontWeight={600} fill="var(--map-accent)">{edges.length ? `${Math.round(edges[0]?.score ? (edges[0].score * 100) : 100)}% Match` : "Selected"}</text>
               </g>

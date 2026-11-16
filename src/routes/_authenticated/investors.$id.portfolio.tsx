@@ -69,10 +69,10 @@ export const Route = createFileRoute("/_authenticated/investors/$id/portfolio")(
 
 const GROUPS_PER_PAGE = 6;
 
-type GroupKey = "industry" | "keywords" | "product" | "market" | "stage" | "country";
+type GroupKey = "sector" | "keywords" | "product" | "market" | "stage" | "country";
 
 const GROUP_OPTIONS: { value: GroupKey; label: string; icon: typeof Layers }[] = [
-  { value: "industry", label: "Industry", icon: Layers },
+  { value: "sector", label: "Sector", icon: Layers },
   { value: "keywords", label: "Keywords", icon: Hash },
   { value: "product", label: "Product & Service Tags", icon: Tags },
   { value: "market", label: "Market Tags", icon: ShoppingCart },
@@ -98,8 +98,8 @@ function InvestorPortfolioPage() {
 
   const [tab, setTab] = useState<"startups" | "investors">("startups");
   const [q, setQ] = useState("");
-  const [groupBy, setGroupBy] = useState<GroupKey>("industry");
-  const [industry, setIndustry] = useState<string | undefined>();
+  const [groupBy, setGroupBy] = useState<GroupKey>("sector");
+  const [sector, setSector] = useState<string | undefined>();
   const [stage, setStage] = useState<string | undefined>();
   const [country, setCountry] = useState<string | undefined>();
   const [stageBand, setStageBand] = useState<"early" | "growth" | undefined>();
@@ -119,7 +119,7 @@ function InvestorPortfolioPage() {
     const list = startups.filter((s) => {
       if (term && !`${s.startup_name} ${s.short_description ?? ""}`.toLowerCase().includes(term))
         return false;
-      if (industry && !s.industry.includes(industry)) return false;
+      if (sector && s.sector !== sector) return false;
       if (stage && s.investment_stage !== stage) return false;
       if (country && s.country !== country) return false;
       if (stageBand) {
@@ -134,7 +134,7 @@ function InvestorPortfolioPage() {
         ? a.startup_name.localeCompare(b.startup_name)
         : b.startup_name.localeCompare(a.startup_name),
     );
-  }, [startups, q, industry, stage, country, stageBand, sort]);
+  }, [startups, q, sector, stage, country, stageBand, sort]);
 
   const filteredInvestors = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -157,7 +157,7 @@ function InvestorPortfolioPage() {
     const map = new Map<string, ChipItem[]>();
     for (const s of filteredStartups) {
       let keys: string[] = [];
-      if (groupBy === "industry") keys = s.industry;
+      if (groupBy === "sector") keys = s.sector ? [s.sector] : [];
       else if (groupBy === "product") keys = s.product_tags;
       else if (groupBy === "market") keys = s.market_tags;
       else if (groupBy === "keywords") keys = [...s.product_tags, ...s.market_tags];
@@ -179,7 +179,7 @@ function InvestorPortfolioPage() {
     const uniq = (vals: (string | null)[]) =>
       [...new Set(vals.filter((v): v is string => !!v))].sort().map((v) => ({ value: v, label: v }));
     return {
-      industries: uniq(startups.flatMap((s) => s.industry)),
+      sectors: uniq(startups.map((s) => s.sector)),
       stages: uniq(startups.map((s) => s.investment_stage)),
       countries: uniq(startups.map((s) => s.country)),
       invTypes: uniq(investors.map((i) => i.investor_type)),
@@ -188,7 +188,7 @@ function InvestorPortfolioPage() {
   }, [startups, investors]);
 
   const summary = useMemo(() => {
-    const industries = new Set(startups.flatMap((s) => s.industry));
+    const sectors = new Set(startups.map((s) => s.sector).filter(Boolean));
     const countries = new Map<string, number>();
     startups.forEach((s) => {
       if (s.country) countries.set(s.country, (countries.get(s.country) ?? 0) + 1);
@@ -197,7 +197,7 @@ function InvestorPortfolioPage() {
     const early = staged.filter((s) => EARLY_STAGES.includes(s.investment_stage!)).length;
     return {
       total: startups.length,
-      industries: industries.size,
+      sectors: sectors.size,
       countries: countries.size,
       earlyPct: staged.length ? Math.round((early / staged.length) * 100) : 0,
       growthPct: staged.length ? 100 - Math.round((early / staged.length) * 100) : 0,
@@ -206,7 +206,7 @@ function InvestorPortfolioPage() {
   }, [startups]);
 
   const resetFilters = () => {
-    setIndustry(undefined);
+    setSector(undefined);
     setStage(undefined);
     setCountry(undefined);
     setStageBand(undefined);
@@ -306,7 +306,7 @@ function InvestorPortfolioPage() {
             <>
               {inv.investor_name} is connected to {startups.length} portfolio startup
               {startups.length === 1 ? "" : "s"}
-              {summary.industries > 0 && <> across {summary.industries} industries</>}. Group,
+              {summary.sectors > 0 && <> across {summary.sectors} sectors</>}. Group,
               search and filter to explore the portfolio.
             </>
           ) : (
@@ -332,13 +332,13 @@ function InvestorPortfolioPage() {
         {tab === "startups" ? (
           <>
             <FilterSelect
-              label="Group by: Industry"
+              label="Group by: Sector"
               value={groupBy}
               options={GROUP_OPTIONS.map((g) => ({ value: g.value, label: `Group by: ${g.label}` }))}
-              onChange={(v) => setGroupBy((v as GroupKey) ?? "industry")}
+              onChange={(v) => setGroupBy((v as GroupKey) ?? "sector")}
               width="w-56"
             />
-            <FilterSelect label="Industry: All" value={industry} options={facets.industries} onChange={setIndustry} />
+            <FilterSelect label="Sector: All" value={sector} options={facets.sectors} onChange={setSector} />
             <FilterSelect label="Stage: All" value={stage} options={facets.stages} onChange={setStage} width="w-36" />
             <Popover>
               <PopoverTrigger asChild>
@@ -507,11 +507,11 @@ function InvestorPortfolioPage() {
               }}
             />
             <SummaryRow
-              label="Industries"
-              value={summary.industries}
+              label="Sectors"
+              value={summary.sectors}
               onClick={() => {
                 setTab("startups");
-                setGroupBy("industry");
+                setGroupBy("sector");
               }}
             />
             <SummaryRow

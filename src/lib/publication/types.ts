@@ -36,7 +36,7 @@ export interface DirectoryProjection {
   name: string;
   logo_url: string | null;
   short_description: string | null;
-  industry: string[];
+  sector: string | null;
   product_tags: string[];
   market_tags: string[];
   location: string | null;

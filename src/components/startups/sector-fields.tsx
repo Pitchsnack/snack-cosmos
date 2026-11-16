@@ -3,7 +3,7 @@
  *
  * Sector uses a two-pane picker (groups left with counts, sectors right) with
  * a search field above both panes that matches across every sector and shows
- * the group of each match. Both fields are optional and never block a save.
+ * the group of each match. Sector completeness never blocks a save.
  */
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
@@ -21,6 +21,7 @@ import { modelAvailability, type AvailabilityBadge } from "@/lib/peer-comparable
 import { useTr } from "@/components/common/edit-info-popup";
 import { useTextLang } from "@/components/common/text-lang";
 import { businessModelLabel } from "@/i18n/th-edit-info";
+import { sectorMissing } from "@/lib/seller-sector";
 
 function norm(s: string) {
   return s.toLowerCase().replace(/[\s\-—–._&/]/g, "");
@@ -462,20 +463,20 @@ export function BusinessModelPicker({
   );
 }
 
-/**
- * Sector and Business model shown together, visually separated from Industry
- * so they read as a related pair.
- */
+/** SET sector and optional Business model shown as a related pair. */
 export function SectorBusinessModelFields({
   sector,
   onSectorChange,
   businessModel,
   onBusinessModelChange,
+  required = false,
 }: {
   sector: string | null;
   onSectorChange: (v: string | null) => void;
   businessModel: string | null;
   onBusinessModelChange: (v: string | null) => void;
+  /** Shows the bilingual missing warning without blocking Save or Create. */
+  required?: boolean;
 }) {
   const tr = useTr();
   const boxRef = useRef<HTMLDivElement>(null);
@@ -503,9 +504,12 @@ export function SectorBusinessModelFields({
       )}
     >
       <div className="space-y-1.5">
-        <div className="text-[13px] font-medium text-foreground">
-          {tr("Sector", "กลุ่มอุตสาหกรรม")} <span className="text-muted-foreground">{tr("(optional)", "(ไม่บังคับ)")}</span>
+        <div className={cn("text-[13px] font-medium", required && sectorMissing(sector) ? "text-destructive" : "text-foreground")}>
+          {tr("Sector", "กลุ่มอุตสาหกรรม")}
         </div>
+        {required && sectorMissing(sector) && (
+          <p className="text-xs text-destructive">{tr("⚠ Missing: pick a sector", "⚠ ยังขาด: เลือกกลุ่มอุตสาหกรรม")}</p>
+        )}
         <p className="text-[11.5px] text-muted-foreground">
           {tr("SET classification, used for financial benchmarking", "การจัดกลุ่มของ SET ใช้เทียบเคียงตัวเลขทางการเงิน")}
         </p>

@@ -28,7 +28,7 @@ export async function buildPartyProfile(sb: any, p: any, direction: PartyDirecti
   };
   if (direction === "buyer_on_seller") {
     const [{ data: st }, { data: own }] = await Promise.all([
-      sb.from("startups").select("startup_name, industry, city, headquarters, year_founded, company_size, website_url, short_description, logo_url").eq("id", p.startup_id).maybeSingle(),
+      sb.from("startups").select("startup_name, sector, city, headquarters, year_founded, company_size, website_url, short_description, logo_url").eq("id", p.startup_id).maybeSingle(),
       sb.from("startup_ownership").select("owning_agent_user_id").eq("startup_id", p.startup_id).maybeSingle(),
     ]);
     let contact: string | null = null;
@@ -42,7 +42,7 @@ export async function buildPartyProfile(sb: any, p: any, direction: PartyDirecti
     return {
       subject: String(p.startup_id),
       name: st?.startup_name || hp?.code_name || hp?.ref_no || "Business",
-      sub: [st?.industry, st?.city].filter(Boolean).join(" · ") || null,
+      sub: [st?.sector, st?.city].filter(Boolean).join(" · ") || null,
       logoUrl: st?.logo_url ?? null, verified: true,
       codeName: hp?.code_name ?? null, sizeLabel: null, contact,
       generated: {

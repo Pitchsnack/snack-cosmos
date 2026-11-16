@@ -84,13 +84,6 @@ export function StartupCard({
   const bookmarked = isFavorite(s.id);
 
   const [isPressed, setIsPressed] = useState(false);
-  const BROAD = ["Enterprise", "Consumers"];
-  const allIndustries = s.industry ?? [];
-  const displayIndustries =
-    allIndustries.length > 1 ? allIndustries.filter((i) => !BROAD.includes(i)) : allIndustries;
-  const industryText = displayIndustries.join(", ");
-  const fullIndustryText = allIndustries.join(", ");
-
   const cardStyle: CSSProperties | undefined = isPressed
     ? PRESSED_CARD_STYLE
     : isHovered
@@ -225,18 +218,18 @@ export function StartupCard({
           </div>
         )}
 
-        {/* Industry row */}
-        {industryText && (
+        {/* SET sector row */}
+        {s.sector && (
           <div className="mb-1 flex items-center gap-1.5 overflow-hidden text-xs text-foreground/80">
             <Factory className="h-3 w-3 shrink-0" />
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
                 <span className="cursor-default truncate">
-                  <span className="font-medium text-foreground">{setupText("Industry:")}</span> {industryText}
+                  <span className="font-medium text-foreground">{setupText("Sector:")}</span> {s.sector}
                 </span>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-[250px] text-xs">
-                {fullIndustryText}
+                {s.sector}
               </TooltipContent>
             </Tooltip>
           </div>

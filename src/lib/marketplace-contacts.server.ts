@@ -58,7 +58,7 @@ export async function loadMarketplaceContacts(data: {as: ContactView}, context: 
     rows.sort((a,b)=>(b.nda_approved_at||'').localeCompare(a.nda_approved_at||''));
     const stIds = [...new Set(rows.map((r) => r.startup_id))];
     const { data: stsRaw } = stIds.length
-      ? await sb.from("startups").select("id, startup_name, industry, website_url, region, city").in("id", stIds)
+      ? await sb.from("startups").select("id, startup_name, sector, website_url, region, city").in("id", stIds)
       : { data: [] };
     const sts = (stsRaw ?? []).map((s: any) => ({ ...s, website: s.website_url, country: s.region }));
     const stMap = Object.fromEntries((sts ?? []).map((s: any) => [s.id, s]));

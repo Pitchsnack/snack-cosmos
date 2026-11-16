@@ -29,7 +29,7 @@ export function StartupTable({ rows, isLoading }: { rows: StartupListItem[]; isL
           <TableRow className="bg-muted/30">
             <TableHead>Startup</TableHead>
             <TableHead>City</TableHead>
-            <TableHead>Industry</TableHead>
+            <TableHead>Sector</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Owning Agent</TableHead>
             <TableHead>AI Owner</TableHead>
@@ -58,7 +58,7 @@ export function StartupTable({ rows, isLoading }: { rows: StartupListItem[]; isL
                   <div className="text-xs text-muted-foreground">{s.tenant_name}</div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.city || "—"}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{s.industry?.length ? s.industry.join(", ") : "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{s.sector || "—"}</TableCell>
                 <TableCell><Badge variant="outline" className={statusTone(s.status)}>{s.status}</Badge></TableCell>
                 <TableCell className="text-sm">{s.owning_agent?.name || s.owning_agent?.email || <span className="text-destructive">Missing</span>}</TableCell>
                 <TableCell className="text-sm">{s.owning_ai_agent?.name || s.owning_ai_agent?.email || <span className="text-destructive">Missing</span>}</TableCell>

@@ -1,31 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { SECTOR_AGNOSTIC } from "@/lib/investor-bands";
-
-/**
- * One match rule for both sides of Browse: an investor's mandate fits a business when
- * its sectors include the business's sector (or it is Sector Agnostic) and, when both
- * sides name a deal type, the deal type is one the investor does.
- * Returns id → the criteria that matched ("sector", "deal type").
- */
-type Mandate = { sectors: string[]; dealTypes: string[] };
-type Biz = { sectors: string[]; dealType: string | null };
-
-function fits(m: Mandate, b: Biz): string[] | null {
-  const low = (x: string) => x.trim().toLowerCase();
-  const ms = m.sectors.map(low);
-  const sectorOk = ms.includes(low(SECTOR_AGNOSTIC)) || b.sectors.some((s) => ms.includes(low(s)));
-  if (!sectorOk || !b.sectors.length && !ms.includes(low(SECTOR_AGNOSTIC))) return null;
-  const crit = ["sector"];
-  if (b.dealType && m.dealTypes.length) {
-    if (!m.dealTypes.map(low).includes(low(b.dealType))) return null;
-    crit.push("deal type");
-  }
-  return crit;
-}
-
-const bizSectors = (s: { sector?: string | null; industry?: string | null } | null) =>
-  [s?.sector, s?.industry].filter((x): x is string => !!x && !!x.trim());
+import { bizSectors, fits, type Mandate, type Biz } from "@/lib/match-rules";
 
 export const myBrowseMatches = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -40,7 +15,7 @@ export const myBrowseMatches = createServerFn({ method: "GET" })
     if (me) {
       const m: Mandate = { sectors: me.sectors ?? [], dealTypes: me.deal_types ?? [] };
       if (!m.sectors.length) return { role: "buyer" as const, matches: out };
-      const { data: rows } = await sb.from("hidden_profiles").select("id, live, startups!inner(sector, industry)").eq("approval_status", "approved").not("live", "is", null);
+      const { data: rows } = await sb.from("hidden_profiles").select("id, live, startups!inner(sector)").eq("approval_status", "approved").not("live", "is", null);
       for (const r of rows ?? []) {
         const c = fits(m, { sectors: bizSectors(r.startups), dealType: r.live?.deal_type ?? null });
         if (c) out[r.id] = c;
@@ -53,7 +28,7 @@ export const myBrowseMatches = createServerFn({ method: "GET" })
     const sid = su?.[0]?.startup_id;
     if (!sid) return { role: "seller" as const, matches: out };
     const [{ data: st }, { data: hp }] = await Promise.all([
-      sb.from("startups").select("sector, industry").eq("id", sid).maybeSingle(),
+      sb.from("startups").select("sector").eq("id", sid).maybeSingle(),
       sb.from("hidden_profiles").select("deal_type, live").eq("startup_id", sid).maybeSingle(),
     ]);
     const biz: Biz = { sectors: bizSectors(st), dealType: hp?.live?.deal_type ?? hp?.deal_type ?? null };

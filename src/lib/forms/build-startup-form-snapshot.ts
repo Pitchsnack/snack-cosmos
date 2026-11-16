@@ -34,7 +34,8 @@ export interface StartupFormSnapshotInput {
   linkedinUrl: string;
   shortDescription: string;
   longDescription: string;
-  industries: string[];
+  sector: string | null;
+  businessModel: string | null;
   productTags: string[];
   marketTags: string[];
   investmentStage: string;
@@ -99,7 +100,8 @@ export function buildStartupFormSnapshot(input: StartupFormSnapshotInput): strin
     shortDescription: s(input.shortDescription),
     longDescription: s(input.longDescription),
     investmentStage: s(input.investmentStage),
-    industries: [...input.industries],
+    sector: s(input.sector),
+    businessModel: s(input.businessModel),
     productTags: [...input.productTags],
     marketTags: [...input.marketTags],
     // Investor selection is a set; sort for order-stability.

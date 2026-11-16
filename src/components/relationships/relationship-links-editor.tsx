@@ -32,7 +32,7 @@ export interface RelationshipRow {
   refId: string | null;
   name: string;
   subtitle: string | null;
-  /** Used for "Group by Industry" on the investor-side portfolio. */
+  /** SET sector used for "Group by Sector" on the investor-side portfolio. */
   industry: string | null;
   relationshipType: InvestorStartupRelationshipType;
   status: "linked" | "pending";
@@ -151,8 +151,8 @@ export function RelationshipLinksEditor({
         id: r.id,
         refId: r.id,
         name: r.startup_name,
-        subtitle: r.industry?.[0] ?? null,
-        industry: r.industry?.[0] ?? null,
+        subtitle: r.sector ?? null,
+        industry: r.sector ?? null,
         relationshipType: "investment" as const,
         status: "linked" as const,
       }));
@@ -196,7 +196,7 @@ export function RelationshipLinksEditor({
             (startupsQ.data?.items ?? []).map((s) => ({
               id: s.id,
               startup_name: s.startup_name,
-              industry: s.industry ?? null,
+              sector: s.sector ?? null,
             })),
           );
 
@@ -302,7 +302,7 @@ export function RelationshipLinksEditor({
             </button>
           ))}
           <div className="ml-auto flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground">Group by Industry</Label>
+            <Label className="text-xs text-muted-foreground">Group by Sector</Label>
             <input
               type="checkbox"
               checked={groupByIndustry}

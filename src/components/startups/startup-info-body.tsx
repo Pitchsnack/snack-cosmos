@@ -66,7 +66,6 @@ export interface StartupInfoData {
   linkedinUrl?: string | null;
   shortDescription?: string | null;
   longDescription?: string | null;
-  industry?: string[];
   /** SET sector — optional, omitted from the panel when not set. */
   sector?: string | null;
   /** Business model value — optional, omitted from the panel when not set. */
@@ -202,7 +201,7 @@ export function StartupInfoBody({
     setDescClamped(full > el.clientHeight + 1);
   }, [data.longDescription]);
 
-  const industry = data.industry ?? [];
+  const sector = data.sector ? [data.sector] : [];
   const productTags = data.productTags ?? [];
   const marketTags = data.marketTags ?? [];
   const licences = data.regulatoryLicenses ?? [];
@@ -322,9 +321,9 @@ export function StartupInfoBody({
         <ChipRow red={!!sectionEdit} tags={productTags} tone="primary" />
       </StartupInfoSection>
 
-      {/* Band 1 — Industry | Market tags */}
+      {/* Band 1 — Sector | Market tags */}
       <PairedSection
-        left={{ icon: Layers, title: "Industry", content: <ChipRow red={!!sectionEdit} tags={industry} tone="muted" />, action: sectionEdit?.("tags") }}
+        left={{ icon: Layers, title: "Sector", content: <ChipRow red={!!sectionEdit} tags={sector} tone="muted" />, action: sectionEdit?.("tags") }}
         right={{
           icon: ShoppingCart,
           title: "Market tags",

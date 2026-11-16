@@ -253,7 +253,7 @@ export const listPipeline = createServerFn({ method: "GET" })
     // Independent lookups run in parallel.
     const [{ data: hps }, { data: sts }, { data: owners }, { data: bvs }, { data: shares }, dkList] = await Promise.all([
       hpIds.length ? sb.from("hidden_profiles").select("id, ref_no, code_name, region, asking_price, asking_price_thb, startup_id").in("id", hpIds) : empty,
-      stIds.length ? sb.from("startups").select("id, startup_name, industry, logo_url").in("id", stIds) : empty,
+      stIds.length ? sb.from("startups").select("id, startup_name, sector, logo_url").in("id", stIds) : empty,
       stIds.length ? sb.from("startup_ownership").select("startup_id, owning_agent_user_id").in("startup_id", stIds) : empty,
       buyerIds.length ? (await import("./profile-verification.server")).verificationsByUsers(sb, buyerIds, "user_id, company_name, buyer_type, status").then((mp: Map<string, any>) => ({ data: [...mp.values()] })) : empty,
       pipeIds.length ? sb.from("report_shares").select("*").in("pipeline_id", pipeIds).order("shared_at", { ascending: false }) : empty,
@@ -315,7 +315,7 @@ export const listPipeline = createServerFn({ method: "GET" })
       const revealed = ndaActive(r);
       return mapRow(r, {
         name: revealed ? st.startup_name || hp.code_name : hp.code_name || hp.ref_no || "Business",
-        sub: [st.industry, hp.region].filter(Boolean).join(" · "),
+        sub: [st.sector, hp.region].filter(Boolean).join(" · "),
         person: null,
         verified: true,
         // Identity stays hidden until the seller approves the NDA.
@@ -683,7 +683,7 @@ export const sellerProfile = createServerFn({ method: "GET" })
     const approved = !!p.nda_approved_at;
     const [{ data: hp }, { data: st }, { data: own }] = await Promise.all([
       sb.from("hidden_profiles").select("code_name, asking_price, asking_price_thb, deal_type, reason, headline, region").eq("id", p.hidden_profile_id).maybeSingle(),
-      sb.from("startups").select("startup_name, industry, city, year_founded, company_size, website_url, short_description").eq("id", p.startup_id).maybeSingle(),
+      sb.from("startups").select("startup_name, sector, city, year_founded, company_size, website_url, short_description").eq("id", p.startup_id).maybeSingle(),
       sb.from("startup_ownership").select("owning_agent_user_id").eq("startup_id", p.startup_id).maybeSingle(),
     ]);
     let person: { name: string | null; role: string | null } | null = null;
@@ -696,7 +696,7 @@ export const sellerProfile = createServerFn({ method: "GET" })
     }
     return {
       name: approved ? st?.startup_name || hp?.code_name || "Business" : hp?.code_name || "Business",
-      industry: st?.industry ?? null,
+      industry: st?.sector ?? null,
       city: approved ? st?.city ?? hp?.region ?? null : hp?.region ?? null,
       about: (approved ? st?.short_description : null) || hp?.headline || null,
       ...priceFor(hp as never, approved),

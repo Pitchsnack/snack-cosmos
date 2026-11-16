@@ -26,7 +26,7 @@ export function FavoriteListHeader() {
       <div>Startup</div>
       <div>Stage/Type</div>
       <div>Country</div>
-      <div>Industry</div>
+      <div>Sector</div>
       <div>Description</div>
       <div>Product tags</div>
       <div>Market tags</div>
@@ -78,9 +78,9 @@ export function FavoriteListRow({
       {/* Country */}
       <div className="min-w-0 truncate text-muted-foreground">{s.headquarters || "—"}</div>
 
-      {/* Industry */}
+      {/* SET sector */}
       <div className="min-w-0 truncate text-muted-foreground">
-        {s.industry?.length ? s.industry.join(", ") : "—"}
+        {s.sector || "—"}
       </div>
 
       {/* Short description */}

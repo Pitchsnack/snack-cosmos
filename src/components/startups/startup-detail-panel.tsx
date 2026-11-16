@@ -384,7 +384,7 @@ export function StartupDetailPanel({
   myStartupsReturnSearch?: {
     q?: string;
     stage?: string;
-    industry?: string;
+    sector?: string;
     hq?: string;
     ct?: string;
     ptag?: string;
@@ -399,7 +399,7 @@ export function StartupDetailPanel({
   returnSearch?: {
     q?: string;
     stage?: string;
-    industry?: string;
+    sector?: string;
     hq?: string;
     ct?: string;
     ptag?: string;
@@ -503,8 +503,8 @@ export function StartupDetailPanel({
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
               {s.headquarters && <span>{s.headquarters}</span>}
-              {s.headquarters && s.industry?.length ? <span aria-hidden>·</span> : null}
-              {s.industry?.length ? <span>{s.industry.join(" · ")}</span> : null}
+              {s.headquarters && s.sector ? <span aria-hidden>·</span> : null}
+              {s.sector ? <span>{s.sector}</span> : null}
             </div>
             <div className="mt-2">
               <GlobalStartupLineageBadge
@@ -819,7 +819,6 @@ export function StartupDetailPanel({
           linkedinUrl: s.linkedin_url,
           shortDescription: s.short_description,
           longDescription: s.long_description,
-          industry: s.industry ?? [],
           sector: s.sector ?? null,
           businessModel: s.business_model ?? null,
           productTags: s.product_tags,

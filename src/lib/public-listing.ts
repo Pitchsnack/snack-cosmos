@@ -20,7 +20,6 @@ export interface ListingSource {
   last_year_revenue?: string | null;
   sector?: string | null;
   business_model?: string | null;
-  industry?: string[] | null;
   product_tags?: string[] | null;
   market_tags?: string[] | null;
   long_description?: string | null;
@@ -179,10 +178,9 @@ export function activityProfile(s: ListingSource): ActivityProfile {
   const terms = listingTerms(s);
   const products = cleanTags(s.product_tags, terms);
   const markets = cleanTags(s.market_tags, terms);
-  const industries = cleanTags(s.industry, terms);
   const sector = (s.sector ?? "").trim();
-  const base = (products[0] || industries[0] || sector || "Established").trim();
-  const hay = [base, sector, s.business_model ?? "", industries.join(" "), products.join(" ")].join(" ");
+  const base = (products[0] || sector || "Established").trim();
+  const hay = [base, sector, s.business_model ?? "", products.join(" ")].join(" ");
 
   const role: ActivityProfile["role"] = MAKER_RE.test(hay)
     ? "Manufacturer"
@@ -199,9 +197,9 @@ export function activityProfile(s: ListingSource): ActivityProfile {
   // The code name uses the category noun (Packaging), not a leading adjective (Flexible)
   // and not a vague industry label (FMCG, SME).
   const words = phrase.split(/\s+/);
-  const scan = [...products, ...industries, sector, s.business_model ?? ""].join(" ");
+  const scan = [...products, sector, s.business_model ?? ""].join(" ");
   const known = CATEGORY_WORDS.find((w) => new RegExp(`\\b${w}`, "i").test(scan));
-  const fallback = (industries.find((i) => !GENERIC_IND.test(i)) || sector || words[words.length - 1] || "Business")
+  const fallback = ((!GENERIC_IND.test(sector) && sector) || words[words.length - 1] || "Business")
     .split(/[,/&]| and /i)[0]
     .trim()
     .split(/\s+/)

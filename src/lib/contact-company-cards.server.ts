@@ -19,7 +19,7 @@ export async function loadContactCompanyCards(sb: any, contact: {id:string; orga
     }
     if (o.kind === 'seller') {
       const [{data: s, error}, {data: h}, {data: media}, {data: inc}, {data: fin}] = await Promise.all([
-        sb.from('startups').select('startup_name,registered_name,website_url,email,city,region,headquarters,company_type,year_founded,company_size,last_year_revenue,sector,business_model,industry,product_tags,market_tags,long_description,short_description,regulatory_licenses,iso_standards,logo_url,registration_verified_at').eq('id', o.id).single(),
+        sb.from('startups').select('startup_name,registered_name,website_url,email,city,region,headquarters,company_type,year_founded,company_size,last_year_revenue,sector,business_model,product_tags,market_tags,long_description,short_description,regulatory_licenses,iso_standards,logo_url,registration_verified_at').eq('id', o.id).single(),
         sb.from('hidden_profiles').select('ref_no,live,headline,description,highlights,customers_summary,deal_type,asking_price_thb,asking_price,published_at,public_image_id').eq('startup_id', o.id).maybeSingle(),
         sb.from('startup_media').select('image_url,slot').eq('startup_id', o.id).order('slot'),
         sb.from('income_statement_items').select('fiscal_year,item_code,amount').eq('startup_id', o.id).in('item_code', ['total_revenue', 'revenue_sales_services']).order('fiscal_year', {ascending: false}),

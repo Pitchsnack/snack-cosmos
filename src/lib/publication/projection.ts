@@ -16,7 +16,7 @@ type ProjectionSource = {
   startup_name: string;
   logo_url?: string | null;
   short_description?: string | null;
-  industry?: string[] | null;
+  sector?: string | null;
   product_tags?: string[] | null;
   market_tags?: string[] | null;
   headquarters?: string | null;
@@ -34,7 +34,7 @@ export function toDirectoryProjection(source: ProjectionSource): DirectoryProjec
     name: source.startup_name,
     logo_url: source.logo_url ?? null,
     short_description: source.short_description ?? null,
-    industry: source.industry ?? [],
+    sector: source.sector ?? null,
     product_tags: source.product_tags ?? [],
     market_tags: source.market_tags ?? [],
     location: source.headquarters ?? source.city ?? null,
@@ -50,7 +50,7 @@ export const DIRECTORY_PROJECTION_ALLOWLIST = [
   "name",
   "logo_url",
   "short_description",
-  "industry",
+  "sector",
   "product_tags",
   "market_tags",
   "location",

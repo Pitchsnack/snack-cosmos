@@ -4,7 +4,7 @@ export const Route=createFileRoute("/_authenticated/my-startups/$id/edit")({
   validateSearch: z.object({
     q: z.string().optional(),
     stage: z.string().optional(),
-    industry: z.string().optional(),
+    sector: z.string().optional(),
     hq: z.string().optional(),
     ct: z.string().optional(),
     ptag: z.string().optional(),

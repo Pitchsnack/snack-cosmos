@@ -77,11 +77,8 @@ export const EDIT_INFO_TH: Record<string, string> = {
   "Business Address": "ที่อยู่ธุรกิจ",
 
   // 2.5 Exclusive view › Industry & Market
-  "how the market describes this company": "คำที่ตลาดใช้อธิบายบริษัทนี้",
-  "⚠ Missing: pick at least one industry": "⚠ ยังขาด: เลือกอุตสาหกรรมอย่างน้อยหนึ่งรายการ",
-  "Add custom industry…": "เพิ่มอุตสาหกรรมเอง…",
-  "Add custom industry...": "เพิ่มอุตสาหกรรมเอง…",
   "Sector": "กลุ่มอุตสาหกรรม",
+  "⚠ Missing: pick a sector": "⚠ ยังขาด: เลือกกลุ่มอุตสาหกรรม",
   "SET classification, used for financial benchmarking": "การจัดกลุ่มของ SET ใช้เทียบเคียงตัวเลขทางการเงิน",
   "Search or pick a sector…": "ค้นหาหรือเลือกกลุ่มอุตสาหกรรม…",
   "Business model": "รูปแบบธุรกิจ",
@@ -107,23 +104,6 @@ export function missingLine(label: string, th: boolean): string {
 /* ---------------- options and chips (follow Texts in) ---------------- */
 
 export type OptLang = "en" | "th";
-
-export const INDUSTRY_TH: Record<string, string> = {
-  "FinTech": "ฟินเทค",
-  "eCommerce & Marketplace": "อีคอมเมิร์ซและมาร์เก็ตเพลส",
-  "MarTech": "มาร์เทค",
-  "HealthTech": "เฮลท์เทค",
-  "Sustainability": "ความยั่งยืน",
-  "Mobility & Logistics": "การเดินทางและโลจิสติกส์",
-  "DeepTech": "ดีพเทค",
-  "Defense": "กลาโหม",
-  "EdTech": "เอ็ดเทค",
-  "Gaming": "เกม",
-  "PropTech": "พร็อพเทค",
-  "AgriTech": "อะกริเทค",
-  "FMCG": "สินค้าอุปโภคบริโภค (FMCG)",
-  "Others": "อื่นๆ",
-};
 
 export const LICENCE_TH: Record<string, string> = {
   "BOT – e-Money licence": "ธปท. – ใบอนุญาตเงินอิเล็กทรอนิกส์",
@@ -195,10 +175,6 @@ export const BUSINESS_MODEL_TH: Record<string, string> = {
 
 export function businessModelLabel(v: string, lang: OptLang): string {
   return lang === "th" ? BUSINESS_MODEL_TH[v] ?? v : v;
-}
-
-export function industryLabel(v: string, lang: OptLang): string {
-  return lang === "th" ? INDUSTRY_TH[v] ?? v : v;
 }
 
 /** A licence or standard added under Other stays as typed. */

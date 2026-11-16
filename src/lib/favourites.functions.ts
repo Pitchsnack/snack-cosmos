@@ -86,7 +86,7 @@ export async function loadBuyerFavourites(userId:string) {
 
     const { data: hps } = await sb
       .from("hidden_profiles")
-      .select("id, startup_id, ref_no, published_at, live, approval_status, public_image_id, startups!inner(startup_name, registered_name, website_url, email, city, region, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, industry, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards, logo_url, registration_verified_at)")
+      .select("id, startup_id, ref_no, published_at, live, approval_status, public_image_id, startups!inner(startup_name, registered_name, website_url, email, city, region, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards, logo_url, registration_verified_at)")
       .in("id", ids)
       .in("approval_status", [...BUYER_VISIBLE])
       .not("live", "is", null);

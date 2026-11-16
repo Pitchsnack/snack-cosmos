@@ -50,7 +50,7 @@ export function EntryProfileTabs({
   const [publishOnOpen, setPublishOnOpen] = useState(false);
   const companyType = s?.company_type ?? null;
   const status = hiddenStatusOf(row, companyType);
-  const industry = s?.sector || s?.industry?.[0] || "—";
+  const industry = s?.sector || "—";
   const startupEntry = isStartupEntry(companyType);
 
   const openEditor = async () => {

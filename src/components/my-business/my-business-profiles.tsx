@@ -52,7 +52,7 @@ function useCompleteness(s: StartupListItem) {
   const { row } = useHiddenProfile(s.id);
   const { data: facts } = useEntryFacts(s.id);
   const { hasData } = useHasFinancials(s.id);
-  const tags = (s.product_tags?.length ?? 0) + (s.market_tags?.length ?? 0) + (s.industry?.length ?? 0);
+  const tags = (s.product_tags?.length ?? 0) + (s.market_tags?.length ?? 0);
   const items: Item[] = [
     { key: "desc", label: "Description & tags", weight: 20, required: false, done: !!s.short_description?.trim() && tags > 0 },
     { key: "logo", label: "Logo & photos", weight: 20, required: false, done: !!s.logo_signed_url && !!s.tile_image_signed_url },
@@ -257,7 +257,7 @@ export function RowLine({ label, children }: { label: string; children: React.Re
 function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow | null }) {
   const status = hiddenStatusOf(row, s.company_type);
   const d = row as HiddenDraft | null;
-  const industry = s.sector || s.industry?.[0] || "SME";
+  const industry = s.sector || "SME";
   const listing = buildPublicListing(s as ListingSource, row ? { ...row, live: status === "live" || status === "live_edited" } : null, false);
   const live = status === "live" || status === "live_edited";
   const adminReview = useAdminReview();
@@ -271,7 +271,7 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   );
   return (
     <>
-      <SectorArt art={d?.cover_art ?? s.sector ?? s.industry?.[0]} sector={s.sector} imageId={(row as { public_image_id?: string | null } | null)?.public_image_id ?? null} className="h-[120px] w-full rounded-none">
+      <SectorArt art={d?.cover_art ?? s.sector} sector={s.sector} imageId={(row as { public_image_id?: string | null } | null)?.public_image_id ?? null} className="h-[120px] w-full rounded-none">
         {badge}
         {managed.has(s.id) && <div className="absolute right-2.5 top-2.5 z-10"><ManagedBadge size="card" border={false} shadow /></div>}
       </SectorArt>
@@ -347,7 +347,7 @@ function PublicPanel({ s, pill, onDeleted }: { s: StartupListItem; pill: React.R
   const { missingRequired } = useCompleteness(s);
   const { hasData: hasFinancials } = useHasFinancials(s.id);
   const actions = useHiddenProfileActions();
-  const industry = s.sector || s.industry?.[0] || "—";
+  const industry = s.sector || "—";
   const adminReview = useAdminReview();
   const navigate = useNavigate();
   const openEdit = useOpenSellerEdit();

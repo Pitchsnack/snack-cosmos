@@ -360,7 +360,7 @@ export const TH_COMPANY_SETUP: Record<string, string> = {
   "Refresh": "รีเฟรช", "Recently created": "สร้างล่าสุด", "Name A–Z": "ชื่อ A–Z", "Name Z–A": "ชื่อ Z–A",
   "View as": "ดูในมุมมอง", "Search…": "ค้นหา…", "NEW": "ใหม่",
   "SELLER": "ผู้ขาย", "BUYER": "ผู้ซื้อ", "ADVISOR": "ที่ปรึกษา", "Certified": "ได้รับการรับรอง",
-  "Search my startups by name, description, industry, HQ…": "ค้นหาธุรกิจของท่านตามชื่อ คำอธิบาย หรืออุตสาหกรรม…",
+  "Search my startups by name, description, sector, HQ…": "ค้นหาธุรกิจของท่านตามชื่อ คำอธิบาย กลุ่มอุตสาหกรรม หรือสำนักงานใหญ่…",
   "Search my investor profiles by name, type, country…": "ค้นหาโปรไฟล์นักลงทุนของท่านตามชื่อ ประเภท หรือประเทศ…",
   "Search my firm profiles by name, service, city…": "ค้นหาโปรไฟล์บริษัทที่ปรึกษาของท่านตามชื่อ บริการ หรือเมือง…",
   "e.g. Siam Foods Co., Ltd.": "เช่น บริษัท สยามฟู้ดส์ จำกัด",

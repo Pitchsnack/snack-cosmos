@@ -33,7 +33,7 @@ const searchSchema = z.object({
   q: z.string().optional(),
   mode: z.enum(MODES).optional(),
   view: z.enum(VIEWS).optional(),
-  industry: z.string().optional(),
+  sector: z.string().optional(),
   ptag: z.string().optional(),
   mtag: z.string().optional(),
   stage: z.string().optional(),
@@ -45,12 +45,12 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/_authenticated/industry-map")({
   head: () => ({
     meta: [
-      { title: "Industry, Product & Market Map — SnackPortal2" },
-      {
-        name: "description",
-        content:
-          "Explore startups grouped by similarities across Industry, Product & Service Tags, and Market Tags.",
-      },
+      { title: "Sector, Product & Market Map — PitchSnack" },
+      { name: "description", content: "Explore companies grouped by SET sector, product and service tags, and market tags." },
+      { property: "og:title", content: "Sector, Product & Market Map — PitchSnack" },
+      { property: "og:description", content: "Explore company similarities by SET sector, products and markets." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   validateSearch: searchSchema,
@@ -76,28 +76,28 @@ function IndustryMapPage() {
   const all = useMemo(() => data?.items ?? [], [data]);
 
   const options = useMemo(() => {
-    const ind = new Set<string>(), prod = new Set<string>(), mkt = new Set<string>();
+    const sectors = new Set<string>(), prod = new Set<string>(), mkt = new Set<string>();
     for (const r of all as StartupListItem[]) {
-      (r.industry ?? []).forEach((t) => ind.add(t));
+      if (r.sector) sectors.add(r.sector);
       (r.product_tags ?? []).forEach((t) => prod.add(t));
       (r.market_tags ?? []).forEach((t) => mkt.add(t));
     }
     const sorted = (x: Set<string>) => [...x].sort((a, b) => a.localeCompare(b));
-    return { industries: sorted(ind), products: sorted(prod), markets: sorted(mkt) };
+    return { sectors: sorted(sectors), products: sorted(prod), markets: sorted(mkt) };
   }, [all]);
 
   const rows = useMemo(() => {
     const q = (s.q ?? "").trim().toLowerCase();
     return (all as StartupListItem[]).filter((r) => {
       if (q && !r.startup_name.toLowerCase().includes(q)) return false;
-      if (s.industry && !(r.industry ?? []).includes(s.industry)) return false;
+      if (s.sector && r.sector !== s.sector) return false;
       if (s.ptag && !(r.product_tags ?? []).includes(s.ptag)) return false;
       if (s.mtag && !(r.market_tags ?? []).includes(s.mtag)) return false;
       if (s.stage && r.investment_stage !== s.stage) return false;
       if (s.region && r.region !== s.region) return false;
       return true;
     });
-  }, [all, s.q, s.industry, s.ptag, s.mtag, s.stage, s.region]);
+  }, [all, s.q, s.sector, s.ptag, s.mtag, s.stage, s.region]);
 
   const clusters = useMemo(() => buildClusters(rows, mode), [rows, mode]);
   const selected = rows.find((r: StartupListItem) => r.id === s.selected) ?? null;
@@ -107,13 +107,13 @@ function IndustryMapPage() {
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            Industry, Product &amp; Market Map
+            Sector, Product &amp; Market Map
             <span className="rounded-full border px-2 py-0.5 text-[11px] font-medium" style={{ borderColor: "color-mix(in oklab, var(--map-accent) 40%, transparent)", background: "color-mix(in oklab, var(--map-accent) 10%, transparent)", color: "var(--map-accent)" }}>
               Discovery
             </span>
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Explore startups grouped by similarities across Industry, Product &amp; Service Tags,
+            Explore startups grouped by similarities across Sector, Product &amp; Service Tags,
             and Market Tags.
           </p>
         </div>
@@ -143,10 +143,10 @@ function IndustryMapPage() {
           />
         </div>
         <FilterSelect
-          label="Industry"
-          value={s.industry}
-          options={options.industries}
-          onChange={(v) => set({ industry: v })}
+          label="Sector"
+          value={s.sector}
+          options={options.sectors}
+          onChange={(v) => set({ sector: v })}
         />
         <FilterSelect
           label="Product & Service"
@@ -393,7 +393,7 @@ function TableView({
         <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
           <tr>
             <th className="px-3 py-2 font-medium">Startup</th>
-            <th className="px-3 py-2 font-medium">Industry</th>
+            <th className="px-3 py-2 font-medium">Sector</th>
             <th className="px-3 py-2 font-medium">Product &amp; Service</th>
             <th className="px-3 py-2 font-medium">Market</th>
             <th className="px-3 py-2 font-medium">Stage</th>
@@ -410,7 +410,7 @@ function TableView({
               )}
             >
               <td className="px-3 py-2 font-medium">{bizName(r.startup_name)}</td>
-              <td className="px-3 py-2 text-muted-foreground">{(r.industry ?? []).join(", ") || "—"}</td>
+              <td className="px-3 py-2 text-muted-foreground">{r.sector || "—"}</td>
               <td className="px-3 py-2 text-muted-foreground">{(r.product_tags ?? []).join(", ") || "—"}</td>
               <td className="px-3 py-2 text-muted-foreground">{(r.market_tags ?? []).join(", ") || "—"}</td>
               <td className="px-3 py-2 text-muted-foreground">{r.investment_stage ?? "—"}</td>

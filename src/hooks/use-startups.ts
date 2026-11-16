@@ -6,10 +6,9 @@ import { useHasSession } from "@/hooks/use-has-session";
 export interface UseStartupsParams {
   search?: string;
   stage?: string;
-  industry?: string;
-  /** SET sector — filtered independently of industry. */
+  /** SET sector. */
   sector?: string;
-  /** Business model — filtered independently of industry. */
+  /** Business model. */
   businessModel?: string;
   headquarters?: string;
   companyType?: string;

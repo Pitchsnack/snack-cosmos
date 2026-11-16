@@ -69,7 +69,8 @@ import { AutoEnrichButton } from "./auto-enrich-button";
 import { AttachmentCard, attachmentMissing } from "./attachment-card";
 import { LicenceLists } from "./licence-lists";
 import { LangTag, missingLangHint, useBiList, useBiText, useTextLang } from "@/components/common/text-lang";
-import { countryLabel, industryLabel, missingLine, sizeLabel } from "@/i18n/th-edit-info";
+import { countryLabel, missingLine, sizeLabel } from "@/i18n/th-edit-info";
+import { marketMissingCount } from "@/lib/seller-sector";
 import { CompactFields, EditInfoFooter, EditInfoTabsSlot, MainTabs, TabHead, TabRow, useEditInfo, useTr } from "@/components/common/edit-info-popup";
 import { PublicViewTab, normalizePublicTab, usePublicDraft, type PublicTab } from "@/components/hidden-profile/public-view-fields";
 import { saveHiddenProfile } from "@/lib/hidden-profiles.functions";
@@ -131,33 +132,9 @@ const STAGES = [
   "Pre-Seed", "Seed", "Series A", "Series B", "Series C+",
   "Growth", "IPO", "Acquired", "Inactive",
 ];
-const INDUSTRIES = [
-  "FinTech", "eCommerce & Marketplace", "MarTech", "HealthTech",
-  "Sustainability", "Mobility & Logistics", "DeepTech", "Defense",
-  "EdTech", "Gaming", "PropTech", "AgriTech", "FMCG", "Others",
-];
 const STATUSES = ["Draft","Active","Fundraising","Due Diligence","Portfolio","Exited"];
 
 const VISIBILITIES = ["Private","Tenant","Shared","Archived"];
-
-// ── Pill button (PitchSnack1 spec: px-3 py-1 rounded-full text-xs) ──
-function Pill({
-  active, onClick, children,
-}: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-3 py-1 rounded-full text-xs border transition-colors ${
-        active
-          ? "bg-primary text-primary-foreground border-primary"
-          : "bg-muted text-muted-foreground border-border hover:bg-accent"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
 
 interface Props {
   /** Answers from the seller onboarding wizard — pre-fill the create form and start at Auto Enrich. */
@@ -174,7 +151,7 @@ interface Props {
   myStartupsReturnSearch?: {
     q?: string;
     stage?: string;
-    industry?: string;
+    sector?: string;
     hq?: string;
     ct?: string;
     ptag?: string;
@@ -189,7 +166,7 @@ interface Props {
   directoryReturnSearch?: {
     q?: string;
     stage?: string;
-    industry?: string;
+    sector?: string;
     hq?: string;
     ct?: string;
     ptag?: string;
@@ -423,10 +400,7 @@ export function StartupForm({
     startup?.regulatory_licenses ?? prefill?.licences ?? [],
   );
   const [isoStandards, setIsoStandards] = useState<string[]>(startup?.iso_standards ?? prefill?.isoStandards ?? []);
-  const initialIndustries = startup?.industry ?? [];
-  const [industries, setIndustries] = useState<string[]>(initialIndustries);
-  const [customIndustry, setCustomIndustry] = useState("");
-  // Sector + business model — optional, used only for financial benchmarking.
+  // SET sector is required for completeness; Business model stays optional.
   const [sector, setSector] = useState<string | null>(startup?.sector ?? prefill?.sector ?? null);
   const [businessModel, setBusinessModel] = useState<string | null>(
     startup?.business_model ?? null,
@@ -571,9 +545,6 @@ export function StartupForm({
   }, [isMyStartupsCreate, owningAiAgentId, aiOptions]);
 
 
-  const toggle = (arr: string[], v: string) =>
-    arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
-
   const addProductTag = () => {
     const t = productTagDraft.trim();
     if (!t || productTags.includes(t) || productTags.length >= 5) return;
@@ -586,15 +557,6 @@ export function StartupForm({
     setMarketTags([...marketTags, t]);
     setMarketTagDraft("");
   };
-  const addCustomIndustry = () => {
-    const t = customIndustry.trim();
-    if (!t || industries.includes(t)) return;
-    setIndustries([...industries, t]);
-    setCustomIndustry("");
-  };
-
-  const industryArray = industries;
-
   // Upload helper bound to a target startup id.
   async function uploadAllForStartup(targetStartupId: string) {
     return uploadPending(
@@ -662,7 +624,6 @@ export function StartupForm({
           sellerRelation: prefill?.sellerRelation ?? null,
           websiteUrl: websiteUrl || null,
           city: city || null,
-          industry: industryArray,
           shortDescription: shortBi.en || null,
           longDescription: longBi.en || null,
           status: status as never,
@@ -710,7 +671,6 @@ export function StartupForm({
           
           websiteUrl: websiteUrl || null,
           city: city || null,
-          industry: industryArray,
           shortDescription: shortBi.en || null,
           longDescription: longBi.en || null,
           logoPath,
@@ -788,7 +748,7 @@ export function StartupForm({
     tenantId, startupName, companyType, businessAddress: JSON.stringify(addr), registeredName, registeredNumber, companySize, lastYearRevenue,
     yearFounded, email, headquarters,
     region, city, websiteUrl, linkedinUrl, shortDescription: shortBi.en + "\u0000" + shortBi.th, longDescription: longBi.en + "\u0000" + longBi.th,
-    industries, productTags: [...productBi.en, "\u0000", ...productBi.th], marketTags: [...marketBi.en, "\u0000", ...marketBi.th], investmentStage,
+    sector, businessModel, productTags: [...productBi.en, "\u0000", ...productBi.th], marketTags: [...marketBi.en, "\u0000", ...marketBi.th], investmentStage,
     status, visibility, investorIds, founders,
     owningAgentUserId, owningAiAgentId, media,
   });
@@ -868,7 +828,6 @@ export function StartupForm({
     handle("LinkedIn URL", !!r.linkedinUrl, isEmpty(linkedinUrl), () => setLinkedinUrl(r.linkedinUrl!));
     handle("Short Description", !!r.shortDescription, isEmpty(shortDescription), () => setShortDescription(r.shortDescription!));
     handle("Long Description", !!r.longDescription, isEmpty(longDescription), () => setLongDescription(r.longDescription!));
-    handle("Industries", !!r.industries?.length, industries.length === 0, () => setIndustries(r.industries!.slice(0, 5)));
     handle("Product Tags", !!r.productTags?.length, productTags.length === 0, () => setProductTags(r.productTags!.slice(0, 5)));
     handle("Market Tags", !!r.marketTags?.length, marketTags.length === 0, () => setMarketTags(r.marketTags!.slice(0, 5)));
     handle("ISO & Standards", !!r.isoStandards?.length, isoStandards.length === 0, () =>
@@ -1174,37 +1133,13 @@ export function StartupForm({
         </div>
 
 
-        <div className="space-y-3 rounded-lg border border-border bg-card p-6 shadow-card">
-          <h2 className="text-sm font-semibold">
-            Industry <span className="ml-1 text-xs font-normal text-muted-foreground">(Select one or more)</span>
-          </h2>
-          <p className="text-xs text-muted-foreground">how the market describes this company</p>
-          <div className="flex flex-wrap gap-2">
-            {INDUSTRIES.map((i) => (
-              <Pill key={i} active={industries.includes(i)} onClick={() => setIndustries(toggle(industries, i))}>
-                {i}
-              </Pill>
-            ))}
-            {industries.filter((i) => !INDUSTRIES.includes(i)).map((i) => (
-              <Pill key={i} active onClick={() => setIndustries(industries.filter((x) => x !== i))}>
-                {i} ✕
-              </Pill>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Input value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); } }}
-              placeholder="Add custom industry..." />
-            <Button type="button" variant="outline" onClick={addCustomIndustry}>Add</Button>
-          </div>
-        </div>
-
         <div className="rounded-lg border border-border bg-card p-6 shadow-card">
           <SectorBusinessModelFields
             sector={sector || null}
             onSectorChange={(v) => setSector(v ?? "")}
             businessModel={businessModel || null}
             onBusinessModelChange={(v) => setBusinessModel(v ?? "")}
+            required
           />
         </div>
 
@@ -1561,40 +1496,13 @@ export function StartupForm({
         </div>
   </div>);
   const marketJsx = (<>
-      {/* Industry pills */}
-      <EditSec id="tags" tone="seller" active={secOn("tags")} className="space-y-1.5">
-        <Label className={miss(industries.length === 0) ? MISSING_LABEL : undefined}>{tr("Industry", "อุตสาหกรรม")}</Label>
-        <p className="text-xs text-muted-foreground">{tr("how the market describes this company", "คำที่ตลาดใช้อธิบายบริษัทนี้")}</p>
-        {miss(industries.length === 0) && (
-          <p className="text-xs text-destructive">{tr("⚠ Missing: pick at least one industry", "⚠ ยังขาด: เลือกอุตสาหกรรมอย่างน้อยหนึ่งรายการ")}</p>
-        )}
-        <div className="flex flex-wrap gap-2">
-          {INDUSTRIES.map((ind) => (
-            <Pill key={ind} active={industries.includes(ind)} onClick={() => setIndustries(toggle(industries, ind))}>
-              {industryLabel(ind, textLang)}
-            </Pill>
-          ))}
-          {industries.filter((i) => !INDUSTRIES.includes(i)).map((c) => (
-            <button key={c} type="button" onClick={() => setIndustries(industries.filter((x) => x !== c))}
-              className="px-3 py-1 rounded-full text-xs border bg-primary text-primary-foreground border-primary inline-flex items-center gap-1">
-              {c} <X className="h-3 w-3" />
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2 mt-2">
-          <Input value={customIndustry} onChange={(e) => setCustomIndustry(e.target.value)}
-            placeholder={tr("Add custom industry…", "เพิ่มอุตสาหกรรมเอง…")} maxLength={50}
-            onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") { e.preventDefault(); addCustomIndustry(); }}} />
-          <Button type="button" variant="outline" size="sm" onClick={addCustomIndustry}>{tr("Add", "เพิ่ม")}</Button>
-        </div>
-      </EditSec>
-
-      {/* Sector + business model — financial benchmarking pair */}
+      {/* Required SET sector + optional business model — financial benchmarking pair */}
       <EditSec id="sector" tone="seller" active={secOn("sector")}><SectorBusinessModelFields
         sector={sector || null}
         onSectorChange={(v) => setSector(v ?? "")}
         businessModel={businessModel || null}
         onBusinessModelChange={(v) => setBusinessModel(v ?? "")}
+        required
       /></EditSec>
 
 
@@ -1808,10 +1716,11 @@ export function StartupForm({
     images: attachmentMissing(media),
     about: [has(yearFounded), has(startupName), has(headquarters), has(city), has(email), shortBi.filled, longBi.filled].filter((x) => !x).length,
     owner: founders.some((f) => f.full_name.trim()) ? 0 : 1,
-    market: (industries.length ? 0 : 1) + (productBi.en.length || productBi.th.length ? 0 : 1),
+    market: marketMissingCount(sector, !!(productBi.en.length || productBi.th.length)),
     licenses: 0,
     admin: 0,
   };
+  // Sector contributes to the same Industry & Market and Exclusive view counts.
   const privTotal = privateCounts.images + privateCounts.about + privateCounts.address + privateCounts.market + privateCounts.owner;
   const pubTotal = pd.counts.identity + pd.counts.deal;
   const privTabs = [

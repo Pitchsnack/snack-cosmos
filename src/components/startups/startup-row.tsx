@@ -87,9 +87,9 @@ export function StartupRow({
             {s.headquarters}
           </div>
         )}
-        {s.industry?.length ? (
+        {s.sector ? (
           <div className="mt-0.5 text-[11px] text-muted-foreground">
-            <span className="font-medium">Industry:</span> {s.industry.join(" · ")}
+            <span className="font-medium">Sector:</span> {s.sector}
           </div>
         ) : null}
         {s.short_description && (

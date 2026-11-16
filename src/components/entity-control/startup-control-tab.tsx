@@ -24,7 +24,7 @@ export function StartupControlTab() {
   const [status, setStatus] = useState<"all" | "published" | "unpublished">("all");
   const [q, setQ] = useState("");
   const debouncedQ = useDebounced(q, 350);
-  const [industry, setIndustry] = useState<string | undefined>();
+  const [sector, setSector] = useState<string | undefined>();
   const [country, setCountry] = useState<string | undefined>();
   const [updated, setUpdated] = useState<ControlListParams["updated"]>("any");
   const [page, setPage] = useState(1);
@@ -38,12 +38,12 @@ export function StartupControlTab() {
       pageSize,
       q: debouncedQ || undefined,
       status,
-      facet: industry,
+      facet: sector,
       country,
       updated,
       sort: "updated_desc",
     }),
-    [page, pageSize, debouncedQ, status, industry, country, updated],
+    [page, pageSize, debouncedQ, status, sector, country, updated],
   );
   const { data, isLoading, isFetching } = useControlStartups(params);
   const setState = useSetDirectoryState();
@@ -65,7 +65,7 @@ export function StartupControlTab() {
 
   const reset = () => {
     setQ("");
-    setIndustry(undefined);
+    setSector(undefined);
     setCountry(undefined);
     setUpdated("any");
     setStatus("all");
@@ -97,15 +97,15 @@ export function StartupControlTab() {
           <Input
             value={q}
             onChange={(e) => { setQ(e.target.value); setPage(1); }}
-            placeholder="Search startup name, website, founder, industry…"
+            placeholder="Search startup name, website, founder, sector…"
             className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
           />
         </div>
         <FilterSelect
-          label="Industry"
-          value={industry}
-          options={(facets.data?.industries ?? []).map((v) => ({ value: v, label: v }))}
-          onChange={(v) => { setIndustry(v); setPage(1); }}
+          label="Sector"
+          value={sector}
+          options={(facets.data?.startupSectors ?? []).map((v) => ({ value: v, label: v }))}
+          onChange={(v) => { setSector(v); setPage(1); }}
         />
         <FilterSelect
           label="HQ / Location"
@@ -154,7 +154,7 @@ export function StartupControlTab() {
         <div className="grid grid-cols-[2.5rem_minmax(0,3fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_8rem_16rem] items-center gap-3 border-b border-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           <span />
           <span>Startup</span>
-          <span>Industry</span>
+          <span>Sector</span>
           <span>HQ / Location</span>
           <span>Last Updated</span>
           <span>Status</span>
@@ -185,7 +185,7 @@ export function StartupControlTab() {
                 <div className="truncate font-medium">{r.name}</div>
                 <div className="truncate text-xs text-muted-foreground">{r.short_description ?? "—"}</div>
               </div>
-              <span className="truncate text-muted-foreground">{r.industry[0] ?? "—"}</span>
+              <span className="truncate text-muted-foreground">{r.sector ?? "—"}</span>
               <span className="truncate text-muted-foreground">{r.location ?? "—"}</span>
               <span className="truncate text-muted-foreground">
                 {new Date(r.updated_at).toLocaleDateString()}

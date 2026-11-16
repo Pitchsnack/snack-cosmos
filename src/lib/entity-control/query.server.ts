@@ -53,7 +53,7 @@ export async function fetchControlStartups(
   let query = supabase
     .from("startups")
     .select(
-      "id,startup_name,short_description,logo_url,industry,headquarters,city,region,visibility,updated_at",
+      "id,startup_name,short_description,logo_url,sector,headquarters,city,region,visibility,updated_at",
       { count: "exact" },
     );
 
@@ -63,7 +63,7 @@ export async function fetchControlStartups(
       `startup_name.ilike.${term},website_url.ilike.${term},short_description.ilike.${term}`,
     );
   }
-  if (params.facet) query = query.contains("industry", [params.facet]);
+  if (params.facet) query = query.eq("sector", params.facet);
   if (params.country) query = query.eq("headquarters", params.country);
   if (params.status === "published") query = query.neq("visibility", PRIVATE_VISIBILITY);
   if (params.status === "unpublished") query = query.eq("visibility", PRIVATE_VISIBILITY);
@@ -80,7 +80,7 @@ export async function fetchControlStartups(
     name: (r.startup_name as string) ?? "Untitled",
     short_description: (r.short_description as string) ?? null,
     logo_url: (r.logo_url as string) ?? null,
-    industry: Array.isArray(r.industry) ? (r.industry as string[]) : [],
+    sector: (r.sector as string | null) ?? null,
     location: (r.headquarters as string) ?? (r.city as string) ?? (r.region as string) ?? null,
     updated_at: r.updated_at as string,
     directory_state: toDirectoryState((r.visibility as string) ?? null),
@@ -158,17 +158,18 @@ export async function setDirectoryState(
 
 export async function fetchControlFacets(supabase: Client) {
   const [startups, investors] = await Promise.all([
-    supabase.from("startups").select("industry,headquarters").limit(500),
+    supabase.from("startups").select("sector,headquarters").limit(500),
     supabase.from("investors").select("investor_type,preferred_stages,preferred_industries,country").limit(500),
   ]);
 
-  const industries = new Set<string>();
+  const startupSectors = new Set<string>();
   const startupCountries = new Set<string>();
   (startups.data ?? []).forEach((r) => {
-    (Array.isArray(r.industry) ? (r.industry as string[]) : []).forEach((i) => i && industries.add(i));
+    if (r.sector) startupSectors.add(r.sector as string);
     if (r.headquarters) startupCountries.add(r.headquarters as string);
   });
 
+  // Buyer sectors remain independent of the seller SET sector facet.
   const investorTypes = new Set<string>();
   const stages = new Set<string>();
   const sectors = new Set<string>();
@@ -186,7 +187,7 @@ export async function fetchControlFacets(supabase: Client) {
 
   const sorted = (s: Set<string>) => Array.from(s).sort((a, b) => a.localeCompare(b));
   return {
-    industries: sorted(industries),
+    startupSectors: sorted(startupSectors),
     startupCountries: sorted(startupCountries),
     investorTypes: sorted(investorTypes),
     stages: sorted(stages),

@@ -68,7 +68,7 @@ function SharedDealDetailInner() {
       id: string; tenant_id: string; deal_name: string; stage: string; visibility: string;
       investment_amount: number | null; probability: number | null;
       expected_close_date: string | null; notes: string | null;
-      startups: { id: string; startup_name: string; country: string | null; industry: string | null; short_description: string | null };
+      startups: { id: string; startup_name: string; country: string | null; sector: string | null; short_description: string | null };
       investors: { id: string; investor_name: string; country: string | null; investor_type: string | null; short_description: string | null };
     };
     deal_share_targets: Array<{ id: string; target_tenant_id: string; status: string; target_tenant: { tenant_name: string } | null }>;
@@ -158,7 +158,7 @@ function SharedDealDetailInner() {
           <div className="grid gap-4 md:grid-cols-2">
             <Card title="Startup">
               <div className="text-sm font-medium">{bizName(r.deals.startups.startup_name)}</div>
-              <div className="text-xs text-muted-foreground">{[r.deals.startups.industry, r.deals.startups.country].filter(Boolean).join(" · ")}</div>
+              <div className="text-xs text-muted-foreground">{[r.deals.startups.sector, r.deals.startups.country].filter(Boolean).join(" · ")}</div>
               {r.deals.startups.short_description && <p className="mt-2 text-sm text-muted-foreground">{r.deals.startups.short_description}</p>}
             </Card>
             <Card title="Investor">

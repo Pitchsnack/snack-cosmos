@@ -135,7 +135,6 @@ export interface StartupRow {
   website_url: string | null;
   linkedin_url: string | null;
   city: string | null;
-  industry: string[];
   sector: string | null;
   business_model: string | null;
   short_description: string | null;
@@ -240,7 +239,7 @@ async function logActivity(
 }
 
 const SELECT_LIST = `
-  id, tenant_id, startup_name, website_url, city, industry, sector, business_model,
+  id, tenant_id, startup_name, website_url, city, sector, business_model,
   short_description, long_description, status, visibility, created_at, updated_at,
    logo_url, company_type, company_type_source, business_address, address_line1, address_line2, address_city_district, address_province_state, postal_code, registered_name, registered_number, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
@@ -254,7 +253,6 @@ const SELECT_LIST = `
 const ListInput = z.object({
   search: z.string().optional(),
   stage: z.string().optional(),
-  industry: z.string().optional(),
   sector: z.string().optional(),
   businessModel: z.string().optional(),
   headquarters: z.string().optional(),
@@ -312,7 +310,6 @@ export const listStartups = createServerFn({ method: "GET" })
       );
     }
     if (data.stage) q = q.eq("investment_stage", data.stage);
-    if (data.industry) q = q.contains("industry", [data.industry]);
     if (data.sector) q = q.eq("sector", data.sector);
     if (data.businessModel) q = q.eq("business_model", data.businessModel);
     if (data.headquarters) q = q.eq("headquarters", data.headquarters);
@@ -410,7 +407,7 @@ export const getStartup = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("startups")
       .select(`
-        id, tenant_id, startup_name, website_url, linkedin_url, city, industry, sector, business_model,
+        id, tenant_id, startup_name, website_url, linkedin_url, city, sector, business_model,
         short_description, long_description, status, visibility, created_at, updated_at,
          logo_url, company_type, company_type_source, business_address, address_line1, address_line2, address_city_district, address_province_state, postal_code, registered_name, registered_number, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
@@ -598,7 +595,6 @@ const CreateInput = z.object({
   sellerRelation: z.enum(["owner", "family_owner", "agent"]).nullable().optional(),
   websiteUrl: z.string().max(2048).optional().nullable().or(z.literal("")),
   city: z.string().max(100).optional().nullable(),
-  industry: z.array(z.string().min(1).max(100)).max(20).optional(),
   sector: z.string().max(100).nullable().optional(),
   businessModel: z.string().max(60).nullable().optional(),
   shortDescription: z.string().max(500).optional().nullable(),
@@ -731,7 +727,6 @@ export const createStartup = createServerFn({ method: "POST" })
         
         website_url: emptyToNull(data.websiteUrl),
         city: emptyToNull(data.city),
-        industry: data.industry ?? [],
         sector: emptyToNull(data.sector),
         business_model: emptyToNull(data.businessModel),
         short_description: emptyToNull(data.shortDescription),
@@ -817,7 +812,6 @@ const UpdateInput = z.object({
   
   websiteUrl: z.string().max(2048).nullable().optional(),
   city: z.string().max(100).nullable().optional(),
-  industry: z.array(z.string().min(1).max(100)).max(20).optional(),
   sector: z.string().max(100).nullable().optional(),
   businessModel: z.string().max(60).nullable().optional(),
   shortDescription: z.string().max(500).nullable().optional(),
@@ -841,7 +835,6 @@ export const updateStartup = createServerFn({ method: "POST" })
     
     if (data.websiteUrl !== undefined) patch.website_url = data.websiteUrl;
     if (data.city !== undefined) patch.city = data.city;
-    if (data.industry !== undefined) patch.industry = data.industry;
     if (data.sector !== undefined) patch.sector = emptyToNull(data.sector);
     if (data.businessModel !== undefined) patch.business_model = emptyToNull(data.businessModel);
     if (data.shortDescription !== undefined) patch.short_description = data.shortDescription;
@@ -1039,7 +1032,7 @@ export const getStartupInvestors = createServerFn({ method: "GET" })
 
     const { data: row, error } = await supabase
       .from("startups")
-      .select("id, startup_name, logo_url, headquarters, city, industry, investment_stage, short_description, status, visibility")
+      .select("id, startup_name, logo_url, headquarters, city, sector, investment_stage, short_description, status, visibility")
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -1083,7 +1076,7 @@ export const getStartupInvestors = createServerFn({ method: "GET" })
 
     const r = row as unknown as {
       id: string; startup_name: string; logo_url: string | null; headquarters: string | null;
-      city: string | null; industry: string[] | null; investment_stage: string | null;
+      city: string | null; sector: string | null; investment_stage: string | null;
       short_description: string | null; status: string | null; visibility: string | null;
     };
 
@@ -1093,7 +1086,7 @@ export const getStartupInvestors = createServerFn({ method: "GET" })
         startup_name: r.startup_name,
         logo_signed_url: r.logo_url ? (signed[r.logo_url] ?? null) : null,
         country: r.headquarters || r.city || null,
-        industry: r.industry ?? [],
+        sector: r.sector ?? null,
         investment_stage: r.investment_stage,
         short_description: r.short_description,
         status: r.status,

@@ -1,5 +1,12 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Seller Industry removal and required Sector
+- [x] Export the existing 28 ref/industry values for the final reply only; no database backup copy.
+- [x] Remove seller/Admin Industry editing and reads, replacing displays, filters, matching, reports, Pipeline, relationships, maps and projections with SET sector.
+- [x] Make Sector required in Edit information with bilingual missing counts while preserving Save/Create behavior and existing review rules.
+- [x] Run focused rules/tests and live Control/Admin EN/TH checks; capture the three requested screenshots. Separate non-Control seller check not run at Dan's choice.
+- [ ] Drop the Industry column/index and regenerate types: blocked by Settings → Agent permissions → “Execute backward incompatible database migrations” = “Never allow”; Dan must choose “Ask each time” or “Always allow” before retrying.
+
 ## Individual-investor registration correction recovery
 - [x] Restore Back and the existing no-registration-number assisted-setup option during correction; preserve rejection and lookup limits.
 - [x] Verify the affected buyer can open and leave assisted setup in EN/TH on desktop and phone without changing account data or sending requests.

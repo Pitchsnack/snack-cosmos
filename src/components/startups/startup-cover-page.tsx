@@ -190,7 +190,7 @@ export function StartupCoverPage({
               <QuickFacts
                 founded={s.year_founded}
                 website={s.website_url}
-                focus={s.industry?.[0] ?? null}
+                focus={s.sector ?? null}
                 market={s.market_tags?.[0] ?? null}
               />
 

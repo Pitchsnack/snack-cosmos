@@ -54,7 +54,6 @@ const COMPANY_TYPES = ["SaaS","FinTech","Marketplace","AI","Hardware","Consumer"
 const searchSchema = z.object({
   q: z.string().optional(),
   stage: z.string().optional(),
-  industry: z.string().optional(),
   sector: z.string().optional(),
   bmodel: z.string().optional(),
   hq: z.string().optional(),
@@ -171,7 +170,7 @@ function StartupsPageInner() {
   }, [previewVersion]);
 
   const { data, isFetching, refetch } = useStartups({
-    search: s.q, stage: s.stage, industry: s.industry, headquarters: s.hq,
+    search: s.q, stage: s.stage, headquarters: s.hq,
     sector: s.sector, businessModel: s.bmodel,
     companyType: s.ct, productTag: s.ptag, marketTag: s.mtag,
     sort, page: favOnly ? 1 : page, pageSize,
@@ -216,7 +215,7 @@ function StartupsPageInner() {
   const update = (patch: Partial<typeof s>) =>
     navigate({ search: (prev: typeof s) => ({ ...prev, ...patch, page: 1 }) });
 
-  const hasFilter = !!(s.q || s.stage || s.industry || s.sector || s.bmodel || s.hq || s.ct || s.ptag || s.mtag);
+  const hasFilter = !!(s.q || s.stage || s.sector || s.bmodel || s.hq || s.ct || s.ptag || s.mtag);
 
   return (
     <OwnershipProvider kind="startup" ids={rawItems.map((it) => it.id)} enabled={isControl}>
@@ -289,13 +288,12 @@ function StartupsPageInner() {
           <Input
             value={s.q ?? ""}
             onChange={(e) => update({ q: e.target.value || undefined })}
-            placeholder="Search name, description, industry, HQ…"
+            placeholder="Search name, description, sector, HQ…"
             className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
           />
         </div>
         <FilterSelect label="Stage" value={s.stage} options={STAGES} onChange={(v) => update({ stage: v })} />
         <FilterSelect label="Type" value={s.ct} options={COMPANY_TYPES} onChange={(v) => update({ ct: v })} />
-        <Input value={s.industry ?? ""} onChange={(e) => update({ industry: e.target.value || undefined })} placeholder="Industry" className="h-9 w-36" />
         <FilterSelect label="Sector" value={s.sector} options={SECTORS} onChange={(v) => update({ sector: v })} />
         <FilterSelect
           label="Business model"

@@ -17,6 +17,7 @@ export const INVESTOR_CLASSIFICATIONS = [
 export const AUM_VALUES = ["50M-100M", "100M-250M", "250M-500M", "500M+"];
 export const TICKET_VALUES = ["50K-100K", "100K-500K", "500K-1M", "1M-5M", "5M+"];
 export const STAGES = ["Ideation", "Early Stage", "Growth Stage", "Maturity Stage"];
+// Buyer enrichment still uses its existing Preferred Industries taxonomy.
 export const INDUSTRIES = [
   "Sector Agnostic",
   "FinTech",

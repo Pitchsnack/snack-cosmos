@@ -21,7 +21,7 @@ export function CompareTab({
     ["Name", f.startup_name ?? dash, h?.code_name ?? dash, "own"],
     ["Logo and images", "Logo, company photos", "Sector image", "own"],
     ["Ref no.", h?.ref_no ?? dash, h?.ref_no ?? dash, "shared"],
-    ["Type and industry", `${s.company_type ?? dash} · ${industry}`, "The same", "shared"],
+    ["Type and sector", `${s.company_type ?? dash} · ${industry}`, "The same", "shared"],
     ["Founded", f.year_founded ? String(f.year_founded) : dash, decadeOf(f.year_founded) ?? dash, "range"],
     ["Location", [f.city, f.headquarters].filter(Boolean).join(", ") || dash, h?.region ?? dash, "range"],
     ["Markets", (s.market_tags ?? []).join(" · ") || dash, "The same", "shared"],

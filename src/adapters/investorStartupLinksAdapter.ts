@@ -39,7 +39,7 @@ export interface InvestorSearchRow {
 export interface StartupSearchRow {
   id: string;
   startup_name: string;
-  industry: string[] | null;
+  sector: string | null;
 }
 
 export function toStartupInvestorLinkView(
@@ -65,7 +65,7 @@ export function toInvestorPortfolioEntryView(
     id: row.id,
     startupId: row.id,
     companyName: row.startup_name,
-    industry: row.industry?.[0] ?? null,
+    industry: row.sector ?? null,
     relationshipType: opts?.relationshipType ?? "investment",
     status: "linked",
   };
@@ -160,14 +160,14 @@ export const investorStartupLinksAdapter = {
 
   checkStartupDuplicates(
     name: string,
-    candidates: Array<{ id: string; startup_name: string; industry?: string[] | null }>,
+    candidates: Array<{ id: string; startup_name: string; sector?: string | null }>,
   ): DuplicateCheckResult {
     return detectDuplicates(
       name,
       candidates.map((c) => ({
         id: c.id,
         name: c.startup_name,
-        subtitle: c.industry?.[0] ?? null,
+        subtitle: c.sector ?? null,
       })),
     );
   },

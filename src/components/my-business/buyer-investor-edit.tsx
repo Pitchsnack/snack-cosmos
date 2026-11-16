@@ -70,13 +70,6 @@ const TICKET_OPTIONS = [
   { value: "1M-5M", label: "1M – 5M" },
   { value: "5M+", label: "5M+" },
 ];
-const INDUSTRIES = [
-  "FinTech", "eCommerce & Marketplace", "MarTech", "HealthTech",
-  "Sustainability", "Mobility & Logistics", "DeepTech", "Defense",
-  "EdTech", "Gaming", "PropTech", "AgriTech", "FMCG", "Others",
-];
-const INVESTOR_INDUSTRIES = ["Sector Agnostic", ...INDUSTRIES];
-
 function Pill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <Button variant="unstyled" size="unstyled"

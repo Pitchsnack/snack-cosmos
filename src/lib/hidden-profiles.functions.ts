@@ -78,7 +78,7 @@ export const createHiddenProfile = createServerFn({ method: "POST" })
       const { suggestHeadline } = await import("@/lib/public-listing");
       const { data: src } = await sb
         .from("startups")
-        .select("startup_name, registered_name, website_url, email, city, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, industry, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards")
+        .select("startup_name, registered_name, website_url, email, city, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards")
         .eq("id", data.startupId)
         .maybeSingle();
       if (src) headline = suggestHeadline(src as any).slice(0, 120);
@@ -289,7 +289,7 @@ export async function loadMarketplaceTeasers(input: { excludeNda: boolean }, use
     const { buildPublicListing } = await import("@/lib/public-listing");
     const { data, error } = await supabaseAdmin
       .from("hidden_profiles")
-      .select("id, startup_id, ref_no, published_at, live, approval_status, public_image_id, startups!inner(startup_name, registered_name, website_url, email, city, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, industry, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards, registration_verified_at)")
+      .select("id, startup_id, ref_no, published_at, live, approval_status, public_image_id, startups!inner(startup_name, registered_name, website_url, email, city, headquarters, company_type, year_founded, company_size, last_year_revenue, sector, business_model, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards, registration_verified_at)")
       // Approval is the only source of truth, and only the approved snapshot is served.
       .in("approval_status", [...BUYER_VISIBLE, "in_review"])
       .not("live", "is", null);
