@@ -151,6 +151,7 @@ export interface StartupRow {
   registered_name: string | null;
   thai_name?: string | null; english_name?: string | null;
   registered_number: string | null;
+  reg_locked_at?: string | null;
   company_size: string | null;
   last_year_revenue: string | null;
   year_founded: number | null;
@@ -241,7 +242,7 @@ async function logActivity(
 const SELECT_LIST = `
   id, tenant_id, startup_name, website_url, city, sector, business_model,
   short_description, long_description, status, visibility, created_at, updated_at,
-   logo_url, company_type, company_type_source, business_address, address_line1, address_line2, address_city_district, address_province_state, postal_code, registered_name, registered_number, company_size, last_year_revenue,
+   logo_url, company_type, company_type_source, business_address, address_line1, address_line2, address_city_district, address_province_state, postal_code, registered_name, registered_number, reg_locked_at, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
   product_tags, market_tags, url_key, source_global_id, imported_at,
   tenants!inner(tenant_name),
@@ -886,6 +887,7 @@ export const updateStartup = createServerFn({ method: "POST" })
     if (data.regulatoryLicenses !== undefined) patch.regulatory_licenses = data.regulatoryLicenses;
     if (data.isoStandards !== undefined) patch.iso_standards = data.isoStandards;
 
+    const lock = await (await import("./identity-lock.server")).guardLockedIdentity(supabase, "startups", data.id, patch as Record<string, unknown>, context.userId, false);
     const { error } = await supabase.from("startups").update(patch as never).eq("id", data.id);
     if (error) throw new Error(error.message);
 
@@ -921,6 +923,7 @@ export const updateStartup = createServerFn({ method: "POST" })
       await logActivity(supabase, data.id, existing.tenant_id, userId, "VISIBILITY_CHANGED", { from: existing.visibility, to: data.visibility });
     }
     await logActivity(supabase, data.id, existing.tenant_id, userId, "STARTUP_UPDATED", patch);
+    await lock.finish();
     return { ok: true };
   });
 

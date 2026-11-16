@@ -2,6 +2,8 @@ import { AdvisorLicenceField } from "./advisor-licence-field";
 import { licenceError } from "@/lib/advisor-licences";
 import { setupText } from "@/i18n/language";
 import { CompanyNameFields } from "@/components/common/company-name-fields";
+import { FromDbdTag, IdentityLockNote, LockableInput } from "@/components/common/identity-lock";
+import { isIdentityLocked } from "@/lib/identity-lock";
 import { tr, useTranslation } from "@/i18n/language";
 import { LangTag, useTextLang } from "@/components/common/text-lang";
 import { supabase } from "@/integrations/supabase/client";
@@ -127,11 +129,17 @@ function F({ label, req, opt, hint, err, tag, children, className, htmlFor }: {
 const sel = "flex h-[42px] w-full rounded-md border border-input bg-background px-3 pr-8 text-[14px] outline-none focus:border-[#1E2A4A]";
 const errB = "border-[#B42318]";
 
-export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreate }: { firm: AdvisorFirm | null; section?: EditSection; setup?: SetupMode; initial?: FirmForm | null; onDone?: () => void; adminCreate?: (id: string) => void }) {
+export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreate, adminEdit: adminArea }: { adminEdit?: boolean; firm: AdvisorFirm | null; section?: EditSection; setup?: SetupMode; initial?: FirmForm | null; onDone?: () => void; adminCreate?: (id: string) => void }) {
   const {data:session} = useSessionContext();
   useTranslation();
   const {isControl} = usePermissions();
   const asAdmin = session?.user?.accountRole === "admin" && isControl;
+  // DBD-confirmed identity: filled values lock everywhere except Admin's own editor.
+  const adminEdit = asAdmin && !!adminArea;
+  const regLockedAt = firm?.regLockedAt ?? null;
+  const lockYear = isIdentityLocked(regLockedAt, firm?.yearFounded, adminEdit);
+  const lockName = isIdentityLocked(regLockedAt, firm?.name, adminEdit);
+  const lockReg = isIdentityLocked(regLockedAt, firm?.registrationNo, adminEdit);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const save = useServerFn(saveAdvisorFirm);
@@ -216,7 +224,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
   const firstBad = errs.find(([, e]) => e)?.[0];
   const missingCounts = {about:errs.filter(([k,e])=>e && !["city","legalName"].includes(k)).length + (f.firmType ? 0 : 1) + (f.languages.length ? 0 : 1), address:errs.filter(([k,e])=>e && ["city","legalName"].includes(k)).length};
 
-  const changeCountry = (c: string) => setF((p) => ({ ...p, country: c, city: "", registrationNo: "", addr: { street: "", unit: "", district: "", province: "", postal: "" } }));
+  const changeCountry = (c: string) => setF((p) => ({ ...p, country: c, city: "", registrationNo: lockReg ? p.registrationNo : "", addr: { street: "", unit: "", district: "", province: "", postal: "" } }));
 
   async function submit() {
     const errors: Record<number, "choice" | "name"> = {};
@@ -315,12 +323,12 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
             intro={tr("Your firm's logo and up to 3 photos of your office, your team or your work.")} showGuidance={false} />
         </F>
 </div>}
-        {visible("about") && <EditSec id={section === "work" ? "work" : "firm"} active={section === "work" || section === "firm"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Info")} /><CompactFields>          <F label={setupText("Year founded")} req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
-            <Input id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder={setupText("e.g. 2014")} value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
+        {visible("about") && <EditSec id={section === "work" ? "work" : "firm"} active={section === "work" || section === "firm"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Info")} />{firm && <IdentityLockNote lockedAt={regLockedAt} adminEdit={adminEdit} />}<CompactFields>          <F label={<>{setupText("Year founded")}<FromDbdTag show={lockYear} /></>} req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
+            <LockableInput locked={lockYear} id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder={setupText("e.g. 2014")} value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
           </F>
-          <EditSec id="company-name" tone="buyer" active={nameFocus}><F label={setupText(setup ? "Firm name" : "Company name")} req tag={src.name} err={show("name")} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && (adminCreate && forced ? "creation-invalid" : errB))} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F></EditSec>
-          <F label={thai ? "Registration no. (เลขทะเบียนนิติบุคคล)" : "Registration no."} req={thai} opt={!thai} tag={f.registrationNo ? src.registrationNo : undefined} err={show("reg")} htmlFor="fe-reg">
-            <Input id="fe-reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? setupText("13 digits") : undefined}
+          <EditSec id="company-name" tone="buyer" active={nameFocus}><F label={<>{setupText(setup ? "Firm name" : "Company name")}<FromDbdTag show={lockName} /></>} req tag={src.name} err={show("name")} htmlFor="fe-name"><LockableInput locked={lockName} id="fe-name" aria-required className={cn(inp, show("name") && (adminCreate && forced ? "creation-invalid" : errB))} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F></EditSec>
+          <F label={<>{thai ? "Registration no. (เลขทะเบียนนิติบุคคล)" : "Registration no."}<FromDbdTag show={lockReg} /></>} req={thai} opt={!thai} tag={f.registrationNo ? src.registrationNo : undefined} err={show("reg")} htmlFor="fe-reg">
+            <LockableInput locked={lockReg} id="fe-reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? setupText("13 digits") : undefined}
               className={cn(inp, thai && "border-[#93C5FD] bg-[#EFF6FF] dark:border-[#1E40AF] dark:bg-[#172554]", show("reg") && errB)}
               value={f.registrationNo} onBlur={blur("reg")} onChange={(e) => set("registrationNo", thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value.slice(0, 50))} />
           </F>
@@ -368,7 +376,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         <CompactFields><F label={setupText("Full name")} req err={show("contactName")} htmlFor="fe-contact-name"><Input id="fe-contact-name" aria-required className={cn(inp, show("contactName") && errB)} maxLength={120} value={f.contactName} onBlur={blur("contactName")} onChange={(e) => set("contactName", e.target.value)} /></F>
           <F label={setupText("Current Position")} opt htmlFor="fe-contact-position"><Input id="fe-contact-position" className={inp} maxLength={120} value={f.contactPosition} onChange={(e) => set("contactPosition", e.target.value)} /></F></CompactFields>
 </EditSec>}
-        {visible("address") && <EditSec id="company" active={section === "company"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Address")} />{!setup ? <CompanyNameFields name={f.name} nameLabel="Company name" thaiName={f.thaiName} englishName={f.englishName ?? ""} onThaiName={v => set("thaiName", v)} onEnglishName={v => set("englishName", v)} onChangeCompany={() => { setTab("about"); setNameFocus(true); setTimeout(() => document.getElementById("fe-name")?.focus(), 100); }} /> : <CompactFields two>          <F label={setupText("Legal name")} opt tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
+        {visible("address") && <EditSec id="company" active={section === "company"} tone="buyer" className="space-y-4"><TabHead title={tr("Company Address")} />{!setup ? <CompanyNameFields lockedAt={regLockedAt} adminEdit={adminEdit} name={f.name} nameLabel="Company name" thaiName={f.thaiName} englishName={f.englishName ?? ""} onThaiName={v => set("thaiName", v)} onEnglishName={v => set("englishName", v)} onChangeCompany={() => { setTab("about"); setNameFocus(true); setTimeout(() => document.getElementById("fe-name")?.focus(), 100); }} /> : <CompactFields two>          <F label={setupText("Legal name")} opt tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
             hint={firm?.verifiedAt ? "Changing this sends your firm back to Admin for a check." : undefined}>
             <Input id="fe-legalName" aria-required className={cn(inp, show("legalName") && errB)} maxLength={200} placeholder={f.name || setupText("e.g. Acme Advisory Co., Ltd.")} value={f.legalName} onBlur={blur("legalName")} onChange={(e) => set("legalName", e.target.value)} />
           </F>
@@ -448,20 +456,21 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           onChangeServices={setup.onChangeServices} onLogo={onLogo} logoErr={logoErr} uploading={uploading}
           onDoc={onDoc} docInput={docInput} changeCountry={changeCountry} licenceErrors={licenceErrors} clearLicenceError={i => setLicenceErrors(e => { const next = { ...e }; delete next[i]; return next; })} />
       ) : <>      <Section id="firm" active={false} title={setupText("Firm")} setup={!!setup}>
+        {firm && <IdentityLockNote lockedAt={regLockedAt} adminEdit={adminEdit} />}
         <F label={tr("Logo and photos")} opt tag={f.logo.url ? (f.logo.source === "enrich" ? "Auto Enrich" : src.logo) : undefined}>
           <AttachmentCard value={f.media} onChange={(m) => set("media", m)} name={f.name || tr("Your firm")} sectorLine={[f.firmType, [f.city || f.addr.province, f.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
             intro={tr("Your firm's logo and up to 3 photos of your office, your team or your work.")} showGuidance={false} />
         </F>
         <div className="grid gap-4 sm:grid-cols-2">
-          <F label={setupText("Firm name")} req tag={src.name} err={show("name")} htmlFor="fe-name"><Input id="fe-name" aria-required className={cn(inp, show("name") && errB)} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F>
+          <F label={<>{setupText("Firm name")}<FromDbdTag show={lockName} /></>} req tag={src.name} err={show("name")} htmlFor="fe-name"><LockableInput locked={lockName} id="fe-name" aria-required className={cn(inp, show("name") && errB)} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F>
           <F label={setupText("Firm type")} req tag={src.firmType}>
             <select aria-required className={sel} value={f.firmType} onChange={(e) => set("firmType", e.target.value)}>
               <option value="" disabled>{setupText("Select type")}</option>
               {FIRM_TYPES.map((t) => <option key={t} value={t}>{setupText(t)}</option>)}
             </select>
           </F>
-          <F label={setupText("Year founded")} req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
-            <Input id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder={setupText("e.g. 2014")} value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
+          <F label={<>{setupText("Year founded")}<FromDbdTag show={lockYear} /></>} req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
+            <LockableInput locked={lockYear} id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder={setupText("e.g. 2014")} value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
           </F>
         </div>
         <F label={<>{setupText("Description")}<LangTag /></>} req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={setupText(`${descV.length} / 300 · your card shows 3 lines`)} htmlFor="fe-desc">
@@ -522,8 +531,8 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
             <Input id="fe-legalName" aria-required className={cn(inp, show("legalName") && errB)} maxLength={200} placeholder={f.name || setupText("e.g. Acme Advisory Co., Ltd.")} value={f.legalName} onBlur={blur("legalName")} onChange={(e) => set("legalName", e.target.value)} />
           </F>
           <F label={setupText("Thai name")} opt={!thai} tag={f.thaiName ? src.thaiName : undefined}><Input className={inp} maxLength={200} placeholder="บริษัท … จำกัด" value={f.thaiName} onChange={(e) => set("thaiName", e.target.value)} /></F>
-          <F label={thai ? "Registration no. (เลขทะเบียนนิติบุคคล)" : "Registration no."} req={thai} opt={!thai} tag={f.registrationNo ? src.registrationNo : undefined} err={show("reg")} htmlFor="fe-reg">
-            <Input id="fe-reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? setupText("13 digits") : undefined}
+          <F label={<>{thai ? "Registration no. (เลขทะเบียนนิติบุคคล)" : "Registration no."}<FromDbdTag show={lockReg} /></>} req={thai} opt={!thai} tag={f.registrationNo ? src.registrationNo : undefined} err={show("reg")} htmlFor="fe-reg">
+            <LockableInput locked={lockReg} id="fe-reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? setupText("13 digits") : undefined}
               className={cn(inp, thai && "border-[#93C5FD] bg-[#EFF6FF] dark:border-[#1E40AF] dark:bg-[#172554]", show("reg") && errB)}
               value={f.registrationNo} onBlur={blur("reg")} onChange={(e) => set("registrationNo", thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value.slice(0, 50))} />
           </F>

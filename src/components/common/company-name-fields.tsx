@@ -5,8 +5,12 @@ import { useTextLang } from "./text-lang";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FromDbdTag, LockableInput } from "./identity-lock";
+import { isIdentityLocked } from "@/lib/identity-lock";
 
-export function CompanyNameFields({ name, nameLabel, thaiName, englishName, onThaiName, onEnglishName, onChangeCompany }: {
+export function CompanyNameFields({ name, nameLabel, thaiName, englishName, onThaiName, onEnglishName, onChangeCompany, lockedAt, adminEdit }: {
+  /** DBD confirmation time: the filled Thai/English name locks for everyone but Admin. */
+  lockedAt?: string | null; adminEdit?: boolean;
   name: string; nameLabel: string; thaiName: string; englishName: string;
   onThaiName: (name: string) => void; onEnglishName: (name: string) => void; onChangeCompany: () => void;
 }) {
@@ -15,6 +19,7 @@ export function CompanyNameFields({ name, nameLabel, thaiName, englishName, onTh
   const { lang } = useTextLang();
   const thai = language === "th";
   const english = lang === "th";
+  const twinLocked = isIdentityLocked(lockedAt, english ? englishName : thaiName, adminEdit);
   return <div className="company-name-fields grid min-w-0 grid-cols-1 gap-4 min-[641px]:grid-cols-2">
     <div className="min-w-0 space-y-1.5">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
@@ -30,9 +35,9 @@ export function CompanyNameFields({ name, nameLabel, thaiName, englishName, onTh
       <p id={`${id}-help`} className="text-xs text-muted-foreground">{thai ? "คัดลอกมาจากชื่อบริษัทในแท็บเกี่ยวกับบริษัท แก้ไขได้ที่แท็บนั้นเท่านั้น" : `Copied from ${nameLabel} in About Company. Change it there.`}</p>
     </div>
     <div className="min-w-0 space-y-1.5">
-      <Label htmlFor={`${id}-other`}>{english ? "English Name" : thai ? "ชื่อภาษาไทย" : "Thai Name"}<span className="ml-1.5 font-normal text-muted-foreground">{thai ? "ไม่บังคับ" : "optional"}</span></Label>
-      <Input id={`${id}-other`} lang={english ? "en" : "th"} maxLength={200} value={english ? englishName : thaiName} onChange={(e) => (english ? onEnglishName : onThaiName)(e.target.value)} placeholder={english ? (thai ? "เช่น ABC Trading Co., Ltd." : "e.g. ABC Trading Co., Ltd.") : "บริษัท ... จำกัด"} />
-      <p className="text-xs text-muted-foreground">{english ? (thai ? "ชื่อบริษัทเป็นภาษาอังกฤษ หากต้องการเพิ่ม" : "Your company name in English, if you'd like to add it.") : (thai ? "ชื่อตามที่จดทะเบียนเป็นภาษาไทย หากต้องการเพิ่ม" : "As registered in Thai, if you'd like to add it.")}</p>
+      <Label htmlFor={`${id}-other`}>{english ? "English Name" : thai ? "ชื่อภาษาไทย" : "Thai Name"}{!twinLocked && <span className="ml-1.5 font-normal text-muted-foreground">{thai ? "ไม่บังคับ" : "optional"}</span>}<FromDbdTag show={twinLocked} /></Label>
+      <LockableInput locked={twinLocked} id={`${id}-other`} lang={english ? "en" : "th"} maxLength={200} value={english ? englishName : thaiName} onChange={(e) => (english ? onEnglishName : onThaiName)(e.target.value)} placeholder={english ? (thai ? "เช่น ABC Trading Co., Ltd." : "e.g. ABC Trading Co., Ltd.") : "บริษัท ... จำกัด"} />
+      {!twinLocked && <p className="text-xs text-muted-foreground">{english ? (thai ? "ชื่อบริษัทเป็นภาษาอังกฤษ หากต้องการเพิ่ม" : "Your company name in English, if you'd like to add it.") : (thai ? "ชื่อตามที่จดทะเบียนเป็นภาษาไทย หากต้องการเพิ่ม" : "As registered in Thai, if you'd like to add it.")}</p>}
     </div>
   </div>;
 }

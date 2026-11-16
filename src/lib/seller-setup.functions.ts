@@ -29,6 +29,7 @@ async function admin() {
 }
 
 export type SellerSetup = {
+  identity: { lockedAt: string | null; name: string | null; reg: string | null; year: number | null };
   id: string; name: string; reg: string; web: string; year: string; city: string; rev: string | null; size: string | null;
   sector: string | null; pick: { type: string; kind?: string } | null; licences: { category: string; name: string; number?: string | null }[]; iso: string[];
   role: "owner" | "family_owner" | "agent" | null; fromSignup: string[]; setupDoneAt: string | null; reached: string | null;
@@ -192,6 +193,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       addr: { street: s.address_line1 ?? "", unit: s.address_line2 ?? "", district: s.address_city_district ?? "", province: s.address_province_state ?? s.city ?? "", postal: s.postal_code ?? "" },
       role: o?.seller_relation ?? null, fromSignup: s.setup_from_signup ?? [], setupDoneAt: s.setup_done_at ?? null, reached: normalizeSellerStep(s.setup_reached),
       tenantId: s.tenant_id,
+      identity: { lockedAt: (s.reg_locked_at ?? null) as string | null, name: s.startup_name ?? null, reg: s.registered_number ?? null, year: s.year_founded ?? null },
       shortDescription:s.short_description ?? "",longDescription:s.long_description ?? "",productTags:s.product_tags ?? [],marketTags:s.market_tags ?? [],
       shortDescriptionTh:s.short_description_th ?? "",longDescriptionTh:s.long_description_th ?? "",productTagsTh:s.product_tags_th ?? [],marketTagsTh:s.market_tags_th ?? [],
       highlights:strengthRows(hp?.highlights),highlightsTh:strengthRows(hp?.highlights_th),
@@ -251,9 +253,11 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
       if(key && key !== cur?.setup_reached) patch.setup_reached=key;
     }
     if (data.listing || data.highlights !== undefined || data.highlightsTh !== undefined) await saveListingAnswers(context.supabase, data.id, context.userId, data.listing, data);
+    const lock = await (await import("./identity-lock.server")).guardLockedIdentity(sb, "startups", data.id, patch, context.userId);
     const { error } = await sb.from("startups").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     if(data.founders) await saveWizardFounders(sb,data.id,context.userId,data.founders);
+    await lock.finish();
     if (data.role) await sb.from("startup_ownership").update({ seller_relation: data.role }).eq("startup_id", data.id);
     return { ok: true };
   });

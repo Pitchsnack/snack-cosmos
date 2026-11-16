@@ -127,6 +127,8 @@ export type FirmDocument = { id?: string; path: string; name: string; type: stri
 export type FirmReview = { id: string; role: "seller" | "buyer"; detail: string | null; service: string | null; stars: number; comment: string | null; at: string };
 
 export type AdvisorFirm = {
+  /** Set once the registration number is confirmed with DBD; identity fields lock for non-Admin editors. */
+  regLockedAt?: string | null;
   /** Browse advisors only: a PitchSnack private client. */
   managed?: boolean;
   /** Owner's last-login bucket (never a timestamp); null = no login on record. */

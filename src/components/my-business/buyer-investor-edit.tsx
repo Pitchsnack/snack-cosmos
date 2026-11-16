@@ -1,6 +1,8 @@
 import { setupText } from "@/i18n/language";
 import { companyNameHelp } from "@/lib/company-name";
 import { CompanyNameFields } from "@/components/common/company-name-fields";
+import { FromDbdTag, IdentityLockNote, LockableInput } from "@/components/common/identity-lock";
+import { isIdentityLocked } from "@/lib/identity-lock";
 import { FieldRow, AutoFillTabButton, ListingEditorTitle } from "@/components/common/listing-editor-fields";
 import { BuyerDescriptionEditor } from "./buyer-description-editor";
 import { LangTag, missingLangHint, useTextLang } from "@/components/common/text-lang";
@@ -194,6 +196,12 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const ais = useQuery({queryKey:["investor-form-ais",tenant],queryFn:()=>getUsers({data:{tenantId:tenant,userType:"AI"}}),enabled:admin && !!directory && !!tenant});
 
   const inv = data.investor;
+  // DBD-confirmed identity: filled values lock everywhere except Admin's own directory editor.
+  const adminEdit = admin && !!directory;
+  const regLockedAt = inv.reg_locked_at ?? null;
+  const lockYear = isIdentityLocked(regLockedAt, inv.year_founded, adminEdit);
+  const lockName = isIdentityLocked(regLockedAt, inv.investor_name, adminEdit);
+  const lockReg = isIdentityLocked(regLockedAt, inv.registration_no, adminEdit);
   const [src, setSources] = useState<Record<string, SourceTag>>(setup?.sources ?? {});
   const rel = data.buyer.relation;
   const individual = rel === "individual";
@@ -225,7 +233,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   const thaiAddr = (f.country || "Thailand") === "Thailand";
   const setAddr = (p: Partial<Addr>) => { setAddrS((o) => ({ ...o, ...p })); setAddrDirty(true); };
   const changeCountry = (c: string) => {
-    setF((o) => ({ ...o, country: c, registration_no: "", region: !c ? "" : regionForCountry(c) || o.region }));
+    setF((o) => ({ ...o, country: c, registration_no: lockReg ? o.registration_no : "", region: !c ? "" : regionForCountry(c) || o.region }));
     setAddrS({ street: "", unit: "", district: "", province: "", postal: "" }); setAddrDirty(true);
   };
   const addrErr = addrDirty ? addrErrors(addr, thaiAddr, addr.district) : null;
@@ -495,26 +503,26 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </div></S>
 
 </div>}
-          {tab === "about" && <div className="space-y-4"><TabHead title={tr("Company Info")}>{autoEnrich}</TabHead>        {/* Row 1: Year Founded | Company Name | Investor Classification */}
+          {tab === "about" && <div className="space-y-4"><TabHead title={tr("Company Info")}>{autoEnrich}</TabHead>{!onCreated && <IdentityLockNote lockedAt={regLockedAt} adminEdit={adminEdit} />}        {/* Row 1: Year Founded | Company Name | Investor Classification */}
         <div className={individual ? "grid gap-4 sm:grid-cols-2" : "grid gap-4 sm:grid-cols-3"}>
           <div className="space-y-1.5">
-            <Label>{setupText("Year Founded")}{!individual && req}<Tag s={src.year_founded} /></Label>
-            <Input id="f-year_founded" inputMode="numeric" maxLength={4} aria-required={!individual} value={f.year_founded}
+            <Label>{setupText("Year Founded")}{!individual && req}<Tag s={src.year_founded} /><FromDbdTag show={lockYear} /></Label>
+            <LockableInput locked={lockYear} id="f-year_founded" inputMode="numeric" maxLength={4} aria-required={!individual} value={f.year_founded}
               onChange={(e) => setF((o) => ({ ...o, year_founded: e.target.value.replace(/\D/g, "").slice(0, 4) }))} placeholder={setupText("e.g. 2014")}
               className={errs.year_founded ? "border-[#B42318]" : ""} />
             <Err k="year_founded" />
           </div>
           <EditSec id="company-name" tone="buyer" active={nameFocus} className="space-y-1.5">
-            <Label>{setupText("Company Name")}{req}<Tag s={src.investor_name} /></Label>
-            <Input id="f-investor_name" aria-required value={f.investor_name} onChange={set("investor_name")} placeholder={setupText("e.g. Acme Ventures")} maxLength={120}
+            <Label>{setupText("Company Name")}{req}<Tag s={src.investor_name} /><FromDbdTag show={lockName} /></Label>
+            <LockableInput locked={lockName} id="f-investor_name" aria-required value={f.investor_name} onChange={set("investor_name")} placeholder={setupText("e.g. Acme Ventures")} maxLength={120}
               className={errs.investor_name && !f.investor_name.trim() ? "creation-invalid" : ""} />
             {!f.investor_name.trim() && <Err k="investor_name" />}
-            {!setup && <p className="text-xs text-muted-foreground">{companyNameHelp(language === "th")}</p>}
+            {!setup && !lockName && <p className="text-xs text-muted-foreground">{companyNameHelp(language === "th")}</p>}
           </EditSec>
           {!individual && (
             <div className="space-y-1.5">
-              <Label>{tr("Registered Number")}{f.country === "Thailand" && req}<Tag s={src.registration_no} /></Label>
-              <Input id="f-registration_no" value={f.registration_no} aria-required={f.country === "Thailand"}
+              <Label>{tr("Registered Number")}{f.country === "Thailand" && req}<Tag s={src.registration_no} /><FromDbdTag show={lockReg} /></Label>
+              <LockableInput locked={lockReg} id="f-registration_no" value={f.registration_no} aria-required={f.country === "Thailand"}
                 maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? setupText("13 digits") : ""}
                 inputMode={f.country === "Thailand" ? "numeric" : undefined}
                 onChange={(e) => setF((o) => ({ ...o, registration_no: o.country === "Thailand" ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value }))}
@@ -640,7 +648,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
 {directory && <div className="space-y-1.5"><Label>{setupText("Bio")}</Label><Textarea value={bio} onChange={e=>setBio(e.target.value)} maxLength={2000} /></div>}{directory && <div className="space-y-1.5"><Label>{setupText("Long Description")}</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</div>}
           {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")}>{autoEnrich}</TabHead>        {/* Company name is edited only in About Company. */}
-        {!setup ? <CompanyNameFields name={f.investor_name} nameLabel="Company Name" thaiName={f.thai_name} englishName={f.english_name} onThaiName={v => setF(o => ({...o, thai_name:v}))} onEnglishName={v => setF(o => ({...o, english_name:v}))} onChangeCompany={() => { setView("private"); setTab("about"); setNameFocus(true); setTimeout(() => document.getElementById("f-investor_name")?.focus(), 100); }} /> : <div className="grid gap-4">
+        {!setup ? <CompanyNameFields lockedAt={regLockedAt} adminEdit={adminEdit} name={f.investor_name} nameLabel="Company Name" thaiName={f.thai_name} englishName={f.english_name} onThaiName={v => setF(o => ({...o, thai_name:v}))} onEnglishName={v => setF(o => ({...o, english_name:v}))} onChangeCompany={() => { setView("private"); setTab("about"); setNameFocus(true); setTimeout(() => document.getElementById("f-investor_name")?.focus(), 100); }} /> : <div className="grid gap-4">
           <div className="space-y-1.5">
             <Label>{setupText("Firm Name")}</Label>
             <Input id="f-firm_name" value={f.firm_name} onChange={set("firm_name")} placeholder={setupText("e.g. Sequoia Capital")} maxLength={100} />

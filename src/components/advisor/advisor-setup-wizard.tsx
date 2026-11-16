@@ -1,4 +1,6 @@
 import { WizardStepBar } from "@/components/common/wizard-step-bar";
+import { FromDbdTag, IdentityLockNote, LOCKED_INPUT, LockWrap } from "@/components/common/identity-lock";
+import { isIdentityLocked } from "@/lib/identity-lock";
 import { ADVISOR_STEP_NAMES } from "@/lib/setup-step-labels";
 import { furthestStep, setupAnswered as questionAnswered, setupStepState } from "@/lib/setup-step-state";
 import { setupText } from "@/i18n/language";
@@ -150,8 +152,11 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const hiddenF = advisorHidden(fromSignup, { type: a.type, web: a.web, year: a.year, team: a.team });
   const hid = (k: string, q: WizardQ) => full !== q && hiddenF.has(k);
   const nameShort = !!fromSignup?.includes("name") && full !== "name";
-  // Confirmed at sign-up: only PitchSnack can change it.
-  const regLocked = !!fromSignup?.includes("reg");
+  // Confirmed with the DBD record: filled identity fields lock; only PitchSnack Admin can change them.
+  const lockAt = firm.regLockedAt ?? null;
+  const regLocked = isIdentityLocked(lockAt, firm.registrationNo);
+  const nameLocked = isIdentityLocked(lockAt, firm.name);
+  const yearLocked = isIdentityLocked(lockAt, firm.yearFounded);
   const shown = STEPS.filter((q) => q === "review" || !skipSet.has(q) || q === full || q === cur);
   // After the first render, resume at the first question that's unanswered or no longer valid.
   const resumed = useRef(false);
@@ -419,26 +424,27 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
       h: nameShort ? tr("Check that the name matches your firm's registration.") : tr("Sellers and buyers see this name on your card. Use the name your clients know."),
       body: (
         <div>
+          <div className="mb-4"><IdentityLockNote lockedAt={lockAt} /></div>
           <div className={cn("grid gap-4", !hid("year", "name") && "sm:grid-cols-[1fr_150px]")}>
             <div>
-              <label className={lbl} htmlFor="w-name">{tr("Firm name")}<Req /></label>
-              <input id="w-name" data-f="name" aria-required maxLength={80} placeholder={tr("e.g. Acme Advisory")} className={cn(inp, errors.name && "need-fill", show("name") && errCls)} {...(errors.name ? { "data-need": "1" } : {})} value={a.name} onBlur={blur("name")}
-                onChange={(e) => set({ name: e.target.value }, { name: e.target.value })} />
+              <label className={lbl} htmlFor="w-name">{tr("Firm name")}<Req /><FromDbdTag show={nameLocked} /></label>
+              <LockWrap locked={nameLocked}><input id="w-name" readOnly={nameLocked} aria-readonly={nameLocked || undefined} data-f="name" aria-required maxLength={80} placeholder={tr("e.g. Acme Advisory")} className={cn(inp, nameLocked && LOCKED_INPUT, errors.name && "need-fill", show("name") && errCls)} {...(errors.name ? { "data-need": "1" } : {})} value={a.name} onBlur={blur("name")}
+                onChange={(e) => { if (nameLocked) return; ((e: React.ChangeEvent<HTMLInputElement>) =>  set({ name: e.target.value }, { name: e.target.value }))(e); }} /></LockWrap>
               <Err m={show("name")} />
             </div>
             {!hid("year", "name") && <div>
-              <label className={lbl} htmlFor="w-year">{tr("Year founded")}<Req /></label>
-              <input id="w-year" data-f="year" aria-required inputMode="numeric" maxLength={4} placeholder={setupText("e.g. 2014")} className={cn(inp, yearShown && errCls)} value={a.year} onBlur={blur("year")}
-                onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 4); set({ year: v }, { year_founded: /^\d{4}$/.test(v) && !yearError(v) ? Number(v) : null }); }} />
+              <label className={lbl} htmlFor="w-year">{tr("Year founded")}<Req /><FromDbdTag show={yearLocked} /></label>
+              <LockWrap locked={yearLocked}><input id="w-year" readOnly={yearLocked} aria-readonly={yearLocked || undefined} data-f="year" aria-required inputMode="numeric" maxLength={4} placeholder={setupText("e.g. 2014")} className={cn(inp, yearLocked && LOCKED_INPUT, yearShown && errCls)} value={a.year} onBlur={blur("year")}
+                onChange={(e) => { if (yearLocked) return; ((e: React.ChangeEvent<HTMLInputElement>) =>  { const v = e.target.value.replace(/\D/g, "").slice(0, 4); set({ year: v }, { year_founded: /^\d{4}$/.test(v) && !yearError(v) ? Number(v) : null }); })(e); }} /></LockWrap>
             </div>}
           </div>
           <Err m={yearShown} />
           <div className="mt-4">
-            <label className={lbl} htmlFor="w-reg">{thai ? <>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<Req /></> : <>{tr("Company registration number")}<Opt /></>}</label>
-            <input id="w-reg" data-f="reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? tr("13 digits") : undefined}
-              className={cn(inp, errors.reg && "need-fill", show("reg") && errCls)} {...(errors.reg ? { "data-need": "1" } : {})}
-              value={a.reg} onBlur={blur("reg")} readOnly={regLocked} aria-readonly={regLocked || undefined} style={regLocked ? { background: "#F3F4F6" } : undefined}
-              onChange={(e) => { if (regLocked) return; const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value.slice(0, 50); set({ reg: v }, { registration_no: v || null }); }} />
+            <label className={lbl} htmlFor="w-reg">{thai ? <>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<Req /></> : <>{tr("Company registration number")}<Opt /></>}<FromDbdTag show={regLocked} /></label>
+            <LockWrap locked={regLocked}><input id="w-reg" readOnly={regLocked} aria-readonly={regLocked || undefined} data-f="reg" aria-required={thai} inputMode={thai ? "numeric" : undefined} maxLength={thai ? 13 : 50} placeholder={thai ? tr("13 digits") : undefined}
+              className={cn(inp, regLocked && LOCKED_INPUT, errors.reg && "need-fill", show("reg") && errCls)} {...(errors.reg ? { "data-need": "1" } : {})}
+              value={a.reg} onBlur={blur("reg")}
+              onChange={(e) => { if (regLocked) return; ((e: React.ChangeEvent<HTMLInputElement>) =>  { const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value.slice(0, 50); set({ reg: v }, { registration_no: v || null }); })(e); }} /></LockWrap>
             <Err m={show("reg")} />
             <p className="mt-2 flex gap-1.5 text-[13px] text-[#B42318]">
               <ShieldCheck className="mt-[1px] h-[15px] w-[15px] shrink-0" />

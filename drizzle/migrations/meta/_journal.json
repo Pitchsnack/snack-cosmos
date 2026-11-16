@@ -1030,6 +1030,13 @@
       "when": 1794857589034,
       "tag": "0146_registration_attempts",
       "breakpoints": true
+    },
+    {
+      "idx": 147,
+      "version": "7",
+      "when": 1794866018630,
+      "tag": "0147_lock_dbd_confirmed_identity",
+      "breakpoints": true
     }
   ]
 }

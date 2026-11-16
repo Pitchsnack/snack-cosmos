@@ -1,4 +1,6 @@
 import { setupText } from "@/i18n/language";
+import { FromDbdTag, IdentityLockNote, LOCKED_INPUT, LockWrap } from "@/components/common/identity-lock";
+import { isIdentityLocked } from "@/lib/identity-lock";
 import { tr, useTranslation } from "@/i18n/language";
 import { checked } from "@/components/setup/verified-tags";
 import { useEffect, useRef, useState } from "react";
@@ -72,8 +74,10 @@ function Check({ on, label, onClick }: { on: boolean; label: string; onClick: ()
 }
 
 export function SellerWizard({
-  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, title = tr("Add my business"), media, owner, listingPreview,
+  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, identity, title = tr("Add my business"), media, owner, listingPreview,
 }: {
+  /** Stored identity + DBD confirmation: filled values lock once confirmed. */
+  identity?: { lockedAt: string | null; name: string | null; reg: string | null; year: number | null };
   /** Upload target for Logo and photos (the business exists). */
   media?: WizardMedia;
   owner?: { fullName: string; position: string };
@@ -91,6 +95,10 @@ export function SellerWizard({
 }) {
   const th = useTranslation().language === "th"; // re-render on language change
   const L = (en: string, t: string) => (th ? t : en);
+  const lockAt = identity?.lockedAt ?? null;
+  const nameLocked = isIdentityLocked(lockAt, identity?.name);
+  const regLocked = isIdentityLocked(lockAt, identity?.reg);
+  const yearLocked = isIdentityLocked(lockAt, identity?.year);
   const [d, setD] = useState<SellerDraft>(() => ({...initial, reached: normalizeSellerStep(initial.reached), founders: initial.founders?.length ? initial.founders : [fallbackSellerFounder(initial.role, owner?.fullName ?? "")]}));
   /** Step 1's wording in the current language; the stored answer is always the key. */
   const roleLabel = () => { const r = SELLER_RELATIONS.find((x) => x.value === d.role); return r ? L(...r.label) : ""; };
@@ -241,12 +249,13 @@ export function SellerWizard({
     nameBody: { t: "",
       body: (
         <div className="space-y-4">
+          {identity && <IdentityLockNote lockedAt={lockAt} />}
           <div className="seller-company-identity">
-          <div><label className={fieldLbl}>{tr("Company name")}</label>
-            <input className={`${inp} ${needCls(!d.name.trim())}`} data-need={!d.name.trim() ? "1" : undefined} aria-required value={d.name} maxLength={255} autoFocus onChange={(e) => set({ name: e.target.value })} placeholder={setupText("e.g. Siam Foods Co., Ltd.")} /></div>
-          <div><label className={`${fieldLbl} whitespace-nowrap`}>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}</label>
-            <input className={`${inp} ${needCls(!/^\d{13}$/.test(d.reg))}`} data-need={!/^\d{13}$/.test(d.reg) ? "1" : undefined} aria-required inputMode="numeric" value={d.reg} maxLength={13} readOnly={fromSignup.includes("reg")} style={fromSignup.includes("reg") ? { background: "#F3F4F6" } : undefined}
-              onChange={(e) => { if (fromSignup.includes("reg")) return; set({ reg: e.target.value.replace(/\D/g, "").slice(0, 13) }); }} placeholder={setupText("13 digits")} />
+          <div><label className={fieldLbl}>{tr("Company name")}<FromDbdTag show={nameLocked} /></label>
+            <LockWrap locked={nameLocked}><input readOnly={nameLocked} aria-readonly={nameLocked || undefined} className={`${inp} ${nameLocked ? LOCKED_INPUT : ""} ${needCls(!d.name.trim())}`} data-need={!d.name.trim() ? "1" : undefined} aria-required value={d.name} maxLength={255} autoFocus={!nameLocked} onChange={(e) => { if (!nameLocked) set({ name: e.target.value }); }} placeholder={setupText("e.g. Siam Foods Co., Ltd.")} /></LockWrap></div>
+          <div><label className={`${fieldLbl} whitespace-nowrap`}>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<FromDbdTag show={regLocked} /></label>
+            <LockWrap locked={regLocked}><input className={`${inp} ${regLocked ? LOCKED_INPUT : ""} ${needCls(!/^\d{13}$/.test(d.reg))}`} data-need={!/^\d{13}$/.test(d.reg) ? "1" : undefined} aria-required inputMode="numeric" value={d.reg} maxLength={13} readOnly={regLocked} aria-readonly={regLocked || undefined}
+              onChange={(e) => { if (regLocked) return; set({ reg: e.target.value.replace(/\D/g, "").slice(0, 13) }); }} placeholder={setupText("13 digits")} /></LockWrap>
             <p className="mt-1.5 text-[13px] text-muted-foreground">{setupText("Used to verify your company.")}{d.reg && d.reg.length !== 13 ? L(` ${d.reg.length}/13 digits.`, ` ${d.reg.length}/13 หลัก`) : ""}</p></div>
           </div>
           <div className="pt-2">
@@ -277,7 +286,7 @@ export function SellerWizard({
       </div> },
     founded: {t:L("When was your company founded, and how big is it?","บริษัทของท่านก่อตั้งเมื่อไร และมีขนาดเท่าไร"),h:L("The year it was registered or started trading, and how many people work there today.","ปีที่จดทะเบียนหรือเริ่มดำเนินธุรกิจ และจำนวนพนักงานในปัจจุบัน"),body:<div>
       <div className="seller-founded-row">
-        <div><label htmlFor="sw-year" className={fieldLbl}>{L("Year founded","ปีที่ก่อตั้ง")} <span className="text-destructive">*</span></label><div className={`seller-founded-input ${touched.year && foundedYearError(d.year) ? "has-error" : ""}`}><Calendar size={18}/><input id="sw-year" inputMode="numeric" maxLength={4} value={d.year} onChange={e => set({year:e.target.value.replace(/\D/g,"").slice(0,4)})} onBlur={() => setTouched(p => ({...p,year:true}))} aria-invalid={!!touched.year && !!foundedYearError(d.year)} placeholder="e.g. 2014"/></div></div>
+        <div><label htmlFor="sw-year" className={fieldLbl}>{L("Year founded","ปีที่ก่อตั้ง")} <span className="text-destructive">*</span><FromDbdTag show={yearLocked} /></label><div className={`seller-founded-input ${yearLocked ? "bg-muted/50" : ""} ${touched.year && foundedYearError(d.year) ? "has-error" : ""}`}><Calendar size={18}/><input id="sw-year" readOnly={yearLocked} aria-readonly={yearLocked || undefined} className={yearLocked ? "cursor-not-allowed" : undefined} inputMode="numeric" maxLength={4} value={d.year} onChange={e => { if (!yearLocked) set({year:e.target.value.replace(/\D/g,"").slice(0,4)}); }} onBlur={() => setTouched(p => ({...p,year:true}))} aria-invalid={!!touched.year && !!foundedYearError(d.year)} placeholder="e.g. 2014"/></div></div>
         <div><label htmlFor="sw-size" className={fieldLbl}>{L("Company size (employees)","ขนาดบริษัท (พนักงาน)")} <span className="text-destructive">*</span></label><div className="seller-founded-input"><Users size={18}/><select id="sw-size" value={d.size ?? ""} onChange={e => set({size:e.target.value || null})}><option value="">{L("Choose a range","เลือกช่วงจำนวน")}</option>{WIZARD_SIZES.map(x => <option value={x.value} key={x.value}>{tr(x.label)}</option>)}</select></div></div>
       </div>
       {(touched.year || d.year.length === 4) && foundedYearError(d.year) && <p className="mt-2 text-[13.5px] text-destructive" role="alert">{foundedYearError(d.year) === "digits" ? L("Enter the year with 4 digits, for example 2014","กรุณากรอกปีเป็นตัวเลข 4 หลัก เช่น 2014") : foundedYearError(d.year) === "thai" ? L(`That looks like a Thai year (พ.ศ.). Enter it in ค.ศ.: ${Number(d.year)-543}`,`ดูเหมือนเป็นปี พ.ศ. กรุณากรอกเป็นปี ค.ศ.: ${Number(d.year)-543}`) : L(`Enter a year between 1800 and ${new Date().getFullYear()}`,`กรุณากรอกปีระหว่าง 1800 ถึง ${new Date().getFullYear()}`)}</p>}

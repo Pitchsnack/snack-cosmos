@@ -93,6 +93,7 @@ function Page() {
       owner={data.owner}
       listingPreview={{ refNo: data.listing.refNo, cover: data.listing.cover }}
       fromSignup={data.fromSignup}
+      identity={data.identity}
       persist={persist}
       media={{ startupId: id, tenantId: data.tenantId, initial: data.media, facts: { name: data.name, web: data.web } }}
       title="Set up your business"

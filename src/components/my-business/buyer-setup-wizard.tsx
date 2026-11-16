@@ -1,4 +1,6 @@
 import { WizardStepBar } from "@/components/common/wizard-step-bar";
+import { FromDbdTag, IdentityLockNote, LOCKED_INPUT, LockWrap } from "@/components/common/identity-lock";
+import { isIdentityLocked } from "@/lib/identity-lock";
 import { BUYER_STEP_NAMES } from "@/lib/setup-step-labels";
 import { furthestStep, setupStepState } from "@/lib/setup-step-state";
 import { buyerProgressFor } from "@/lib/buyer-wizard";
@@ -210,8 +212,11 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const steps = stepsAll.filter((s) => !skipSet.has(s.id) || s.id === full || s.id === cur);
   const hiddenF = full === "name" ? new Set<string>() : buyerHiddenFields(fromSignup, { role: a.role, type: a.type, web: a.web, year: a.year, name: a.name });
   const nameShort = !!fromSignup?.includes("name") && full !== "name";
-  // Confirmed at sign-up: only PitchSnack can change it.
-  const regLocked = !!fromSignup?.includes("reg");
+  // Confirmed with the DBD record: filled identity fields lock; only PitchSnack Admin can change them.
+  const lockAt = data.investor.reg_locked_at ?? null;
+  const regLocked = isIdentityLocked(lockAt, data.investor.registration_no);
+  const nameLocked = isIdentityLocked(lockAt, data.investor.investor_name);
+  const yearLocked = isIdentityLocked(lockAt, data.investor.year_founded);
   const nextAfter = (x: A, from: QId): QId => {
     const all = stepsFor(x.role); const sk = skipOf(x);
     const i = all.findIndex((s) => s.id === from);
@@ -543,20 +548,21 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       h: addrOnly ? tr("Sellers see your country and province, never the full address, until they approve your NDA.") : nameShort ? tr("Check that the name matches your firm's registration. Sellers don't see either before an NDA.") : L(`Sellers see “${tr(tName)}” instead of your name until they approve your NDA.`, `ผู้ขายจะเห็นคำว่า “${tr(tName)}” แทนชื่อของท่าน จนกว่าผู้ขายจะอนุมัติ NDA ของท่าน`),
       body: (
         <div className={addrOnly ? "pt-[6px]" : "space-y-4"}>
+          {!addrOnly && !individual && <IdentityLockNote lockedAt={lockAt} />}
           {!addrOnly && (<div>
             <div className="flex flex-col gap-[14px] sm:flex-row">
               <div className="flex-1">
-                <label className={lbl} htmlFor="w-name">{tr("Firm name")}<Req /></label>
-                <input id="w-name" aria-required autoFocus {...(errors.name ? { "data-need": "1" } : {})} className={`${inp} ${errors.name ? "need-fill" : ""} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder={L("e.g. Example Co., Ltd.", "เช่น บริษัท ตัวอย่าง จำกัด")}
+                <label className={lbl} htmlFor="w-name">{tr("Firm name")}<Req /><FromDbdTag show={nameLocked} /></label>
+                <LockWrap locked={nameLocked}><input id="w-name" readOnly={nameLocked} aria-readonly={nameLocked || undefined} aria-required autoFocus {...(errors.name ? { "data-need": "1" } : {})} className={`${inp} ${nameLocked ? LOCKED_INPUT : ""} ${errors.name ? "need-fill" : ""} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder={L("e.g. Example Co., Ltd.", "เช่น บริษัท ตัวอย่าง จำกัด")}
                   onBlur={() => setTouched((t) => ({ ...t, name: true }))}
-                  onChange={(e) => set({ name: e.target.value }, e.target.value.trim() ? { investor_name: e.target.value } : {})} />
+                  onChange={(e) => { if (nameLocked) return; ((e: React.ChangeEvent<HTMLInputElement>) =>  set({ name: e.target.value }, e.target.value.trim() ? { investor_name: e.target.value } : {}))(e); }} /></LockWrap>
               </div>
               {!individual && !hiddenF.has("year") && (
                 <div className="sm:w-[150px]">
-                  <label className={lbl} htmlFor="w-year">{tr("Year founded")}<Req /></label>
-                  <input id="w-year" aria-required inputMode="numeric" maxLength={4} className={`${inp} ${show("year") ? errCls : ""}`} value={a.year} placeholder={setupText("e.g. 2014")}
+                  <label className={lbl} htmlFor="w-year">{tr("Year founded")}<Req /><FromDbdTag show={yearLocked} /></label>
+                  <LockWrap locked={yearLocked}><input id="w-year" readOnly={yearLocked} aria-readonly={yearLocked || undefined} aria-required inputMode="numeric" maxLength={4} className={`${inp} ${yearLocked ? LOCKED_INPUT : ""} ${show("year") ? errCls : ""}`} value={a.year} placeholder={setupText("e.g. 2014")}
                     onBlur={() => setTouched((t) => ({ ...t, year: true }))}
-                    onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 4); set({ year: v }, !yearError(v) ? { year_founded: Number(v) } : {}); }} />
+                    onChange={(e) => { if (yearLocked) return; ((e: React.ChangeEvent<HTMLInputElement>) =>  { const v = e.target.value.replace(/\D/g, "").slice(0, 4); set({ year: v }, !yearError(v) ? { year_founded: Number(v) } : {}); })(e); }} /></LockWrap>
                 </div>
               )}
             </div>
@@ -565,11 +571,11 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           </div>)}
           {!individual && (
             <div>
-              <label className={lbl} htmlFor="w-reg">{thai ? <>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<Req /></> : <>{tr("Company registration number")}<Opt /></>}</label>
-              <input id="w-reg" aria-required={thai} {...(errors.reg ? { "data-need": "1" } : {})} className={`${inp} ${errors.reg ? "need-fill" : ""} ${show("reg") ? errCls : ""}`} value={a.reg} inputMode={thai ? "numeric" : undefined}
+              <label className={lbl} htmlFor="w-reg">{thai ? <>{tr("Company Registration Number (เลขทะเบียนนิติบุคคล)")}<Req /></> : <>{tr("Company registration number")}<Opt /></>}<FromDbdTag show={regLocked} /></label>
+              <LockWrap locked={regLocked}><input id="w-reg" readOnly={regLocked} aria-readonly={regLocked || undefined} aria-required={thai} {...(errors.reg ? { "data-need": "1" } : {})} className={`${inp} ${regLocked ? LOCKED_INPUT : ""} ${errors.reg ? "need-fill" : ""} ${show("reg") ? errCls : ""}`} value={a.reg} inputMode={thai ? "numeric" : undefined}
                 maxLength={thai ? 13 : 50} placeholder={thai ? setupText("13 digits") : ""}
-                onBlur={() => setTouched((t) => ({ ...t, reg: true }))} readOnly={regLocked} aria-readonly={regLocked || undefined} style={regLocked ? { background: "#F3F4F6" } : undefined}
-                onChange={(e) => { if (regLocked) return; const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value; set({ reg: v }, { registration_no: v }); }} />
+                onBlur={() => setTouched((t) => ({ ...t, reg: true }))}
+                onChange={(e) => { if (regLocked) return; ((e: React.ChangeEvent<HTMLInputElement>) =>  { const v = thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value; set({ reg: v }, { registration_no: v }); })(e); }} /></LockWrap>
               <Err m={show("reg")} />
               <p className="mt-2.5 flex items-start gap-2 text-[13px] text-[#434A5C] dark:text-muted-foreground">
                 <ShieldCheck className="mt-0.5 h-[15px] w-[15px] flex-none text-[#15803D]" />

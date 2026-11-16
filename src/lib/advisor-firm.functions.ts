@@ -63,7 +63,7 @@ function toFirm(r: any, kids: { fees: any[]; team: any[]; creds: any[]; docs: an
     description: r.description, descriptionTh: r.description_th ?? null, longDescription: r.long_description ?? null, contactName: r.contact_name ?? null, contactPosition: r.contact_position ?? null, yearFounded: r.year_founded, city: r.city, country: r.country,
     services: r.services ?? [], fees, feeDetails, dealBand: r.deal_size_band ?? null,
     teamSize: r.team_size, languages: r.languages ?? [], sectors: r.sectors ?? [], sectorAgnostic: !!r.sector_agnostic, sectorPicks: r.sector_picks ?? null,
-    legalName: r.legal_name, thaiName: r.thai_name, englishName: r.english_name ?? null, registrationNo: r.registration_no,
+    legalName: r.legal_name, thaiName: r.thai_name, englishName: r.english_name ?? null, registrationNo: r.registration_no, regLockedAt: r.reg_locked_at ?? null,
     addrStreet: r.addr_street, addrUnit: r.addr_unit, addrDistrict: r.addr_district,
     addrProvince: r.addr_province, addrPostal: r.addr_postal,
     website: r.website, email: r.email, phone: r.phone,
@@ -227,8 +227,10 @@ export const saveAdvisorWizard = createServerFn({ method: "POST" })
     if (data.patch.logo_path && !data.patch.logo_path.startsWith(own) && data.patch.logo_path !== current.logo_path) throw new Error("Invalid logo file.");
     if (data.patch.media?.some((m) => !m.image_path.startsWith(own) && !(current.media ?? []).some((old: any) => old.image_path === m.image_path))) throw new Error("Invalid photo file.");
     if (Object.keys(data.patch).length) {
+      const lock = await (await import("./identity-lock.server")).guardLockedIdentity(sb, "advisor_firms", data.id, data.patch as Record<string, unknown>, context.userId, false);
       const { error } = await sb.from("advisor_firms").update(data.patch).eq("id", data.id);
       if (error) throw new Error(error.message);
+      await lock.finish();
     }
     if (data.fees && Object.keys(data.fees).length) {
       const rows = Object.entries(data.fees).map(([s, f]) => feeToRow(data.id, s, f));
@@ -279,8 +281,10 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
     }
     let id = data.id;
     if (id) {
+      const lock = await (await import("./identity-lock.server")).guardLockedIdentity(sb, "advisor_firms", id, row as Record<string, unknown>, context.userId, false);
       const { error } = await sb.from("advisor_firms").update(row).eq("id", id);
       if (error) throw new Error(error.message);
+      await lock.finish();
     } else {
       const { data: ins, error } = await sb.from("advisor_firms").insert({ ...row, email: row.email || ((context.claims as any)?.email as string | undefined) || null, owner_user_id: context.userId, status: "draft" }).select("id").single();
       if (error) throw new Error(error.message);

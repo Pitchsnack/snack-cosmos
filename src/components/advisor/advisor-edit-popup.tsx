@@ -12,7 +12,7 @@ export function AdvisorEditPopup({ id, section, onClose }: { id: string; section
   const { data } = useQuery({ queryKey: ["advisor-admin-edit", id], queryFn: () => fn({ data: { id } }) });
   return (
     <EditInfoPopup open subtitle={data?.name ?? ""} companyName={data?.name || "Advisor firm"} onClosed={onClose}>
-      {data ? <FirmEditForm firm={data} section={section} onDone={onClose} /> : <Skeleton className="h-[500px]" />}
+      {data ? <FirmEditForm adminEdit firm={data} section={section} onDone={onClose} /> : <Skeleton className="h-[500px]" />}
     </EditInfoPopup>
   );
 }

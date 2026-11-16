@@ -127,6 +127,7 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
       investor: {
         id: inv.id as string,
         investor_name: inv.investor_name as string,
+        reg_locked_at: (inv.reg_locked_at ?? null) as string | null,
         legal_name: inv.legal_name as string | null,
         firm_name: inv.firm_name as string | null,
         thai_name: inv.thai_name as string | null,
@@ -375,6 +376,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       }
     } else inv.acts_for_types = [];
     if (!r.directory && data.complete_setup) inv.setup_done_at = new Date().toISOString();
+    const lock = await (await import("./identity-lock.server")).guardLockedIdentity(sb, "investors", investorId, inv, context.userId);
     const { error } = await sb.from("investors").update(inv).eq("id", investorId);
     if (error) throw new Error(error.message);
 
@@ -401,6 +403,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     const { error: e2 } = await writeBp(r, context.userId, bp);
     if (e2) throw new Error(e2.message);
     await sb.from("investor_activity").insert({ investor_id: investorId, tenant_id: (await sb.from("investors").select("tenant_id").eq("id", investorId).single()).data.tenant_id, activity_type: "buyer_profile_updated", activity_details: {}, created_by: context.userId });
+    await lock.finish();
     return { ok: true };
   });
 
@@ -522,10 +525,12 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     if (data.answered || data.pe_ticked !== undefined) {
       inv.wizard = { ...(cur.wizard ?? {}), ...(data.answered ? { answered: data.answered } : {}), ...(data.pe_ticked !== undefined ? { pe_ticked: data.pe_ticked } : {}) };
     }
+    const lock = await (await import("./identity-lock.server")).guardLockedIdentity(sb, "investors", investorId, inv, context.userId);
     const { error } = await sb.from("investors").update(inv).eq("id", investorId);
     if (error) throw new Error(error.message);
     const { error: e2 } = await writeBp(r, context.userId, bp);
     if (e2) throw new Error(e2.message);
+    await lock.finish();
     return { ok: true };
   });
 

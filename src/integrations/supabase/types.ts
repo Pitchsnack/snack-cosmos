@@ -8553,6 +8553,10 @@ export type Database = {
         Args: { _tenant: string; _user_id: string }
         Returns: boolean
       }
+      locked_identity_changes: {
+        Args: { _new: Json; _old: Json; _table: string }
+        Returns: Json
+      }
       mark_welcome_tour_seen: { Args: never; Returns: string }
       nda_decision_commit: {
         Args: { _actor: string; _approve: boolean; _id: string }

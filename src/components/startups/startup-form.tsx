@@ -1,6 +1,8 @@
 import { missingCreationFields } from "@/lib/profile-edit-rules";
 import { companyNameHelp } from "@/lib/company-name";
 import { CompanyNameFields } from "@/components/common/company-name-fields";
+import { FromDbdTag, IdentityLockNote, LockableInput } from "@/components/common/identity-lock";
+import { isIdentityLocked } from "@/lib/identity-lock";
 import { EditSec, useOpenAtSection } from "@/components/common/edit-section";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { DefaultIntakeOwnershipModeSection } from "@/components/intake/default-intake-ownership-mode-section";
@@ -267,6 +269,11 @@ export function StartupForm({
   /** Lists, options and chips follow "Texts in" (the app language outside Edit information). */
   const { lang: textLang } = useTextLang();
   const ctAdmin = session?.user?.accountRole === "admin" && workspace === "startups";
+  // DBD-confirmed identity: filled values lock outside Admin's own area (Control in View as included).
+  const regLockedAt = startup?.reg_locked_at ?? null;
+  const lockYear = isIdentityLocked(regLockedAt, startup?.year_founded, ctAdmin);
+  const lockName = isIdentityLocked(regLockedAt, startup?.startup_name, ctAdmin);
+  const lockReg = isIdentityLocked(regLockedAt, startup?.registered_number, ctAdmin);
   const [companyTypeReset, setCompanyTypeReset] = useState(false);
   const [companyTypeSource, setCompanyTypeSource] = useState<string>((startup as any)?.company_type_source ?? "account");
   const create = useServerFn(createStartup);
@@ -1248,29 +1255,30 @@ export function StartupForm({
   </>);
   const aboutJsx = (<>
       {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
+      {startup?.id && <div className="mb-4"><IdentityLockNote lockedAt={regLockedAt} adminEdit={ctAdmin} /></div>}
       <div className="@container">
       <div className="grid gap-4 sm:grid-cols-3">
         <EditSec id="facts" tone="seller" active={secOn("facts")}>
           <div className="space-y-1.5">
-            <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>{tr("Year Founded", "ปีที่ก่อตั้ง")}</Label>
-            <Input type="number" min={1800} max={new Date().getFullYear()}
+            <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>{tr("Year Founded", "ปีที่ก่อตั้ง")}<FromDbdTag show={lockYear} /></Label>
+            <LockableInput locked={lockYear} type="number" min={1800} max={new Date().getFullYear()}
               value={yearFounded} onChange={(e) => setYearFounded(e.target.value)}
               placeholder={miss(isStrEmpty(yearFounded)) ? missingPh("Year Founded") : tr("e.g. 2020", "เช่น 2020")}
               className={miss(isStrEmpty(yearFounded)) ? MISSING_INPUT : undefined} />
           </div>
         </EditSec>
         <EditSec id="company-name" tone="seller" active={nameFocus} className="space-y-1.5">
-          <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>{tr("Company Name", "ชื่อบริษัท")} <span className="text-destructive">*</span></Label>
-          <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
+          <Label className={miss(isStrEmpty(startupName)) ? MISSING_LABEL : undefined}>{tr("Company Name", "ชื่อบริษัท")} <span className="text-destructive">*</span><FromDbdTag show={lockName} /></Label>
+          <LockableInput locked={lockName} value={startupName} onChange={(e) => setStartupName(e.target.value)}
             placeholder={miss(isStrEmpty(startupName)) ? missingPh("Company Name") : tr("Acme Inc.", "เช่น บริษัท ตัวอย่าง จำกัด")}
             className={nameErr && !startupName.trim() ? "creation-invalid" : miss(isStrEmpty(startupName)) ? MISSING_INPUT : undefined}
             id="sf-company-name" required={!popup && !editCtx} maxLength={255} />
           {nameErr && isStrEmpty(startupName) && <p className="text-[12.5px] text-destructive">{tr(isEdit ? "Add the Company Name before you save." : "Needed to create the startup.", "กรุณากรอกชื่อบริษัทก่อนบันทึก")}</p>}
-          {editCtx && <p className="text-xs text-muted-foreground">{companyNameHelp(th)}</p>}
+          {editCtx && !lockName && <p className="text-xs text-muted-foreground">{companyNameHelp(th)}</p>}
         </EditSec>
         <div className="space-y-1.5">
-          <Label>{tr("Registered Number", "เลขทะเบียนนิติบุคคล")}</Label>
-          <Input
+          <Label>{tr("Registered Number", "เลขทะเบียนนิติบุคคล")}<FromDbdTag show={lockReg} /></Label>
+          <LockableInput locked={lockReg}
             value={registeredNumber}
             onChange={(e) => setRegisteredNumber(e.target.value)}
             placeholder={tr("e.g. 0105555078063", "เช่น 0105555078063")}
@@ -1478,7 +1486,7 @@ export function StartupForm({
       </EditSec>
 
   </>);
-  const addressJsx = (<div className="space-y-4">{editCtx ? <CompanyNameFields name={startupName} nameLabel="Company Name" thaiName={thaiName} englishName={englishName} onThaiName={setThaiName} onEnglishName={setEnglishName} onChangeCompany={() => { navTab("private", "about"); setNameFocus(true); setTimeout(() => document.getElementById("sf-company-name")?.focus(), 100); }} /> : <EditSec id="address" tone="seller" active={secOn("address")} className="space-y-1.5">
+  const addressJsx = (<div className="space-y-4">{editCtx ? <CompanyNameFields lockedAt={regLockedAt} adminEdit={ctAdmin} name={startupName} nameLabel="Company Name" thaiName={thaiName} englishName={englishName} onThaiName={setThaiName} onEnglishName={setEnglishName} onChangeCompany={() => { navTab("private", "about"); setNameFocus(true); setTimeout(() => document.getElementById("sf-company-name")?.focus(), 100); }} /> : <EditSec id="address" tone="seller" active={secOn("address")} className="space-y-1.5">
           <Label>{tr("Registered Name", "ชื่อที่จดทะเบียน")}</Label>
           <Input
             value={registeredName}
