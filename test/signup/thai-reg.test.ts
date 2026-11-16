@@ -17,9 +17,9 @@ describe("Registration-number correction", () => {
     expect(canCorrectRegistrationCheck({ status: "not_found" })).toBe(true);
     expect(canCorrectRegistrationCheck({ status: "rejected" })).toBe(true);
   });
-  it("never permits correction after a company was found or while a check is running", () => {
+  it("allows correction after cancelling a running check, but never after a company was found", () => {
+    expect(canCorrectRegistrationCheck({ status: "running" })).toBe(true);
     expect(canCorrectRegistrationCheck({ status: "found" })).toBe(false);
-    expect(canCorrectRegistrationCheck({ status: "running" })).toBe(false);
   });
 });
 describe("Sign-up steps", () => {

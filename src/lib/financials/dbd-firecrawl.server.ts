@@ -120,7 +120,7 @@ function toYear(raw: string): number | null {
   return y >= 1900 && y <= 2999 ? y : null;
 }
 
-async function scrape(url: string, actions: Action[]): Promise<string | null> {
+async function scrape(url: string, actions: Action[], waitFor = 8000): Promise<string | null> {
   const key = process.env["FIRECRAWL_API_KEY"];
   if (!key) return null;
   const res = await fetch(FIRECRAWL, {
@@ -130,7 +130,7 @@ async function scrape(url: string, actions: Action[]): Promise<string | null> {
       url,
       formats: ["rawHtml"],
       onlyMainContent: false,
-      waitFor: 8000,
+      waitFor,
       timeout: 120000,
       // DBD serves Thai or English depending on the visitor's locale — always ask for Thai.
       location: { country: "TH", languages: ["th-TH", "th"] },
@@ -288,6 +288,7 @@ async function findByName(name: string): Promise<{ number: string } | null> {
 async function lookup(input: {
   registeredNumber?: string | null;
   registeredName?: string | null;
+  companyOnly?: boolean;
 }): Promise<DbdOutcome> {
   if (!process.env["FIRECRAWL_API_KEY"]) return { status: "not_configured" };
 
@@ -308,13 +309,15 @@ async function lookup(input: {
   }
 
   const profileUrl = dbdProfileUrl(number);
-  const positionHtml = await scrape(profileUrl, financialActions(1));
-  if (!positionHtml) return { status: "unavailable", detail: "DBD_UNREACHABLE" };
-  if (/404 - Page not found|Oops!/.test(clean(positionHtml).slice(0, 500))) {
+  // Sign-up needs identity only. One untouched profile read replaces the four
+  // financial-section reads, which used to hold the verifying dialog for ~90 seconds.
+  const firstHtml = await scrape(profileUrl, input.companyOnly ? [] : financialActions(1));
+  if (!firstHtml) return { status: "unavailable", detail: "DBD_UNREACHABLE" };
+  if (/404 - Page not found|Oops!/.test(clean(firstHtml).slice(0, 500))) {
     return { status: "not_found" };
   }
 
-  const company = parseCompany(positionHtml);
+  const company = parseCompany(firstHtml);
   if (!company) return { status: "not_found" };
   if (
     matchedBy === "registered_name" &&
@@ -327,6 +330,13 @@ async function lookup(input: {
     return { status: "ambiguous", candidates: [company] };
   }
 
+  if (input.companyOnly) {
+    const companyInfo = parseCompanyInfoTh(firstHtml);
+    if (hasAnyCompanyInfo(companyInfo)) company.companyInfo = companyInfo;
+    return { status: "no_financials", company, matchedBy };
+  }
+
+  const positionHtml = firstHtml;
   const [incomeHtml, ratioHtml, infoHtml] = await Promise.all([
     scrape(profileUrl, financialActions(2)),
     scrape(profileUrl, financialActions(3)),
@@ -366,10 +376,11 @@ async function lookup(input: {
 export async function lookupDbdFinancialsViaFirecrawl(input: {
   registeredNumber?: string | null;
   registeredName?: string | null;
+  companyOnly?: boolean;
 }): Promise<DbdOutcome> {
   const key = `${normalizeRegisteredNumber(input.registeredNumber) ?? ""}|${normalizeRegisteredName(
     input.registeredName,
-  )}`;
+  )}|${input.companyOnly ? "company" : "financials"}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.outcome;
 

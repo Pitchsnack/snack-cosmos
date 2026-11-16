@@ -163,3 +163,9 @@
 - [x] Build entity-aware register profile URLs for public companies, private companies and partnerships in the shared lookup used by every role.
 - [x] Add bilingual Edit Company Registration Number to the unavailable-register dialog and permit corrected pending numbers after unsuccessful checks.
 - [x] 73 sign-up/financial tests and isolated EN/TH dialog action checks pass; no accounts created or company data changed. Full external extraction was not rerun.
+
+## Responsive sign-up verification
+- [x] Make Verifying cancellable in English and Thai, without stale results overriding a corrected registration number.
+- [x] Use the company-profile-only register lookup for sign-up; keep financial extraction in its existing Admin/report flows and never store an identity-only read as financial data.
+- [x] 74 sign-up/financial tests pass; real reported company lookup succeeds in 15.8 seconds (previously ~93); isolated real-component Edit, Cancel, Escape and 390px touch checks pass without runtime errors. No accounts created.
+- [ ] Full email-confirmed correction/resume remains unverified without a designated pending sign-up account; server attempt tokens and conditional writes are covered by code review, not a live account flow.

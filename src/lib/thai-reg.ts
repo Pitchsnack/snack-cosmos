@@ -15,9 +15,9 @@ export const REG_CHANGES = 2;
 export const LOOKUPS_PER_EMAIL = 3;
 export const LOOKUPS_PER_DEVICE_24H = 5;
 
-/** A pending sign-up may correct its number after an unsuccessful check, never after a company was found. */
+/** A pending sign-up may correct its number unless a company was found. Running checks are explicitly cancellable. */
 export function canCorrectRegistrationCheck(held: { status?: unknown } | null | undefined): boolean {
-  return !held || held.status === "not_found" || held.status === "rejected" || held.status === "unavailable";
+  return !held || ["not_found", "rejected", "unavailable", "running"].includes(String(held.status));
 }
 
 /** Website saved without https:// and without a trailing slash. */

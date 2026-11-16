@@ -51,12 +51,19 @@ export function ConfirmRegDialog({ open, lang, reg, change, onCancel, onConfirm 
   );
 }
 
-/** 6.2 Verifying (can't be closed). */
-export function VerifyingDialog({ open, lang, reg }: { open: boolean; lang: Lang; reg: string }) {
+/** 6.2 Verifying: visitors can always leave; a wrong number can be corrected immediately. */
+export function VerifyingDialog({ open, lang, reg, onCancel, onEdit }: {
+  open: boolean; lang: Lang; reg: string; onCancel: () => void; onEdit?: () => void;
+}) {
+  const main = useRef<HTMLButtonElement>(null);
   return (
-    <SrDialog open={open} closable={false} title={R.isYours[lang]} lang={lang}>
+    <SrDialog open={open} onClose={onCancel} closable title={R.isYours[lang]} lang={lang} mainRef={main}>
       <h2>{R.isYours[lang]}</h2>
       <div className="sr-spin" role="status"><LoaderCircle size={16} className="lg-spin" />{tx(lang, R.verifying, { number: reg })}</div>
+      <div className={`sr-btns${onEdit ? "" : " end"}`}>
+        {onEdit && <button type="button" className="sr-btn" onClick={onEdit}>{R.edit[lang]}</button>}
+        <button ref={main} type="button" className="sr-btn navy" onClick={onCancel}>{R.cancel[lang]}</button>
+      </div>
     </SrDialog>
   );
 }

@@ -22,6 +22,7 @@
  */
 import type { DbdCompany, DbdLookupKey, DbdOutcome, DbdStatement } from "./dbd-provider.server";
 import { dbdProfileUrl } from "./dbd-profile-url";
+import { hasAnyCompanyInfo, parseCompanyInfoTh } from "./dbd-company-info";
 import {
   detectDbdUnit,
   mapDbdLabel,
@@ -166,6 +167,7 @@ export function parseSearchResults(html: string): DbdCompany[] {
 async function lookup(input: {
   registeredNumber?: string | null;
   registeredName?: string | null;
+  companyOnly?: boolean;
 }): Promise<DbdOutcome> {
   const number = normalizeRegisteredNumber(input.registeredNumber);
   const name = (input.registeredName ?? "").trim();
@@ -214,6 +216,12 @@ async function lookup(input: {
   if (looksRestricted(profile.body)) return { status: "unavailable", detail: "DBD_ACCESS_RESTRICTED" };
   if (!profile.ok) return { status: "unavailable", detail: `HTTP ${profile.status}` };
 
+  if (input.companyOnly) {
+    const companyInfo = parseCompanyInfoTh(profile.body);
+    if (hasAnyCompanyInfo(companyInfo)) company.companyInfo = companyInfo;
+    return { status: "no_financials", company, matchedBy };
+  }
+
   const unit = detectDbdUnit(stripTags(profile.body).slice(0, 4000));
   const tables = extractTables(profile.body);
   if (tables.length === 0) return { status: "unavailable", detail: "DBD_LAYOUT_CHANGED" };
@@ -241,10 +249,11 @@ async function lookup(input: {
 export async function lookupDbdFinancialsViaTestScraper(input: {
   registeredNumber?: string | null;
   registeredName?: string | null;
+  companyOnly?: boolean;
 }): Promise<DbdOutcome> {
   const key = `${normalizeRegisteredNumber(input.registeredNumber) ?? ""}|${normalizeRegisteredName(
     input.registeredName,
-  )}`;
+  )}|${input.companyOnly ? "company" : "financials"}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.outcome;
   if (inFlight) return { status: "unavailable", detail: "Another DBD lookup is already running." };

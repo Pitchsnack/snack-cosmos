@@ -114,7 +114,7 @@ async function deviceLimit(sb: any, deviceId: string) {
 async function lookupCheck(reg: string): Promise<any> {
   const { lookupDbdFinancials } = await import("./financials/dbd-provider.server");
   let outcome: any;
-  try { outcome = await lookupDbdFinancials({ registeredNumber: reg }); }
+  try { outcome = await lookupDbdFinancials({ registeredNumber: reg, companyOnly: true }); }
   catch (e: any) { outcome = { status: "unavailable", detail: String(e?.message ?? e) }; }
   const found = outcome.status === "ok" || outcome.status === "no_financials";
   if (found) {
@@ -123,7 +123,7 @@ async function lookupCheck(reg: string): Promise<any> {
       const en = await translateAddress(company.addressTh);
       if (en) { company.addressEn = en; company.translated = true; }
     }
-    return { status: "found", reg, company, raw: outcome };
+    return { status: "found", reg, company, raw: { ...outcome, lookupScope: "company" } };
   }
   return outcome.status === "not_found" ? { status: "not_found", reg } : { status: "unavailable" };
 }
@@ -185,7 +185,14 @@ export const runRegCheck = createServerFn({ method: "POST" })
       if (!canCorrectRegistrationCheck(held)) throw new Error("Nothing to correct.");
       if (changes >= REG_CHANGES) throw new Error("You've used both changes.");
       if (data.newReg === a.reg_no) throw new Error("Change the registration number.");
+      if (!isValidThaiReg(data.newReg)) throw new Error("This registration number isn't valid.");
       reg = data.newReg; changes += 1;
+      // Claim the correction before awaiting the register. An older request for the
+      // previous number can no longer write its late result over this correction.
+      const { data: claimed, error: claimError } = await sb.from("signup_answers").update({
+        reg_no: reg, reg_check: { status: "running", reg }, updated_at: new Date().toISOString(),
+      }).eq("user_id", uid).eq("reg_no", a.reg_no).is("registered_at", null).select("reg_no");
+      if (claimError || !claimed?.length) throw new Error("The registration check changed. Try again.");
     } else if (held?.status === "found" && held.reg === reg) {
       return { status: "found", reg, company: held.company };   // reopen from the held result, no new lookup
     } else if (held && held.reg === reg && ["not_found", "rejected"].includes(held.status)) {
@@ -218,15 +225,23 @@ export const runRegCheck = createServerFn({ method: "POST" })
         deviceLimit(sb, data.deviceId),
         sb.from("signup_reg_checks").select("id", { count: "exact", head: true }).eq("email", email).neq("result", "unavailable"),
       ]);
-      if ((byEmail ?? 0) >= 3 || lim.over) return { status: "limit" };
+      if ((byEmail ?? 0) >= 3 || lim.over) {
+        if (data.newReg) await sb.from("signup_answers").update({ reg_check: { status: "unavailable", reg } }).eq("user_id", uid).eq("reg_no", reg).is("registered_at", null);
+        return { status: "limit" };
+      }
       check = await lookupCheck(reg);
       await sb.from("signup_reg_checks").insert({ user_id: uid, email, device_hash: lim.deviceHash, ip_hash: lim.ipHash, reg_no: reg, result: check.status });
-      // Register didn't answer: nothing counts, nothing changes; the user may try again.
-      if (check.status === "unavailable") return { status: "unavailable" };
+      // Register didn't answer: no attempt or correction is consumed; the user may try again.
+      if (check.status === "unavailable") {
+        if (data.newReg) await sb.from("signup_answers").update({ reg_check: { status: "unavailable", reg } }).eq("user_id", uid).eq("reg_no", reg).is("registered_at", null);
+        return { status: "unavailable" };
+      }
     }
     const found = check.status === "found";
     const tried = Array.from(new Set([...(a.reg_tried ?? []), reg]));
-    await sb.from("signup_answers").update({ reg_no: reg, reg_changes: changes, reg_tried: tried, reg_check: check, updated_at: new Date().toISOString() }).eq("user_id", uid);
+    // reg_no is also the optimistic lock: a superseded request cannot overwrite a correction.
+    await sb.from("signup_answers").update({ reg_no: reg, reg_changes: changes, reg_tried: tried, reg_check: check, updated_at: new Date().toISOString() })
+      .eq("user_id", uid).eq("reg_no", reg).is("registered_at", null);
     return found ? { status: "found", reg, company: check.company } : { status: "not_found", reg };
   });
 
@@ -321,11 +336,14 @@ export const confirmRegCompany = createServerFn({ method: "POST" })
       }).eq("id", pid);
     }
 
-    // The company's one fetch, stored under the confirmed number (as Extract data does).
-    try {
-      const { outcomeToData } = await import("./dbd-store.server");
-      await sb.rpc("dbd_store_save_signup", { _user: uid, _reg: a.reg_no, _data: outcomeToData(chk.raw), _raw: chk.raw });
-    } catch (e) { console.error("signup dbd store", e); }
+    // Legacy full lookups may still populate the shared store. Company-only sign-up checks
+    // must not masquerade as a completed financial extraction; Admin/report flows fetch those later.
+    if (chk.raw?.lookupScope !== "company") {
+      try {
+        const { outcomeToData } = await import("./dbd-store.server");
+        await sb.rpc("dbd_store_save_signup", { _user: uid, _reg: a.reg_no, _data: outcomeToData(chk.raw), _raw: chk.raw });
+      } catch (e) { console.error("signup dbd store", e); }
+    }
 
     await sb.from("signup_answers").update({ registered_at: now, pending: null, reg_check: { status: "found", reg: a.reg_no, company: co }, welcome_seen_at: null, updated_at: now }).eq("user_id", uid);
     return { role: a.role as "seller" | "buyer" | "advisor", firstName: a.first_name as string | null };

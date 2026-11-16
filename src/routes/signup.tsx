@@ -185,6 +185,7 @@ function SignupInner() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const emailRef = useRef<HTMLInputElement>(null);
+  const checkAttemptRef = useRef(0);
 
   useEffect(() => { try { const l = localStorage.getItem(LANG_KEY); if (l === "en" || l === "th") setLangState(l); } catch { /* noop */ } }, []);
   useEffect(() => {
@@ -221,15 +222,21 @@ function SignupInner() {
 
   /** The check: runs on the server only once the email is confirmed. */
   async function startCheck(newReg?: string) {
+    const attempt = ++checkAttemptRef.current;
     setCheckBusy(true);
+    if (newReg) { clearPre(); setReg(newReg); setRegLocked(true); }
     // A finished background check opens at once; "Verifying…" shows only while one is still running.
     const pre = newReg ? undefined : readPre();
     if (newReg || !pre) setDlg("verifying");
-    const slow = pre && !newReg ? setTimeout(() => setDlg((d) => d ?? "verifying"), 700) : undefined;
+    const slow = pre && !newReg ? setTimeout(() => {
+      if (attempt === checkAttemptRef.current) setDlg((d) => d ?? "verifying");
+    }, 700) : undefined;
     let r: RegCheck;
     for (;;) {
+      if (attempt !== checkAttemptRef.current) { if (slow) clearTimeout(slow); return; }
       try { r = await runCheck({ data: { deviceId: deviceId(), ...(newReg ? { newReg } : {}), ...(pre ? { pre } : {}) } }); }
       catch { r = { status: "unavailable" }; }
+      if (attempt !== checkAttemptRef.current) { if (slow) clearTimeout(slow); return; }
       if (r.status !== "running") break;
       setDlg("verifying");
       await new Promise((res) => setTimeout(res, 3000));
@@ -246,6 +253,18 @@ function SignupInner() {
       setUnavailableEdit(r.status !== "limit");
       setDlg(r.status === "limit" ? "limit" : "unavailable");
     }
+  }
+
+  function cancelCheck() {
+    ++checkAttemptRef.current;
+    setCheckBusy(false);
+    setDlg(null);
+  }
+  function editDuringCheck() {
+    ++checkAttemptRef.current;
+    setCheckBusy(false);
+    clearPre();
+    openFix("unavailable");
   }
 
   /** Answers move from the browser to the pending sign-up once the sign-in user exists. */
@@ -910,14 +929,14 @@ function SignupInner() {
       </main>
 
       <ConfirmRegDialog open={dlg === "confirm"} lang={lang} reg={reg} change={fix ? changes + 1 : 0} onCancel={() => setDlg(null)} onConfirm={confirmNumber} />
-      <VerifyingDialog open={dlg === "verifying"} lang={lang} reg={reg} />
+      <VerifyingDialog open={dlg === "verifying"} lang={lang} reg={reg} onCancel={cancelCheck} onEdit={changesLeft > 0 ? editDuringCheck : undefined} />
       {found && <FoundDialog open={dlg === "found"} lang={lang} reg={reg} co={found} noChangeLeft={changesLeft <= 0} busy={checkBusy}
         onClose={() => setDlg(null)} onNo={() => void answerNo()} onYes={() => void answerYes()} />}
       <NotFoundDialog open={dlg === "nf"} lang={lang} reg={reg} onEdit={() => openFix("nf")} onContact={() => { setDlg(null); setSetupCard("check_failed"); }} />
       <SimpleDialog open={dlg === "limit"} lang={lang} kind="limit" onMain={() => { setDlg(null); setSetupCard("too_many"); }} />
       <SimpleDialog open={dlg === "contact"} lang={lang} kind="contact" count={tried.length} onMain={() => { setDlg(null); setSetupCard("check_failed"); }} />
       <SimpleDialog open={dlg === "unavailable"} lang={lang} kind="unavailable" busy={checkBusy}
-        onMain={() => void startCheck(fix ? reg : undefined)} onEdit={unavailableEdit ? () => openFix("unavailable") : undefined} />
+        onMain={() => void startCheck()} onEdit={unavailableEdit ? () => openFix("unavailable") : undefined} />
     </div>
   );
 }

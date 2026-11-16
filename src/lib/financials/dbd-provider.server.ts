@@ -117,6 +117,8 @@ function normCompany(raw: unknown): DbdCompany {
 export async function lookupDbdFinancials(input: {
   registeredNumber?: string | null;
   registeredName?: string | null;
+  /** Sign-up identity checks skip all financial-statement pages. */
+  companyOnly?: boolean;
 }): Promise<DbdOutcome> {
   // Provider mode: firecrawl (default — live DBD read), gateway, test_scraper, fixture.
   const mode = (
@@ -153,6 +155,7 @@ export async function lookupDbdFinancials(input: {
       body: JSON.stringify({
         registered_number: input.registeredNumber?.trim() || null,
         registered_name: input.registeredName?.trim() || null,
+        company_only: input.companyOnly === true,
       }),
     });
     if (res.status === 404) return { status: "not_found" };
