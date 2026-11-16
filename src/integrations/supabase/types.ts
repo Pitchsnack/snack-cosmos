@@ -8494,6 +8494,7 @@ export type Database = {
         }[]
       }
       is_account_admin: { Args: { _uid: string }; Returns: boolean }
+      is_active_member: { Args: { _uid: string }; Returns: boolean }
       is_control: { Args: { _user_id: string }; Returns: boolean }
       is_master_agent_of: {
         Args: { _tenant: string; _user_id: string }
