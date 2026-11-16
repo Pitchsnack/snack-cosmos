@@ -3,6 +3,7 @@ import { ADVISOR_STEP_NAMES } from "@/lib/setup-step-labels";
 import { furthestStep, setupAnswered as questionAnswered, setupStepState } from "@/lib/setup-step-state";
 import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
+import { checked } from "@/components/setup/verified-tags";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ManyTypeQuestion, advisorWords, manyError, useL } from "@/components/common/business-type-question";
 import { normPicks, picksToSectors, type SectorPicks } from "@/lib/business-types";
@@ -624,7 +625,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
         </div>
       ) },
     review: { req: false, t: tr("Review your answers"), h: tr("Check them, then we'll fill in the rest of your profile."),
-      body: <Review a={a} errors={errors} invalid={WIZARD_QS.filter(k => k !== "deal" && k !== "logo" && !qValid(k))} missingNames={WIZARD_QS.filter(k => k !== "deal" && k !== "logo" && !qValid(k)).map(k => L(...ADVISOR_STEP_NAMES[k].full))} onEdit={(id) => { const t = (id === "desc" ? "web" : id) as WizardQ; setFromReview(true); setFull(t); goTo(t); }} /> },
+      body: <Review fs={fromSignup} a={a} errors={errors} invalid={WIZARD_QS.filter(k => k !== "deal" && k !== "logo" && !qValid(k))} missingNames={WIZARD_QS.filter(k => k !== "deal" && k !== "logo" && !qValid(k)).map(k => L(...ADVISOR_STEP_NAMES[k].full))} onEdit={(id) => { const t = (id === "desc" ? "web" : id) as WizardQ; setFromReview(true); setFull(t); goTo(t); }} /> },
   };
   const q = Q[cur];
   const continueLabel = cur === "review" ? tr("Finish setup") : fromProfile && cur === "services" ? tr("Back to your profile") : fromReview ? tr("Back to review") : tr("Continue");
@@ -759,7 +760,7 @@ function LeavePopover({ onKeep, onLeave }: { onKeep: () => void; onLeave: () => 
   );
 }
 
-function Review({ a, errors, invalid, missingNames, onEdit }: { a: A; errors: Record<string, string | null>; invalid: WizardQ[]; missingNames: string[]; onEdit: (id: WizardQ) => void }) {
+function Review({ fs, a, errors, invalid, missingNames, onEdit }: { fs?: string[]; a: A; errors: Record<string, string | null>; invalid: WizardQ[]; missingNames: string[]; onEdit: (id: WizardQ) => void }) {
   const thai = a.country === "Thailand";
   const miss = <b className="font-semibold text-[#B42318]">{tr("Missing")}</b>;
   const notSet = <span className="text-muted-foreground">{useTranslation().language === "th" ? "ไม่ได้ระบุ" : "Not given"}</span>;
@@ -770,10 +771,10 @@ function Review({ a, errors, invalid, missingNames, onEdit }: { a: A; errors: Re
   const groups: [string, Row[]][] = [
     [tr("About the firm"), [
       [tr("Firm type"), tr(a.type) || miss, "type"],
-      [tr("Firm name"), errors.name ? miss : a.name, "name"],
-      [tr("Year founded"), errors.year ? miss : a.year, "name"],
-      [tr("Registration number"), a.reg || (thai ? miss : notSet), "name"],
-      [tr("Business address"), addrOk && addrLine ? addrLine : miss, "name"],
+      [tr("Firm name"), errors.name ? miss : checked(a.name, fs, "name"), "name"],
+      [tr("Year founded"), errors.year ? miss : checked(a.year, fs, "year"), "name"],
+      [tr("Registration number"), checked(a.reg, fs, "reg") || (thai ? miss : notSet), "name"],
+      [tr("Business address"), addrOk && addrLine ? checked(addrLine, fs, "address") : miss, "name"],
       [tr("Website"), errors.web ? miss : a.web, "web"],
       [tr("Short description"), errors.desc ? miss : a.desc, "web"],
       [tr("Long description"), errors.long ? miss : a.long, "web"],

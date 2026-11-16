@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ConfirmRegDialog, FoundDialog, NotFoundDialog, SimpleDialog, SrDialog, VerifyingDialog, CompanyRows } from "@/components/login/signup-reg-parts";
+import { ConfirmRegDialog, FoundDialog, NotFoundDialog, SrDialog, VerifyingDialog, CompanyRows } from "@/components/login/signup-reg-parts";
 import { R } from "@/components/login/signup-reg-copy";
 import { answerAddCheck, runAddCheck, sendAddSetupRequest, type AddCheck } from "@/lib/add-company-check.functions";
 import type { RegCompany } from "@/lib/signup-reg.functions";
@@ -25,6 +25,7 @@ export const A = {
   reason: c("เหตุผล", "Reason"), foreign: c("บริษัทนอกประเทศไทย", "Firm outside Thailand"), individual: c("นักลงทุนรายบุคคลที่ไม่มีบริษัท", "Individual Investor without a company"), other: c("อื่น ๆ", "Other"),
   sent: c("ขอบคุณ เราได้รับคำขอของท่านแล้ว ทีมของเราจะติดต่อท่านภายใน 1 วันทำการ", "Thanks. We've got your request. Our team will contact you within 1 business day."),
   back: c("ย้อนกลับ", "Back"), cont: c("ดำเนินการต่อ", "Continue"), creating: c("กำลังสร้างโปรไฟล์…", "Creating the profile…"),
+  indHint: c("ลงทุนในนามบุคคล? กรอกบริษัทที่ท่านใช้ลงทุน", "Investing as an individual? Enter the company you invest through."),
   limitA: c("ท่านแก้ไขเลขทะเบียนครบ 2 ครั้งแล้ว กรุณาติดต่อทีม PitchSnack", "You've used both changes. Please contact the PitchSnack team."),
 };
 const tx = (s: string, v: Record<string, string | number>) => Object.entries(v).reduce((o, [k, x]) => o.split(`{${k}}`).join(String(x)), s);
@@ -53,6 +54,8 @@ export function AddCompanyCheck({ kind, open, onClose, onYes }: { kind: Kind; op
   const [busy, setBusy] = useState(false);
   const [reason, setReason] = useState<"foreign" | "individual" | "other">(kind === "buyer" ? "foreign" : "foreign");
   const [sent, setSent] = useState(false);
+  // + Add has only the per-profile limit (one number + 2 changes); no device-wide "Too many checks".
+  const [limitHit, setLimitHit] = useState(false);
   const firm = kind === "seller" ? "seller" : "firm";
   const word = kind === "seller" ? "company" : "firm";
   const bad = reg.length === 13 && !isValidThaiReg(reg);
@@ -72,7 +75,8 @@ export function AddCompanyCheck({ kind, open, onClose, onYes }: { kind: Kind; op
       const r = await run({ data: { kind, reg, session: session.current } });
       if (!tried.includes(reg)) setTried((t) => [...t, reg]);
       setRes(r);
-      setStep(r.status === "found" ? "found" : r.status === "not_found" ? "nf" : "limit");
+      if (r.status === "limit") { setLimitHit(true); setStep("q"); return; }
+      setStep(r.status === "found" ? "found" : r.status === "not_found" ? "nf" : "q");
     } catch (e) { toast((e as Error).message); setStep("q"); }
   };
   const no = async () => {
@@ -134,7 +138,8 @@ export function AddCompanyCheck({ kind, open, onClose, onYes }: { kind: Kind; op
               <input id="ac-reg" className={inp} inputMode="numeric" maxLength={13} value={reg} placeholder={R.regPh[lang]} aria-invalid={bad}
                 onBlur={() => setTouched(true)} onChange={(e) => setReg(e.target.value.replace(/\D/g, "").slice(0, 13))} />
               <p className={`sr-hint${bad && touched ? " bad" : ""}`}>{bad ? R.regBad[lang] : tx(R.regHint[word][lang], { n: reg.length })}</p>
-              {blocked && <p className="sr-hint bad">{A.limitA[lang]}</p>}
+              {kind === "buyer" && <p className="sr-hint">{A.indHint[lang]}</p>}
+              {(blocked || limitHit) && <p className="sr-hint bad">{A.limitA[lang]}</p>}
               <button type="button" className="sr-link" onClick={() => setStep("none")}>{R.noReg[lang]}</button>
             </div>
           </div>
@@ -149,7 +154,6 @@ export function AddCompanyCheck({ kind, open, onClose, onYes }: { kind: Kind; op
       {res?.status === "found" && <FoundDialog open={open && step === "found"} lang={lang} reg={res.reg} co={res.company} noChangeLeft={changesLeft === 0} busy={busy}
         onClose={() => void close()} onNo={() => void (changesLeft === 0 ? close() : no())} onYes={() => void yes()} />}
       <NotFoundDialog open={open && step === "nf"} lang={lang} reg={reg} onEdit={() => setStep("q")} onContact={() => setStep("none")} nfA={A.nfA[lang]} nfB={A.nfB[lang]} />
-      <SimpleDialog open={open && step === "limit"} lang={lang} kind="limit" onMain={() => setStep("none")} />
     </>
   );
 }

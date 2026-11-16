@@ -4,6 +4,7 @@ import { furthestStep, setupStepState } from "@/lib/setup-step-state";
 import { buyerProgressFor } from "@/lib/buyer-wizard";
 import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
+import { checked } from "@/components/setup/verified-tags";
 import { buyerAboutError, descriptionWords, singleLineDescription } from '@/lib/buyer-description';
 import { useFocusNeeded } from "@/components/common/need-fill";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -676,7 +677,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       ) },
     team: { req: true, t: L("Who is on your team?", "ทีมงานของท่านมีใครบ้าง"), h: L("Add the people who decide on deals. Sellers see them after they approve your NDA, and PitchSnack uses them to verify your firm.", "เพิ่มผู้ที่มีอำนาจตัดสินใจเรื่องดีล ผู้ขายจะเห็นหลังจากอนุมัติ NDA ของท่าน และ PitchSnack ใช้ข้อมูลนี้เพื่อยืนยันตัวตนบริษัทของท่าน"), body: teamBody },
     review: { req: false, t: tr("Review your answers"), h: tr("Check them, then we'll fill in the rest of your profile."),
-      body: <Review a={a} med={med} steps={stepsAll} errors={errors} individual={individual} thai={thai} stagesShown={stagesShown} corp={corp}
+      body: <Review fs={fromSignup} a={a} med={med} steps={stepsAll} errors={errors} individual={individual} thai={thai} stagesShown={stagesShown} corp={corp}
         missingNames={missingRequired.map(s => L(...BUYER_STEP_NAMES[s.id].full))}
         onEdit={(id) => { setFromReview(true); setFull(id); if (id === "web" && !individual) setWebOpen(true); goTo(id); }} /> },
   };
@@ -774,8 +775,8 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   );
 }
 
-function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, missingNames, onEdit }: {
-  a: A; med: { logo: boolean; photos: number }; steps: { id: QId }[]; errors: Record<string, string | null>; individual: boolean; thai: boolean; stagesShown: boolean; corp: boolean; missingNames: string[]; onEdit: (id: QId) => void;
+function Review({ fs, a, med, steps, errors, individual, thai, stagesShown, corp, missingNames, onEdit }: {
+  fs?: string[]; a: A; med: { logo: boolean; photos: number }; steps: { id: QId }[]; errors: Record<string, string | null>; individual: boolean; thai: boolean; stagesShown: boolean; corp: boolean; missingNames: string[]; onEdit: (id: QId) => void;
 }) {
   const L = useL();
   const shown = new Set(steps.map((s) => s.id));
@@ -786,12 +787,12 @@ function Review({ a, med, steps, errors, individual, thai, stagesShown, corp, mi
       ...(shown.has("type") ? [a.role === "agent"
         ? [tr("Acts for"), a.acts.map(typeLabel).join(", "), "type", "req", errors.type] as Row
         : [tr("Investor type"), WIZARD_TYPES.find((t) => t.value === a.type)?.label ?? a.type, "type", "req", errors.type] as Row] : []),
-      [individual ? tr("Address") : tr("Business address"), [a.addr.street, a.addr.unit, a.addr.district, a.addr.province, a.addr.postal, a.country].filter(Boolean).join(", "), "name", "req", errors["a-street"] || errors["a-district"] || errors["a-province"] || errors["a-postal"]],
-      [tr("Firm name"), a.name, "name", "req", errors.name, "🔒 After NDA"],
+      [individual ? tr("Address") : tr("Business address"), checked([a.addr.street, a.addr.unit, a.addr.district, a.addr.province, a.addr.postal, a.country].filter(Boolean).join(", "), fs, "address"), "name", "req", errors["a-street"] || errors["a-district"] || errors["a-province"] || errors["a-postal"]],
+      [tr("Firm name"), checked(a.name, fs, "name"), "name", "req", errors.name, "🔒 After NDA"],
       [tr("Email address"), a.people[0]?.email ?? "", "team", "req", errors.team],
       ...(!individual ? [
-        [tr("Year founded"), a.year, "name", "req", errors.year, "🔒 After NDA"] as Row,
-        [tr("Registration number"), a.reg, "name", thai ? "req" : "opt", errors.reg, "🔒 After NDA"] as Row,
+        [tr("Year founded"), checked(a.year, fs, "year"), "name", "req", errors.year, "🔒 After NDA"] as Row,
+        [tr("Registration number"), checked(a.reg, fs, "reg"), "name", thai ? "req" : "opt", errors.reg, "🔒 After NDA"] as Row,
       ] : []),
       ...(shown.has("sectors") ? [[tr("Industries"), a.sectors.includes(SECTOR_AGNOSTIC) ? "Sector agnostic" : a.sectors.join(", "), "sectors", "req", errors.sectors] as Row] : []),
       individual ? [L("Website and description", "เว็บไซต์และคำอธิบาย"), [a.web, a.desc.trim()].filter(Boolean).join(" · "), "web", "opt", errors.web || errors.about || (errors.desc ? "fix" : null)] as Row

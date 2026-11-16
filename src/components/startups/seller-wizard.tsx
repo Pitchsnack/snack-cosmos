@@ -1,5 +1,6 @@
 import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
+import { checked } from "@/components/setup/verified-tags";
 import { useEffect, useRef, useState } from "react";
 import { Lock, Check as CheckIcon, Sparkles, Loader2, Calendar, Users } from "lucide-react";
 import { StepBar, MissedNote, type StepItem } from "@/components/common/step-bar";
@@ -339,11 +340,11 @@ export function SellerWizard({
         <h3 className="mb-2 text-[14px] font-bold text-foreground">{L("Your company", "บริษัทของท่าน")}</h3>
         <div className="overflow-hidden rounded-[10px] border border-border">
           {([
-            ["role",tr("You are"),roleLabel()], ["name",tr("Company name"),d.name],
-            ["name",tr("Registration no."),d.reg], ["name",tr("Business address"),addressLine(d.addr)],
+            ["role",tr("You are"),roleLabel()], ["name",tr("Company name"),checked(d.name,fromSignup,"name")],
+            ["name",tr("Registration no."),checked(d.reg,fromSignup,"reg")], ["name",tr("Business address"),checked(addressLine(d.addr),fromSignup,"address")],
             ["sector",tr("Sector"),tr(d.sector ?? "")],
             ["web",L(...STEP_FULL.web),`${d.web || L("No company website","ไม่มีเว็บไซต์บริษัท")} · ${L(`${strengthCount(d)} key business strengths`,`จุดแข็งหลักของธุรกิจ ${strengthCount(d)} ข้อ`)} · ${th ? d.shortDescriptionTh || d.shortDescription || "" : d.shortDescription || d.shortDescriptionTh || ""}`],
-            ["founded",L(...STEP_SHORT.founded),`${d.year} · ${tr(WIZARD_SIZES.find(x => x.value === d.size)?.label ?? "")} ${L("employees","คน")}`],
+            ["founded",L(...STEP_SHORT.founded),<>{checked(d.year,fromSignup,"year")} · {tr(WIZARD_SIZES.find(x => x.value === d.size)?.label ?? "")} {L("employees","คน")}</>],
             ["rev",tr("Revenue last year"),d.rev ? tr(normRevBand(d.rev)) : ""],
             ["lic",tr("Licences & standards"),[...d.licences.map(l => l.name),...d.iso].join(", ") || L("None","ไม่มี")],
           ] as [StepKey,string,React.ReactNode][]).map(([key,label,value],ri) => {
