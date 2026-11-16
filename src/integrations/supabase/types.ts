@@ -5733,6 +5733,51 @@ export type Database = {
         }
         Relationships: []
       }
+      registration_attempts: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          email: string | null
+          held: Json | null
+          id: string
+          profile_id: string | null
+          profile_kind: string | null
+          reg_no: string
+          result: string
+          session_key: string | null
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          held?: Json | null
+          id?: string
+          profile_id?: string | null
+          profile_kind?: string | null
+          reg_no: string
+          result?: string
+          session_key?: string | null
+          source: string
+          user_id?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          held?: Json | null
+          id?: string
+          profile_id?: string | null
+          profile_kind?: string | null
+          reg_no?: string
+          result?: string
+          session_key?: string | null
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       report_open_events: {
         Row: {
           buyer_id: string

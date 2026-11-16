@@ -37,6 +37,8 @@ import { Group, Ring, Row } from "@/components/my-business/my-business-profiles"
 import { StatusPill } from "@/components/marketplace/buyer-browse-card";
 import { FirmCard, FirmLogo, ServiceChip, Stars, VerifiedAdvisorChip } from "@/components/advisor/advisor-firm-card";
 import { myFirmViews } from "@/lib/advisor-enquiries.functions";
+import { applyAddCheck } from "@/lib/add-company-check.functions";
+import { AddCompanyCheck, type AddCheckYes } from "@/components/setup/add-company-check";
 import { createAdvisorDraft, getMapsEmbedKey, listMyAdvisorFirms, saveAdvisorServices, setAdvisorFirmStatus } from "@/lib/advisor-firm.functions";
 import { startProfileEnrichment } from "@/lib/website-enrichment.functions";
 import {
@@ -75,17 +77,24 @@ function useAddFirm() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const create = useServerFn(createAdvisorDraft);
+  const apply = useServerFn(applyAddCheck);
   const [busy, setBusy] = useState(false);
-  const add = async () => {
+  const [open, setOpen] = useState(false);
+  // The firm is made only after "Yes, this is my company".
+  const onYes = async (y: AddCheckYes) => {
     if (busy) return;
     setBusy(true);
     try {
       const { id } = await create();
+      await apply({ data: { attemptId: y.attemptId, kind: "advisor", profileId: id, name: y.name, session: y.session } });
+      setOpen(false);
       await qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY });
       await navigate({ to: "/advisor/company/$id/setup", params: { id } });
-    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+    } finally { setBusy(false); }
   };
-  return { add, busy };
+  const add = () => setOpen(true);
+  const dialog = open ? <AddCompanyCheck kind="advisor" open={open} onClose={() => setOpen(false)} onYes={onYes} /> : null;
+  return { add, busy, dialog };
 }
 
 export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {}) {
@@ -93,7 +102,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
   const viewsFn = useServerFn(myFirmViews);
   const { data: views } = useQuery({ queryKey: ["advisor-firm-views"], queryFn: () => viewsFn(), staleTime: 60_000 });
   const { data, isLoading, refetch, isFetching } = useMyAdvisorFirms();
-  const { add, busy: adding } = useAddFirm();
+  const { add, busy: adding, dialog: addDialog } = useAddFirm();
   const [mode, setMode] = useState<"profiles" | ViewMode>("profiles");
   const [q, setQ] = useState("");
   const [svc, setSvc] = useState("all");
@@ -130,6 +139,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
     const sel = firms.find((f) => f.id === openId) ?? firms[0] ?? null;
     return (
       <div className="space-y-5">
+        {addDialog}
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">{setupText("My Company")}</h1>
         {isLoading ? (
           <div className="grid gap-5 lg:grid-cols-[320px_1fr]"><Skeleton className="h-[420px]" /><Skeleton className="h-[620px]" /></div>
@@ -148,6 +158,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
 
   return (
     <div className="space-y-5">
+      {addDialog}
       <SignupWelcome role="advisor" setupDone={!!open?.setupDoneAt} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

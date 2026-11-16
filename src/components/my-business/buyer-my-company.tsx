@@ -242,7 +242,7 @@ export function BuyerMyCompany() {
             <h1 className="text-3xl font-semibold tracking-tight">{setupText("My Company")}</h1>
             {isAdmin && <p className="mt-1 text-sm text-muted-foreground">{setupText(`${total} investor profile${total === 1 ? "" : "s"} you own or manage`)}</p>}
           </div>
-          {isAdmin && <AddInvestorProfileButton onClick={() => void addProfile.run()} busy={addProfile.busy} />}
+          {addProfile.dialog}{isAdmin && <AddInvestorProfileButton onClick={() => void addProfile.run()} busy={addProfile.busy} />}
         </div>
         {extras}
         <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
@@ -285,6 +285,7 @@ export function BuyerMyCompany() {
           </button>
           <Button variant={layout === "profiles" ? "default" : "outline"} size="sm" className="h-9" onClick={() => setLayout("profiles")}>{setupText("Profiles")}</Button>
           <ViewToggle value={layout === "profiles" ? ("" as never) : layout} onChange={(l) => { setLayout(l); if (l === "split") setView("private"); }} />
+          {addProfile.dialog}
           {isAdmin
             ? <AddInvestorProfileButton onClick={() => void addProfile.run()} busy={addProfile.busy} />
             : <AddInvestorProfileButton onClick={() => (setup ? openWizard() : setNewOpen(true))} />}

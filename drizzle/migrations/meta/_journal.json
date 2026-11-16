@@ -1023,6 +1023,13 @@
       "when": 1794815236325,
       "tag": "0145_scope_reference_reads_to_active_members",
       "breakpoints": true
+    },
+    {
+      "idx": 146,
+      "version": "7",
+      "when": 1794857589034,
+      "tag": "0146_registration_attempts",
+      "breakpoints": true
     }
   ]
 }

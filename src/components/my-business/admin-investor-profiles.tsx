@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditInfoPopup } from "@/components/common/edit-info-popup";
 import { DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company-menu";
+import { applyAddCheck } from "@/lib/add-company-check.functions";
+import { AddCompanyCheck, type AddCheckYes } from "@/components/setup/add-company-check";
 import { addInvestorProfile, getBuyerInvestorById, listMyInvestorProfileIds } from "@/lib/buyer-investor.functions";
 import { BuyerInvestorEdit, buyerInvestorKey, type Data } from "@/components/my-business/buyer-investor-edit";
 import { buyerProgressFor, type BuyerRelation } from "@/lib/buyer-wizard";
@@ -29,19 +31,25 @@ export function useMyInvestorProfileIds(enabled = true) {
 /** + Add Investor Profile: a new Draft on the server, then its wizard at question 1. One Draft per click. */
 export function useAddInvestorProfile() {
   const add = useServerFn(addInvestorProfile);
+  const apply = useServerFn(applyAddCheck);
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
   const lock = useRef(false);
-  const run = async () => {
+  // The profile is made only after "Yes, this is my company".
+  const onYes = async (y: AddCheckYes) => {
     if (lock.current) return;
     lock.current = true; setBusy(true);
     try {
       const { id } = await add();
+      await apply({ data: { attemptId: y.attemptId, kind: "buyer", profileId: id, name: y.name, session: y.session } });
+      setOpen(false);
       await navigate({ to: "/buyer/company/$id/setup", params: { id }, search: {} });
-    } catch (e) { toast((e as Error).message); }
-    finally { lock.current = false; setBusy(false); }
+    } finally { lock.current = false; setBusy(false); }
   };
-  return { run, busy };
+  const run = async () => { setOpen(true); };
+  const dialog = open ? <AddCompanyCheck kind="buyer" open={open} onClose={() => setOpen(false)} onYes={onYes} /> : null;
+  return { run, busy, dialog };
 }
 
 export function AddInvestorProfileButton({ onClick, busy }: { onClick: () => void; busy?: boolean }) {

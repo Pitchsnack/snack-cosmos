@@ -50,7 +50,10 @@ export const getRegReview = createServerFn({ method: "GET" })
     const { data: row } = await sb.from(t.table).select(`${t.col}, reg_locked_at`).eq("id", t.id).maybeSingle();
     const reg: string | null = row?.[t.col] ?? null;
     const dups = reg && /^\d{13}$/.test(reg) ? await duplicates(sb, reg, t) : [];
-    return { reg, locked: !!row?.reg_locked_at, duplicates: dups };
+    // Every number tried for this profile (sign-up and + Add), oldest first.
+    const { data: tries } = await sb.from("registration_attempts").select("reg_no, company_name, result, created_at").eq("profile_id", t.id).order("created_at", { ascending: true }).limit(50);
+    const tried = (tries ?? []).map((x: any) => ({ reg: x.reg_no as string, company: (x.company_name as string | null) ?? null, result: x.result as string, at: x.created_at as string }));
+    return { reg, locked: !!row?.reg_locked_at, duplicates: dups, tried };
   });
 
 export const adminChangeRegistration = createServerFn({ method: "POST" })

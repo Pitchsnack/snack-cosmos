@@ -75,30 +75,6 @@ export const savePendingSignup = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-function companyFrom(outcome: any): RegCompany {
-  const ci = outcome?.company?.companyInfo ?? {};
-  const st: string | null = ci.legalEntityStatusTh ?? outcome?.company?.profile?.status ?? null;
-  return {
-    nameTh: ci.legalNameTh ?? null, nameEn: ci.legalNameEn ?? outcome?.company?.registeredName ?? null,
-    regDate: ci.registrationDate ?? null, regDateTh: ci.registrationDateThRaw ?? null,
-    addressTh: ci.headOfficeAddressTh ?? null, addressEn: null, translated: false,
-    statusTh: st, active: !!st && /ยังดำเนินกิจการอยู่|active/i.test(st),
-  };
-}
-
-async function translateAddress(th: string): Promise<string | null> {
-  try {
-    const { generateResponse } = await import("@lovable.dev/ai-gateway");
-    const res: any = await generateResponse({
-      model: "openai/gpt-6.1-terra",
-      instructions: "Translate the Thai postal address into a standard English postal address. Reply with the address only, on one line.",
-      input: th,
-    });
-    const text = (res.output ?? []).flatMap((o: any) => (o.type === "message" ? o.content : [])).filter((c: any) => c.type === "output_text").map((c: any) => c.text).join("").trim();
-    return text || null;
-  } catch { return null; }
-}
-
 async function deviceLimit(sb: any, deviceId: string) {
   const { getRequestHeader } = await import("@tanstack/react-start/server");
   const ip = getRequestHeader("cf-connecting-ip") ?? getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
@@ -110,22 +86,9 @@ async function deviceLimit(sb: any, deviceId: string) {
   return { over: (count ?? 0) >= 5, deviceHash, ipHash };
 }
 
-/** One register lookup; the held check keeps `raw` server-side only. */
 async function lookupCheck(reg: string): Promise<any> {
-  const { lookupDbdFinancials } = await import("./financials/dbd-provider.server");
-  let outcome: any;
-  try { outcome = await lookupDbdFinancials({ registeredNumber: reg, companyOnly: true }); }
-  catch (e: any) { outcome = { status: "unavailable", detail: String(e?.message ?? e) }; }
-  const found = outcome.status === "ok" || outcome.status === "no_financials";
-  if (found) {
-    const company = companyFrom(outcome);
-    if (company.addressTh && !company.addressEn) {
-      const en = await translateAddress(company.addressTh);
-      if (en) { company.addressEn = en; company.translated = true; }
-    }
-    return { status: "found", reg, company, raw: { ...outcome, lookupScope: "company" } };
-  }
-  return outcome.status === "not_found" ? { status: "not_found", reg } : { status: "unavailable" };
+  const { lookupCheck: run } = await import("./reg-lookup.server");
+  return run(reg);
 }
 
 const PRE_STALE_MS = 4 * 60_000;
@@ -213,7 +176,7 @@ export const runRegCheck = createServerFn({ method: "POST" })
           const { count } = await (pre.check_row_id ? q.neq("id", pre.check_row_id) : q);
           if (pre.check_row_id) await sb.from("signup_reg_checks").update({ email, user_id: uid }).eq("id", pre.check_row_id);
           await sb.from("signup_reg_prechecks").delete().eq("id", pre.id);
-          if (r.status === "limit" || (count ?? 0) >= 3) return { status: "limit" };
+          if (r.status === "limit" || (count ?? 0) >= 3) { const { logAttempt } = await import("./reg-lookup.server"); await logAttempt(sb, { reg, userId: uid, email, source: "signup", result: "limit" }); return { status: "limit" }; }
           check = r;
         } else await sb.from("signup_reg_prechecks").delete().eq("id", pre.id);
       }
@@ -226,6 +189,7 @@ export const runRegCheck = createServerFn({ method: "POST" })
         sb.from("signup_reg_checks").select("id", { count: "exact", head: true }).eq("email", email).neq("result", "unavailable"),
       ]);
       if ((byEmail ?? 0) >= 3 || lim.over) {
+        { const { logAttempt } = await import("./reg-lookup.server"); await logAttempt(sb, { reg, userId: uid, email, source: "signup", result: "limit" }); }
         if (data.newReg) await sb.from("signup_answers").update({ reg_check: { status: "unavailable", reg } }).eq("user_id", uid).eq("reg_no", reg).is("registered_at", null);
         return { status: "limit" };
       }
@@ -238,6 +202,8 @@ export const runRegCheck = createServerFn({ method: "POST" })
       }
     }
     const found = check.status === "found";
+    { const { logAttempt } = await import("./reg-lookup.server");
+      await logAttempt(sb, { reg, userId: uid, email, source: "signup", result: found ? "pending" : "not_found", company: found ? check.company : null, kind: null }); }
     const tried = Array.from(new Set([...(a.reg_tried ?? []), reg]));
     // reg_no is also the optimistic lock: a superseded request cannot overwrite a correction.
     await sb.from("signup_answers").update({ reg_no: reg, reg_changes: changes, reg_tried: tried, reg_check: check, updated_at: new Date().toISOString() })
@@ -252,6 +218,7 @@ export const rejectRegCompany = createServerFn({ method: "POST" })
     const sb = await admin();
     const { data: a } = await sb.from("signup_answers").select("reg_no, reg_check, registered_at").eq("user_id", context.userId).maybeSingle();
     if (!a || a.registered_at || a.reg_check?.status !== "found") throw new Error("Nothing to answer.");
+    { const { answerSignupAttempt } = await import("./reg-lookup.server"); await answerSignupAttempt(sb, context.userId, "no"); }
     await sb.from("signup_answers").update({ reg_check: { status: "rejected", reg: a.reg_no }, updated_at: new Date().toISOString() }).eq("user_id", context.userId);
     return { ok: true };
   });
@@ -301,6 +268,8 @@ export const confirmRegCompany = createServerFn({ method: "POST" })
     }
 
     const now = new Date().toISOString();
+    { const { answerSignupAttempt } = await import("./reg-lookup.server"); await answerSignupAttempt(sb, uid, "yes");
+      await sb.from("registration_attempts").update({ profile_id: pid, profile_kind: a.role }).eq("user_id", uid).eq("source", "signup").is("profile_id", null); }
     const addrEn = co.addressEn ?? null;
     // The register gives one line; split it into the wizards' own address fields.
     const { splitThaiAddress } = await import("./thai-address");

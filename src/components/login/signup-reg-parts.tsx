@@ -44,7 +44,6 @@ export function ConfirmRegDialog({ open, lang, reg, change, onCancel, onConfirm 
       <h2>{R.cTitle[lang]}</h2>
       <p className="sr-lead">{change > 0 ? <>{tx(lang, R.cChange, { k: change })}{change >= 2 ? ` ${R.cLast[lang]}` : ""}</> : R.cLead[lang]}</p>
       <div className="sr-numbox"><small>{R.regLabel[lang]}</small><b>{reg}</b></div>
-      {change === 0 && <p className="sr-cwarn">{R.cWarn[lang]}</p>}
       <div className="sr-btns"><button type="button" className="sr-btn" onClick={onCancel}>{R.cancel[lang]}</button>
         <button ref={main} type="button" className="sr-btn navy" onClick={onConfirm}>{R.confirmGo[lang]}</button></div>
     </SrDialog>
@@ -117,12 +116,12 @@ function Head({ title, sub, ok }: { title: string; sub?: string; ok?: boolean })
 }
 
 /** 6.4 We couldn't verify your company. */
-export function NotFoundDialog({ open, lang, reg, onEdit, onContact }: { open: boolean; lang: Lang; reg: string; onEdit: () => void; onContact: () => void }) {
+export function NotFoundDialog({ open, lang, reg, onEdit, onContact, nfA, nfB }: { open: boolean; lang: Lang; reg: string; onEdit: () => void; onContact: () => void; nfA?: string; nfB?: string }) {
   const main = useRef<HTMLButtonElement>(null);
   return (
     <SrDialog open={open} closable={false} title={R.nfTitle[lang]} lang={lang} mainRef={main}>
       <Head title={R.nfTitle[lang]} sub={tx(lang, R.regNo, { number: reg })} />
-      <p className="sr-p">{R.nfA[lang]}</p><p className="sr-p">{R.nfB[lang]}</p>
+      <p className="sr-p">{nfA ?? R.nfA[lang]}</p><p className="sr-p">{nfB ?? R.nfB[lang]}</p>
       <div className="sr-stack"><button ref={main} type="button" className="sr-btn navy" onClick={onEdit}>{R.edit[lang]}</button>
         <button type="button" className="sr-btn" onClick={onContact}>{R.contact[lang]}</button></div>
     </SrDialog>
