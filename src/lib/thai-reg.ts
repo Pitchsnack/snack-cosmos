@@ -20,6 +20,11 @@ export function canCorrectRegistrationCheck(held: { status?: unknown } | null | 
   return !held || ["not_found", "rejected", "unavailable", "running"].includes(String(held.status));
 }
 
+/** Correction must retain the no-number escape without unlocking a confirmed number. */
+export function canRequestSignupSetup(regLocked: boolean, correcting: boolean): boolean {
+  return correcting || !regLocked;
+}
+
 /** Website saved without https:// and without a trailing slash. */
 export const normWebsite = (s: string) => s.trim().replace(/^https?:\/\//i, "").replace(/\/+$/, "");
 

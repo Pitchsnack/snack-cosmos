@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canCorrectRegistrationCheck, isValidThaiReg, signupSteps, normWebsite } from "@/lib/thai-reg";
+import { canCorrectRegistrationCheck, canRequestSignupSetup, isValidThaiReg, signupSteps, normWebsite } from "@/lib/thai-reg";
 
 describe("Thai registration number", () => {
   it("accepts the brief's sample numbers", () => {
@@ -27,5 +27,17 @@ describe("Sign-up steps", () => {
   it("corporate buyer has 8", () => expect(signupSteps("buyer", "corporate")).toHaveLength(8));
   it("individual buyer has 6 and no logo", () => { const s = signupSteps("buyer", "individual"); expect(s).toHaveLength(6); expect(s).not.toContain("logo"); });
   it("advisor has 7", () => expect(signupSteps("advisor", "Law firm")).toHaveLength(7));
+});
+describe("No-registration-number recovery", () => {
+  it("allows an individual investor to request setup during rejected-number correction", () => {
+    expect(canRequestSignupSetup(false, true)).toBe(true);
+    expect(canRequestSignupSetup(true, true)).toBe(true);
+  });
+  it("keeps the original no-number option before number confirmation", () => {
+    expect(canRequestSignupSetup(false, false)).toBe(true);
+  });
+  it("does not unlock an already confirmed number outside correction", () => {
+    expect(canRequestSignupSetup(true, false)).toBe(false);
+  });
 });
 it("website is saved bare", () => expect(normWebsite("https://www.acme.co.th/")).toBe("www.acme.co.th"));

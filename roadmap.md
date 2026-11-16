@@ -1,5 +1,10 @@
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
+## Individual-investor registration correction recovery
+- [x] Restore Back and the existing no-registration-number assisted-setup option during correction; preserve rejection and lookup limits.
+- [x] Verify the affected buyer can open and leave assisted setup in EN/TH on desktop and phone without changing account data or sending requests.
+- [x] Run signup regression tests (18 passed) and check preview errors (build OK).
+
 ## Seller Company row half and half
 - [x] Make Company name and Company Registration Number equal-width columns; keep the registration label on one line and the existing mobile stack.
 - [x] Verify EN/TH alignment at 1440px and 1280px, registration-error alignment and the 390px stack; capture the requested 1440px English screenshot.

@@ -12,7 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { buyOrderInvite } from "@/lib/buy-orders.functions";
 import { getSignupState, saveSignupAnswers, saveSignupSector } from "@/lib/signup.functions";
 import { confirmRegCompany, getRegState, rejectRegCompany, runRegCheck, startRegPrecheck, savePendingSignup, sendSetupRequest, type RegCheck, type RegCompany } from "@/lib/signup-reg.functions";
-import { digitsOnly, isValidThaiReg, normWebsite, REG_CHANGES, signupSteps, type SignupStepKey as StepKey } from "@/lib/thai-reg";
+import { canRequestSignupSetup, digitsOnly, isValidThaiReg, normWebsite, REG_CHANGES, signupSteps, type SignupStepKey as StepKey } from "@/lib/thai-reg";
+import { Button } from "@/components/ui/button";
 import { COUNTRIES } from "@/lib/investor-bands";
 import { R, type SetupReason } from "@/components/login/signup-reg-copy";
 import { CompanyRows, ConfirmRegDialog, FoundDialog, LogoPicker, NotFoundDialog, SetupRequest, SimpleDialog, VerifyingDialog, type HeldLogo } from "@/components/login/signup-reg-parts";
@@ -248,7 +249,7 @@ function SignupInner() {
     if (r.status === "found" || r.status === "not_found") setTried((l) => Array.from(new Set([...l, r.reg])));
     if (r.status === "found") { setFound(r.company); setDlg("found"); }
     else if (r.status === "not_found") setDlg((newReg ? changes + 1 : changes) < REG_CHANGES ? "nf" : "contact");
-    else if (r.status === "rejected") { setFix({ why: "no", old: r.reg }); setDlg(null); setStep("company"); }
+    else if (r.status === "rejected") { setFix({ why: "no", old: r.reg }); setRegLocked(false); setDlg(null); setStep("company"); }
     else {
       setUnavailableEdit(r.status !== "limit");
       setDlg(r.status === "limit" ? "limit" : "unavailable");
@@ -572,7 +573,7 @@ function SignupInner() {
     </button>
   );
   const BackBtn = ({ to }: { to: StepKey }) => (
-    <button type="button" className="su-back" disabled={busy} onClick={() => go(to)}><ArrowLeft size={17} />{t(S.back)}</button>
+    <Button type="button" variant="ghost" className="su-back" disabled={busy} onClick={() => go(to)}><ArrowLeft size={17} />{t(S.back)}</Button>
   );
   const setupInit = { name: [first, last].filter(Boolean).join(" "), email, company: coName, country: role === "seller" ? "Thailand" : country };
   const fixHint = fix && fixSame;
@@ -772,7 +773,7 @@ function SignupInner() {
                             <p style={{ margin: "6px 0 0" }}>{t(R.boxLeft)} <b>{changesLeft === 1 ? t(R.left1) : fill(R.left, { k: changesLeft })}</b></p>
                           </div>
                         )}
-                        {!regLocked && !fix && <button type="button" className="sr-link" onClick={() => setNoNumber(true)}>{t(R.noReg)}</button>}
+                        {canRequestSignupSetup(regLocked, !!fix) && <Button type="button" variant="link" className="sr-link" onClick={() => setNoNumber(true)}>{t(R.noReg)}</Button>}
                       </div>
                       {!fix && !individual && (
                         <div className="lg-fg">
@@ -804,7 +805,7 @@ function SignupInner() {
                         </div>
                       )}
                       {!fix && <div className="su-info">{role === "seller" ? <Lock size={16} /> : role === "buyer" ? <EyeOff size={16} /> : <Eye size={16} />}<span>{t(agent ? S.privacyAgent : S.privacy5[role])}</span></div>}
-                      <div className="su-actions">{!fix && <BackBtn to={prevOf("company")} />}<Primary type="submit" label={fix ? R.iConfirm : S.next} /></div>
+                      <div className="su-actions"><BackBtn to={prevOf("company")} /><Primary type="submit" label={fix ? R.iConfirm : S.next} /></div>
                       </>}
                     </form>
                   </>}
