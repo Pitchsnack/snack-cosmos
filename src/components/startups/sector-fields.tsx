@@ -1,20 +1,12 @@
 /**
- * Sector + Business model — the financial-benchmarking pair.
- *
- * Sector uses a two-pane picker (groups left with counts, sectors right) with
- * a search field above both panes that matches across every sector and shows
- * the group of each match. Sector completeness never blocks a save.
+ * SET sector + Business model — the financial-benchmarking pair.
+ * Every seller sector editor reuses the shared two-pane SetSectorPicker.
  */
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { Check, ChevronDown, Search, X } from "lucide-react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { Check, ChevronDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  BUSINESS_MODELS,
-  SECTOR_GROUPS,
-  SECTOR_HINTS,
-  sectorGroupOf,
-} from "@/lib/sectors";
+import { BUSINESS_MODELS } from "@/lib/sectors";
 import { cn } from "@/lib/utils";
 import { usePeerAvailability } from "@/hooks/use-peer-availability";
 import { modelAvailability, type AvailabilityBadge } from "@/lib/peer-comparables";
@@ -22,255 +14,55 @@ import { useTr } from "@/components/common/edit-info-popup";
 import { useTextLang } from "@/components/common/text-lang";
 import { businessModelLabel } from "@/i18n/th-edit-info";
 import { sectorMissing } from "@/lib/seller-sector";
+import { SetSectorPicker } from "@/components/common/set-sector-picker";
+import { setupText } from "@/i18n/language";
 
-function norm(s: string) {
-  return s.toLowerCase().replace(/[\s\-—–._&/]/g, "");
-}
-
-export function SectorPicker({
+/** Compact financial-matching trigger; the editor itself is the same shared two-pane picker. */
+export function SectorPickerPopover({
   value,
   onChange,
-  compact = false,
 }: {
   value: string | null;
   onChange: (v: string | null) => void;
-  /** Inline 28px trigger, no pill beneath. */
-  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [group, setGroup] = useState<string>(
-    () => sectorGroupOf(value) ?? SECTOR_GROUPS[0]!.group,
-  );
-  const [activeIndex, setActiveIndex] = useState(0);
-  const optionListRef = useRef<HTMLDivElement>(null);
-
-  const typed = query.trim();
-  const searchMatches = useMemo(() => {
-    const q = norm(typed);
-    if (!q) return null;
-    const out: { sector: string; group: string }[] = [];
-    for (const g of SECTOR_GROUPS) {
-      for (const s of g.sectors) {
-        if (norm(s).includes(q)) out.push({ sector: s, group: g.group });
-      }
-    }
-    return out;
-  }, [typed]);
-
-  const activeGroup = SECTOR_GROUPS.find((g) => g.group === group) ?? SECTOR_GROUPS[0]!;
-  const visibleSectors = searchMatches?.map((match) => match.sector) ?? activeGroup.sectors;
-
-  useEffect(() => {
-    if (!open) return;
-    const selectedIndex = visibleSectors.indexOf(value ?? "");
-    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
-  }, [group, open, query, value]);
-
-  useEffect(() => {
-    if (!open) return;
-    optionListRef.current
-      ?.querySelector<HTMLElement>(`[data-option-index="${activeIndex}"]`)
-      ?.scrollIntoView({ block: "nearest" });
-  }, [activeIndex, open]);
-
-  const pick = (s: string) => {
-    onChange(s);
-    setOpen(false);
-    setQuery("");
-    setGroup(sectorGroupOf(s) ?? group);
-  };
-
-  const handleOptionKeys = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      setOpen(false);
-      return;
-    }
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      if (visibleSectors.length === 0) return;
-      const direction = event.key === "ArrowDown" ? 1 : -1;
-      setActiveIndex((current) =>
-        (current + direction + visibleSectors.length) % visibleSectors.length,
-      );
-      return;
-    }
-    if (event.key === "Enter" && visibleSectors[activeIndex]) {
-      event.preventDefault();
-      pick(visibleSectors[activeIndex]);
-    }
-  };
+  const tr = useTr();
+  const { lang } = useTextLang();
+  const label = value ? (lang === "th" ? setupText(value) : value) : tr("Choose sector", "เลือกกลุ่มอุตสาหกรรม");
 
   return (
-    <div className={compact ? "inline-block" : undefined}>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            role="combobox"
-            aria-expanded={open}
-            aria-label="Choose sector"
-            className={cn(
-              "items-center gap-2 border text-left focus:outline-none",
-              compact
-                ? "inline-flex h-7 max-w-[240px] rounded-[6px] border-[#D3D9E2] bg-white px-[9px] text-[12.5px] font-medium text-[#0F1B33]"
-                : "flex h-[42px] w-full rounded-[9px] border-[#D7DBE2] bg-background px-3 text-[13.5px] focus:border-[#2563EB] focus:shadow-[0_0_0_3px_#EFF4FE]",
-              compact && !value && "border-[#E9D4B4] bg-[#FDF9F3] font-normal text-[#B45309]",
-            )}
-          >
-            {!compact && <Search className="h-[15px] w-[15px] shrink-0 text-[#9AA3AF]" />}
-            <span className={cn("truncate", !value && !compact && "text-muted-foreground")}>
-              {value ?? (compact ? "Not set" : "Search or pick a sector…")}
-            </span>
-            <ChevronDown
-              className={cn(
-                "ml-auto shrink-0 text-muted-foreground",
-                compact ? "h-3.5 w-3.5" : "h-4 w-4",
-              )}
-            />
-          </button>
-        </PopoverTrigger>
-
-
-        <PopoverContent
-          align="start"
-          sideOffset={6}
-          collisionPadding={16}
-          className="w-[var(--radix-popover-trigger-width)] min-w-[min(440px,calc(100vw-2rem))] overflow-hidden rounded-[10px] border-[#D7DBE2] p-0 shadow-[0_10px_24px_rgba(15,23,42,.10)]"
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-label={tr("Choose sector", "เลือกกลุ่มอุตสาหกรรม")}
+          className={cn(
+            "inline-flex h-7 max-w-[240px] items-center gap-2 rounded-[6px] border px-[9px] text-left text-[12.5px] font-medium text-[#0F1B33] focus:outline-none",
+            value ? "border-[#D3D9E2] bg-white" : "border-[#E9D4B4] bg-[#FDF9F3] font-normal text-[#B45309]",
+          )}
         >
-          <div className="flex items-center gap-2 border-b border-[#EFF1F4] px-3 py-2">
-            <Search className="h-[14px] w-[14px] text-[#9AA3AF]" />
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleOptionKeys}
-              placeholder="Search sectors…"
-              className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-[#9AA3AF]"
-            />
-          </div>
-
-          {compact && value && (
-            <button
-              type="button"
-              onClick={() => {
-                onChange(null);
-                setOpen(false);
-              }}
-              className="flex w-full items-center border-b border-[#EFF1F4] px-3 py-2 text-left text-[13px] text-muted-foreground hover:bg-[#F8FAFD]"
-            >
-              Not set
-            </button>
-          )}
-
-
-
-          {searchMatches ? (
-            <div
-              ref={optionListRef}
-              role="listbox"
-              aria-label="Sectors"
-              className="max-h-[min(330px,var(--radix-popover-content-available-height))] overscroll-contain overflow-y-auto"
-              onKeyDown={handleOptionKeys}
-            >
-              {searchMatches.length === 0 && (
-                <div className="px-3 py-3 text-[13px] italic text-muted-foreground">
-                  No sector matches “{typed}”
-                </div>
-              )}
-              {searchMatches.map((m) => (
-                <button
-                  key={m.sector}
-                  type="button"
-                  role="option"
-                  aria-selected={m.sector === value}
-                  data-option-index={searchMatches.indexOf(m)}
-                  onClick={() => pick(m.sector)}
-                  onMouseMove={() => setActiveIndex(searchMatches.indexOf(m))}
-                  className={cn(
-                    "flex w-full items-center gap-2 border-b border-[#EFF1F4] px-3 py-[9px] text-left text-[13px] last:border-b-0 hover:bg-[#F8FAFD]",
-                    searchMatches.indexOf(m) === activeIndex && "bg-[#F8FAFD]",
-                  )}
-                >
-                  <span className="truncate">{m.sector}</span>
-                  {SECTOR_HINTS[m.sector] && (
-                    <span className="truncate text-[11.5px] text-[#9AA3AF]">
-                      {SECTOR_HINTS[m.sector]}
-                    </span>
-                  )}
-                  <span className="ml-auto shrink-0 text-[11px] uppercase tracking-wide text-[#9AA3AF]">
-                    {m.group}
-                  </span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-[1fr_1.15fr]">
-              <div className="max-h-[min(330px,var(--radix-popover-content-available-height))] overscroll-contain overflow-y-auto border-r border-[#EFF1F4] bg-muted/30">
-                {SECTOR_GROUPS.map((g) => (
-                  <button
-                    key={g.group}
-                    type="button"
-                    onClick={() => setGroup(g.group)}
-                    className={cn(
-                      "flex w-full items-center gap-2 border-b border-[#EFF1F4] px-3 py-[11px] text-left text-[13px] hover:bg-[#F1F5FB]",
-                      g.group === activeGroup.group &&
-                        "bg-background font-semibold text-[#1D4ED8] shadow-[inset_3px_0_0_#2563EB]",
-                    )}
-                  >
-                    <span className="truncate">{g.group}</span>
-                    <span className="ml-auto text-[11px] text-[#9AA3AF]">{g.sectors.length}</span>
-                  </button>
-                ))}
-              </div>
-              <div
-                ref={optionListRef}
-                role="listbox"
-                aria-label={`${activeGroup.group} sectors`}
-                tabIndex={0}
-                onKeyDown={handleOptionKeys}
-                className="max-h-[min(330px,var(--radix-popover-content-available-height))] overscroll-contain overflow-y-auto outline-none"
-              >
-                {activeGroup.sectors.map((s, index) => (
-                  <button
-                    key={s}
-                    type="button"
-                    role="option"
-                    aria-selected={s === value}
-                    data-option-index={index}
-                    onClick={() => pick(s)}
-                    onMouseMove={() => setActiveIndex(index)}
-                    className={cn(
-                      "flex w-full items-center gap-2 border-b border-[#EFF1F4] px-3 py-[9px] text-left text-[13px] last:border-b-0 hover:bg-[#F8FAFD]",
-                      s === value && "bg-[#EFF4FE] font-semibold text-[#1D4ED8]",
-                      index === activeIndex && s !== value && "bg-[#F8FAFD]",
-                    )}
-                  >
-                    <span className="truncate">{s}</span>
-                    {SECTOR_HINTS[s] && (
-                      <span className="truncate text-[11.5px] text-[#9AA3AF]">
-                        {SECTOR_HINTS[s]}
-                      </span>
-                    )}
-                    {s === value && <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-[#15803D]" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </PopoverContent>
-      </Popover>
-
-      {!compact && value && (
-        <span className="mt-[10px] inline-flex items-center gap-[7px] rounded-full border border-[#D3E0FB] bg-[#EFF4FE] px-3 py-[5px] text-[12.5px] font-semibold text-[#1D4ED8]">
-          {value}
-          <button type="button" onClick={() => onChange(null)} aria-label="Remove sector">
-            <X className="h-3 w-3 opacity-70" />
-          </button>
-        </span>
-      )}
-    </div>
+          <span className="truncate">{label}</span>
+          <ChevronDown className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        sideOffset={6}
+        collisionPadding={16}
+        className="w-[min(680px,calc(100vw-2rem))] rounded-[12px] border-[#D7DBE2] p-3 shadow-[0_10px_24px_rgba(15,23,42,.10)]"
+      >
+        <SetSectorPicker
+          mode="single"
+          value={value ? [value] : []}
+          onChange={(next) => {
+            onChange(next[0] ?? null);
+            setOpen(false);
+          }}
+          singleSummary={{ selectedLabel: "Selected:", emptyLabel: "No sector picked yet", includeGroup: false }}
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -372,7 +164,7 @@ export function BusinessModelPicker({
             )}
           >
             <span className={cn("truncate", !selected && !compact && "text-muted-foreground")}>
-              {selected ? businessModelLabel(selected.label, lang) : (compact ? "Not set" : "Choose a business model…")}
+              {selected ? businessModelLabel(selected.label, lang) : (compact ? "Not set" : lang === "th" ? "เลือกรูปแบบธุรกิจ…" : "Choose a business model…")}
             </span>
             {selected && !compact && (
               <span className="truncate text-[11.5px] text-[#9AA3AF]">{selected.hint}</span>
@@ -505,15 +297,22 @@ export function SectorBusinessModelFields({
     >
       <div className="space-y-1.5">
         <div className={cn("text-[13px] font-medium", required && sectorMissing(sector) ? "text-destructive" : "text-foreground")}>
-          {tr("Sector", "กลุ่มอุตสาหกรรม")}
+          {tr("Industry group", "กลุ่มอุตสาหกรรม")}
         </div>
-        {required && sectorMissing(sector) && (
-          <p className="text-xs text-destructive">{tr("⚠ Missing: pick a sector", "⚠ ยังขาด: เลือกกลุ่มอุตสาหกรรม")}</p>
-        )}
         <p className="text-[11.5px] text-muted-foreground">
           {tr("SET classification, used for financial benchmarking", "การจัดกลุ่มของ SET ใช้เทียบเคียงตัวเลขทางการเงิน")}
         </p>
-        <SectorPicker value={sector} onChange={onSectorChange} />
+        <SetSectorPicker
+          mode="single"
+          value={sector ? [sector] : []}
+          onChange={(next) => onSectorChange(next[0] ?? null)}
+          singleSummary={{
+            selectedLabel: "Selected:",
+            emptyLabel: "No sector picked yet",
+            required,
+            includeGroup: false,
+          }}
+        />
       </div>
       <div className="space-y-1.5">
         <div className="text-[13px] font-medium text-foreground">

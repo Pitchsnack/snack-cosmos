@@ -80,7 +80,6 @@ export const EDIT_INFO_TH: Record<string, string> = {
   "Sector": "กลุ่มอุตสาหกรรม",
   "⚠ Missing: pick a sector": "⚠ ยังขาด: เลือกกลุ่มอุตสาหกรรม",
   "SET classification, used for financial benchmarking": "การจัดกลุ่มของ SET ใช้เทียบเคียงตัวเลขทางการเงิน",
-  "Search or pick a sector…": "ค้นหาหรือเลือกกลุ่มอุตสาหกรรม…",
   "Business model": "รูปแบบธุรกิจ",
   "Choose a business model…": "เลือกรูปแบบธุรกิจ…",
   "⚠ Missing: add at least one product tag": "⚠ ยังขาด: เพิ่มแท็กสินค้าอย่างน้อยหนึ่งแท็ก",

@@ -301,6 +301,8 @@ export const TH_WIZARDS: Record<string, string> = {
   "Industrial Materials & Machinery": "วัสดุอุตสาหกรรมและเครื่องจักร",
   "Packaging": "บรรจุภัณฑ์",
   "Your sector:": "ภาคธุรกิจของท่าน:",
+  "Selected:": "เลือกแล้ว:",
+  "No sector picked yet": "ยังไม่ได้เลือกกลุ่มอุตสาหกรรม",
   "Pick the sector your main business is in.": "เลือกหมวดธุรกิจที่ตรงกับธุรกิจหลักของท่าน",
   "None selected yet": "ยังไม่ได้เลือก",
   "Selected": "เลือกแล้ว",

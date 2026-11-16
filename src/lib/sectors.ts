@@ -60,6 +60,11 @@ export function sectorGroupOf(sector: string | null | undefined): string | null 
   return SECTOR_GROUPS.find((g) => g.sectors.includes(sector))?.group ?? null;
 }
 
+/** Single-sector pickers open on the saved sector's group, or Services when empty. */
+export function sectorPickerGroup(sector: string | null | undefined): string {
+  return sectorGroupOf(sector) ?? SECTOR_GROUPS[0]!.group;
+}
+
 export function isSector(v: string | null | undefined): boolean {
   return !!v && SECTORS.includes(v);
 }

@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { AlertCircle, AlertTriangle, Check, X } from "lucide-react";
 import { toast } from "sonner";
-import { SECTOR_GROUPS, sectorGroupOf } from "@/lib/sectors";
+import { SECTOR_GROUPS, sectorGroupOf, sectorPickerGroup } from "@/lib/sectors";
 import { cn } from "@/lib/utils";
 import { tr, useTranslation } from "@/i18n/language";
 
@@ -29,6 +29,8 @@ export function SetSectorPicker({
   limitMsg,
   agnostic,
   error,
+  /** Optional wording for seller editing; setup keeps its original guidance by default. */
+  singleSummary,
   /** Move keyboard focus to the open group (current sector if there is one) when the picker appears. */
   focusOnMount,
 }: {
@@ -39,15 +41,26 @@ export function SetSectorPicker({
   limitMsg?: string;
   agnostic?: Agnostic;
   error?: string | null;
+  singleSummary?: {
+    selectedLabel: string;
+    emptyLabel: string;
+    required?: boolean;
+    includeGroup?: boolean;
+  };
   focusOnMount?: boolean;
 }) {
   useTranslation();
-  const [group, setGroup] = useState(() => sectorGroupOf(value[0]) ?? SECTOR_GROUPS[0]!.group);
+  const [group, setGroup] = useState(() => sectorPickerGroup(value[0]));
   const tabsRef = useRef<HTMLDivElement>(null);
   const radiosRef = useRef<HTMLDivElement>(null);
   const open = SECTOR_GROUPS.find((g) => g.group === group) ?? SECTOR_GROUPS[0]!;
   const off = !!agnostic?.on;
   const single = mode === "single";
+
+  useEffect(() => {
+    if (!single) return;
+    setGroup(sectorPickerGroup(value[0]));
+  }, [single, value[0]]);
 
   useEffect(() => {
     if (!focusOnMount) return;
@@ -126,7 +139,7 @@ export function SetSectorPicker({
                 <span className="truncate">{tr(g.group)}</span>
                 {n > 0 ? (
                   single
-                    ? <span className={cn("ml-auto grid h-5 w-5 flex-none place-items-center rounded-full text-white", navy)}><Check className="h-3 w-3" strokeWidth={3} /></span>
+                    ? <span className={cn("ml-auto grid h-5 w-5 flex-none place-items-center rounded-full text-[11px] font-bold text-white", navy)}>1</span>
                     : <span className={cn("ml-auto grid h-5 min-w-5 flex-none place-items-center rounded-full px-1.5 text-[11px] font-bold text-white", navy)}>{n}</span>
                 ) : <span className="ml-auto text-[12px] font-normal text-[#9CA3AF]">{g.sectors.length}</span>}
               </button>
@@ -166,12 +179,16 @@ export function SetSectorPicker({
       <div className="mt-3 text-[12.5px] text-[#6B7280] dark:text-muted-foreground">
         {single ? (
           value[0] ? (
-            <span className="flex flex-wrap items-center gap-2">{tr("Your sector:")}
+            <span className="flex flex-wrap items-center gap-2">{tr(singleSummary?.selectedLabel ?? "Your sector:")}
               <span className="rounded-[20px] border border-[#1E2A4A] bg-[#F4F6FA] px-3 py-1 font-semibold text-[#151A28] dark:border-[#4A5CA6] dark:bg-[#1B2238] dark:text-foreground">
-                {tr(value[0])}{sectorGroupOf(value[0]) && <span className="font-normal text-[#6B7280]"> · {tr(sectorGroupOf(value[0])!)}</span>}
+                {tr(value[0])}{singleSummary?.includeGroup !== false && sectorGroupOf(value[0]) && <span className="font-normal text-[#6B7280]"> · {tr(sectorGroupOf(value[0])!)}</span>}
               </span>
             </span>
-          ) : tr("Pick the sector your main business is in.")
+          ) : (
+            <span className={cn(singleSummary?.required && "font-medium text-destructive")}>
+              {tr(singleSummary?.emptyLabel ?? "Pick the sector your main business is in.")}
+            </span>
+          )
         ) : off ? (
           <span>{agnostic!.summary}</span>
         ) : value.length === 0 ? tr("None selected yet") : (

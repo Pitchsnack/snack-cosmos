@@ -181,3 +181,8 @@
 - [x] Use the company-profile-only register lookup for sign-up; keep financial extraction in its existing Admin/report flows and never store an identity-only read as financial data.
 - [x] 74 sign-up/financial tests pass; real reported company lookup succeeds in 15.8 seconds (previously ~93); isolated real-component Edit, Cancel, Escape and 390px touch checks pass without runtime errors. No accounts created.
 - [ ] Full email-confirmed correction/resume remains unverified without a designated pending sign-up account; server attempt tokens and conditional writes are covered by code review, not a live account flow.
+
+## Seller industry picker
+- [x] Reuse the two-pane picker for every seller sector editor, including Admin and financial matching.
+- [x] Add required bilingual selected/empty states and preserve saving and setup wizards.
+- [x] Ten focused tests passed; Admin Automotive save/read-back verified in English/Thai and the test seller restored to Commerce; preview build OK.

@@ -5,7 +5,7 @@
  */
 import { Link } from "@tanstack/react-router";
 
-import { SectorPicker, BusinessModelPicker } from "@/components/startups/sector-fields";
+import { SectorPickerPopover, BusinessModelPicker } from "@/components/startups/sector-fields";
 
 export type MatchingRowProps = {
   sector: string | null;
@@ -57,7 +57,7 @@ export function MatchingRow({
       <div className="flex flex-wrap items-center gap-2 text-[12.5px]">
         <span className="text-muted-foreground">Sector</span>
         {canEdit ? (
-          <SectorPicker compact value={sector} onChange={onSector} />
+          <SectorPickerPopover value={sector} onChange={onSector} />
         ) : (
           <ReadOnly value={sector} />
         )}
