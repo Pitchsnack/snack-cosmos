@@ -8,30 +8,8 @@ import type { CardNdaStatus } from '@/lib/standard-card';
 import { LAST_LOGIN_LABEL, type LastLoginStep } from '@/lib/last-login';
 import { cardValue } from '@/lib/marketplace-contacts';
 
-const pending = new Set<HTMLElement>();
-let frame = 0;
-function matchGrid(grid: HTMLElement) {
-  const blocks = Array.from(grid.querySelectorAll<HTMLElement>('[data-card-text]'));
-  blocks.forEach((b) => { if (!b.closest('.standard-card-open')) { b.style.minHeight = ''; b.dataset.closedH = String(b.getBoundingClientRect().height); } });
-  const rows = new Map<number, HTMLElement[]>();
-  blocks.forEach((b) => { const top = Math.round(b.closest('article')!.getBoundingClientRect().top); rows.set(top, [...(rows.get(top) ?? []), b]); });
-  rows.forEach((row) => {
-    if (row.length < 2) return;
-    const max = Math.max(...row.map((b) => Number(b.dataset.closedH) || 0));
-    row.forEach((b) => { if (!b.closest('.standard-card-open') && Number(b.dataset.closedH) < max - 0.5) b.style.minHeight = `${max}px`; });
-  });
-}
-/** Grid only: closed name+description blocks in a row share the row's tallest closed height. */
-export function scheduleCardRows(el: Element | null) {
-  const grid = el?.closest<HTMLElement>('.standard-card-grid');
-  if (!grid) return;
-  pending.add(grid);
-  if (frame) return;
-  frame = requestAnimationFrame(() => { frame = 0; const grids = [...pending]; pending.clear(); grids.forEach((g) => g.isConnected && matchGrid(g)); });
-}
-
-export type StandardFigure = { label: string; value?: string | null; second?: string | null };
-export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, beforeName, figureLabel, footerDate, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip }: {
+export type StandardFigure = { label: string; value?: string | null; second?: string | null; /** Replaces the value text (e.g. a value with a "+n" badge). */ node?: ReactNode };
+export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, beforeName, figureLabel, footerDate, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip, hideRef, subtitleContent, defaultExpanded, style }: {
   title: string; subtitle?: string; refNo: string; place?: string | null; description?: string | null;
   cover: (children: ReactNode) => ReactNode; status?: CardNdaStatus; newDays?: number | null; managed?: boolean;
   topRight?: ReactNode; badges?: { label: string; financial?: boolean }[]; figures: StandardFigure[];
@@ -43,9 +21,11 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
   className?: string; sourceType?: string; tag?: ReactNode; hideStatus?: boolean;
   /** Owner's last-login bucket on the left of Show more (browse/watchlist only; previews omit it). */
   lastLogin?: LastLoginStep | null; lastLoginTooltip?: string;
+  /** Leave "{ref} · {place}" off the cover (the advisor cover draws its own). */
+  hideRef?: boolean; subtitleContent?: ReactNode; defaultExpanded?: boolean; style?: React.CSSProperties;
 }) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(!!defaultExpanded);
   const [cut, setCut] = useState(false);
   const [twoLines, setTwoLines] = useState(!!subtitle);
   const article = useRef<HTMLElement>(null);
@@ -62,22 +42,24 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
     observer.observe(row); observer.observe(heading); check();
     return () => observer.disconnect();
   }, [title, subtitle, expanded]);
+  const textBox = useRef<HTMLDivElement>(null);
+  const descRef = useRef<HTMLParagraphElement>(null);
+  const [lines, setLines] = useState<number | null>(null);
+  // The closed text block has a fixed height; the description shows the whole lines left under the name.
   useEffect(() => {
-    const el = article.current;
-    const grid = el?.closest<HTMLElement>('.standard-card-grid');
-    if (!el || !grid) return;
-    scheduleCardRows(el);
-    const observer = new ResizeObserver(() => scheduleCardRows(el));
-    observer.observe(grid);
-    document.fonts?.ready.then(() => scheduleCardRows(el));
-    return () => { observer.disconnect(); scheduleCardRows(grid); };
-  }, []);
-  useEffect(() => { scheduleCardRows(article.current); }, [title, subtitle, description, twoLines, expanded]);
+    const box = textBox.current, d = descRef.current;
+    if (!box || !d || expanded) { setLines(null); return; }
+    const fit = () => setLines(Math.max(0, Math.floor((box.getBoundingClientRect().bottom - d.getBoundingClientRect().top + 0.5) / 21)));
+    const observer = new ResizeObserver(fit);
+    observer.observe(box); if (nameRow.current) observer.observe(nameRow.current); fit();
+    document.fonts?.ready.then(fit);
+    return () => observer.disconnect();
+  }, [expanded, title, subtitle, description]);
   const statusLabel = status === 'approved' ? 'NDA approved' : status === 'requested' ? 'NDA requested' : 'Name hidden';
   const StatusIcon = status === 'approved' ? LockOpen : status === 'requested' ? Clock : EyeOff;
   const statusTip = newDays != null ? `${t(statusLabel)} · ${t('New, listed')} ${newDays} ${t(newDays === 1 ? 'day ago' : 'days ago')}` : t(statusLabel);
   const figure = (f: StandardFigure, highlight = false) => <dl className={cn('standard-card-cell', highlight && !!f.value && 'standard-card-fit')}>
-    <dt title={t(f.label)}>{t(f.label)}</dt><dd><span className={cn('standard-card-value', !f.value && 'standard-card-empty')} title={f.value ?? undefined}>{f.value || t('Not stated')}</span>{f.second && <span className="standard-card-second" title={f.second}>{f.second}</span>}</dd>
+    <dt title={t(f.label)}>{t(f.label)}</dt><dd>{f.node ?? <span className={cn('standard-card-value', !f.value && 'standard-card-empty')} title={f.value ?? undefined}>{f.value || t('Not stated')}</span>}{f.second && <span className="standard-card-second" title={f.second}>{f.second}</span>}</dd>
   </dl>;
   const openFromCard = (e: React.MouseEvent<HTMLElement>) => {
     if (!onOpen) return;
@@ -90,35 +72,38 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
   };
   return <article ref={article} data-standard-card data-expanded={expanded} data-connect-source={refNo} data-connect-type={sourceType}
     onClick={openFromCard}
+    style={style}
     className={cn('standard-card', onOpen && 'standard-card-clickable', expanded && 'standard-card-open', selected && 'standard-card-selected', className)}>
     <div className="standard-card-cover" data-connect-cover={refNo} data-connect-type={sourceType}>
       {cover(<>
         <div ref={coverFit.box} className="pointer-events-none absolute inset-x-0 top-0 h-0" />
-        {!hideStatus && <span ref={coverFit.left as React.RefObject<HTMLSpanElement>} className={cn('standard-card-status', `standard-card-status-${status}`)} title={statusTip}>
-          <StatusIcon aria-hidden /><span>{t(statusLabel)}</span>{newDays != null && <span className="standard-card-new">{t('NEW')}</span>}
-        </span>}
-        <div ref={coverFit.right} className="standard-card-tools">{managed && <ManagedBadge size="sm" hatOnly={coverFit.level >= 1} />}{topRight}</div>
+        <div className="standard-card-top">
+          {!hideStatus && <span ref={coverFit.left as React.RefObject<HTMLSpanElement>} className={cn('standard-card-status', `standard-card-status-${status}`)} title={statusTip}>
+            <StatusIcon aria-hidden /><span>{t(statusLabel)}</span>{newDays != null && <span className="standard-card-new">{t('NEW')}</span>}
+          </span>}
+          {!hideRef && <span className="standard-card-ref" title={[refNo, place].filter(Boolean).join(' · ')}><span className="standard-card-ref-no">{refNo}</span>{place && <><span className="standard-card-ref-no">&nbsp;·&nbsp;</span><span className="standard-card-ref-place">{place}</span></>}</span>}
+          <div ref={coverFit.right} className="standard-card-tools">{managed && <ManagedBadge size="sm" hatOnly={coverFit.level >= 1} />}{topRight}</div>
+        </div>
         {!!badges?.length && <div className="standard-card-badges">{badges.map((b) => <span key={b.label} className="standard-card-badge">{b.financial ? <FileText aria-hidden /> : <CircleCheck aria-hidden />}{t(b.label)}</span>)}</div>}
       </>)}
     </div>
     <div className="standard-card-body" id={id}>
-      <div className="standard-card-text" data-card-text>
+      <div ref={textBox} className="standard-card-text" data-card-text>
       {beforeName}
       <div ref={nameRow} className={cn('standard-card-name', cut && 'standard-card-title-cut', subtitle && 'standard-card-private-name')}>
-        <span className="standard-card-ref">{refNo}{place && <> · <b>{place}</b></>}</span>
         <h3 ref={titleRef} title={title} data-card-title>{title}</h3>
         {onOpen && <Button variant="unstyled" size="unstyled" onClick={onOpen} aria-label={title} className="standard-card-title-link" />}
-        {subtitle && <p className="standard-card-subtitle" title={subtitle}>{subtitle}</p>}
+        {subtitle && <p className="standard-card-subtitle" title={subtitle}>{subtitleContent ?? subtitle}</p>}
       </div>
       {afterName}
-      <p className={cn('standard-card-description', twoLines ? 'standard-card-desc-3' : 'standard-card-desc-4')} title={description ?? undefined}>{descriptionContent ?? description}</p>
+      <p ref={descRef} className={cn('standard-card-description', lines == null && (twoLines ? 'standard-card-desc-3' : 'standard-card-desc-4'))} style={lines != null && !expanded ? (lines ? { WebkitLineClamp: lines } : { display: 'none' }) : undefined} title={description ?? undefined}>{descriptionContent ?? description}</p>
       </div>
       {figureLabel && <div className="standard-card-caption">{figureLabel}</div>}
       <div className="standard-card-figures">
         <div className={cn('standard-card-figure-row', figures.length === 1 && 'standard-card-one')}>{figures.map((f) => <div key={f.label}>{figure(f)}</div>)}</div>
         <div className="standard-card-fit-row">{figure(fit, true)}</div>
         {focusRow && <dl className="standard-card-focus-row"><dt>{t(focusRow.label)}</dt><dd>{focusRow.value || t('Not stated')}</dd></dl>}
-        <dl className="standard-card-text-row"><dt>{t(textRow.label)}</dt><dd title={textRow.value ?? undefined}>{textRow.value || t('Not stated')}</dd></dl>
+        <dl className="standard-card-text-row"><dt>{t(textRow.label)}</dt><dd title={textRow.value ?? undefined}>{textRow.node ?? (textRow.value || t('Not stated'))}</dd></dl>
       </div>
       {expanded && <div className="standard-card-more">{tag}{more}</div>}
       {lastLogin || footerDate ? (

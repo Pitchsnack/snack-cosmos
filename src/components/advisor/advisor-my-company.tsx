@@ -212,7 +212,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
           list={list.map(f => <div key={f.id} data-company-selected={open?.id === f.id}><FirmCard f={f} selected={open?.id === f.id} onClick={() => setOpenId(f.id)} /></div>)}
           panel={open && <FirmPanel f={open} views={views?.[open.id] ?? 0} onDeletedDraft={() => setOpenId(null)} />} />
       ) : mode === "grid" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {list.map((f) => <FirmCard key={f.id} f={f} onClick={() => { setOpenId(f.id); setMode("profiles"); }} />)}
         </div>
       ) : (

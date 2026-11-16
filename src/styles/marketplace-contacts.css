@@ -45,6 +45,6 @@ html[lang=th] .mc-caption,html[lang=th] .mc-table-scroll th{font-size:12px;lette
 @media(max-width:1179px){.mc-split{grid-template-columns:minmax(0,1fr)}.mc-panel{position:static}}
 @media(max-width:720px){.marketplace-contacts{padding:20px 16px}.mc-own-grid{grid-template-columns:1fr 1fr;gap:14px 20px}.mc-own-grid>div:first-child{grid-column:1/-1}.mc-filters>div{flex-basis:100%;min-width:0}.mc-filters select{max-width:100%;flex:1}.mc-panel{padding:16px}}
 
-.mc-panel .standard-card-ref{float:none;display:block;margin:3px 0 0;padding:0;text-align:left}
+
 .mc-footer-end{white-space:nowrap}
 .mc-panel::-webkit-scrollbar-thumb:hover{background:var(--mc-scroll-hover)}

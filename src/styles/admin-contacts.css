@@ -43,7 +43,7 @@
 .contact-note-input {min-height:128px;height:128px;width:100%;resize:vertical;font-size:14.5px;line-height:1.5;padding:12px 14px}
 .contact-note-save {height:38px;padding:0 16px;font-size:14px}
 .contact-note-body {font-size:14.5px;line-height:1.5} .contact-note-meta {font-size:12.5px}
-.contact-company-cards .standard-card-ref {max-width:100%;float:none;text-align:right}
+
 .contact-company-cards .standard-card-name {height:auto;min-height:43.2px}
 .contact-company-cards .standard-card-private-name h3,.contact-company-cards .standard-card-subtitle {white-space:normal;overflow-wrap:anywhere}
 .contact-company-cards .standard-card-value,.contact-company-cards .standard-card-text-row dd {white-space:normal;overflow-wrap:anywhere}

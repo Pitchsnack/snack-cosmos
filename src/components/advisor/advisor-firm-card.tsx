@@ -2,8 +2,8 @@ import { setupText } from "@/i18n/language";
 import { ManagedBadge } from "@/components/common/managed-badge";
 import { sectorChips } from "@/lib/business-types";
 import type React from "react";
-import { useState } from "react";
-import { BadgeCheck, Building2, ChevronDown, ChevronUp, LogIn } from "lucide-react";
+import { BadgeCheck, Building2 } from "lucide-react";
+import { StandardBrowseCard } from "@/components/marketplace/standard-browse-card";
 import { StatusPill } from "@/components/marketplace/buyer-browse-card";
 import { dealBandLabels, initials, reviewStats, serviceOf, type AdvisorFirm } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
@@ -66,7 +66,7 @@ export function ServiceChip({ name }: { name: string }) {
   );
 }
 
-/** 150px cover: the logo whole (up to 96 × 240px), centred 12px above the bottom, under the badge. */
+/** 116px cover: the logo whole (up to 96 × 240px), its bottom on the cover line; the badges sit on top where they meet. */
 export function FirmCover({ f, noStatus }: { f: Pick<AdvisorFirm, "name" | "logoUrl" | "refNo" | "city" | "verifiedAt" | "managed" | "status">; noStatus?: boolean }) {
   const pills = (
     <div className="advisor-cover-top">
@@ -83,14 +83,14 @@ export function FirmCover({ f, noStatus }: { f: Pick<AdvisorFirm, "name" | "logo
   );
   if (f.logoUrl) {
     return (
-      <div className="relative flex items-end justify-center border-b border-[#EEF0F3] bg-white px-5 pb-3" style={{ height: 150 }}>
-        <img src={f.logoUrl} alt="" className="object-contain" style={{ maxHeight: 96, maxWidth: "min(240px, 100%)" }} />
+      <div className="relative flex items-end justify-center border-b border-[#EEF0F3] bg-white px-5" style={{ height: 116 }}>
+        <img src={f.logoUrl} alt="" className="block object-contain" style={{ maxHeight: 96, maxWidth: "min(240px, 100%)" }} />
         {pills}
       </div>
     );
   }
   return (
-    <div className="relative grid place-items-center overflow-hidden bg-[#E0F5F2]" style={{ height: 150 }}>
+    <div className="relative grid place-items-center overflow-hidden bg-[#E0F5F2]" style={{ height: 116 }}>
       <svg aria-hidden className="absolute inset-0 h-full w-full text-[#0F766E] opacity-35" viewBox="0 0 320 120" preserveAspectRatio="none">
         <circle cx="40" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="1" />
         <circle cx="280" cy="10" r="70" fill="none" stroke="currentColor" strokeWidth="1" />
@@ -101,119 +101,73 @@ export function FirmCover({ f, noStatus }: { f: Pick<AdvisorFirm, "name" | "logo
   );
 }
 
-function Fig({ label, main, sub }: { label: string; main: string; sub: string | null }) {
-  return (
-    <div className="min-w-0 whitespace-nowrap px-3 py-2.5">
-      <div className="text-[12px] text-[#6B7280]">{label}</div>
-      <div className={cn("mt-0.5 text-[15px] font-bold", sub == null && main === tr("Not added") ? "font-medium text-[#9CA3AF]" : "text-[#111827] dark:text-foreground")}>{main}</div>
-      {sub && <div className="text-[12px] text-[#6B7280]">{sub}</div>}
-    </div>
-  );
-}
-
-/** The figures box's last row: the first two languages, "+{n}" for more, tooltip lists them all. */
-function LanguagesRow({ f }: { f: AdvisorFirm }) {
-  const langs = f.languages.map(tr).filter(Boolean);
-  const shown = langs.slice(0, 2).join(" · ");
-  const extra = langs.length - 2;
-  return (
-    <div className="flex items-center gap-2.5 border-t border-border px-3 py-2" title={langs.length ? langs.join(" · ") : undefined}>
-      <span className="shrink-0 text-[12px] text-[#6B7280]">{tr("Languages")}</span>
-      <span className="min-w-0 truncate text-[13px] font-semibold text-[#111827] dark:text-foreground">{shown || tr("Not added")}</span>
-      {extra > 0 && <span className="shrink-0 rounded-full bg-[#F1F2F5] px-1.5 text-[11px] font-semibold leading-[18px] text-[#4B5563] dark:bg-muted dark:text-muted-foreground">+{extra}</span>}
-    </div>
-  );
-}
-
 function MoreRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex gap-3 text-[13px]">
       <span className="w-[84px] shrink-0 text-[#6B7280]">{label}</span>
-      <span className="min-w-0 flex-1 font-medium text-[#111827]">{value}</span>
+      <span className="min-w-0 flex-1 font-medium text-[#111827] dark:text-foreground">{value}</span>
     </div>
   );
 }
 
-export function FirmCard({ f, wide, preview, selected, onClick, className, action, accent = "#F6A823", noStatus, lastLogin }: {
+/** "{first two} +{n}" on one line; the full list in the tooltip. */
+function TwoPlus({ items }: { items: string[] }) {
+  return (
+    <span className="standard-card-value-row" title={items.join(" · ")}>
+      <span className="standard-card-value">{items.slice(0, 2).join(" · ")}</span>
+      {items.length > 2 && <span className="standard-card-plus">+{items.length - 2}</span>}
+    </span>
+  );
+}
+const empty = (text: string) => <span className="standard-card-value standard-card-empty">{text}</span>;
+
+/** The advisor firm card, built on the shared seller/buyer card: 116px cover, fixed text block, figures box and footer. */
+export function FirmCard({ f, wide, preview, selected, onClick, className, action, accent = "#F6A823", noStatus, lastLogin, cover }: {
   f: AdvisorFirm; wide?: boolean; preview?: boolean; selected?: boolean; onClick?: () => void; className?: string;
   /** Send enquiry (or the status chip), shown full width inside Show more after Sectors. */
   action?: React.ReactNode; accent?: string; noStatus?: boolean;
   /** Owner's last-login bucket on the left of Show more (Browse advisors only; previews/Admin omit it). */
   lastLogin?: LastLoginStep | null;
+  /** Replaces the cover (Admin's directory cover with its bookmark). */
+  cover?: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
   const deal = dealBandLabels(f.dealBand);
   const { n, avg } = reviewStats(f.reviews);
-  const showMore = wide || open;
-  const toggle = (centred: boolean) => (
-    <button
-      type="button"
-      onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
-      className={cn("inline-flex flex-none items-center gap-1 whitespace-nowrap text-[14px] font-semibold text-[#374151] hover:text-foreground dark:text-foreground/80", centred && "w-full justify-center py-1")}
-    >
-      {open ? <>{tr("Show less")} <ChevronUp className="h-4 w-4" /></> : <>{tr("Show more")} <ChevronDown className="h-4 w-4" /></>}
-    </button>
-  );
-  return (
-    <div
-      onClick={onClick}
-      role={noStatus && onClick ? "button" : undefined}
-      tabIndex={noStatus && onClick ? 0 : undefined}
-      aria-label={noStatus && onClick ? f.name : undefined}
-      onKeyDown={e => { if (e.target === e.currentTarget && onClick && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onClick(); } }}
-      className={cn(
-        "group flex flex-col overflow-hidden rounded-[14px] border bg-card text-left transition-all",
-        selected ? "" : "border-border",
-        onClick && "cursor-pointer hover:-translate-y-0.5",
-        noStatus && "advisor-browse-card",
-        className,
-      )}
-      style={selected ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}` } : undefined}
-    >
-      <FirmCover f={f} noStatus={noStatus} />
-      <div className="advisor-card-body flex-1 space-y-2.5 p-4">
-        <div>
-          <div className="min-w-0">
-            <h3 className="line-clamp-2 min-w-0 text-[17px] font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] dark:text-foreground">{f.name.trim() || tr("New firm profile")}</h3>
-          </div>
-          <div className="mt-[3px] text-[13px] text-[#6B7280]">{tr(f.firmType ?? "")}{f.yearFounded ? ` · ${tr("since")} ${f.yearFounded}` : ""}</div>
-          {n > 0 && (
-            <div className="mt-1.5 flex items-center gap-1.5 text-[13px]">
-              <Stars value={avg} />
-              <span className="font-bold text-[#151A28] dark:text-foreground">{avg.toFixed(1)}</span>
-              <span className="text-[#6A7181]">({n}{setupText("review")}{n === 1 ? "" : "s"})</span>
-            </div>
-          )}
-        </div>
-        {f.description?.trim()
-          ? <p className={cn("text-[13.5px] leading-[1.5] text-[#374151] dark:text-foreground/80", (!showMore || preview) && "line-clamp-3")}>{f.description}</p>
-          : <p className="text-[13.5px] text-[#9CA3AF]">{tr("No description yet.")}</p>}
-        {f.services.length > 0 && <div className="flex flex-wrap gap-1.5">{f.services.map((s) => <ServiceChip key={s} name={s} />)}</div>}
-        <div className="advisor-card-figures @container rounded-[10px] border border-border bg-muted/30">
-          <div className="grid grid-cols-1 divide-y divide-border @[260px]:grid-cols-[3fr_2fr] @[260px]:divide-x @[260px]:divide-y-0">
-            <Fig label={tr("Typical deal size")} main={deal?.usd ?? tr("Not added")} sub={deal ? `(${deal.thb})` : null} />
-            <Fig label={tr("Team size")} main={f.teamSize ? `${f.teamSize} ${tr("people")}` : tr("Not added")} sub={null} />
-          </div>
-          <LanguagesRow f={f} />
-        </div>
-        {showMore && !preview && (
-          <div className="space-y-2.5">
-            {(f.sectorAgnostic || f.sectors.length > 0) && <MoreRow label={tr("Sectors")} value={
-              <span className="flex flex-wrap gap-1">{(f.sectorAgnostic ? [tr("Sector agnostic")] : sectorChips(f.sectors, f.sectorPicks)).map((s) => <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[12px]">{s}</span>)}</span>} />}
-            {action && <div className="flex justify-center pt-0.5 [&_button]:w-full [&_button]:justify-center">{action}</div>}
-          </div>
-        )}
-      </div>
-      {lastLogin ? (
-        <div className="advisor-card-foot flex items-center justify-between gap-2.5 px-4 pb-3 pt-1">
-          <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap text-[12px] leading-4 text-[#6B7280]" title={`${tr(LAST_LOGIN_LABEL[lastLogin])} — ${tr("When the advisor last logged in to PitchSnack")}`}>
-            <LogIn className="h-[13px] w-[13px] shrink-0" /><span className="min-w-0 truncate">{tr(LAST_LOGIN_LABEL[lastLogin])}</span>
-          </span>
-          {toggle(false)}
-        </div>
-      ) : (
-        !wide && !preview && <div className="advisor-card-foot px-4 pb-3 pt-1">{toggle(true)}</div>
-      )}
+  const services = f.services.map(tr).filter(Boolean);
+  const langs = f.languages.map(tr).filter(Boolean);
+  const line = [tr(f.firmType ?? ""), f.yearFounded ? `${tr("since")} ${f.yearFounded}` : ""].filter(Boolean).join(" · ");
+  const stars = n > 0 ? `★ ${avg.toFixed(1)} (${n})` : "☆ 0 (0)";
+  const sectors = f.sectorAgnostic ? [tr("Sector agnostic")] : sectorChips(f.sectors, f.sectorPicks);
+  const more = (
+    <div className="space-y-2.5">
+      {services.length > 0 && <div className="flex flex-wrap gap-1.5">{f.services.map((s) => <ServiceChip key={s} name={s} />)}</div>}
+      <MoreRow label={tr("Typical deal size")} value={deal ? `${deal.usd} (${deal.thb})` : <span className="text-[#9CA3AF]">{tr("Not added")}</span>} />
+      {sectors.length > 0 && <MoreRow label={tr("Sectors")} value={<span className="flex flex-wrap gap-1">{sectors.map((s) => <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[12px]">{s}</span>)}</span>} />}
+      {action && !preview && <div className="flex justify-center pt-0.5 [&_button]:w-full [&_button]:justify-center">{action}</div>}
     </div>
+  );
+  const name = f.name.trim() || tr("New firm profile");
+  return (
+    <StandardBrowseCard
+      title={name} refNo={f.refNo} place={f.city} hideRef hideStatus
+      subtitle={[line, stars].filter(Boolean).join(" · ")}
+      subtitleContent={<>{line}{line && " · "}{n > 0
+        ? <><span className="standard-card-star">★ {avg.toFixed(1)}</span> ({n})</>
+        : <><span className="standard-card-star">☆</span> <span className="standard-card-star-zero">0 (0)</span></>}</>}
+      description={f.description?.trim() || tr("No description yet.")}
+      cover={(children) => <div className="standard-advisor-cover">{cover ?? <FirmCover f={f} noStatus={noStatus} />}{children}</div>}
+      figures={[
+        { label: tr("Typical deal size"), value: deal?.usd ?? null, node: deal ? undefined : empty(tr("Not added")) },
+        { label: tr("Team size"), value: f.teamSize ? `${f.teamSize} ${tr("people")}` : null, node: f.teamSize ? undefined : empty(tr("Not added")) },
+      ]}
+      fit={{ label: tr("Services"), value: services.length ? services.join(" · ") : null, node: services.length ? <TwoPlus items={services} /> : empty("0") }}
+      textRow={{ label: tr("Languages"), value: langs.length ? langs.join(" · ") : null, node: langs.length ? <TwoPlus items={langs} /> : <span className="standard-card-empty">{tr("Not added")}</span> }}
+      lastLogin={lastLogin ?? null}
+      lastLoginTooltip={lastLogin ? `${tr(LAST_LOGIN_LABEL[lastLogin])} — ${tr("When the advisor last logged in to PitchSnack")}` : undefined}
+      more={more} defaultExpanded={wide} selected={selected} onOpen={onClick}
+      sourceType="advisor"
+      style={selected ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}` } : undefined}
+      className={cn("standard-advisor-card", noStatus && "advisor-browse-card", className)}
+    />
   );
 }

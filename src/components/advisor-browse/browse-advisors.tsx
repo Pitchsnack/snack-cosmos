@@ -351,7 +351,7 @@ export function BrowseAdvisorsPage({ side, firmParam, enquire }: { side: Side; f
   );
 
   return (
-    <div className={cn(`browse-head role-${side}`, "mx-auto w-full max-w-[1440px] px-4 pb-10 pt-6 md:px-8", splitFixed && "flex h-[calc(100vh-4rem)] min-h-[560px] flex-col")}>
+    <div className={cn(`browse-head role-${side}`, "mx-auto w-full max-w-[1440px] pb-10 pt-6", splitFixed && "flex h-[calc(100vh-4rem)] min-h-[560px] flex-col")}>
       <div className="shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -416,8 +416,8 @@ export function BrowseAdvisorsPage({ side, firmParam, enquire }: { side: Side; f
         {isLoading ? (
           <div className="standard-card-grid">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[380px] rounded-[14px]" />)}</div>
         ) : shown.length === 0 ? empty : view === "grid" ? (
-          <div className="standard-card-grid" style={{ alignItems: "stretch" }}>
-            {shown.map((f) => <FirmCard key={f.id} f={f} noStatus className="h-full" accent={ACCENT[side]} onClick={() => openSplit(f.id)} action={cardAction(f)} lastLogin={f.lastLoginStep} />)}
+          <div className="standard-card-grid">
+            {shown.map((f) => <FirmCard key={f.id} f={f} noStatus accent={ACCENT[side]} onClick={() => openSplit(f.id)} action={cardAction(f)} lastLogin={f.lastLoginStep} />)}
           </div>
         ) : view === "split" ? (
           <div className={splitFixed ? "grid min-h-0 flex-1 grid-cols-[372px_minmax(0,1fr)] gap-5" : "grid items-start gap-5 min-[1100px]:grid-cols-[372px_minmax(0,1fr)]"}>

@@ -1,5 +1,6 @@
 import { licenceName } from "@/lib/advisor-licences";
-import { FirmCover } from "@/components/advisor/advisor-firm-card";
+import { FirmCard, FirmCover } from "@/components/advisor/advisor-firm-card";
+import type { AdvisorFirm } from "@/lib/advisor-firm";
 import { useOwnershipDir } from "@/components/handover/ownership";
 import { useTranslation } from "@/i18n/language";
 import {CreatedDirectoryRow} from "@/components/common/created-directory-row";
@@ -175,7 +176,7 @@ function AdvisorsDirectory() {
       ) : items.length === 0 ? (
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card"><Briefcase className="mx-auto mb-2 h-8 w-8 opacity-50" /><p>No firms match your filters.</p></div>
       ) : view === "grid" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((f) => <div key={f.id} className="space-y-1.5"><GridCard f={f} fav={favs.has(f.id)} onFav={() => toggleFav(f.id)} onOpen={() => set({ view: "split", selected: f.id })} /><Under f={f} /></div>)}
         </div>
       ) : view === "list" ? (
@@ -243,23 +244,8 @@ function AdminFirmCover({ f, fav, onFav }: { f: AdminFirm; fav: boolean; onFav: 
 }
 
 function GridCard({ f, fav, onFav, onOpen }: { f: AdminFirm; fav: boolean; onFav: () => void; onOpen: () => void }) {
-  const deal = dealBandLabels(f.dealBand);
-  return (
-    <div role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()} className="cursor-pointer overflow-hidden rounded-lg border border-border bg-card shadow-card transition hover:shadow-md">
-      <AdminFirmCover f={f} fav={fav} onFav={onFav} />
-      <div className="space-y-2 p-4">
-        <div className="min-w-0"><div className="line-clamp-2 font-semibold">{f.name}</div><div className="truncate text-xs text-muted-foreground">{f.firmType}</div></div>
-        {f.description && <p className="line-clamp-2 text-sm text-muted-foreground">{f.description}</p>}
-        <div className="flex flex-wrap gap-1">{f.services.slice(0, 4).map((x) => <span key={x} className="rounded-full bg-[#E0F5F2] px-2 py-0.5 text-[11px] font-medium text-[#0F766E]">{x}</span>)}</div>
-        <div className="space-y-0.5 text-xs text-muted-foreground">
-          {f.yearFounded && <div>Est. {f.yearFounded}</div>}
-          <div>Sectors: {f.sectorAgnostic ? "Sector agnostic" : f.sectors.join(", ") || "—"}</div>
-          {deal && <div>Deal size: {deal.usd}</div>}
-          {f.languages.length > 0 && <div className="flex flex-wrap items-center gap-1">Languages: {f.languages.map((l) => <span key={l} className="rounded bg-muted px-1.5 py-0.5 text-[10.5px]">{l}</span>)}</div>}
-        </div>
-      </div>
-    </div>
-  );
+  const firm = { ...f, refNo: f.ref, verifiedAt: f.v.verifiedAt, sectorPicks: null } as unknown as AdvisorFirm;
+  return <FirmCard f={firm} noStatus onClick={onOpen} cover={<AdminFirmCover f={f} fav={fav} onFav={onFav} />} />;
 }
 
 function SplitCard({ f, selected, fav, onFav, onSelect }: { f: AdminFirm; selected: boolean; fav: boolean; onFav: () => void; onSelect: () => void }) {

@@ -6,7 +6,7 @@
 - Pipeline chat lazily reuses Messages Chat inside ProfileBox; parent-held drafts preserve unsent content without new storage/auth paths.
 - Pipeline full-profile dialogs reuse invitationPrivateProfile's selected-deal gate, InvestorDetailPanel and shared identity parts; only All deals/watchlist opt in, preserving other viewers.
 - Pipeline company chips use own-organisation DTOs from the deal's startup/linked buyer firm, never counterparty or page-selected organisations; pending/ended identity and NDA gates stay unchanged.
-- Discovery Grid and Split-list cards share StandardBrowseCard through listing/investor adapters; watchlist wrappers own view state and existing DTO gates own privacy, so panels and List rows remain independent.
+- Discovery Grid and Split-list cards share StandardBrowseCard through listing/investor/FirmCard adapters (fixed closed text block, no row levelling); watchlist wrappers own view state and existing DTO gates own privacy, so panels and List rows remain independent.
 - Seller Connect flight is browser-only presentation using the stored invitation ID, shared Pipeline opening signal and public investor cover markers; invitation writes and authorization remain in the existing server function.
 - Pending contacts share a focusable tooltip button using Connect/verification/session DTOs; own approval records determine server-side status; request authorization stays unchanged.
 - My Company, Pipeline and Admin share WorkspaceSubmenu; Admin toggleOnly rows never navigate. Role colours default to amber at :root for use outside Marketplace.
