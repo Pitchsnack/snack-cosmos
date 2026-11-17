@@ -17,6 +17,7 @@ import {
 import { COUNTRIES, THAI_PROVINCES_77, yearError } from "@/lib/investor-bands";
 import { cn } from "@/lib/utils";
 import type { FirmForm } from "@/components/advisor/advisor-firm-edit";
+import { LogoDropLabel } from "@/components/login/signup-reg-parts";
 
 /**
  * The advisor setup wizard's Review & complete: one page of label and value
@@ -296,8 +297,10 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
               <input ref={logoInput} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="hidden"
                 onChange={(e) => { const file = e.target.files?.[0]; if (file) onLogo(file); e.target.value = ""; }} />
               <button type="button" onClick={() => logoInput.current?.click()} aria-label={f.logo.url ? tr("Replace logo") : tr("Upload logo")}
-                className={cn("grid h-[60px] w-[60px] flex-none cursor-pointer place-items-center overflow-hidden rounded-[10px]", f.logo.url ? "border border-[#E3E6EB] bg-white" : "border-[1.5px] border-dashed border-[#C9CED8] text-[#9CA3AF]")}>
-                {f.logo.url ? <img src={f.logo.url} alt="" className="h-full w-full object-contain" /> : <Plus className="h-5 w-5" />}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => { e.preventDefault(); const file = e.dataTransfer.files?.[0]; if (file) onLogo(file); }}
+                className={cn("grid h-[120px] w-[120px] flex-none cursor-pointer place-items-center overflow-hidden rounded-[10px]", f.logo.url ? "border border-[#E3E6EB] bg-white" : "border-[1.5px] border-dashed border-[#C9CED8] text-[#9CA3AF]")}>
+                {f.logo.url ? <img src={f.logo.url} alt="" className="h-full w-full object-contain" /> : <LogoDropLabel lang={language} />}
               </button>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[15px] font-bold">{f.name || tr("Your firm")}</div>

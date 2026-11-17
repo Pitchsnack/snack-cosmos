@@ -5,6 +5,8 @@ import { validateImageFile } from "@/lib/media/image-validation";
 import { EMPTY_SLOT, type EntityMediaState, type SlotState } from "@/components/media/entity-media-editor";
 import { useTr } from "@/components/common/edit-info-popup";
 import { cn } from "@/lib/utils";
+import { LogoDropLabel } from "@/components/login/signup-reg-parts";
+import { useTranslation } from "@/i18n/language";
 
 /**
  * Edit information › Images & Logo › Attachment: the card buyers see after an
@@ -130,11 +132,12 @@ function Space({ kind, slot, label, removeLabel, onFile, onRemove }: {
   kind: "logo" | "photo"; slot: SlotState; label: string; removeLabel: string; onFile: (f: File | undefined) => void; onRemove: () => void;
 }) {
   const tr = useTr();
+  const { language } = useTranslation();
   const input = useRef<HTMLInputElement>(null);
   const src = usePreview(slot);
   const [over, setOver] = useState(false);
   const drop = (e: DragEvent) => { e.preventDefault(); setOver(false); onFile(e.dataTransfer.files?.[0]); };
-  const box = kind === "logo" ? "h-16 w-16 shrink-0 rounded-[12px]" : "aspect-[10/7] w-full rounded-[10px]";
+  const box = kind === "logo" ? "h-[120px] w-[120px] shrink-0 rounded-[12px]" : "aspect-[10/7] w-full rounded-[10px]";
   if (src) {
     return (
       <div className={cn("relative", box)}>
@@ -153,8 +156,10 @@ function Space({ kind, slot, label, removeLabel, onFile, onRemove }: {
         onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={drop}
         className={cn(box, "group flex flex-col items-center justify-center gap-1 border-[1.5px] border-dashed border-[#CBD1DA] bg-card text-[#6A7181] outline-none hover:border-[#8A90A0] hover:bg-[#FAFAFB] hover:text-[#4B5563] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4338CA] dark:border-border dark:hover:bg-muted",
           over && "border-[#8A90A0] bg-[#FAFAFB]")}>
-        <Plus className={kind === "logo" ? "h-4 w-4" : "h-[18px] w-[18px]"} />
-        <span className={kind === "logo" ? "text-[11px]" : "text-[12.5px] max-sm:hidden"}>{kind === "logo" ? tr("Logo", "โลโก้") : tr("Add photo", "เพิ่มรูปภาพ")}</span>
+        {kind === "logo" ? <LogoDropLabel lang={language} /> : <>
+          <Plus className="h-[18px] w-[18px]" />
+          <span className="text-[12.5px] max-sm:hidden">{tr("Add photo", "เพิ่มรูปภาพ")}</span>
+        </>}
       </button>
       <input ref={input} type="file" accept="image/*" className="hidden" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
     </>

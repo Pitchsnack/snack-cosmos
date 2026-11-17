@@ -34,7 +34,7 @@ export const R = {
   // Logo
   logoTitle: c("อัปโหลดโลโก้บริษัท", "Add your company logo"),
   logoHelp: { seller: c("ผู้ซื้อจะเห็นโลโก้หลังจากท่านอนุมัติ NDA ก่อนหน้านั้นจะเห็นภาพประจำภาคธุรกิจ", "Buyers see it after you approve their NDA. Before that, they see a sector picture."), buyer: c("ผู้ขายจะเห็นโลโก้หลังจากอนุมัติ NDA ของท่าน", "Sellers see it after they approve your NDA."), advisor: c("ผู้ขายและผู้ซื้อจะเห็นโลโก้บนการ์ดของท่านในหน้า Browse advisors", "Sellers and buyers see it on your card in Browse advisors.") },
-  logoLabel: c("โลโก้", "Logo"), addLogo: c("+ เพิ่มโลโก้", "+ Add logo"), remove: c("ลบ", "Remove"),
+  logoLabel: c("โลโก้", "Logo"), addLogo: c("+ เพิ่มโลโก้", "+ Add logo"), dropLogo: c("หรือลากไฟล์มาวางที่นี่", "Or drop it here."), remove: c("ลบ", "Remove"),
   logoTypes: c("ไฟล์ PNG, JPG, SVG หรือ WebP ขนาดไม่เกิน 2 MB", "PNG, JPG, SVG or WebP, up to 2 MB."),
   logoSquare: c("โลโก้ทรงสี่เหลี่ยมจัตุรัสจะแสดงผลได้ดีที่สุด", "A square logo works best."),
   logoBadType: c("เลือกรูปภาพ PNG, JPG, SVG หรือ WebP", "Choose a PNG, JPG, SVG or WebP image."),

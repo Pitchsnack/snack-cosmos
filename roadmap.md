@@ -1,3 +1,8 @@
+# Logo drop hint everywhere
+- [x] Add the exact bilingual “+ Add logo” / “Or drop it here.” empty state to the shared sign-up and + Add logo box without changing its 120px size or file checks.
+- [x] Apply the same two lines and working drop behaviour to seller, buyer, advisor and Admin logo editors, including directory creation/editing and setup review; hide both lines once a logo is present.
+- [x] Check EN/TH, phone sizing and real dropped-file previews in the shared controls; audit every entry point. Full seller host dialog stayed on its loading panel, so host-level Save was not exercised.
+
 # Shared sign-up and + Add company flow
 
 ## One flow for sellers, buyers and advisors

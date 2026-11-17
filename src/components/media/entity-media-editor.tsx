@@ -30,6 +30,8 @@ import { SnippingCapture } from "@/components/media/snipping-capture";
 import { MediaPreviewDialog } from "@/components/media/media-preview-dialog";
 import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
 import { toWebp } from "@/lib/media/to-webp";
+import { LogoDropLabel } from "@/components/login/signup-reg-parts";
+import { useTranslation } from "@/i18n/language";
 
 /**
  * Shared remove-X button. Only rendered when the tile has an image.
@@ -287,6 +289,7 @@ function fileMetaBadge(slot: SlotState): { ext: string | null; size: number | nu
 /* -------------------------------------------------------------------------- */
 
 export function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: SlotState) => void }) {
+  const { language } = useTranslation();
   const ref = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [snipOpen, setSnipOpen] = useState(false);
@@ -356,13 +359,12 @@ export function LogoSlot({ value, onChange }: { value: SlotState; onChange: (s: 
             }`}
             onClick={() => ref.current?.click()}
           >
-            <Upload className={`h-4 w-4 ${dragging ? "text-primary" : "text-muted-foreground"}`} />
-            <span className="text-[10px] text-muted-foreground mt-0.5">Drop or click</span>
+            <LogoDropLabel lang={language} />
             {supportsSnip && (
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setSnipOpen(true); }}
-                className="absolute bottom-1 right-1 bg-background/95 rounded-full p-1 shadow hover:bg-background"
+                className="absolute -right-2 -top-2 bg-background/95 rounded-full p-1 shadow hover:bg-background"
                 title="Snip from screen"
                 aria-label="Snip from screen"
               >

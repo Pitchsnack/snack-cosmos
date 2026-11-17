@@ -188,6 +188,12 @@ export async function prepareLogo(file: File): Promise<{ logo?: HeldLogo; error?
   return { logo: { data: await toDataUrl(conv), type } };
 }
 
+/** The same two-line empty state in sign-up, + Add and every profile logo editor. */
+export function LogoDropLabel({ lang }: { lang: Lang }) {
+  const R = useRegCopy();
+  return <span className="logo-drop-label"><span>{R.addLogo[lang]}</span><span className="logo-drop-hint">{R.dropLogo[lang]}</span></span>;
+}
+
 export function LogoPicker({ lang, role, logo, onChange, showRequiredError }: { lang: Lang; role: "seller" | "buyer" | "advisor"; logo: HeldLogo | null; onChange: (l: HeldLogo | null) => void; showRequiredError: boolean }) {
   const R = useRegCopy();
   const input = useRef<HTMLInputElement>(null);
@@ -208,7 +214,7 @@ export function LogoPicker({ lang, role, logo, onChange, showRequiredError }: { 
         <div>
           <button type="button" className={`sr-drop${bad ? " bad" : ""}`} aria-required onClick={() => input.current?.click()}
             onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); void take(e.dataTransfer.files?.[0]); }}>
-            {busy ? <LoaderCircle className="lg-spin" /> : logo ? <img src={logo.data} alt="" /> : R.addLogo[lang]}
+            {busy ? <LoaderCircle className="lg-spin" /> : logo ? <img src={logo.data} alt="" /> : <LogoDropLabel lang={lang} />}
           </button>
           {logo && <button type="button" className="sr-link" onClick={() => onChange(null)}>{R.remove[lang]}</button>}
           <input ref={input} type="file" hidden accept=".png,.jpg,.jpeg,.svg,.webp,image/png,image/jpeg,image/svg+xml,image/webp" onChange={(e) => void take(e.target.files?.[0])} />

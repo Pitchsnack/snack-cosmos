@@ -10,7 +10,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X, RefreshCw, Sparkles, Upload, Scissors, Loader2, Lock } from "lucide-react";
+import { X, RefreshCw, Sparkles, Scissors, Loader2, Lock } from "lucide-react";
 import { setupText, useTranslation } from "@/i18n/language";
 import { AddressBox } from "@/components/common/business-address";
 import { SnippingCapture } from "@/components/media/snipping-capture";
@@ -69,6 +69,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AutoEnrichButton } from "./auto-enrich-button";
 import { AttachmentCard, attachmentMissing } from "./attachment-card";
+import { LogoDropLabel } from "@/components/login/signup-reg-parts";
 import { LicenceLists } from "./licence-lists";
 import { LangTag, missingLangHint, useBiList, useBiText, useTextLang } from "@/components/common/text-lang";
 import { countryLabel, missingLine, sizeLabel } from "@/i18n/th-edit-info";
@@ -1092,15 +1093,17 @@ export function StartupForm({
             <div className="space-y-1.5">
               <Label>Company Logo</Label>
               <div className="flex items-center gap-2">
-                <label className="flex h-[38px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 text-xs text-muted-foreground hover:bg-accent/40">
-                  {logoPreview ? (
+                <label className="flex min-h-[56px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 text-xs text-muted-foreground hover:bg-accent/40"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const f = e.dataTransfer.files?.[0] ?? null;
+                    if (f) setMedia({ ...media, logo: { ...media.logo, pendingFile: f } });
+                  }}>
+                  {logoPreview ? <>
                     <img src={logoPreview} alt="Logo preview" className="h-6 w-6 rounded object-cover" />
-                  ) : (
-                    <Upload className="h-4 w-4" />
-                  )}
-                  <span className="truncate">
-                    {media.logo.pendingFile ? media.logo.pendingFile.name : "Upload logo (PNG, JPG, SVG)"}
-                  </span>
+                    {media.logo.pendingFile && <span className="truncate">{media.logo.pendingFile.name}</span>}
+                  </> : <LogoDropLabel lang={th ? "th" : "en"} />}
                   <input
                     type="file"
                     accept="image/*"
