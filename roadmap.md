@@ -1,3 +1,12 @@
+# Shared sign-up and + Add company flow
+
+## One flow for sellers, buyers and advisors
+- [ ] Reuse sign-up's role-specific About/type/sector/company/logo steps in + Add, omitting only Role, Account and email confirmation.
+- [ ] Share the registration confirmation, lookup, limits, DBD-store save and bilingual + Add wording; preserve sign-up behavior and authorization.
+- [ ] Create the role draft with all pre-answers and wizard answered progress only after Yes; open it selected on My Company without a welcome pop-up.
+- [ ] Keep buyer + Add Control/Admin-only, preserve identity locks, and verify shared limits and no-create-on-cancel paths with focused tests.
+- [ ] Run existing signup/Add tests and live EN/TH checks; capture + Add My Business at “Whose business are you selling?”, report changed files and unverified paths.
+
 # Browse cards brief (lovable-seller-buyer-cards.md)
 
 ## Seller Industry removal and required Sector
