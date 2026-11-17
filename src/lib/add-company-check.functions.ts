@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { isValidThaiReg, REG_CHANGES } from "@/lib/thai-reg";
+import { isValidThaiReg } from "@/lib/thai-reg";
+import { planAddCheck, type AddAttemptForRetry } from "@/lib/registration-retry";
 import type { RegCompany } from "@/lib/signup-reg.functions";
 
 /**
@@ -25,42 +26,50 @@ export const runAddCheck = createServerFn({ method: "POST" })
     const sb = await admin();
     const { lookupCheck, logAttempt, deviceLimit } = await import("./reg-lookup.server");
     const email = ((context.claims as any)?.email as string | undefined)?.toLowerCase() ?? null;
-    const { data: prev } = await sb.from("registration_attempts").select("reg_no, result").eq("session_key", data.session).eq("user_id", context.userId).neq("result", "limit");
-    const numbers = new Set<string>((prev ?? []).map((r: any) => r.reg_no));
-    const isNew = !numbers.has(data.reg);
-    // One number plus two changes per + Add, as in sign-up.
-    if (isNew && numbers.size >= 1 + REG_CHANGES) {
+    const { data: prev } = await sb.from("registration_attempts").select("reg_no, result, held").eq("session_key", data.session).eq("user_id", context.userId).neq("result", "limit");
+    const plan = planAddCheck((prev ?? []) as AddAttemptForRetry[], data.reg);
+    if (plan.status === "limit") {
       await logAttempt(sb, { reg: data.reg, userId: context.userId, email, source: "add", kind: data.kind, session: data.session, result: "limit" });
       return { status: "limit", why: "changes" };
+    }
+    // Rejected and not-found numbers reuse this session's server-held result. The retry consumes
+    // one change but does not consume the shared device lookup budget or contact the register again.
+    if (plan.status === "cached_not_found") {
+      await logAttempt(sb, { reg: data.reg, userId: context.userId, email, source: "add", kind: data.kind, session: data.session, result: "not_found" });
+      return { status: "not_found", reg: data.reg, changesLeft: plan.changesLeft };
+    }
+    if (plan.status === "cached_found") {
+      const id = await logAttempt(sb, { reg: data.reg, userId: context.userId, email, source: "add", kind: data.kind, session: data.session,
+        result: "pending", company: plan.company, held: plan.held });
+      if (!id) throw new Error("Try again.");
+      return { status: "found", attemptId: id, reg: data.reg, company: plan.company, changesLeft: plan.changesLeft };
     }
     const lim = await deviceLimit(sb, data.deviceId);
     if (lim.over) {
       await logAttempt(sb, { reg: data.reg, userId: context.userId, email, source: "add", kind: data.kind, session: data.session, result: "limit" });
       return { status: "limit", why: "device" };
     }
-    const used = numbers.size + (isNew ? 1 : 0);
-    const changesLeft = Math.max(0, 1 + REG_CHANGES - used);
     const check = await lookupCheck(data.reg);
     // Register didn't answer: nothing counts, as in sign-up.
     if (check.status === "unavailable") return { status: "unavailable" };
     await sb.from("signup_reg_checks").insert({ user_id: context.userId, email: email ?? "", device_hash: lim.deviceHash, ip_hash: lim.ipHash, reg_no: data.reg, result: check.status });
     if (check.status !== "found") {
       await logAttempt(sb, { reg: data.reg, userId: context.userId, email, source: "add", kind: data.kind, session: data.session, result: "not_found" });
-      return { status: "not_found", reg: data.reg, changesLeft };
+      return { status: "not_found", reg: data.reg, changesLeft: plan.changesLeft };
     }
     // The held result (with the raw register answer) stays server-side until Yes.
     const id = await logAttempt(sb, { reg: data.reg, userId: context.userId, email, source: "add", kind: data.kind, session: data.session, result: "pending", company: check.company, held: { company: check.company, raw: check.raw ?? null } });
     if (!id) throw new Error("Try again.");
-    return { status: "found", attemptId: id, reg: data.reg, company: check.company, changesLeft };
+    return { status: "found", attemptId: id, reg: data.reg, company: check.company, changesLeft: plan.changesLeft };
   });
 
-/** No, or leaving the check: the attempt is answered; nothing about the company is kept. */
+/** No keeps the server-held result for a cached retry; leaving the check clears it. */
 export const answerAddCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ attemptId: z.string().uuid(), result: z.enum(["no", "cancelled"]) }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = await admin();
-    await sb.from("registration_attempts").update({ result: data.result, held: null }).eq("id", data.attemptId).eq("user_id", context.userId).eq("result", "pending");
+    await sb.from("registration_attempts").update(data.result === "no" ? { result: data.result } : { result: data.result, held: null }).eq("id", data.attemptId).eq("user_id", context.userId).eq("result", "pending");
     return { ok: true };
   });
 

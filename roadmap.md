@@ -1,3 +1,10 @@
+# Shared company step, assisted form and rejected-number retry
+- [x] Apply the exact bilingual registration link and sign-up Thai help line in every seller/buyer/advisor sign-up and + Add entry point.
+- [x] Make assisted setup a standalone screen with the specified fields, responsive buttons, Back behavior and unchanged request sending.
+- [x] After No/Not found, show only the yellow company explanation and allow cached same-number confirmation using one change without a new lookup.
+- [x] Add focused regression tests; verify EN/TH desktop/phone flows and Control/Admin shared behavior without creating accounts or changing company data.
+- [x] Deliver English/Thai assisted-form and after-No screenshots and list every shared link/form entry point.
+
 # Logo drop hint everywhere
 - [x] Add the exact bilingual “+ Add logo” / “Or drop it here.” empty state to the shared sign-up and + Add logo box without changing its 120px size or file checks.
 - [x] Apply the same two lines and working drop behaviour to seller, buyer, advisor and Admin logo editors, including directory creation/editing and setup review; hide both lines once a logo is present.

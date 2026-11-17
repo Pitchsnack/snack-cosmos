@@ -15,7 +15,7 @@ import { confirmRegCompany, getRegState, rejectRegCompany, runRegCheck, startReg
 import { REG_CHANGES, signupSteps, type SignupStepKey as StepKey } from "@/lib/thai-reg";
 import { R, type SetupReason } from "@/components/login/signup-reg-copy";
 import { ConfirmRegDialog, FoundDialog, NotFoundDialog, SetupRequest, SimpleDialog, VerifyingDialog } from "@/components/login/signup-reg-parts";
-import { BIZ_STEPS, BackBtn as SharedBack, BusinessStep, Choice as SharedChoice, Err as BizErr, Primary as SharedPrimary, useBusinessAnswers, type BizStep, type Held } from "@/components/login/business-steps";
+import { BIZ_STEPS, BackBtn as SharedBack, BusinessStep, Choice as SharedChoice, Err as BizErr, Primary as SharedPrimary, companySetupReason, useBusinessAnswers, type BizStep, type Held } from "@/components/login/business-steps";
 import { useTranslation } from "@/i18n/language";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import streetSvg from "@/components/login/street.svg?raw";
@@ -124,7 +124,7 @@ function SignupInner() {
   const [ready, setReady] = useState(false);
   const [role, setRole] = useState<Role | null>(preRole ?? null);
   const b = useBusinessAnswers(role);
-  const { setAnswers, setPickErr, setCountry, coName, reg, setReg, regLocked, setRegLocked, setErr5, setSameErr, fix, setFix, regRef,
+  const { setAnswers, setPickErr, setCountry, coName, reg, setReg, regLocked, setRegLocked, setErr5, fix, setFix, regRef,
     sPick, sSector, picks, agnostic, corpType, pickErr, answer, buyer, individual, agent, types, restoreHeld, restoreTypes, held, country } = b;
   // Account
   const [first, setFirst] = useState(""); const [last, setLast] = useState("");
@@ -192,7 +192,7 @@ function SignupInner() {
     if (r.status === "found" || r.status === "not_found") setTried((l) => Array.from(new Set([...l, r.reg])));
     if (r.status === "found") { setFound(r.company); setDlg("found"); }
     else if (r.status === "not_found") setDlg((newReg ? changes + 1 : changes) < REG_CHANGES ? "nf" : "contact");
-    else if (r.status === "rejected") { setFix({ why: "no", old: r.reg }); setRegLocked(false); setDlg(null); setStep("company"); }
+    else if (r.status === "rejected") { setFix({ why: "no", old: r.reg, co: r.company }); setRegLocked(false); setDlg(null); setStep("company"); }
     else {
       setUnavailableEdit(r.status !== "limit");
       setDlg(r.status === "limit" ? "limit" : "unavailable");
@@ -260,6 +260,7 @@ function SignupInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const assistedInline = role && step === "company" ? companySetupReason(role, answer, country, b.noNumber) : null;
   useEffect(() => {
     const r = gate.details?.role;
     if (!preRole && r && r !== "any") setRole((cur) => cur ?? r);
@@ -274,7 +275,7 @@ function SignupInner() {
     return false;
   }
 
-  useEffect(() => { if (ready && !dlg) { titleRef.current?.focus({ preventScroll: true }); window.scrollTo(0, 0); } }, [step, ready]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (ready && !dlg) { titleRef.current?.focus({ preventScroll: true }); window.scrollTo(0, 0); } }, [step, ready, assistedInline, setupCard]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (step !== "code" || wait <= 0) return;
     const id = setTimeout(() => setWait((w) => w - 1), 1000); return () => clearTimeout(id);
@@ -414,14 +415,14 @@ function SignupInner() {
   // ----- Pop-up answers -----
   const changesLeft = REG_CHANGES - changes;
   function openFix(why: "no" | "nf" | "unavailable", co?: RegCompany) {
-    setFix({ why, old: reg, co }); setRegLocked(false); setSameErr(false); setErr5({}); setDlg(null); setStep("company");
+    setFix({ why, old: reg, co }); setRegLocked(false); setErr5({}); setDlg(null); setStep("company");
     setTimeout(() => { regRef.current?.focus(); regRef.current?.select(); }, 60);
   }
   async function answerNo() {
     const co = found;
     try { await rejectCo(); } catch { /* the held answer stays */ }
     setFound(null);
-    if (changesLeft <= 0) { setDlg("contact"); return; }
+    if (changesLeft <= 0) { setFix({ why: "no", old: reg, co: co ?? undefined }); setRegLocked(false); setDlg("contact"); return; }
     openFix("no", co ?? undefined);
   }
   async function answerYes() {
@@ -453,6 +454,10 @@ function SignupInner() {
   const BackBtn = ({ to }: { to: StepKey }) => <SharedBack busy={busy} lang={lang} onClick={() => go(to)} />;
   const Primary = (p: { label: T; busyLabel?: T; onClick?: () => void; type?: "button" | "submit" }) => <SharedPrimary {...p} busy={busy} lang={lang} />;
   const setupInit = { name: [first, last].filter(Boolean).join(" "), email, company: coName, country: role === "seller" ? "Thailand" : country };
+  function backFromSetupCard() {
+    setSetupCard(null); setDlg(null); setStep("company");
+    if (!fix) setRegLocked(false);
+  }
 
   return (
     <div className="lg su" data-lang={lang}>
@@ -485,8 +490,7 @@ function SignupInner() {
             <div className="lg-card su-card">
               {setupCard ? (
                 <div className="su-step">
-                  <h1 ref={titleRef} tabIndex={-1} className="sr-only">{t(R.sTitle)}</h1>
-                  <SetupRequest card lang={lang} reason={setupCard} init={setupInit} tried={tried} onSend={(v) => sendRequest(setupCard, v)} />
+                  <SetupRequest lang={lang} reason={setupCard} init={setupInit} tried={tried} titleRef={titleRef} onBackToFields={backFromSetupCard} onSend={(v) => sendRequest(setupCard, v)} />
                 </div>
               ) : <>
               <DiscoveryWaiting lang={lang} signup role={step === "role" ? role : null}/>
@@ -528,10 +532,10 @@ function SignupInner() {
                   <Link to="/login" className="lg-btn" style={{ marginTop: 18 }}>{t(G.signIn)}<LogIn size={18} /></Link>
                 </div>
               ) : <>
-              <div className="su-prog">
+              {!assistedInline && <div className="su-prog">
                 <div className="su-prow"><b>{t(NAMES[step])}</b><span>{t(S.progress).replace("{n}", String(shownN)).replace("{N}", String(order.length))}</span></div>
                 <div className="su-bars" style={{ gridTemplateColumns: `repeat(${order.length},1fr)` }}>{order.map((n, k) => <i key={n} className={k < shownN ? "on" : ""} />)}</div>
-              </div>
+              </div>}
               {!ready ? <div className="su-load"><LoaderCircle className="lg-spin" /></div> : (
                 <div className="su-step" key={step}>
                   {step === "role" && <>
@@ -658,7 +662,7 @@ function SignupInner() {
       <VerifyingDialog open={dlg === "verifying"} lang={lang} reg={reg} onCancel={cancelCheck} onEdit={changesLeft > 0 ? editDuringCheck : undefined} />
       {found && <FoundDialog open={dlg === "found"} lang={lang} reg={reg} co={found} noChangeLeft={changesLeft <= 0} busy={checkBusy}
         onClose={() => setDlg(null)} onNo={() => void answerNo()} onYes={() => void answerYes()} />}
-      <NotFoundDialog open={dlg === "nf"} lang={lang} reg={reg} onEdit={() => openFix("nf")} onContact={() => { setDlg(null); setSetupCard("check_failed"); }} />
+      <NotFoundDialog open={dlg === "nf"} lang={lang} reg={reg} onEdit={() => openFix("nf")} onContact={() => { setFix({ why: "nf", old: reg }); setRegLocked(false); setDlg(null); setSetupCard("check_failed"); }} />
       <SimpleDialog open={dlg === "limit"} lang={lang} kind="limit" onMain={() => { setDlg(null); setSetupCard("too_many"); }} />
       <SimpleDialog open={dlg === "contact"} lang={lang} kind="contact" count={tried.length} onMain={() => { setDlg(null); setSetupCard("check_failed"); }} />
       <SimpleDialog open={dlg === "unavailable"} lang={lang} kind="unavailable" busy={checkBusy}

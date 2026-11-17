@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { canCorrectRegistrationCheck, isValidThaiReg, REG_CHANGES } from "@/lib/thai-reg";
+import { cachedSignupRetry } from "@/lib/registration-retry";
 
 /**
  * Sign-up company check (section 9). The account stays a pending sign-up — no role,
@@ -20,7 +21,7 @@ export type RegCompany = {
 export type RegCheck =
   | { status: "found"; reg: string; company: RegCompany }
   | { status: "not_found"; reg: string }
-  | { status: "rejected"; reg: string }
+  | { status: "rejected"; reg: string; company?: RegCompany }
   | { status: "limit" }
   | { status: "unavailable" }
   | { status: "running"; reg: string };
@@ -135,8 +136,35 @@ export const runRegCheck = createServerFn({ method: "POST" })
     if (data.newReg) {
       if (!canCorrectRegistrationCheck(held)) throw new Error("Nothing to correct.");
       if (changes >= REG_CHANGES) throw new Error("You've used both changes.");
-      if (data.newReg === a.reg_no) throw new Error("Change the registration number.");
       if (!isValidThaiReg(data.newReg)) throw new Error("This registration number isn't valid.");
+
+      // A number already checked in this sign-up reuses its own server-held outcome. This includes
+      // the rejected number itself: Confirm consumes a change, but no register lookup is repeated.
+      let cached = cachedSignupRetry(held, data.newReg, changes);
+      if (!cached) {
+        const { data: previous } = await sb.from("registration_attempts").select("result, held")
+          .eq("user_id", uid).eq("source", "signup").eq("reg_no", data.newReg).in("result", ["no", "not_found"])
+          .order("created_at", { ascending: false }).limit(1);
+        const old = previous?.[0];
+        if (old?.result === "not_found") cached = cachedSignupRetry({ status: "not_found", reg: data.newReg }, data.newReg, changes);
+        else if (old?.held?.company) cached = cachedSignupRetry({ status: "rejected", reg: data.newReg, company: old.held.company, raw: old.held.raw }, data.newReg, changes);
+      }
+      if (cached) {
+        reg = data.newReg;
+        const check = cached.status === "found"
+          ? { status: "found", reg, company: cached.company!, raw: cached.raw }
+          : { status: "not_found", reg };
+        const tried = Array.from(new Set([...(a.reg_tried ?? []), reg]));
+        const { data: retried, error: retryError } = await sb.from("signup_answers").update({
+          reg_no: reg, reg_changes: cached.changes, reg_tried: tried, reg_check: check, updated_at: new Date().toISOString(),
+        }).eq("user_id", uid).eq("reg_no", a.reg_no).eq("reg_changes", a.reg_changes ?? 0).is("registered_at", null).select("reg_no");
+        if (retryError || !retried?.length) throw new Error("The registration check changed. Try again.");
+        const { logAttempt } = await import("./reg-lookup.server");
+        await logAttempt(sb, { reg, userId: uid, email, source: "signup", result: cached.status === "found" ? "pending" : "not_found",
+          company: cached.company, kind: null, held: cached.company ? { company: cached.company, raw: cached.raw } : null });
+        return cached.status === "found" ? { status: "found", reg, company: cached.company! } : { status: "not_found", reg };
+      }
+      if (data.newReg === a.reg_no) throw new Error("Change the registration number.");
       reg = data.newReg; changes += 1;
       // Claim the correction before awaiting the register. An older request for the
       // previous number can no longer write its late result over this correction.
@@ -147,7 +175,7 @@ export const runRegCheck = createServerFn({ method: "POST" })
     } else if (held?.status === "found" && held.reg === reg) {
       return { status: "found", reg, company: held.company };   // reopen from the held result, no new lookup
     } else if (held && held.reg === reg && ["not_found", "rejected"].includes(held.status)) {
-      return { status: held.status, reg } as RegCheck;
+      return { status: held.status, reg, ...(held.status === "rejected" && held.company ? { company: held.company } : {}) } as RegCheck;
     }
     if (!isValidThaiReg(reg)) throw new Error("This registration number isn't valid.");
 
@@ -191,7 +219,8 @@ export const runRegCheck = createServerFn({ method: "POST" })
     }
     const found = check.status === "found";
     { const { logAttempt } = await import("./reg-lookup.server");
-      await logAttempt(sb, { reg, userId: uid, email, source: "signup", result: found ? "pending" : "not_found", company: found ? check.company : null, kind: null }); }
+      await logAttempt(sb, { reg, userId: uid, email, source: "signup", result: found ? "pending" : "not_found", company: found ? check.company : null, kind: null,
+        held: found ? { company: check.company, raw: check.raw ?? null } : null }); }
     const tried = Array.from(new Set([...(a.reg_tried ?? []), reg]));
     // reg_no is also the optimistic lock: a superseded request cannot overwrite a correction.
     await sb.from("signup_answers").update({ reg_no: reg, reg_changes: changes, reg_tried: tried, reg_check: check, updated_at: new Date().toISOString() })
@@ -199,7 +228,7 @@ export const runRegCheck = createServerFn({ method: "POST" })
     return found ? { status: "found", reg, company: check.company } : { status: "not_found", reg };
   });
 
-/** "No, this isn't my company": nothing about that company is kept. */
+/** "No": record the answer; keep the fetched result server-side only for a cached correction. */
 export const rejectRegCompany = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -207,7 +236,7 @@ export const rejectRegCompany = createServerFn({ method: "POST" })
     const { data: a } = await sb.from("signup_answers").select("reg_no, reg_check, registered_at").eq("user_id", context.userId).maybeSingle();
     if (!a || a.registered_at || a.reg_check?.status !== "found") throw new Error("Nothing to answer.");
     { const { answerSignupAttempt } = await import("./reg-lookup.server"); await answerSignupAttempt(sb, context.userId, "no"); }
-    await sb.from("signup_answers").update({ reg_check: { status: "rejected", reg: a.reg_no }, updated_at: new Date().toISOString() }).eq("user_id", context.userId);
+    await sb.from("signup_answers").update({ reg_check: { status: "rejected", reg: a.reg_no, company: a.reg_check.company ?? null, raw: a.reg_check.raw ?? null }, updated_at: new Date().toISOString() }).eq("user_id", context.userId);
     return { ok: true };
   });
 

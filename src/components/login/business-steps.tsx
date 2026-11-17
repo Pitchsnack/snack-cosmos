@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { COUNTRIES } from "@/lib/investor-bands";
 import { canRequestSignupSetup, digitsOnly, isValidThaiReg, normWebsite, signupSteps, type SignupStepKey } from "@/lib/thai-reg";
 import { useRegCopy, type SetupReason } from "@/components/login/signup-reg-copy";
-import { CompanyRows, LogoPicker, SetupRequest, type HeldLogo, type SetupInit } from "@/components/login/signup-reg-parts";
+import { LogoPicker, RejectedCompany, SetupRequest, type HeldLogo, type SetupInit } from "@/components/login/signup-reg-parts";
 import { SellerTypeQuestion, ManyTypeQuestion, buyerWords, advisorWords, manyError } from "@/components/common/business-type-question";
 import { EMPTY_PICKS, type SectorPick, type SectorPicks } from "@/lib/business-types";
 import type { RegCompany } from "@/lib/signup-reg.functions";
@@ -53,7 +53,6 @@ export function useBusinessAnswers(role: Role | null) {
   const [coName, setCoName] = useState(""); const [size, setSize] = useState(""); const [web, setWeb] = useState("");
   const [reg, setReg] = useState(""); const [regLocked, setRegLocked] = useState(false);
   const [err5, setErr5] = useState<Record<string, boolean>>({});
-  const [sameErr, setSameErr] = useState(false);
   const [noNumber, setNoNumber] = useState(false);
   const [fix, setFix] = useState<Fix>(null);
   const regRef = useRef<HTMLInputElement>(null);
@@ -89,12 +88,19 @@ export function useBusinessAnswers(role: Role | null) {
   return {
     answers, setAnswers, answer, setAnswer, pickErr, setPickErr, corpType, setCorpType, agentTypes, setAgentTypes,
     country, setCountry, coName, setCoName, size, setSize, web, setWeb, reg, setReg, regLocked, setRegLocked,
-    err5, setErr5, sameErr, setSameErr, noNumber, setNoNumber, fix, setFix, regRef,
+    err5, setErr5, noNumber, setNoNumber, fix, setFix, regRef,
     sPick, setSPick, sSector, setSSector, picks, setPicks, agnostic, setAgnostic, err7, setErr7, logo, setLogo, logoErr, setLogoErr,
     buyer, individual, agent, corp, types, word, restoreHeld, restoreTypes, held,
   };
 }
 export type BusinessAnswers = ReturnType<typeof useBusinessAnswers>;
+
+/** The assisted request replaces the company step; wrappers use this to hide step chrome too. */
+export function companySetupReason(role: Role, answer: string | null, country: string, noNumber: boolean): SetupReason | null {
+  const individual = role === "buyer" && answer === "individual";
+  if (role !== "seller" && country !== "Thailand") return role === "advisor" ? "outside_advisor" : "outside_buyer";
+  return noNumber ? (individual ? "individual" : "no_number") : null;
+}
 
 /** Your company: field checks shared by sign-up and + Add. Returns the first bad field, if any. */
 export function companyErrors(b: BusinessAnswers, role: Role) {
@@ -170,16 +176,16 @@ export function BusinessStep({ step, role, b, lang, busy, titleRef, go, back, ne
   const opts = role === "seller" ? SELLER_OPTS : role === "buyer" ? BUYER_REL_OPTS : ADVISOR_OPTS;
   const afterAboutFor = (v: string): BizStep => businessSteps(role, v)[1] ?? "company";
   const outside = role !== "seller" && b.country !== "Thailand";
-  const setupReasonInline: SetupReason | null = outside ? (role === "advisor" ? "outside_advisor" : "outside_buyer") : b.noNumber ? (individual ? "individual" : "no_number") : null;
+  const setupReasonInline = companySetupReason(role, answer, b.country, b.noNumber);
   const webRequired = role === "advisor" || (buyer && !individual);
-  const fixSame = !!fix && b.reg === fix.old;
-  const fixHint = fix && fixSame;
+  const fixNoText = fix?.why === "no" ? fill(R.boxNo, { number: "\u0000" }) : "";
+  const fixHasName = !!(fix?.co?.nameTh || fix?.co?.nameEn);
   const pickFirst = () => document.querySelector<HTMLInputElement>(".su-cards input")?.focus();
 
   function companyContinue(e: React.FormEvent) {
     e.preventDefault(); if (busy) return;
     if (fix) {
-      if (fixSame) { b.setSameErr(true); b.regRef.current?.focus(); return; }
+      if (changesLeft <= 0) return;
       if (!isValidThaiReg(b.reg)) { b.setErr5((x) => ({ ...x, reg: true })); b.regRef.current?.focus(); return; }
       onConfirmNeeded(); return;
     }
@@ -255,6 +261,12 @@ export function BusinessStep({ step, role, b, lang, busy, titleRef, go, back, ne
     </div>
   </>;
 
+  if (step === "company" && setupReasonInline) return (
+    <SetupRequest key={setupReasonInline} lang={lang} reason={setupReasonInline} init={setup.init} tried={[]} titleRef={titleRef}
+      onBackToFields={() => { b.setNoNumber(false); if (outside) b.setCountry("Thailand"); }}
+      onSend={(v) => setup.onSend(setupReasonInline, v)} />
+  );
+
   if (step === "company") return <>
     <h1 ref={titleRef} tabIndex={-1}>{t(role === "seller" ? R.coTitle.seller : R.coTitle.firm)}</h1>
     <p className="lg-cline su-line">{t(individual ? R.coLine.ind : R.coLine[word])}</p>
@@ -268,10 +280,6 @@ export function BusinessStep({ step, role, b, lang, busy, titleRef, go, back, ne
             </select></div>
         </div>
       )}
-      {setupReasonInline ? (
-        <SetupRequest lang={lang} reason={setupReasonInline} init={setup.init} tried={[]}
-          onBackToFields={() => { b.setNoNumber(false); b.setCountry("Thailand"); }} onSend={(v) => setup.onSend(setupReasonInline, v)} />
-      ) : <>
       {!fix && (
         <div className="lg-fg">
           <label className="lg-label" htmlFor="su-name">{individual ? t(R.indName) : t(S.nameL[role])}<Req /></label>
@@ -285,24 +293,22 @@ export function BusinessStep({ step, role, b, lang, busy, titleRef, go, back, ne
       )}
       <div className="lg-fg">
         <label className={`lg-label${fix ? " sr-lbl-bad" : ""}`} htmlFor="su-reg">{t(R.regLabel)}<Req /></label>
-        <div className={`lg-field su-f ${b.err5.reg || b.sameErr || fixHint ? "bad" : ""} ${b.regLocked ? "sr-locked" : ""}`}><FileText size={18} />
+        <div className={`lg-field su-f ${b.err5.reg || fix ? "bad" : ""} ${b.regLocked ? "sr-locked" : ""}`}><FileText size={18} />
           <input id="su-reg" ref={b.regRef} aria-required inputMode="numeric" maxLength={13} placeholder={t(R.regPh)} value={b.reg} readOnly={b.regLocked}
-            aria-invalid={b.err5.reg || b.sameErr || undefined}
-            onChange={(e) => { b.setReg(digitsOnly(e.target.value)); b.setErr5((x) => ({ ...x, reg: false })); b.setSameErr(false); }} />
+            aria-invalid={b.err5.reg || !!fix || undefined}
+            onChange={(e) => { b.setReg(digitsOnly(e.target.value)); b.setErr5((x) => ({ ...x, reg: false })); }} />
           {b.regLocked && <Lock size={16} aria-hidden />}</div>
-        {b.regLocked ? <p className="sr-hint">{t(R.regLocked)}</p>
-          : fixHint ? <p className="sr-hint bad"><b>{t(R.fixA)}</b> {t(fix!.why === "no" ? R.fixNo[word] : fix!.why === "nf" ? R.fixNf[word] : R.fixUnavailable)}</p>
-          : <p className="sr-hint">{fill(R.regHint[word], { n: b.reg.length })}</p>}
-        {b.err5.reg && <Err lang={lang} text={R.regBad} />}
-        {b.sameErr && <Err lang={lang} text={fix?.why === "no" ? R.sameNo : fix?.why === "nf" ? R.sameNf : R.fixUnavailable} />}
+        {!fix && (b.regLocked ? <p className="sr-hint">{t(R.regLocked)}</p>
+          : <p className="sr-hint">{fill(R.regHint[word], { n: b.reg.length })}</p>)}
+        {!fix && b.err5.reg && <Err lang={lang} text={R.regBad} />}
         {fix && (
           <div className="sr-warn">
             {fix.why === "no" ? <>
-              <span>{fill(R.boxNo, { number: "\u0000" }).split("\u0000").map((part, i, arr) => <span key={i}>{part}{i < arr.length - 1 && <b>{fix.old}</b>}</span>)}</span>
-              {fix.co && <div className="sr-warn-in"><CompanyRows lang={lang} co={fix.co} /></div>}
+              <span>{(fixHasName ? fixNoText : fixNoText.replace(/:$/, ".")).split("\u0000").map((part, i, arr) => <span key={i}>{part}{i < arr.length - 1 && <b>{fix.old}</b>}</span>)}</span>
+              {fix.co && fixHasName && <div className="sr-warn-in"><RejectedCompany co={fix.co} /></div>}
             </> : fix.why === "nf" ? <p style={{ margin: 0 }}>{fill(R.boxNf, { number: "\u0000" }).split("\u0000").map((part, i, arr) => <span key={i}>{part}{i < arr.length - 1 && <b>{fix.old}</b>}</span>)}</p>
               : <p style={{ margin: 0 }}>{t(R.fixUnavailable)}</p>}
-            <p style={{ margin: "6px 0 0" }}>{t(R.boxLeft)} <b>{changesLeft === 1 ? t(R.left1) : fill(R.left, { k: changesLeft })}</b></p>
+            <p style={{ margin: "6px 0 0" }}>{changesLeft > 0 ? <>{t(R.boxLeft)} <b>{changesLeft === 1 ? t(R.left1) : fill(R.left, { k: changesLeft })}</b></> : t(R.usedBoth)}</p>
           </div>
         )}
         {canRequestSignupSetup(b.regLocked, !!fix) && <Button type="button" variant="link" className="sr-link" onClick={() => b.setNoNumber(true)}>{t(R.noReg)}</Button>}
@@ -337,8 +343,7 @@ export function BusinessStep({ step, role, b, lang, busy, titleRef, go, back, ne
         </div>
       )}
       {!fix && <div className="su-info">{role === "seller" ? <Lock size={16} /> : role === "buyer" ? <EyeOff size={16} /> : <Eye size={16} />}<span>{t(agent ? S.privacyAgent : S.privacy5[role])}</span></div>}
-      <div className="su-actions"><Back /><Primary busy={busy} lang={lang} type="submit" label={fix ? R.iConfirm : S.next} /></div>
-      </>}
+      <div className="su-actions"><Back /><Primary busy={busy || (!!fix && (changesLeft <= 0 || !/^\d{13}$/.test(b.reg)))} lang={lang} type="submit" label={fix ? R.iConfirm : S.next} /></div>
     </form>
   </>;
 

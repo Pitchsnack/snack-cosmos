@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { DialogOverlay, DialogPortal } from "@/components/ui/dialog";
 import { ConfirmRegDialog, FoundDialog, NotFoundDialog, SetupRequest, SimpleDialog, VerifyingDialog } from "@/components/login/signup-reg-parts";
 import { RegCopyContext, R_ADD, type SetupReason } from "@/components/login/signup-reg-copy";
-import { BusinessStep, bizStepName, businessSteps, useBusinessAnswers, type BizStep } from "@/components/login/business-steps";
+import { BusinessStep, bizStepName, businessSteps, companySetupReason, useBusinessAnswers, type BizStep } from "@/components/login/business-steps";
 import { S } from "@/components/login/signup-copy";
 import { answerAddCheck, getAddContactDefaults, runAddCheck, sendAddSetupRequest, type AddAnswersInput, type AddCheck } from "@/lib/add-company-check.functions";
 import type { RegCompany } from "@/lib/signup-reg.functions";
@@ -51,14 +51,16 @@ export function AddCompanyCheck({ kind, open, onClose, onYes }: { kind: Kind; op
   const [dlg, setDlg] = useState<Dlg>(null);
   const [res, setRes] = useState<AddCheck | null>(null);
   const [tried, setTried] = useState<string[]>([]);
+  const [checks, setChecks] = useState(0);
   const [busy, setBusy] = useState(false);
   const [setupCard, setSetupCard] = useState<null | "check_failed" | "too_many">(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const attempt = useRef(0);
-  const changes = Math.max(0, tried.length - 1);
+  const changes = Math.max(0, checks - 1);
   const changesLeft = Math.max(0, REG_CHANGES - changes);
 
-  useEffect(() => { if (!dlg) titleRef.current?.focus({ preventScroll: true }); }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  const assistedInline = companySetupReason(kind, b.answer, b.country, b.noNumber);
+  useEffect(() => { if (!dlg) titleRef.current?.focus({ preventScroll: true }); }, [step, assistedInline, setupCard]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const go = (k: BizStep) => { b.setPickErr(false); setStep(k); };
   const idx = Math.max(0, order.indexOf(step));
@@ -83,6 +85,7 @@ export function AddCompanyCheck({ kind, open, onClose, onYes }: { kind: Kind; op
     if (n !== attempt.current) return;
     setRes(r);
     if (r.status === "found" || r.status === "not_found") {
+      setChecks((n) => n + 1);
       setTried((l) => Array.from(new Set([...l, r.reg])));
       b.setFix(null); b.setRegLocked(true);
     }
@@ -92,7 +95,7 @@ export function AddCompanyCheck({ kind, open, onClose, onYes }: { kind: Kind; op
     else setDlg("unavailable");
   }
   function openFix(why: "no" | "nf" | "unavailable", co?: RegCompany) {
-    b.setFix({ why, old: b.reg, co }); b.setRegLocked(false); b.setSameErr(false); b.setErr5({}); setDlg(null); setStep("company");
+    b.setFix({ why, old: b.reg, co }); b.setRegLocked(false); b.setErr5({}); setDlg(null); setStep("company");
     setTimeout(() => { b.regRef.current?.focus(); b.regRef.current?.select(); }, 60);
   }
   async function answerNo() {
@@ -127,6 +130,13 @@ export function AddCompanyCheck({ kind, open, onClose, onYes }: { kind: Kind; op
     await sendReq({ data: { kind, reason, lang, session: session.current, ...v } });
   };
 
+  function backFromSetupCard() {
+    setSetupCard(null); setDlg(null); setStep("company");
+    if (!b.fix && res?.status === "found") b.setFix({ why: "no", old: res.reg, co: res.company });
+    else if (!b.fix && res?.status === "not_found") b.setFix({ why: "nf", old: res.reg });
+    b.setRegLocked(false);
+  }
+
   const main = open && !dlg;
   return (
     <RegCopyContext.Provider value={R_ADD}>
@@ -136,18 +146,17 @@ export function AddCompanyCheck({ kind, open, onClose, onYes }: { kind: Kind; op
           <DialogPrimitive.Content aria-describedby={undefined} data-testid="add-company-flow"
             className="lg su su-pop fixed left-1/2 top-1/2 z-50 max-h-[92dvh] w-[min(560px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl shadow-lg"
             data-lang={lang} onOpenAutoFocus={(e) => { e.preventDefault(); titleRef.current?.focus(); }}>
-            <DialogPrimitive.Title className="sr-only">{bizStepName(step, kind, R_ADD)[lang]}</DialogPrimitive.Title>
+            <DialogPrimitive.Title className="sr-only">{setupCard || assistedInline ? R_ADD.sTitle[lang] : bizStepName(step, kind, R_ADD)[lang]}</DialogPrimitive.Title>
             <div className="lg-card su-card">
               {setupCard ? (
                 <div className="su-step">
-                  <h1 ref={titleRef} tabIndex={-1} className="sr-only">{R_ADD.sTitle[lang]}</h1>
-                  <SetupRequest card lang={lang} reason={setupCard} init={init} tried={tried} onSend={(v) => onSend(setupCard, v)} />
+                  <SetupRequest lang={lang} reason={setupCard} init={init} tried={tried} titleRef={titleRef} onBackToFields={backFromSetupCard} onSend={(v) => onSend(setupCard, v)} />
                 </div>
               ) : <>
-                <div className="su-prog">
+                {!assistedInline && <div className="su-prog">
                   <div className="su-prow"><b>{bizStepName(step, kind, R_ADD)[lang]}</b><span>{S.progress[lang].replace("{n}", String(idx + 1)).replace("{N}", String(order.length))}</span></div>
                   <div className="su-bars" style={{ gridTemplateColumns: `repeat(${order.length},1fr)` }}>{order.map((n, k) => <i key={n} className={k <= idx ? "on" : ""} />)}</div>
-                </div>
+                </div>}
                 <div className={`su-step${step === "sector" ? " su-wide" : ""}`} key={step}>
                   <BusinessStep step={step} role={kind} b={b} lang={lang} busy={busy} titleRef={titleRef}
                     go={go} back={back} next={next} onConfirmNeeded={() => setDlg("confirm")} changesLeft={changesLeft}

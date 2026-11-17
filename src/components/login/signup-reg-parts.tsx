@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Check, LoaderCircle, X } from "lucide-react";
+import { ArrowLeft, Check, LoaderCircle, X } from "lucide-react";
 import { DialogOverlay, DialogPortal } from "@/components/ui/dialog";
+import { COUNTRIES } from "@/lib/investor-bands";
 import { toWebp } from "@/lib/media/to-webp";
 import type { RegCompany } from "@/lib/signup-reg.functions";
 import { type SetupReason, useRegCopy } from "./signup-reg-copy";
@@ -91,6 +92,17 @@ export function CompanyRows({ lang, co, full }: { lang: Lang; co: RegCompany; fu
       {full && <div className="sr-row"><span>{R.status[lang]}</span><div><span className="sr-status" style={co.active ? undefined : { color: "var(--sr-muted)" }}><i />{co.active ? R.active[lang] : co.statusTh ?? "—"}</span></div></div>}
     </div>
   );
+}
+
+/** Compact company identity inside the rejected-number yellow explanation. */
+export function RejectedCompany({ co }: { co: RegCompany }) {
+  const name = co.nameTh ?? co.nameEn;
+  const address = co.addressEn ?? co.addressTh;
+  return <div className="sr-warn-co">
+    {name && <b>{name}</b>}
+    {co.nameTh && co.nameEn && <small>{co.nameEn}</small>}
+    {address && <small>{address}</small>}
+  </div>;
 }
 
 /** 6.3 Is this your company? */
@@ -231,20 +243,20 @@ export function LogoPicker({ lang, role, logo, onChange, showRequiredError }: { 
 
 /* --------------------------- Set-up request form -------------------------- */
 export type SetupInit = { name: string; email: string; company: string; country: string; phone?: string };
-export function SetupRequest({ lang, reason, init, tried, onBackToFields, onSend, card }: {
-  lang: Lang; reason: SetupReason; init: SetupInit; tried: string[]; card?: boolean;
+export function SetupRequest({ lang, reason, init, tried, onBackToFields, onSend, titleRef }: {
+  lang: Lang; reason: SetupReason; init: SetupInit; tried: string[];
   onBackToFields?: () => void;
   onSend: (v: { name: string; email: string; phone: string; company: string | null; country: string; note: string | null }) => Promise<void>;
+  titleRef?: React.RefObject<HTMLHeadingElement | null>;
 }) {
   const R = useRegCopy();
   const [v, setV] = useState({ name: init.name, email: init.email, phone: init.phone ?? "", company: init.company, country: init.country, note: "" });
   useEffect(() => { setV((o) => ({ ...o, name: o.name || init.name, email: o.email || init.email, phone: o.phone || (init.phone ?? ""), company: o.company || init.company, country: init.country || o.country })); }, [init.name, init.email, init.company, init.country, init.phone]);
   const [errs, setErrs] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false); const [fail, setFail] = useState(false); const [done, setDone] = useState(false);
-  const companyOptional = reason === "individual";
   const canGoBack = ["no_number", "individual", "outside_buyer", "outside_advisor"].includes(reason);
   async function send() {
-    const e = { name: v.name.trim().length < 2, email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email.trim()), phone: v.phone.replace(/\D/g, "").length < 6, company: !companyOptional && !v.company.trim(), country: v.country.trim().length < 2 };
+    const e = { name: v.name.trim().length < 2, email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email.trim()), phone: v.phone.replace(/\D/g, "").length < 6, company: !v.company.trim(), country: v.country.trim().length < 2 };
     setErrs(e);
     if (Object.values(e).some(Boolean)) return;
     setBusy(true); setFail(false);
@@ -253,33 +265,38 @@ export function SetupRequest({ lang, reason, init, tried, onBackToFields, onSend
     finally { setBusy(false); }
   }
   if (done) return (
-    <div className="sr"><div className={card ? "" : "sr-setup"}><div className="sr-thanks" role="status">
+    <div className="sr"><div className="sr-thanks" role="status">
       <span className="sr-circle ok" aria-hidden><Check size={22} /></span><b>{R.thanksA[lang]}</b><p>{R.thanksB[lang]}</p>
       {canGoBack && onBackToFields && <div className="sr-btns end" style={{ justifyContent: "center" }}><button type="button" className="sr-btn" onClick={onBackToFields}>{R.backSignup[lang]}</button></div>}
-    </div></div></div>
+    </div></div>
   );
   const F = (k: keyof typeof v, label: string, req: boolean, type = "text", full = false) => (
-    <label className={full ? "full" : ""}>{label}{req ? <span className="sr-req" aria-hidden>*</span> : <span className="su-opt"> {lang === "th" ? "ไม่บังคับ" : "optional"}</span>}
+    <label className={full ? "full" : ""}>
+      <span className="sr-field-label">{label}{req ? <span className="sr-req" aria-hidden>*</span> : <span className="su-opt">{lang === "th" ? "ไม่บังคับ" : "optional"}</span>}</span>
       {k === "note" ? <textarea rows={3} value={v.note} onChange={(e) => setV({ ...v, note: e.target.value })} maxLength={2000} />
+        : k === "country" ? <select aria-required={req} className={errs[k] ? "bad" : ""} value={v.country} onChange={(e) => { setV({ ...v, country: e.target.value }); setErrs((x) => ({ ...x, country: false })); }}>
+          {COUNTRIES.map((country) => <option key={country} value={country}>{country}</option>)}
+        </select>
         : <input type={type} aria-required={req} className={errs[k] ? "bad" : ""} value={v[k]} onChange={(e) => { setV({ ...v, [k]: e.target.value }); setErrs((x) => ({ ...x, [k]: false })); }} />}
       {errs[k] && <em>{R.required[lang]}</em>}
     </label>
   );
   return (
-    <div className="sr"><div className="sr-setup">
-      <h3>{R.sTitle[lang]}</h3>
-      <p>{R.why[reason][lang]} {R.sLead[lang]}</p>
+    <div className="sr sr-setup-page">
+      <h1 ref={titleRef} tabIndex={-1}>{R.sTitle[lang]}</h1>
+      <p className="sr-setup-intro"><span>{R.why[reason][lang]}</span><span>{R.sLead[lang]}</span></p>
       <div className="sr-grid">
         {F("name", R.fullName[lang], true)}{F("email", R.workEmail[lang], true, "email")}
-        {F("phone", R.phone[lang], true, "tel")}{F("company", companyOptional ? R.coIf[lang] : R.coFirm[lang], !companyOptional)}
-        {F("country", R.country[lang], true)}{F("note", R.anything[lang], false, "text", true)}
+        {F("phone", R.phone[lang], true, "tel")}{F("country", R.country[lang], true)}
+        {F("company", R.coFirm[lang], true, "text", true)}{F("note", R.anything[lang], false, "text", true)}
       </div>
       {(reason === "check_failed" || reason === "too_many") && tried.length > 0 && <p className="sr-hint">{tx(lang, R.triedLine, { numbers: tried.join(", ") })}</p>}
       {fail && <p className="sr-hint bad" role="alert">{lang === "th" ? "ส่งคำขอไม่สำเร็จ กรุณาลองอีกครั้ง" : "We couldn't send your request. Please try again."}</p>}
-      <div className="sr-foot">
-        {canGoBack && onBackToFields ? <button type="button" className="sr-link" style={{ marginTop: 0 }} onClick={onBackToFields}>{R.haveAfter[lang]}</button> : <span />}
+      <div className="sr-setup-actions">
+        {onBackToFields ? <button type="button" className="sr-btn" disabled={busy} onClick={onBackToFields}><ArrowLeft size={17} />{lang === "th" ? "ย้อนกลับ" : "Back"}</button> : <span />}
         <button type="button" className="sr-btn navy" disabled={busy} onClick={() => void send()}>{busy ? R.sending[lang] : R.send[lang]}</button>
       </div>
-    </div></div>
+      <p className="sr-setup-note">{R.sNote[lang]}</p>
+    </div>
   );
 }

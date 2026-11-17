@@ -49,8 +49,10 @@
 .sr-hint.bad { color: var(--sr-red); }
 .sr-link { background: none; border: 0; padding: 0; color: var(--sr-blue); text-decoration: underline; cursor: pointer; font-size: 14px; margin-top: 8px; text-align: left; }
 .sr-warn { margin-top: 10px; background: var(--sr-warn-bg); border: 1px solid var(--sr-warn-edge); color: var(--sr-warn-ink); border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.5; }
-.sr-warn-in { margin: 8px 0; background: var(--sr-paper); border: 1px solid var(--sr-warn-inner); border-radius: 10px; padding: 10px 12px; color: var(--sr-ink); }
+.sr-warn-in { margin: 8px 0; background: var(--sr-paper); border: 1px solid var(--sr-warn-inner); border-radius: 10px; padding: 9px 13px; color: var(--sr-ink); }
 .sr-warn-in p { margin: 0 0 4px; }
+.sr-warn-co b { display: block; font-weight: 600; }
+.sr-warn-co small { display: block; color: var(--sr-muted); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
 .sr-info { margin-top: 12px; background: var(--sr-info-bg); border: 1px solid var(--sr-info-edge); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
 /* Logo */
 .sr-logo { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; margin-top: 14px; }
@@ -62,18 +64,29 @@
 .dark .logo-drop-hint { color: var(--muted); }
 .sr-logo-side p { margin: 0 0 2px; font-size: 13.5px; color: var(--sr-muted); }
 .sr-logo-side .err { color: var(--sr-red); margin-top: 6px; }
-/* Set-up request */
-.sr-setup { margin-top: 14px; background: var(--sr-info-bg); border: 1px solid var(--sr-info-edge); border-radius: 14px; padding: 18px; }
-.sr-setup h3 { font-size: 17px; font-weight: 700; margin: 0; }
-.sr-setup > p { font-size: 14px; margin: 6px 0 0; }
-.sr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
-@media (max-width: 520px) { .sr-grid { grid-template-columns: 1fr; } }
-.sr-grid label { display: grid; gap: 4px; font-size: 13.5px; font-weight: 600; }
+/* Set-up request: a standalone page, not a nested grey panel. */
+.sr-setup-intro { margin: 8px 0 0; color: var(--sr-muted); font-size: 15px; line-height: 1.6; }
+.sr-setup-intro > span { display: block; }
+.sr-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px 16px; margin-top: 20px; }
+.sr-grid label { display: grid; align-content: start; gap: 6px; min-width: 0; font-size: 14px; font-weight: 600; }
+.sr-field-label { display: block; min-width: 0; line-height: 1.45; }
+.sr-field-label .sr-req { margin-left: 2px; top: -1px; }
+.sr-field-label .su-opt { margin-left: 6px; color: var(--sr-muted); font-size: 13px; font-weight: 400; }
 .sr-grid .full { grid-column: 1 / -1; }
-.sr-grid input, .sr-grid textarea, .sr-grid select { border: 1px solid var(--sr-edge); border-radius: 10px; padding: 9px 11px; font-size: 15px; background: var(--sr-paper); color: var(--sr-ink); font-weight: 400; width: 100%; min-width: 0; }
+.sr-grid input, .sr-grid textarea, .sr-grid select { border: 1px solid var(--sr-edge); border-radius: 10px; padding: 10px 12px; font-size: 15px; background: var(--sr-paper); color: var(--sr-ink); font-weight: 400; width: 100%; min-width: 0; min-height: 48px; }
+.sr-grid textarea { min-height: 96px; resize: vertical; }
 .sr-grid .bad { border-color: var(--sr-red); }
 .sr-grid em { color: var(--sr-red); font-style: normal; font-weight: 400; font-size: 12.5px; }
-.sr-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+.sr-setup-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; }
+.sr-setup-actions .sr-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.sr-setup-actions .sr-btn.navy { flex: 1; }
+.sr-setup-note { margin: 12px 0 0; color: var(--sr-muted); font-size: 13px; line-height: 1.5; }
+@media (max-width: 520px) {
+  .sr-grid { grid-template-columns: minmax(0, 1fr); }
+  .sr-grid .full { grid-column: auto; }
+  .sr-setup-actions { flex-direction: column-reverse; align-items: stretch; }
+  .sr-setup-actions .sr-btn { width: 100%; }
+}
 .sr-thanks { text-align: center; padding: 18px 6px; }
 .sr-thanks .sr-circle { margin: 0 auto 10px; }
 .sr-thanks b { display: block; font-size: 17px; }
