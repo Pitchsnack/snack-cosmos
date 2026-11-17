@@ -222,7 +222,8 @@ function AccessPage({ flash, onOpen, onLang }: { flash: Flash | null; onOpen: (d
   const [lang, setLangState] = useState<Lang>("th");
   const t = (x: { th: string; en: string }) => x[lang];
   const [code, setCode] = useState(flash?.kind === "inactive" && flash.code ? flash.code : "");
-  const [remember, setRemember] = useState(true);
+  // Testing phase: never remember the device so testers always see the access code page.
+  const remember = false;
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<Err>(flash?.kind === "inactive" ? "inactive" : flash?.kind === "no_pass" ? "newAcct" : null);
   const [pausedUntil, setPausedUntil] = useState(0);
@@ -325,8 +326,8 @@ function AccessPage({ flash, onOpen, onLang }: { flash: Flash | null; onOpen: (d
                   </div>
                   <div id="ag-err" aria-live="polite">{err && <div className="lg-err"><CircleAlert size={15} />{t(ERR_TEXT[err])}</div>}</div>
                 </div>
-                <label className="lg-check">
-                  <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+                <label className="lg-check" style={{ opacity: 0.5, cursor: "not-allowed" }} aria-disabled="true">
+                  <input type="checkbox" checked={false} disabled readOnly />
                   {t(G.remember)}
                 </label>
                 <button type="submit" className={`lg-btn${busy ? " ag-busy" : ""}`} disabled={busy || paused}>
