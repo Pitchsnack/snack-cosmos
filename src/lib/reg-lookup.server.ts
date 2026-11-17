@@ -61,3 +61,46 @@ export async function answerSignupAttempt(sb: any, userId: string, result: "yes"
     if (data?.[0]) await sb.from("registration_attempts").update({ result }).eq("id", data[0].id);
   } catch (e) { console.error("registration attempt", e); }
 }
+
+export async function sha(s: string) {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+/** 5 checks a day per device (browser id or IP), sign-up and + Add counted together in signup_reg_checks. */
+export async function deviceLimit(sb: any, deviceId: string) {
+  const { getRequestHeader } = await import("@tanstack/react-start/server");
+  const ip = getRequestHeader("cf-connecting-ip") ?? getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+  const deviceHash = await sha(`d:${deviceId}`);
+  const ipHash = ip ? await sha(`i:${ip}`) : null;
+  const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+  const { count } = await sb.from("signup_reg_checks").select("id", { count: "exact", head: true }).gte("created_at", since).neq("result", "unavailable")
+    .or(ipHash ? `device_hash.eq.${deviceHash},ip_hash.eq.${ipHash}` : `device_hash.eq.${deviceHash}`);
+  return { over: (count ?? 0) >= 5, deviceHash, ipHash };
+}
+
+export type HeldLogoIn = { data: string; type: "image/webp" | "image/svg+xml" | "image/png" | "image/jpeg" } | null | undefined;
+/** Uploads a held (browser-converted) logo to where the setup wizards save it. Returns the path or null. */
+export async function uploadHeldLogo(sb: any, logo: HeldLogoIn, pathFor: (ext: string) => string): Promise<string | null> {
+  if (!logo) return null;
+  const m = /^data:([^;]+);base64,(.+)$/.exec(logo.data);
+  if (!m) return null;
+  const bytes = Uint8Array.from(atob(m[2]!), (ch) => ch.charCodeAt(0));
+  if (bytes.byteLength > 2 * 1024 * 1024) return null;
+  const ext = logo.type === "image/svg+xml" ? "svg" : logo.type === "image/png" ? "png" : logo.type === "image/jpeg" ? "jpg" : "webp";
+  const path = pathFor(ext);
+  const { error } = await sb.storage.from("startup-media").upload(path, bytes, { contentType: logo.type, upsert: true });
+  return error ? null : path;
+}
+
+/**
+ * At "Yes": the one DBD store write shared by sign-up and + Add. Company-only identity checks are not
+ * saved as a completed financial extraction; Admin/report flows fetch those later.
+ */
+export async function saveDbdAfterYes(sb: any, userId: string, reg: string, raw: any) {
+  if (!raw || raw.lookupScope === "company") return false;
+  try {
+    const { outcomeToData } = await import("./dbd-store.server");
+    await sb.rpc("dbd_store_save_signup", { _user: userId, _reg: reg, _data: outcomeToData(raw), _raw: raw });
+    return true;
+  } catch (e) { console.error("dbd store", e); return false; }
+}

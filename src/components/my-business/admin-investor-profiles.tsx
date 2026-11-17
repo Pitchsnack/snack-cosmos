@@ -42,9 +42,9 @@ export function useAddInvestorProfile() {
     lock.current = true; setBusy(true);
     try {
       const { id } = await add();
-      await apply({ data: { attemptId: y.attemptId, kind: "buyer", profileId: id, name: y.name, session: y.session } });
+      await apply({ data: { attemptId: y.attemptId, kind: "buyer", profileId: id, session: y.session, answers: y.answers } });
       setOpen(false);
-      await navigate({ to: "/buyer/company/$id/setup", params: { id }, search: {} });
+      await navigate({ to: "/marketplace/my-company", search: { open: id } as never });
     } finally { lock.current = false; setBusy(false); }
   };
   const run = async () => { setOpen(true); };

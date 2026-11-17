@@ -86,10 +86,10 @@ function useAddFirm() {
     setBusy(true);
     try {
       const { id } = await create();
-      await apply({ data: { attemptId: y.attemptId, kind: "advisor", profileId: id, name: y.name, session: y.session } });
+      await apply({ data: { attemptId: y.attemptId, kind: "advisor", profileId: id, session: y.session, answers: y.answers } });
       setOpen(false);
       await qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY });
-      await navigate({ to: "/advisor/company/$id/setup", params: { id } });
+      await navigate({ to: "/marketplace/my-company", search: { open: id } as never });
     } finally { setBusy(false); }
   };
   const add = () => setOpen(true);

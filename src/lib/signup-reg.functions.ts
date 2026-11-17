@@ -40,10 +40,7 @@ const Pending = z.object({
 });
 export type PendingPayload = z.infer<typeof Pending>;
 
-async function sha(s: string) {
-  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-}
+async function sha(s: string) { const { sha: h } = await import("./reg-lookup.server"); return h(s); }
 
 export const getRegState = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -75,16 +72,7 @@ export const savePendingSignup = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-async function deviceLimit(sb: any, deviceId: string) {
-  const { getRequestHeader } = await import("@tanstack/react-start/server");
-  const ip = getRequestHeader("cf-connecting-ip") ?? getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
-  const deviceHash = await sha(`d:${deviceId}`);
-  const ipHash = ip ? await sha(`i:${ip}`) : null;
-  const since = new Date(Date.now() - 24 * 3600_000).toISOString();
-  const { count } = await sb.from("signup_reg_checks").select("id", { count: "exact", head: true }).gte("created_at", since).neq("result", "unavailable")
-    .or(ipHash ? `device_hash.eq.${deviceHash},ip_hash.eq.${ipHash}` : `device_hash.eq.${deviceHash}`);
-  return { over: (count ?? 0) >= 5, deviceHash, ipHash };
-}
+async function deviceLimit(sb: any, deviceId: string) { const { deviceLimit: d } = await import("./reg-lookup.server"); return d(sb, deviceId); }
 
 async function lookupCheck(reg: string): Promise<any> {
   const { lookupCheck: run } = await import("./reg-lookup.server");
@@ -248,24 +236,10 @@ export const confirmRegCompany = createServerFn({ method: "POST" })
     await doSaveSector(uid, p.sector as never);
 
     // Logo, uploaded now to the same place the setup wizard saves it.
-    let logoPath: string | null = null;
-    if (p.logo) {
-      const m = /^data:([^;]+);base64,(.+)$/.exec(p.logo.data);
-      if (m) {
-        const bytes = Uint8Array.from(atob(m[2]!), (ch) => ch.charCodeAt(0));
-        if (bytes.byteLength <= 2 * 1024 * 1024) {
-          const ext = p.logo.type === "image/svg+xml" ? "svg" : p.logo.type === "image/png" ? "png" : p.logo.type === "image/jpeg" ? "jpg" : "webp";
-          let path: string;
-          if (a.role === "advisor") path = `advisor/${uid}/logo-${Date.now()}-signup.${ext}`;
-          else {
-            const t = a.role === "seller" ? await sb.from("startups").select("tenant_id").eq("id", pid).maybeSingle() : await sb.from("investors").select("tenant_id").eq("id", pid).maybeSingle();
-            path = `${t.data?.tenant_id}/${pid}/logo-${Date.now()}.${ext}`;
-          }
-          const { error } = await sb.storage.from("startup-media").upload(path, bytes, { contentType: p.logo.type, upsert: true });
-          if (!error) logoPath = path;
-        }
-      }
-    }
+    const { uploadHeldLogo, saveDbdAfterYes } = await import("./reg-lookup.server");
+    let tenantId: string | null = null;
+    if (a.role !== "advisor") { const t = a.role === "seller" ? await sb.from("startups").select("tenant_id").eq("id", pid).maybeSingle() : await sb.from("investors").select("tenant_id").eq("id", pid).maybeSingle(); tenantId = t.data?.tenant_id ?? null; }
+    const logoPath = await uploadHeldLogo(sb, p.logo, (ext) => a.role === "advisor" ? `advisor/${uid}/logo-${Date.now()}-signup.${ext}` : `${tenantId}/${pid}/logo-${Date.now()}.${ext}`);
 
     const now = new Date().toISOString();
     { const { answerSignupAttempt } = await import("./reg-lookup.server"); await answerSignupAttempt(sb, uid, "yes");
@@ -307,12 +281,7 @@ export const confirmRegCompany = createServerFn({ method: "POST" })
 
     // Legacy full lookups may still populate the shared store. Company-only sign-up checks
     // must not masquerade as a completed financial extraction; Admin/report flows fetch those later.
-    if (chk.raw?.lookupScope !== "company") {
-      try {
-        const { outcomeToData } = await import("./dbd-store.server");
-        await sb.rpc("dbd_store_save_signup", { _user: uid, _reg: a.reg_no, _data: outcomeToData(chk.raw), _raw: chk.raw });
-      } catch (e) { console.error("signup dbd store", e); }
-    }
+    await saveDbdAfterYes(sb, uid, a.reg_no, chk.raw);
 
     await sb.from("signup_answers").update({ registered_at: now, pending: null, reg_check: { status: "found", reg: a.reg_no, company: co }, welcome_seen_at: null, updated_at: now }).eq("user_id", uid);
     return { role: a.role as "seller" | "buyer" | "advisor", firstName: a.first_name as string | null };

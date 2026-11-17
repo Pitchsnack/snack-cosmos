@@ -4,7 +4,7 @@ import { Check, LoaderCircle, X } from "lucide-react";
 import { DialogOverlay, DialogPortal } from "@/components/ui/dialog";
 import { toWebp } from "@/lib/media/to-webp";
 import type { RegCompany } from "@/lib/signup-reg.functions";
-import { R, type SetupReason } from "./signup-reg-copy";
+import { type SetupReason, useRegCopy } from "./signup-reg-copy";
 import "@/styles/signup-reg.css";
 
 type Lang = "th" | "en";
@@ -16,6 +16,7 @@ const tx = (lang: Lang, x: T, vars: Record<string, string | number> = {}) =>
 export function SrDialog({ open, onClose, closable, title, lang, children, mainRef }: {
   open: boolean; onClose?: () => void; closable: boolean; title: string; lang: Lang; children: React.ReactNode; mainRef?: React.RefObject<HTMLButtonElement | null>;
 }) {
+  const R = useRegCopy();
   return (
     <DialogPrimitive.Root open={open} onOpenChange={(o) => { if (!o && closable) onClose?.(); }}>
       <DialogPortal>
@@ -38,6 +39,7 @@ export function SrDialog({ open, onClose, closable, title, lang, children, mainR
 
 /** 6.1 Confirm your registration number. */
 export function ConfirmRegDialog({ open, lang, reg, change, onCancel, onConfirm }: { open: boolean; lang: Lang; reg: string; change: number; onCancel: () => void; onConfirm: () => void }) {
+  const R = useRegCopy();
   const main = useRef<HTMLButtonElement>(null);
   return (
     <SrDialog open={open} onClose={onCancel} closable title={R.cTitle[lang]} lang={lang} mainRef={main}>
@@ -54,6 +56,7 @@ export function ConfirmRegDialog({ open, lang, reg, change, onCancel, onConfirm 
 export function VerifyingDialog({ open, lang, reg, onCancel, onEdit }: {
   open: boolean; lang: Lang; reg: string; onCancel: () => void; onEdit?: () => void;
 }) {
+  const R = useRegCopy();
   const main = useRef<HTMLButtonElement>(null);
   return (
     <SrDialog open={open} onClose={onCancel} closable title={R.isYours[lang]} lang={lang} mainRef={main}>
@@ -78,6 +81,7 @@ export function regDates(iso: string | null) {
 
 /** Business name / Registered address rows, both languages. */
 export function CompanyRows({ lang, co, full }: { lang: Lang; co: RegCompany; full?: boolean }) {
+  const R = useRegCopy();
   const dt = regDates(co.regDate);
   return (
     <div className="sr-rows">
@@ -93,6 +97,7 @@ export function CompanyRows({ lang, co, full }: { lang: Lang; co: RegCompany; fu
 export function FoundDialog({ open, lang, reg, co, noChangeLeft, busy, onClose, onNo, onYes }: {
   open: boolean; lang: Lang; reg: string; co: RegCompany; noChangeLeft: boolean; busy: boolean; onClose: () => void; onNo: () => void; onYes: () => void;
 }) {
+  const R = useRegCopy();
   const main = useRef<HTMLButtonElement>(null);
   return (
     <SrDialog open={open} onClose={busy ? undefined : onClose} closable title={R.isYours[lang]} lang={lang} mainRef={main}>
@@ -117,6 +122,7 @@ function Head({ title, sub, ok }: { title: string; sub?: string; ok?: boolean })
 
 /** 6.4 We couldn't verify your company. */
 export function NotFoundDialog({ open, lang, reg, onEdit, onContact, nfA, nfB }: { open: boolean; lang: Lang; reg: string; onEdit: () => void; onContact: () => void; nfA?: string; nfB?: string }) {
+  const R = useRegCopy();
   const main = useRef<HTMLButtonElement>(null);
   return (
     <SrDialog open={open} closable={false} title={R.nfTitle[lang]} lang={lang} mainRef={main}>
@@ -130,6 +136,7 @@ export function NotFoundDialog({ open, lang, reg, onEdit, onContact, nfA, nfB }:
 
 /** 6.5 Too many checks · 6.6 Please contact the team · register not answering (retry). */
 export function SimpleDialog({ open, lang, kind, count, onMain, onEdit, busy }: { open: boolean; lang: Lang; kind: "limit" | "contact" | "unavailable"; count?: number; onMain: () => void; onEdit?: () => void; busy?: boolean }) {
+  const R = useRegCopy();
   const main = useRef<HTMLButtonElement>(null);
   const title = kind === "limit" ? R.limTitle[lang] : kind === "contact" ? R.pcTitle[lang] : R.unTitle[lang];
   return (
@@ -148,6 +155,7 @@ export function SimpleDialog({ open, lang, kind, count, onMain, onEdit, busy }: 
 
 /** 6.7 Welcome, over My Company once the account is registered. */
 export function WelcomeDialog({ open, lang, name, onClose, onCreate }: { open: boolean; lang: Lang; name: string; onClose: () => void; onCreate: () => void }) {
+  const R = useRegCopy();
   const main = useRef<HTMLButtonElement>(null);
   return (
     <SrDialog open={open} onClose={onClose} closable title={tx(lang, R.wTitle, { name })} lang={lang} mainRef={main}>
@@ -181,6 +189,7 @@ export async function prepareLogo(file: File): Promise<{ logo?: HeldLogo; error?
 }
 
 export function LogoPicker({ lang, role, logo, onChange, showRequiredError }: { lang: Lang; role: "seller" | "buyer" | "advisor"; logo: HeldLogo | null; onChange: (l: HeldLogo | null) => void; showRequiredError: boolean }) {
+  const R = useRegCopy();
   const input = useRef<HTMLInputElement>(null);
   const [err, setErr] = useState<null | "type" | "size">(null);
   const [busy, setBusy] = useState(false);
@@ -215,14 +224,15 @@ export function LogoPicker({ lang, role, logo, onChange, showRequiredError }: { 
 }
 
 /* --------------------------- Set-up request form -------------------------- */
-export type SetupInit = { name: string; email: string; company: string; country: string };
+export type SetupInit = { name: string; email: string; company: string; country: string; phone?: string };
 export function SetupRequest({ lang, reason, init, tried, onBackToFields, onSend, card }: {
   lang: Lang; reason: SetupReason; init: SetupInit; tried: string[]; card?: boolean;
   onBackToFields?: () => void;
   onSend: (v: { name: string; email: string; phone: string; company: string | null; country: string; note: string | null }) => Promise<void>;
 }) {
-  const [v, setV] = useState({ name: init.name, email: init.email, phone: "", company: init.company, country: init.country, note: "" });
-  useEffect(() => { setV((o) => ({ ...o, name: o.name || init.name, email: o.email || init.email, company: o.company || init.company, country: init.country || o.country })); }, [init.name, init.email, init.company, init.country]);
+  const R = useRegCopy();
+  const [v, setV] = useState({ name: init.name, email: init.email, phone: init.phone ?? "", company: init.company, country: init.country, note: "" });
+  useEffect(() => { setV((o) => ({ ...o, name: o.name || init.name, email: o.email || init.email, phone: o.phone || (init.phone ?? ""), company: o.company || init.company, country: init.country || o.country })); }, [init.name, init.email, init.company, init.country, init.phone]);
   const [errs, setErrs] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false); const [fail, setFail] = useState(false); const [done, setDone] = useState(false);
   const companyOptional = reason === "individual";

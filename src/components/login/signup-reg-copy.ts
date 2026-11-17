@@ -1,3 +1,4 @@
+import { createContext, useContext } from "react";
 /** Sign-up texts added by the company-first sign-up (section 14). Never says "DBD". */
 type C = { th: string; en: string };
 const c = (th: string, en: string): C => ({ th, en });
@@ -103,3 +104,32 @@ export const R = {
   bannerTitle: c("ตั้งค่าโปรไฟล์ธุรกิจของท่าน", "Set up your business profile"),
 };
 export type SetupReason = keyof typeof R.why;
+
+/** + Add texts: the same keys as sign-up, for a signed-in user adding a company (no account is made). */
+const ADD: Partial<Record<keyof typeof R, unknown>> = {
+  indNote: c("ท่านต้องใช้เลขทะเบียนนิติบุคคลของบริษัทที่ท่านใช้ลงทุน หากไม่มีบริษัท ทีม PitchSnack จะเพิ่มบริษัทให้ท่านโดยตรง", "You'll need the registration number of the company you invest through. No company? PitchSnack adds it for you personally."),
+  coLine: { company: c("เราจะยืนยันบริษัทของท่านก่อนเพิ่มเข้าในบัญชี", "We verify your company before adding it."), firm: c("เราจะยืนยันบริษัทของท่านก่อนเพิ่มเข้าในบัญชี", "We verify your firm before adding it."), ind: c("ใช้บริษัทที่ท่านใช้ลงทุน เราจะยืนยันบริษัทก่อนเพิ่มเข้าในบัญชี", "Use the company you invest through. We verify it before adding it.") },
+  nfA: c("เราไม่พบบริษัทที่ใช้เลขทะเบียนนี้ จึงยังไม่สามารถเพิ่มบริษัทได้", "We couldn't find a company with this registration number, so we can't add it yet."),
+  nfB: c("กรุณาตรวจสอบเลขทะเบียนแล้วลองอีกครั้ง หรือติดต่อทีม PitchSnack แล้วเราจะช่วยเพิ่มบริษัทของท่าน", "Check the number and try again or contact the PitchSnack team and we'll help add your company."),
+  limA: c("เพื่อปกป้องข้อมูลของบริษัทต่าง ๆ เราจำกัดจำนวนเลขทะเบียนที่ตรวจสอบได้ต่ออุปกรณ์ ขณะนี้ครบจำนวนแล้ว เราจึงยังไม่สามารถตรวจสอบบริษัทของท่านได้", "To protect companies' information, we limit how many registration numbers can be checked from one device. That limit has been reached, so we can't check your company now."),
+  limB: c("กรุณาลองอีกครั้งใน 24 ชั่วโมง หรือให้ทีม PitchSnack เพิ่มบริษัทของท่าน", "Try again in 24 hours, or ask the PitchSnack team to add your company."),
+  pcA: c("เราไม่พบบริษัทของท่านจากเลขทะเบียน {count} เลขที่ท่านลองกรอก จึงไม่สามารถเพิ่มบริษัทได้", "We couldn't find your company with the {count} registration numbers you tried, so we can't add it."),
+  pcB: c("ทีมของเราจะตรวจสอบการจดทะเบียนบริษัทของท่าน และเพิ่มบริษัทให้ท่านโดยตรง", "Our team will check your company's registration and add it for you personally."),
+  registering: c("กำลังเพิ่มบริษัทของท่าน…", "Adding your company…"),
+  sTitle: c("ให้ PitchSnack เพิ่มบริษัทของท่าน", "Let PitchSnack add your company"),
+  why: {
+    no_number: c("PitchSnack ต้องใช้เลขทะเบียนนิติบุคคลไทยในการเพิ่มบริษัท หากไม่มี ทีมของเราจะเพิ่มบริษัทให้ท่านโดยตรง", "PitchSnack needs a Thai company registration number to add a company. Without one, our team adds it for you personally."),
+    individual: c("นักลงทุนรายบุคคลต้องใช้เลขทะเบียนนิติบุคคลของบริษัทที่ใช้ลงทุน หากไม่มี PitchSnack จะเพิ่มโปรไฟล์ให้ท่านโดยตรง", "Individual Investors need the registration number of a company they invest through. Without one, PitchSnack adds the profile for you personally."),
+    outside_buyer: c("PitchSnack เพิ่มบริษัทลงทุนนอกประเทศไทยให้โดยตรง", "PitchSnack adds investment firms outside Thailand personally."),
+    outside_advisor: c("PitchSnack เพิ่มบริษัทที่ปรึกษานอกประเทศไทยให้โดยตรง", "PitchSnack adds advisory firms outside Thailand personally."),
+    check_failed: c("เราไม่สามารถยืนยันบริษัทของท่านได้ จึงไม่สามารถเพิ่มบริษัทได้ ทีมของเราจะตรวจสอบการจดทะเบียนบริษัทของท่าน และเพิ่มบริษัทให้ท่านโดยตรง", "We couldn't verify your company, so we can't add it. Our team will check your company's registration and add it for you personally."),
+    too_many: c("เราไม่สามารถตรวจสอบเลขทะเบียนเพิ่มเติมจากอุปกรณ์นี้ได้ในขณะนี้ จึงไม่สามารถเพิ่มบริษัทได้ ทีมของเราจะตรวจสอบการจดทะเบียนบริษัทของท่าน และเพิ่มบริษัทให้ท่านโดยตรง", "We can't check more registration numbers from this device right now, so we can't add your company. Our team will check your company's registration and add it for you personally."),
+  },
+  thanksB: c("ทีมของเราจะติดต่อท่านภายใน 1 วันทำการเพื่อเพิ่มบริษัทของท่าน ยังไม่มีการเพิ่มบริษัท", "Our team will contact you within 1 business day to add your company. Nothing has been added yet."),
+  backSignup: c("กลับไปที่คำถาม", "Back to the questions"),
+  noReg: c("ฉันไม่มีเลขทะเบียนนิติบุคคล หรือบริษัทของฉันจดทะเบียนในต่างประเทศ", "I don't have a company registration number, or my company is registered outside Thailand."),
+};
+export const R_ADD = { ...R, ...ADD } as typeof R;
+export const RegCopyContext = createContext<typeof R>(R);
+/** Sign-up texts, or their + Add versions inside an Add flow. */
+export const useRegCopy = () => useContext(RegCopyContext);

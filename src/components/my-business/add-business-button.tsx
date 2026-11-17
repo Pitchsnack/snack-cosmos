@@ -25,9 +25,9 @@ export function AddBusinessButton({ label = "Add My Business", size }: { label?:
     lock.current = true; setBusy(true);
     try {
       const { id } = await add({ data: { tenantId: session?.activeWorkspace?.tenantId ?? null } });
-      await apply({ data: { attemptId: y.attemptId, kind: "seller", profileId: id, name: y.name, session: y.session } });
+      await apply({ data: { attemptId: y.attemptId, kind: "seller", profileId: id, session: y.session, answers: y.answers } });
       setOpen(false);
-      await navigate({ to: "/my-startups/setup/$id", params: { id } });
+      await navigate({ to: "/my-startups", search: { open: id } as never });
     } finally { lock.current = false; setBusy(false); }
   };
   return (

@@ -12,13 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { buyOrderInvite } from "@/lib/buy-orders.functions";
 import { getSignupState, saveSignupAnswers, saveSignupSector } from "@/lib/signup.functions";
 import { confirmRegCompany, getRegState, rejectRegCompany, runRegCheck, startRegPrecheck, savePendingSignup, sendSetupRequest, type RegCheck, type RegCompany } from "@/lib/signup-reg.functions";
-import { canRequestSignupSetup, digitsOnly, isValidThaiReg, normWebsite, REG_CHANGES, signupSteps, type SignupStepKey as StepKey } from "@/lib/thai-reg";
-import { Button } from "@/components/ui/button";
-import { COUNTRIES } from "@/lib/investor-bands";
+import { REG_CHANGES, signupSteps, type SignupStepKey as StepKey } from "@/lib/thai-reg";
 import { R, type SetupReason } from "@/components/login/signup-reg-copy";
-import { CompanyRows, ConfirmRegDialog, FoundDialog, LogoPicker, NotFoundDialog, SetupRequest, SimpleDialog, VerifyingDialog, type HeldLogo } from "@/components/login/signup-reg-parts";
-import { SellerTypeQuestion, ManyTypeQuestion, buyerWords, advisorWords, manyError } from "@/components/common/business-type-question";
-import { EMPTY_PICKS, type SectorPick, type SectorPicks } from "@/lib/business-types";
+import { ConfirmRegDialog, FoundDialog, NotFoundDialog, SetupRequest, SimpleDialog, VerifyingDialog } from "@/components/login/signup-reg-parts";
+import { BIZ_STEPS, BackBtn as SharedBack, BusinessStep, Choice as SharedChoice, Err as BizErr, Primary as SharedPrimary, useBusinessAnswers, type BizStep, type Held } from "@/components/login/business-steps";
 import { useTranslation } from "@/i18n/language";
 import logoWhite from "@/assets/pitchsnack-white.png";
 import streetSvg from "@/components/login/street.svg?raw";
@@ -42,20 +39,13 @@ const clearPre = () => { try { localStorage.removeItem(PRE_KEY); } catch { /* no
 function newPre() { const id = crypto.randomUUID() + crypto.randomUUID().slice(0, 8); try { localStorage.setItem(PRE_KEY, id); } catch { /* noop */ } return id; }
 const FONT_URL = "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600;700&family=Noto+Serif+Thai:wght@600;700&display=swap";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const WEB_RE = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(\/\S*)?$/i;
 type Lang = "th" | "en";
 type T = { th: string; en: string };
 
-const ICONS: Record<string, LucideIcon> = {
-  store: Store, users: Users, "file-pen-line": FilePenLine, house: House, landmark: Landmark, rocket: Rocket,
-  "building-2": Building2, factory: Factory, sprout: Sprout, user: User, handshake: Handshake, scale: Scale,
-  calculator: Calculator, gauge: Gauge, briefcase: Briefcase, search: Search,
-};
 const POINT_ICONS: Record<Role | "none", LucideIcon[]> = {
   none: [Lock, ShieldCheck, Scale], seller: [EyeOff, LogOut, Tag], buyer: [ShieldCheck, FileText, Scale], advisor: [BadgeCheck, ChartColumn, EyeOff],
 };
 const ROLE_OF: Record<string, Role> = { seller: "seller", buyer: "buyer", partner: "advisor", advisor: "advisor" };
-const SIZES = ["1-10", "11-50", "51-200", "201-500", "500+"];
 
 export const Route = createFileRoute("/signup")({
   ssr: false,
@@ -78,12 +68,6 @@ export const Route = createFileRoute("/signup")({
   component: SignupPage,
 });
 
-type Held = {
-  company?: { name: string; size: string | null; website: string | null; country: string };
-  reg?: string;
-  sector?: { sector?: string | null; pick?: SectorPick | null; picks?: SectorPicks | null; agnostic?: boolean };
-  logo?: HeldLogo | null;
-};
 type Pending = { role: Role; answer: string; types?: string[]; first?: string; last?: string; email?: string; terms: boolean; news: boolean; provider?: string } & Held;
 const readPending = (): Pending | null => { try { const r = localStorage.getItem(PENDING_KEY); return r ? JSON.parse(r) : null; } catch { return null; } };
 const writePending = (p: Pending | null) => { try { if (p) localStorage.setItem(PENDING_KEY, JSON.stringify(p)); else localStorage.removeItem(PENDING_KEY); } catch { /* noop */ } };
@@ -111,7 +95,6 @@ function SignupPage() {
 }
 
 type Dlg = null | "confirm" | "verifying" | "found" | "nf" | "limit" | "contact" | "unavailable";
-type Fix = null | { why: "no" | "nf" | "unavailable"; old: string; co?: RegCompany };
 
 function SignupInner() {
   const navigate = useNavigate();
@@ -140,10 +123,9 @@ function SignupInner() {
   const [step, setStep] = useState<StepKey>(preRole ? "about" : "role");
   const [ready, setReady] = useState(false);
   const [role, setRole] = useState<Role | null>(preRole ?? null);
-  const [answers, setAnswers] = useState<Record<Role, string | null>>({ seller: null, buyer: null, advisor: null });
-  const [pickErr, setPickErr] = useState(false);
-  const [corpType, setCorpType] = useState<string | null>(null);
-  const [agentTypes, setAgentTypes] = useState<string[]>([]);
+  const b = useBusinessAnswers(role);
+  const { setAnswers, setPickErr, setCountry, coName, reg, setReg, regLocked, setRegLocked, setErr5, setSameErr, fix, setFix, regRef,
+    sPick, sSector, picks, agnostic, corpType, pickErr, answer, buyer, individual, agent, types, restoreHeld, restoreTypes, held, country } = b;
   // Account
   const [first, setFirst] = useState(""); const [last, setLast] = useState("");
   const [email, setEmail] = useState(search.email ?? ""); const [pw, setPw] = useState("");
@@ -159,22 +141,7 @@ function SignupInner() {
   // Confirm email
   const [code, setCode] = useState(["", "", "", "", "", ""]); const [codeErr, setCodeErr] = useState<null | "short" | "bad">(null);
   const [wait, setWait] = useState(30); const [sentNote, setSentNote] = useState(false);
-  // Your company
-  const [country, setCountry] = useState("Thailand");
-  const [coName, setCoName] = useState(""); const [size, setSize] = useState(""); const [web, setWeb] = useState("");
-  const [reg, setReg] = useState(""); const [regLocked, setRegLocked] = useState(false);
-  const [err5, setErr5] = useState<Record<string, boolean>>({});
-  const [sameErr, setSameErr] = useState(false);
-  const [noNumber, setNoNumber] = useState(false);
-  const [fix, setFix] = useState<Fix>(null);
-  const regRef = useRef<HTMLInputElement>(null);
-  // Sector
-  const [sPick, setSPick] = useState<SectorPick | null>(null); const [sSector, setSSector] = useState<string | null>(null);
-  const [picks, setPicks] = useState<SectorPicks>(EMPTY_PICKS); const [agnostic, setAgnostic] = useState(false);
-  const [err7, setErr7] = useState(false);
   const [legacy, setLegacy] = useState(false);
-  // Logo
-  const [logo, setLogo] = useState<HeldLogo | null>(null); const [logoErr, setLogoErr] = useState(false);
   // The check
   const [dlg, setDlg] = useState<Dlg>(null);
   const [found, setFound] = useState<RegCompany | null>(null);
@@ -196,30 +163,6 @@ function SignupInner() {
   }, [lang]);
   useEffect(() => { setAppLang(lang); }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
   const setLang = (l: Lang) => { setLangState(l); try { localStorage.setItem(LANG_KEY, l); } catch { /* noop */ } };
-
-  const answer = role ? answers[role] : null;
-  const buyer = role === "buyer";
-  const individual = buyer && answer === "individual";
-  const agent = buyer && answer === "agent";
-  const corp = buyer && answer === "corporate";
-  const types = corp ? (corpType ? [corpType] : []) : agent ? agentTypes : individual ? ["Individual Investor"] : [];
-  const word: "company" | "firm" = role === "seller" ? "company" : "firm";
-
-  function restoreHeld(h: Held) {
-    if (h.company) { setCoName(h.company.name ?? ""); setSize(h.company.size ?? ""); setWeb(h.company.website ?? ""); setCountry(h.company.country || "Thailand"); }
-    if (h.reg) { setReg(h.reg); setRegLocked(true); }
-    if (h.sector) { setSSector(h.sector.sector ?? null); setSPick(h.sector.pick ?? null); if (h.sector.picks) setPicks(h.sector.picks); setAgnostic(!!h.sector.agnostic); }
-    if (h.logo) setLogo(h.logo);
-  }
-  function restoreTypes(ans: string, list?: string[] | null) {
-    if (!list?.length) return;
-    if (ans === "corporate") setCorpType(list[0]!); else if (ans === "agent") setAgentTypes(list);
-  }
-  const held = (): Held => ({
-    company: { name: coName.trim(), size: individual ? null : size || null, website: web.trim() ? normWebsite(web) : null, country: role === "seller" ? "Thailand" : country },
-    reg, logo: individual ? null : logo,
-    sector: role === "seller" ? { sector: sSector, pick: sPick } : { picks: agnostic ? null : picks, agnostic },
-  });
 
   /** The check: runs on the server only once the email is confirmed. */
   async function startCheck(newReg?: string) {
@@ -350,7 +293,6 @@ function SignupInner() {
     sector: S.stepSec[role ?? "seller"], logo: R.stepLogo, account: S.stepAcc, code: S.stepCode,
   };
   const Lx = (en: string, th: string) => (lang === "th" ? th : en);
-  const err7Text = !err7 || !role ? null : role === "seller" ? (sSector ? null : t(S.eSeller)) : manyError(picks, agnostic, Lx);
   const shownN = Math.max(1, order.indexOf(step) + 1);
   const prevOf = (k: StepKey): StepKey => order[Math.max(0, order.indexOf(k) - 1)]!;
   const nextOf = (k: StepKey): StepKey => order[Math.min(order.length - 1, order.indexOf(k) + 1)]!;
@@ -365,37 +307,9 @@ function SignupInner() {
 
   const rules = [pw.length >= 8, /[A-Za-z\u0E00-\u0E7F]/.test(pw), /\d/.test(pw)];
   const go = (n: StepKey) => { setPickErr(false); setStep(n); };
-  const afterAboutFor = (v: string): StepKey => signupSteps(role, v)[2]!;
 
-  function pick(v: string, auto: boolean) {
-    if (!role) return;
-    setAnswers((a) => ({ ...a, [role]: v })); setPickErr(false);
-    if (auto) setTimeout(() => setStep(afterAboutFor(v)), 250);
-  }
   const typesOk = () => !buyer || individual || types.length > 0;
-  const outside = role !== "seller" && country !== "Thailand";
-  const setupReasonInline: SetupReason | null = outside ? (role === "advisor" ? "outside_advisor" : "outside_buyer") : noNumber ? (individual ? "individual" : "no_number") : null;
 
-  // ----- Your company -----
-  const sizeBad = () => !individual && (role === "advisor" ? !/^[1-9]\d{0,4}$/.test(size) : !SIZES.includes(size));
-  const webRequired = role === "advisor" || (buyer && !individual);
-  const webBad = () => (webRequired && !web.trim()) || (!!web.trim() && !WEB_RE.test(web.trim()));
-  const fixSame = !!fix && reg === fix.old;
-
-  function companyContinue(e: React.FormEvent) {
-    e.preventDefault(); if (busy || !role) return;
-    if (fix) {
-      if (fixSame) { setSameErr(true); regRef.current?.focus(); return; }
-      if (!isValidThaiReg(reg)) { setErr5((x) => ({ ...x, reg: true })); regRef.current?.focus(); return; }
-      setDlg("confirm"); return;
-    }
-    const errs = { name: coName.trim().length < 2, reg: !isValidThaiReg(reg), size: sizeBad(), web: webBad() };
-    setErr5(errs);
-    const firstBad = (["name", "reg", "size", "web"] as const).find((k) => errs[k]);
-    if (firstBad) { document.getElementById(`su-${firstBad}`)?.focus(); return; }
-    if (regLocked) { go(nextOf("company")); return; }
-    setDlg("confirm");
-  }
   function confirmNumber() {
     setDlg(null); setRegLocked(true);
     if (fix) { void startCheck(reg); return; }
@@ -404,18 +318,6 @@ function SignupInner() {
     go(nextOf("company"));
   }
 
-  // ----- Sector, Logo -----
-  function sectorContinue() {
-    if (busy || !role) return;
-    const bad = role === "seller" ? !sSector : !!manyError(picks, agnostic, Lx);
-    if (bad) {
-      setErr7(true);
-      setTimeout(() => document.querySelector<HTMLElement>(".su-sector [role=radio], .su-sector button")?.focus(), 0);
-      return;
-    }
-    if (legacy) { void finishLegacy(); return; }
-    go(nextOf("sector"));
-  }
   async function finishLegacy() {
     setBusy(true); setFail(false);
     try {
@@ -426,7 +328,6 @@ function SignupInner() {
       goHome(res.role);
     } catch { setBusy(false); setFail(true); }
   }
-  function logoContinue() { if (!logo) { setLogoErr(true); return; } go("account"); }
 
   // ----- Account, Confirm email -----
   const pendingNow = (extra: Partial<Pending>): Pending => ({ role: role!, answer: answer!, types, first: first.trim(), last: last.trim(), email: email.trim(), terms, news, ...held(), ...extra });
@@ -547,36 +448,11 @@ function SignupInner() {
       <button type="button" aria-pressed={lang === "en"} onClick={() => setLang("en")}>EN</button>
     </div>
   );
-  const Err = ({ text, id }: { text: T | string; id?: string }) => (
-    <div className="lg-err" id={id}><CircleAlert size={15} />{typeof text === "string" ? text : t(text)}</div>
-  );
-  const Req = () => <span className="sr-req" aria-hidden>*</span>;
+  const Err = ({ text }: { text: T | string }) => <BizErr lang={lang} text={text} />;
 
-  const Choice = ({ o, name, big, tone }: { o: { v: string; icon: string; t: T; l: T; k?: string }; name: string; big?: boolean; tone: string }) => {
-    const Icon = ICONS[o.icon] ?? Circle;
-    const checked = big ? role === o.v : answer === o.v;
-    return (
-      <label className={`su-choice ${big ? "big" : "small"} ${checked ? "on" : ""}`}
-        onClick={(e) => { if (!big && e.detail > 0) pick(o.v, true); }}>
-        <input type="radio" name={name} value={o.v} checked={checked}
-          onChange={() => (big ? (setRole(o.v as Role), setPickErr(false)) : pick(o.v, false))}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); big ? go("about") : (pick(o.v, false), go(afterAboutFor(o.v))); } }} />
-        <span className={`su-tile t-${tone}`}><Icon size={big ? 22 : 19} /></span>
-        <span className="su-ct"><b>{t(o.t)}</b><small>{t(o.l)}</small></span>
-        <span className="su-radio" aria-hidden />
-      </label>
-    );
-  };
-  const Primary = ({ label, busyLabel, onClick, type = "button" }: { label: T; busyLabel?: T; onClick?: () => void; type?: "button" | "submit" }) => (
-    <button type={type} className="lg-btn su-grow" disabled={busy} onClick={onClick}>
-      {busy && busyLabel ? <>{t(busyLabel)}<LoaderCircle size={18} className="lg-spin" /></> : <>{t(label)}<ArrowRight size={18} /></>}
-    </button>
-  );
-  const BackBtn = ({ to }: { to: StepKey }) => (
-    <Button type="button" variant="ghost" className="su-back" disabled={busy} onClick={() => go(to)}><ArrowLeft size={17} />{t(S.back)}</Button>
-  );
+  const BackBtn = ({ to }: { to: StepKey }) => <SharedBack busy={busy} lang={lang} onClick={() => go(to)} />;
+  const Primary = (p: { label: T; busyLabel?: T; onClick?: () => void; type?: "button" | "submit" }) => <SharedPrimary {...p} busy={busy} lang={lang} />;
   const setupInit = { name: [first, last].filter(Boolean).join(" "), email, company: coName, country: role === "seller" ? "Thailand" : country };
-  const fixHint = fix && fixSame;
 
   return (
     <div className="lg su" data-lang={lang}>
@@ -664,7 +540,7 @@ function SignupInner() {
                     <fieldset className="su-cards big">
                       <legend className="sr-only">{t(S.s1Legend)}</legend>
                       {(["seller", "buyer", "advisor"] as Role[]).map((r) => (
-                        <Choice key={r} name="role" big tone={r} o={{ v: r, icon: r === "seller" ? "store" : r === "buyer" ? "search" : "briefcase", t: S.roles[r][0], l: S.roles[r][1] }} />
+                        <SharedChoice key={r} name="role" big tone={r} lang={lang} checked={role === r} onPick={() => { setRole(r); setPickErr(false); }} onEnter={() => go("about")} o={{ v: r, icon: r === "seller" ? "store" : r === "buyer" ? "search" : "briefcase", t: S.roles[r][0], l: S.roles[r][1] }} />
                       ))}
                     </fieldset>
                     {inv && inv.role !== "any" && role === inv.role && <p className="su-rnote"><Info size={15} />{t(G.roleNote)}</p>}
@@ -674,164 +550,13 @@ function SignupInner() {
                     </div>
                   </>}
 
-                  {step === "about" && role && <>
-                    <h1 ref={titleRef} tabIndex={-1}>{t(S.s2[role][0])}</h1>
-                    <p className="lg-cline su-line">{t(S.s2[role][1])}</p>
-                    <fieldset className="su-cards small">
-                      <legend className="sr-only">{t(S.s2[role][0])}</legend>
-                      {opts.map((o) => <Choice key={o.v} o={o} name={`a-${role}`} tone={role} />)}
-                    </fieldset>
-                    {individual && <div className="su-info"><Info size={16} /><span>{t(R.indNote)}</span></div>}
-                    {pickErr && <Err text={S.pickOne} />}
-                    <div className="su-actions">
-                      <BackBtn to="role" />
-                      <Primary label={S.next} onClick={() => { if (!answer) { setPickErr(true); document.querySelector<HTMLInputElement>(".su-cards input")?.focus(); } else go(afterAboutFor(answer)); }} />
-                    </div>
-                  </>}
-
-                  {step === "type" && buyer && (corp || agent) && <>
-                    <h1 ref={titleRef} tabIndex={-1}>{t((agent ? S.s3Agent : S.s3Corp)[0])}</h1>
-                    <p className="lg-cline su-line">{t((agent ? S.s3Agent : S.s3Corp)[1])}</p>
-                    <fieldset className="su-cards small">
-                      <legend className="sr-only">{t((agent ? S.s3Agent : S.s3Corp)[0])}</legend>
-                      {BUYER_OPTS.filter((o) => agent || o.v !== "Individual Investor").map((o) => {
-                        const Icon = ICONS[o.icon] ?? Circle;
-                        const on = agent ? agentTypes.includes(o.v) : corpType === o.v;
-                        return (
-                          <label key={o.v} className={`su-choice small ${on ? "on" : ""}`}
-                            onClick={(e) => { if (!agent && e.detail > 0) { setCorpType(o.v); setPickErr(false); setTimeout(() => setStep("company"), 250); } }}>
-                            {agent ? (
-                              <input type="checkbox" value={o.v} checked={on}
-                                onChange={() => { setAgentTypes((l) => BUYER_OPTS.map((x) => x.v).filter((v) => (v === o.v ? !on : l.includes(v)))); setPickErr(false); }}
-                                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (!agentTypes.length) setPickErr(true); else go("company"); } }} />
-                            ) : (
-                              <input type="radio" name="b-type" value={o.v} checked={on}
-                                onChange={() => { setCorpType(o.v); setPickErr(false); }}
-                                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setCorpType(o.v); go("company"); } }} />
-                            )}
-                            <span className={`su-tile t-b-${o.k}`}><Icon size={19} /></span>
-                            <span className="su-ct"><b>{t(o.t)}</b><small>{t(o.l)}</small></span>
-                            <span className={agent ? "su-tick" : "su-radio"} aria-hidden>{agent && on && <Check size={13} strokeWidth={3} />}</span>
-                          </label>
-                        );
-                      })}
-                    </fieldset>
-                    {pickErr && <Err text={agent ? S.pickMany : S.pickOne} />}
-                    <div className="su-actions">
-                      <BackBtn to="about" />
-                      <Primary label={S.next} onClick={() => { if (!types.length) { setPickErr(true); document.querySelector<HTMLInputElement>(".su-cards input")?.focus(); } else go("company"); }} />
-                    </div>
-                  </>}
-
-                  {step === "company" && role && <>
-                    <h1 ref={titleRef} tabIndex={-1}>{t(role === "seller" ? R.coTitle.seller : R.coTitle.firm)}</h1>
-                    <p className="lg-cline su-line">{t(individual ? R.coLine.ind : R.coLine[word])}</p>
-                    <form className="su-form sr" onSubmit={companyContinue} noValidate>
-                      {role !== "seller" && !fix && (
-                        <div className="lg-fg">
-                          <label className="lg-label" htmlFor="su-country">{t(R.country)}<Req /></label>
-                          <div className="lg-field su-f"><Globe size={18} />
-                            <select id="su-country" aria-required value={country} disabled={regLocked} onChange={(e) => setCountry(e.target.value)} className="w-full bg-transparent outline-none">
-                              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                            </select></div>
-                        </div>
-                      )}
-                      {setupReasonInline ? (
-                        <SetupRequest lang={lang} reason={setupReasonInline} init={setupInit} tried={[]}
-                          onBackToFields={() => { setNoNumber(false); setCountry("Thailand"); }} onSend={(v) => sendRequest(setupReasonInline, v)} />
-                      ) : <>
-                      {!fix && (
-                        <div className="lg-fg">
-                          <label className="lg-label" htmlFor="su-name">{individual ? t(R.indName) : t(S.nameL[role])}<Req /></label>
-                          <div className={`lg-field su-f ${err5.name ? "bad" : ""}`}><Building size={18} />
-                            <input id="su-name" aria-required maxLength={120} placeholder={t(S.namePh[role])} value={coName}
-                              onChange={(e) => { setCoName(e.target.value); if (e.target.value.trim().length >= 2) setErr5((x) => ({ ...x, name: false })); }} /></div>
-                          {role === "buyer" ? (agent ? <p className="su-fhint">{t(S.nameHintAgent)}</p> : null)
-                            : S.nameHint[role] && <p className="su-fhint">{t(S.nameHint[role]!)}</p>}
-                          {err5.name && <Err text={S.nameErr[role]} />}
-                        </div>
-                      )}
-                      <div className="lg-fg">
-                        <label className={`lg-label${fix ? " sr-lbl-bad" : ""}`} htmlFor="su-reg">{t(R.regLabel)}<Req /></label>
-                        <div className={`lg-field su-f ${err5.reg || sameErr || fixHint ? "bad" : ""} ${regLocked ? "sr-locked" : ""}`}><FileText size={18} />
-                          <input id="su-reg" ref={regRef} aria-required inputMode="numeric" maxLength={13} placeholder={t(R.regPh)} value={reg} readOnly={regLocked}
-                            aria-invalid={err5.reg || sameErr || undefined}
-                            onChange={(e) => { setReg(digitsOnly(e.target.value)); setErr5((x) => ({ ...x, reg: false })); setSameErr(false); }} />
-                          {regLocked && <Lock size={16} aria-hidden />}</div>
-                        {regLocked ? <p className="sr-hint">{t(R.regLocked)}</p>
-                          : fixHint ? <p className="sr-hint bad"><b>{t(R.fixA)}</b> {t(fix!.why === "no" ? R.fixNo[word] : fix!.why === "nf" ? R.fixNf[word] : R.fixUnavailable)}</p>
-                          : <p className="sr-hint">{fill(R.regHint[word], { n: reg.length })}</p>}
-                        {err5.reg && <Err text={R.regBad} />}
-                        {sameErr && <Err text={fix?.why === "no" ? R.sameNo : fix?.why === "nf" ? R.sameNf : R.fixUnavailable} />}
-                        {fix && (
-                          <div className="sr-warn">
-                            {fix.why === "no" ? <>
-                              <span>{fill(R.boxNo, { number: "\u0000" }).split("\u0000").map((part, i, arr) => <span key={i}>{part}{i < arr.length - 1 && <b>{fix.old}</b>}</span>)}</span>
-                              {fix.co && <div className="sr-warn-in"><CompanyRows lang={lang} co={fix.co} /></div>}
-                            </> : fix.why === "nf" ? <p style={{ margin: 0 }}>{fill(R.boxNf, { number: "\u0000" }).split("\u0000").map((part, i, arr) => <span key={i}>{part}{i < arr.length - 1 && <b>{fix.old}</b>}</span>)}</p>
-                              : <p style={{ margin: 0 }}>{t(R.fixUnavailable)}</p>}
-                            <p style={{ margin: "6px 0 0" }}>{t(R.boxLeft)} <b>{changesLeft === 1 ? t(R.left1) : fill(R.left, { k: changesLeft })}</b></p>
-                          </div>
-                        )}
-                        {canRequestSignupSetup(regLocked, !!fix) && <Button type="button" variant="link" className="sr-link" onClick={() => setNoNumber(true)}>{t(R.noReg)}</Button>}
-                      </div>
-                      {!fix && !individual && (
-                        <div className="lg-fg">
-                          <label className="lg-label" htmlFor="su-size">{t(role === "advisor" ? S.sizeAdv : S.size)}<Req /></label>
-                          {role === "advisor" ? (
-                            <div className={`lg-field su-f ${err5.size ? "bad" : ""}`}><Users size={18} />
-                              <input id="su-size" aria-required inputMode="numeric" placeholder={t(S.sizeAdvPh)} value={size}
-                                onChange={(e) => { setSize(e.target.value.replace(/\D/g, "").replace(/^0+/, "").slice(0, 5)); setErr5((x) => ({ ...x, size: false })); }} />
-                              <span className="su-unit">{t(S.people)}</span></div>
-                          ) : (
-                            <div className={`lg-field su-f ${err5.size ? "bad" : ""}`}><Users size={18} />
-                              <select id="su-size" aria-required value={size} onChange={(e) => { setSize(e.target.value); setErr5((x) => ({ ...x, size: false })); }}
-                                className={`w-full bg-transparent outline-none ${size ? "" : "text-muted-foreground"}`}>
-                                <option value="" disabled>{t(S.sizePick)}</option>
-                                {SIZES.map((s) => <option key={s} value={s}>{s === "500+" ? t(S.sizeMore) : s.replace("-", "–")}</option>)}
-                              </select></div>
-                          )}
-                          {err5.size && <Err text={role === "advisor" ? S.eSizeAdv : S.eSize} />}
-                        </div>
-                      )}
-                      {!fix && (
-                        <div className="lg-fg">
-                          <label className="lg-label" htmlFor="su-web">{t(S.web)}{webRequired ? <Req /> : <> <span className="su-opt">{t(S.optional)}</span></>}</label>
-                          <div className={`lg-field su-f ${err5.web ? "bad" : ""}`}><Globe size={18} />
-                            <input id="su-web" aria-required={webRequired} inputMode="url" placeholder={role === "seller" ? "www.yourcompany.com" : "www.yourfirm.com"} value={web}
-                              onChange={(e) => { setWeb(e.target.value); setErr5((x) => ({ ...x, web: false })); }} /></div>
-                          {!webRequired && <p className="su-fhint">{t(S.webHint[role])}</p>}
-                          {err5.web && <Err text={webRequired && !web.trim() ? R.webReq : S.eWeb} />}
-                        </div>
-                      )}
-                      {!fix && <div className="su-info">{role === "seller" ? <Lock size={16} /> : role === "buyer" ? <EyeOff size={16} /> : <Eye size={16} />}<span>{t(agent ? S.privacyAgent : S.privacy5[role])}</span></div>}
-                      <div className="su-actions"><BackBtn to={prevOf("company")} /><Primary type="submit" label={fix ? R.iConfirm : S.next} /></div>
-                      </>}
-                    </form>
-                  </>}
-
-                  {step === "sector" && role && <>
-                    <h1 ref={titleRef} tabIndex={-1}>{t(S.s7[role][0])}</h1>
-                    <p className="lg-cline su-line">{t(S.s7[role][1])}</p>
-                    <div className="su-sector">
-                      {role === "seller" ? (
-                        <SellerTypeQuestion pick={sPick} sector={sSector} onChange={(p, sec) => { setSPick(p); setSSector(sec); if (sec) setErr7(false); }} />
-                      ) : (
-                        <ManyTypeQuestion picks={picks} agnostic={agnostic} words={role === "buyer" ? buyerWords(Lx) : advisorWords(Lx)}
-                          onChange={(p, ag) => { setPicks(p); setAgnostic(ag); if (!manyError(p, ag, Lx)) setErr7(false); }} />
-                      )}
-                    </div>
-                    {err7Text && <div role="alert"><Err text={err7Text} /></div>}
-                    {fail && <Err text={S.other} />}
-                    <div className="su-actions">{!legacy && <BackBtn to="company" />}<Primary label={legacy ? S.go : S.next} busyLabel={S.going} onClick={sectorContinue} /></div>
-                  </>}
-
-                  {step === "logo" && role && <>
-                    <h1 ref={titleRef} tabIndex={-1}>{t(R.logoTitle)}</h1>
-                    <p className="lg-cline su-line">{t(R.logoHelp[role])}</p>
-                    <LogoPicker lang={lang} role={role} logo={logo} onChange={(l) => { setLogo(l); if (l) setLogoErr(false); }} showRequiredError={logoErr} />
-                    <div className="su-actions"><BackBtn to="sector" /><Primary label={S.next} onClick={logoContinue} /></div>
-                  </>}
+                  {role && (BIZ_STEPS as string[]).includes(step) && (
+                    <BusinessStep step={step as BizStep} role={role} b={b} lang={lang} busy={busy} titleRef={titleRef} fail={fail}
+                      go={(k) => go(k)} back={legacy ? undefined : () => go(step === "company" ? prevOf("company") : prevOf(step))}
+                      next={(k) => (k === "logo" ? go("account") : go(nextOf(k)))} onConfirmNeeded={() => setDlg("confirm")}
+                      changesLeft={changesLeft} setup={{ init: setupInit, onSend: (r, v) => sendRequest(r, v) }}
+                      sectorAction={legacy ? { label: S.go, busyLabel: S.going, onClick: () => void finishLegacy() } : undefined} />
+                  )}
 
                   {step === "account" && role && <>
                     <h1 ref={titleRef} tabIndex={-1}>{t(S.s3Title)}</h1>
