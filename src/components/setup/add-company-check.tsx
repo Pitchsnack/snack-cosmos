@@ -26,6 +26,7 @@ export const A = {
   sent: c("ขอบคุณ เราได้รับคำขอของท่านแล้ว ทีมของเราจะติดต่อท่านภายใน 1 วันทำการ", "Thanks. We've got your request. Our team will contact you within 1 business day."),
   back: c("ย้อนกลับ", "Back"), cont: c("ดำเนินการต่อ", "Continue"), creating: c("กำลังสร้างโปรไฟล์…", "Creating the profile…"),
   indHint: c("ลงทุนในนามบุคคล? กรอกบริษัทที่ท่านใช้ลงทุน", "Investing as an individual? Enter the company you invest through."),
+  noReg: c("ฉันไม่มีเลขทะเบียนนิติบุคคล หรือบริษัทของฉันจดทะเบียนในต่างประเทศ", "I don’t have a company registration number, or my company is registered outside Thailand."),
   limitA: c("ท่านแก้ไขเลขทะเบียนครบ 2 ครั้งแล้ว กรุณาติดต่อทีม PitchSnack", "You've used both changes. Please contact the PitchSnack team."),
 };
 const tx = (s: string, v: Record<string, string | number>) => Object.entries(v).reduce((o, [k, x]) => o.split(`{${k}}`).join(String(x)), s);
@@ -140,7 +141,7 @@ export function AddCompanyCheck({ kind, open, onClose, onYes }: { kind: Kind; op
               <p className={`sr-hint${bad && touched ? " bad" : ""}`}>{bad ? R.regBad[lang] : tx(R.regHint[word][lang], { n: reg.length })}</p>
               {kind === "buyer" && <p className="sr-hint">{A.indHint[lang]}</p>}
               {(blocked || limitHit) && <p className="sr-hint bad">{A.limitA[lang]}</p>}
-              <button type="button" className="sr-link" onClick={() => setStep("none")}>{R.noReg[lang]}</button>
+              <button type="button" className="sr-link" onClick={() => setStep("none")}>{A.noReg[lang]}</button>
             </div>
           </div>
         )}
