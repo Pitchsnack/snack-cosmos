@@ -366,7 +366,7 @@ export function BusinessStep({ step, role, b, lang, busy, titleRef, go, back, ne
   if (step === "logo") return <>
     <h1 ref={titleRef} tabIndex={-1}>{t(R.logoTitle)}</h1>
     <p className="lg-cline su-line">{t(R.logoHelp[role])}</p>
-    <LogoPicker lang={lang} role={role} logo={b.logo} onChange={(l) => { b.setLogo(l); if (l) b.setLogoErr(false); }} showRequiredError={b.logoErr} />
+    <LogoPicker lang={lang} logo={b.logo} onChange={(l) => { b.setLogo(l); if (l) b.setLogoErr(false); }} showRequiredError={b.logoErr} />
     {fail && <Err lang={lang} text={S.other} />}
     <div className="su-actions"><Back /><Primary busy={busy} lang={lang} label={S.next} onClick={() => { if (!b.logo) { b.setLogoErr(true); return; } next("logo"); }} /></div>
   </>;

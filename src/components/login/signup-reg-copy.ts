@@ -34,7 +34,6 @@ export const R = {
   logoSquare: c("โลโก้ทรงสี่เหลี่ยมจัตุรัสจะแสดงผลได้ดีที่สุด", "A square logo works best."),
   logoBadType: c("เลือกรูปภาพ PNG, JPG, SVG หรือ WebP", "Choose a PNG, JPG, SVG or WebP image."),
   logoBig: c("โลโก้ต้องมีขนาดไม่เกิน 2 MB", "The logo must be 2 MB or smaller."),
-  logoUnder: { seller: c("ท่านเพิ่มรูปภาพได้ภายหลังในขั้นตอนตั้งค่าโปรไฟล์", "You can add photos later in the setup wizard."), buyer: c("ท่านเพิ่มภาพหน้าปกได้ภายหลังในขั้นตอนตั้งค่าโปรไฟล์", "You can add the cover photo later in the setup wizard."), advisor: c("ท่านแก้ไขได้ภายหลังใน Edit information และขั้นตอนตั้งค่าโปรไฟล์จะไม่ถามซ้ำ", "You can change it later in Edit information. The setup wizard won't ask for it again.") },
   // Account
   accFor: c("บัญชีสำหรับ: {role} · {company} · เลขทะเบียน {number}", "Account for: {role} · {company} · Reg. no. {number}"),
   // Pop-ups

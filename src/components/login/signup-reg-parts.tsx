@@ -206,7 +206,7 @@ export function LogoDropLabel({ lang }: { lang: Lang }) {
   return <span className="logo-drop-label"><span>{R.addLogo[lang]}</span><span className="logo-drop-hint">{R.dropLogo[lang]}</span></span>;
 }
 
-export function LogoPicker({ lang, role, logo, onChange, showRequiredError }: { lang: Lang; role: "seller" | "buyer" | "advisor"; logo: HeldLogo | null; onChange: (l: HeldLogo | null) => void; showRequiredError: boolean }) {
+export function LogoPicker({ lang, logo, onChange, showRequiredError }: { lang: Lang; logo: HeldLogo | null; onChange: (l: HeldLogo | null) => void; showRequiredError: boolean }) {
   const R = useRegCopy();
   const input = useRef<HTMLInputElement>(null);
   const [err, setErr] = useState<null | "type" | "size">(null);
@@ -236,7 +236,6 @@ export function LogoPicker({ lang, role, logo, onChange, showRequiredError }: { 
           {err && <p className="err" role="alert">{err === "type" ? R.logoBadType[lang] : R.logoBig[lang]}</p>}
         </div>
       </div>
-      <p className="sr-hint">{R.logoUnder[role][lang]}</p>
     </div>
   );
 }
