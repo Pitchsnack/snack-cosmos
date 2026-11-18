@@ -20,6 +20,8 @@ describe("standard company-step copy", () => {
   it("uses the requested Thai sign-up line without changing English or + Add", () => {
     expect(R.coLine.company.th).toBe("เราจะตรวจสอบข้อมูลบริษัทของท่านก่อนเปิดใช้งานบัญชี");
     expect(R.coLine.company.en).toBe("We verify your company before creating your account.");
+    expect(R.coLine.ind.th).toBe("ใช้บริษัทที่ท่านใช้ลงทุน เราจะตรวจสอบข้อมูลบริษัทก่อนเปิดใช้งานบัญชี");
+    expect(R.coLine.ind.en).toBe("Use the company you invest through. We verify it before creating your account.");
     expect(R_ADD.coLine.company.th).toBe("เราจะยืนยันบริษัทของท่านก่อนเพิ่มเข้าในบัญชี");
   });
 

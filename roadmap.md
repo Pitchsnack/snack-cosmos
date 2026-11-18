@@ -4,6 +4,8 @@
 - [x] After No/Not found, show only the yellow company explanation and allow cached same-number confirmation using one change without a new lookup.
 - [x] Add focused regression tests; verify EN/TH desktop/phone flows and Control/Admin shared behavior without creating accounts or changing company data.
 - [x] Deliver English/Thai assisted-form and after-No screenshots and list every shared link/form entry point.
+- [x] Correct the Individual Investor sign-up Thai help line to the brief's exact wording and cover it with a regression test.
+- [x] Complete the brief's separate seller, buyer and advisor EN/TH assisted-form and after-No browser proof without creating profiles or sending requests; cached retries reached 1 change left with no browser errors.
 
 # Logo drop hint everywhere
 - [x] Add the exact bilingual “+ Add logo” / “Or drop it here.” empty state to the shared sign-up and + Add logo box without changing its 120px size or file checks.

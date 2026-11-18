@@ -9,7 +9,7 @@ export const R = {
   stepCo: { seller: c("บริษัทของคุณ", "Your company"), buyer: c("บริษัทของคุณ", "Your firm"), advisor: c("บริษัทของคุณ", "Your firm") },
   stepLogo: c("โลโก้", "Logo"),
   coTitle: { seller: c("ชื่อบริษัทและเลขทะเบียนนิติบุคคล", "What is your company's name and registration number?"), firm: c("ชื่อบริษัทและเลขทะเบียนนิติบุคคล", "What is your firm's name and registration number?") },
-  coLine: { company: c("เราจะตรวจสอบข้อมูลบริษัทของท่านก่อนเปิดใช้งานบัญชี", "We verify your company before creating your account."), firm: c("เราจะตรวจสอบข้อมูลบริษัทของท่านก่อนเปิดใช้งานบัญชี", "We verify your firm before creating your account."), ind: c("เราจะตรวจสอบข้อมูลบริษัทของท่านก่อนเปิดใช้งานบัญชี", "Use the company you invest through. We verify it before creating your account.") },
+  coLine: { company: c("เราจะตรวจสอบข้อมูลบริษัทของท่านก่อนเปิดใช้งานบัญชี", "We verify your company before creating your account."), firm: c("เราจะตรวจสอบข้อมูลบริษัทของท่านก่อนเปิดใช้งานบัญชี", "We verify your firm before creating your account."), ind: c("ใช้บริษัทที่ท่านใช้ลงทุน เราจะตรวจสอบข้อมูลบริษัทก่อนเปิดใช้งานบัญชี", "Use the company you invest through. We verify it before creating your account.") },
   country: c("ประเทศ", "Country"),
   indName: c("ชื่อบริษัทที่ท่านใช้ลงทุน", "Name of the company you invest through"),
   regLabel: c("เลขทะเบียนนิติบุคคล", "Company Registration Number (เลขทะเบียนนิติบุคคล)"),
