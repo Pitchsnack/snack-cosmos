@@ -127,8 +127,8 @@ async function saveListingAnswers(userSb: any, startupId: string, userId: string
   if(readError) throw new Error(readError.message);
   const patch: Record<string, unknown> = l ? {
     deal_type: l.deal, owner_stays: l.stays, handover_months: l.stays === "yes" ? l.months ?? 6 : null,
-    asking_price_thb: l.price, updated_by: userId,
-  } : {updated_by:userId};
+    asking_price_thb: l.price, updated_by: userId, identity_notice_count: 0,
+  } : {updated_by:userId, identity_notice_count: 0};
   if (l) {
     const { data: control, error: controlError } = await userSb.rpc('is_control', { _user_id: userId });
     if (controlError) throw new Error(controlError.message);

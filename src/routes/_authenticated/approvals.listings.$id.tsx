@@ -22,6 +22,7 @@ import {
 import { setListingPublicImage } from "@/lib/sector-images.functions";
 import { useSectorImages } from "@/hooks/use-sector-images";
 import { cn } from "@/lib/utils";
+import { IdentityReviewPanel, useIdentityReview } from "@/components/approvals/identity-review-panel";
 
 export const Route = createFileRoute("/_authenticated/approvals/listings/$id")({
   head: () => ({
@@ -48,6 +49,7 @@ function ListingReview() {
   const notifyFn = useServerFn(setNotifyAdminEdits);
   const listFn = useServerFn(listStartups);
   const { data, isLoading, error } = useQuery({ queryKey: ["approvals", "listing", id], queryFn: () => fn({ data: { id } }) });
+  const identityQuery = useIdentityReview("seller", id);
   const startupId = (data as any)?.hp?.startup_id as string | undefined;
   const { data: items } = useQuery({
     queryKey: ["approvals", "listing-startup", startupId],
@@ -114,6 +116,7 @@ function ListingReview() {
 
       {item ? (
         <AdminReviewCtx.Provider value={ctx}>
+          <div className="rounded-[14px] border border-border bg-card p-4"><IdentityReviewPanel kind="seller" itemId={id} onChanged={refresh} /></div>
           <MyBusinessProfiles items={[item]} />
         </AdminReviewCtx.Provider>
       ) : <p className="text-sm text-muted-foreground">Loading the seller's My business screen…</p>}
@@ -132,7 +135,7 @@ function ListingReview() {
       {changes && <RequestChangesDialog onClose={() => setChanges(false)} pending={decide.isPending} onSend={(r, f, note) => decide.mutate({ id, action: "request_changes", reasons: r, fields: f, note })} />}
       {reject && <RejectDialog onClose={() => setReject(false)} pending={decide.isPending} onSend={(note) => decide.mutate({ id, action: "reject", note })} />}
       {approve && (
-        <ApproveDialog name={hp.code_name} sector={v.sector ?? ""} editsCount={edits.length} notify={ctx.notify} hasImage={!!ctx.pendingCover} pending={decide.isPending}
+        <ApproveDialog name={hp.code_name} sector={v.sector ?? ""} editsCount={edits.length} notify={ctx.notify} hasImage={!!ctx.pendingCover} pending={decide.isPending} identityRemaining={identityQuery.data?.findings.length ?? 0}
           onClose={() => setApprove(false)} onConfirm={(o) => decide.mutate({ id, action: "approve", ...o })} />
       )}
       {library && <ImageLibraryDialog id={id} current={hp.public_image_id ?? null} sector={v.sector} onClose={() => setLibrary(false)} onDone={refresh} />}
@@ -213,8 +216,8 @@ function AdminEditsDialog({ edits, names, onClose, onDone }: { edits: any[]; nam
   );
 }
 
-function ApproveDialog({ name, sector, editsCount, notify, hasImage, pending, onClose, onConfirm }: {
-  name: string; sector: string; editsCount: number; notify: boolean; hasImage: boolean; pending: boolean; onClose: () => void;
+function ApproveDialog({ name, sector, editsCount, notify, hasImage, pending, identityRemaining, onClose, onConfirm }: {
+  name: string; sector: string; editsCount: number; notify: boolean; hasImage: boolean; pending: boolean; identityRemaining: number; onClose: () => void;
   onConfirm: (o: { category: string; isNew: boolean; featured: boolean }) => void;
 }) {
   const [category, setCategory] = useState(sector);
@@ -233,6 +236,7 @@ function ApproveDialog({ name, sector, editsCount, notify, hasImage, pending, on
         <DialogTitle>Approve & publish {name}?</DialogTitle>
         <DialogDescription>This is what will happen.</DialogDescription>
         <ol className="list-decimal space-y-1.5 pl-5 text-[13px]">{steps.map((s) => <li key={s}>{s}</li>)}</ol>
+        {identityRemaining > 0 && <p className="os-note">Identity check: {identityRemaining} identifying words still need review. You can publish anyway, or go back and fix them.</p>}
         <div className="space-y-3 rounded-[10px] bg-muted p-3">
           <div className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">Directory placement</div>
           <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Category" maxLength={80} />

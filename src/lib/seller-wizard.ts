@@ -7,7 +7,6 @@ import type { RegulatoryLicence } from "@/lib/compliance";
 import type { FounderStory } from "@/lib/founder-story";
 import { strengthCount, STRENGTH_MAX } from './seller-strengths';
 import { sellerWordingCount } from './seller-listing-wording';
-import { runIdentityCheck } from './hidden-profile';
 
 export type SellerRelation = "owner" | "family_owner" | "agent";
 
@@ -219,17 +218,15 @@ export function founderContactComplete(f: SellerFounder | undefined): boolean {
   // Same checks as About Company: Email address required, Phone optional.
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((f.email ?? "").trim());
 }
-export function sellerListingFindings(d: Pick<SellerDraft, 'listingName' | 'headline' | 'headlineTh' | 'name' | 'registeredName' | 'web'>) {
-  const findings = runIdentityCheck({ code_name: d.listingName ?? '', headline: d.headline ?? '', headline_th: d.headlineTh ?? '' }, { startup_name: d.name, registered_name: d.registeredName, website_url: d.web });
-  const contact = /[\w.+-]+@[\w.-]+\.[a-z]{2,}|(?:https?:\/\/|www\.)\S+|(?:\+?\d[\d ()-]{7,}\d)/i;
-  return { name: findings.some(f => f.field === 'code_name') || contact.test(d.listingName ?? ''), headline: findings.some(f => f.field === 'headline') || contact.test(`${d.headline ?? ''} ${d.headlineTh ?? ''}`) };
+export function sellerListingFindings(_d: Pick<SellerDraft, 'listingName' | 'headline' | 'headlineTh' | 'name' | 'registeredName' | 'web'>) {
+  // Identity findings are Admin-only; sellers never see field flags or gates.
+  return { name: false, headline: false };
 }
 export function sellerListingValid(d: Pick<SellerDraft, 'listingName' | 'headline' | 'headlineTh' | 'name' | 'registeredName' | 'web' | 'nameOk'>) {
-  const findings = sellerListingFindings(d);
   return !!d.listingName?.trim() && !!(d.headline?.trim() || d.headlineTh?.trim())
     && !sellerWordingCount(d.listingName, 'name').over
     && !sellerWordingCount(d.headline, 'headline').over && !sellerWordingCount(d.headlineTh, 'headline').over
-    && !findings.name && !findings.headline && d.nameOk !== false;
+    && d.nameOk !== false;
 }
 export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
   return {

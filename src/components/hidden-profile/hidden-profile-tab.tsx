@@ -1,14 +1,13 @@
 import { useManagedIds } from "@/hooks/use-managed-ids";
 import { priceFor } from "@/lib/asking-price";
 import { useEffect, useState } from "react";
-import { AlertTriangle, Check, Pencil, Store } from "lucide-react";
+import { AlertTriangle, Pencil, Store } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
   hiddenStatusOf,
   isBuyerVisible,
   isStartupEntry,
-  runIdentityCheck,
   type EntryFacts,
   type HiddenDraft,
   type HiddenProfileRow,
@@ -21,6 +20,7 @@ import {
 } from "@/lib/public-listing";
 import { PublicListingCard, type ListingPart } from "./public-listing-card";
 import { useAdminReview } from "@/components/my-business/admin-review-context";
+import { useTranslation } from "@/i18n/language";
 
 
 export function HiddenProfileTab({
@@ -55,6 +55,7 @@ export function HiddenProfileTab({
   hasFinancials: boolean;
 }) {
   const adminReview = useAdminReview();
+  const { t } = useTranslation();
   const managedIds = useManagedIds("startup", [row?.startup_id]);
   const [editAfterCreate, setEditAfterCreate] = useState(false);
   const startup = isStartupEntry(companyType);
@@ -86,10 +87,7 @@ export function HiddenProfileTab({
   const terms = listingTerms(src);
   const built = buildPublicListing(src, { ...row, live }, hasFinancials);
   const listing = adminReview ? { ...built, coverImage: adminReview.pendingCover ?? built.coverImage } : built;
-  const flagged = [
-    ...checkListing(listing, terms),
-    ...(facts ? runIdentityCheck(row as HiddenDraft, facts).map((f) => f.term) : []),
-  ].filter((v, i, a) => a.indexOf(v) === i);
+  const identityNoticeCount = Math.max(0, Number((row as any).identity_notice_count ?? 0));
 
   return (
     <div className="space-y-3">
@@ -102,10 +100,10 @@ export function HiddenProfileTab({
         </div>
         <PublicListingCard showManaged l={{ ...listing, managed: managedIds.has(row.startup_id) }} deal={{ dealType: row.deal_type, ...priceFor(row, true) }} seller editable={adminReview ? undefined : onPart} />
       </div>
-      {flagged.length === 0 ? (
-        <p className="flex items-center gap-1.5 text-[12.5px] text-emerald-700 dark:text-emerald-400"><Check className="h-4 w-4" />Identity check passed · no company, product or people names in the public text.</p>
-      ) : (
-        <p className="flex items-start gap-1.5 text-[12.5px] text-destructive"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />Identity check found: {flagged.join(", ")}. Edit the public view to remove them before you publish.</p>
+      {!adminReview && live && identityNoticeCount > 0 && (
+        <p className="rounded-md border border-border bg-card px-3 py-2 text-[12.5px] text-muted-foreground">
+          {t("PitchSnack changed {n} words to keep your company anonymous before an NDA.").replace("{n}", String(identityNoticeCount))}
+        </p>
       )}
 
 

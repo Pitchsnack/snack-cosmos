@@ -23,7 +23,6 @@ import {
 import { buildPublicListing, provinceOnly, type ListingSource } from "@/lib/public-listing";
 import { TagChips } from "@/components/hidden-profile/public-listing-card";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { runIdentityCheck } from "@/lib/hidden-profile";
 import { ApprovalFooter, ApprovedChip, APPROVAL_LABEL, APPROVAL_TONE, approvalOf } from "@/components/my-business/approval-bits";
 import { cn } from "@/lib/utils";
 import { SectionEditLink } from "@/components/common/edit-section";

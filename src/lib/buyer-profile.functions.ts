@@ -106,6 +106,8 @@ export const setBuyerListing = createServerFn({ method: "POST" })
       if ((p as any).approval_status === "in_review") return { ok: true, submitted: true };
       const { error } = await sb.from("buyer_profiles").update({ approval_status: "in_review", submitted_at: now, decision_note: null, updated_at: now }).eq("user_id", context.userId);
       if (error) throw new Error(error.message);
+      const { captureIdentityBaseline } = await import("./identity-review.server");
+      await captureIdentityBaseline(sb, "buyer", context.userId);
       await sb.from("approval_events").insert({ item_type: "buyer_profile", item_id: context.userId, subject_user_id: context.userId, action: (p as any).approval_status === "draft" ? "submit" : "resubmit", actor_id: context.userId });
       return { ok: true, submitted: true };
     }

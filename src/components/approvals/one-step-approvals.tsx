@@ -24,6 +24,7 @@ import { useTranslation } from "@/i18n/language";
 import { TH } from "@/i18n/th";
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { DbdStorePanel } from "./dbd-store-panel";
+import { IdentityReviewPanel, useIdentityReview } from "./identity-review-panel";
 
 const KEY = ["one-step-approvals"];
 const DEFAULT_NOTE = "Your business details do not match the registered company number. Please check and confirm the information before submitting.";
@@ -54,7 +55,7 @@ export function OneStepApprovals({ kind, openId, onOpen }: { kind: OneStepKind; 
   return <div className="os-split">
     <aside className="os-queue"><h2>{t(QUEUE[kind][0])}</h2><p className="os-muted">{t(QUEUE[kind][1])}</p>
       {error ? <p className="text-destructive">{(error as Error).message}</p> : isLoading ? <p>{t("Loading…")}</p> : !items.length ? <p className="os-empty">{t(QUEUE[kind][2])}</p> : items.map(i => <Button variant="unstyled" size="unstyled" key={i.id} className="os-queue-item" aria-pressed={sel === i.id} onClick={() => pick(i.id)}>
-        <span className="os-queue-name"><span className="os-tile">{initials(i.name)}</span><strong>{i.name}</strong></span>
+        <span className="os-queue-name"><span className="os-tile">{initials(i.name)}</span><strong>{i.name}</strong>{!!i.identityCount && <span className="os-identity-dot" role="img" aria-label={t("Identity check needs review")} title={t("Identity check needs review")} />}</span>
         <span className="os-muted">{[i.ref, t(i.type ?? ""), t(i.place ?? "")].filter(Boolean).join(" · ")}</span>
         <span className={approvalWaitingDays(i.submittedAt) && i.chip === "waiting" ? "os-late" : "os-muted"}>{i.chip === "sent_back" ? `${t("Sent back {date}").replace("{date}", approvalDate(i.sentBackAt, language))} · ${t(`waiting for the ${kind}`)}` : `${t("Submitted {date}").replace("{date}", approvalDate(i.submittedAt, language))} · ${waiting(i.submittedAt)}`}</span><Status item={i} />
       </Button>)}
@@ -82,6 +83,9 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
   const { t, language } = useTranslation();
   const qc = useQueryClient();
   const decide = useServerFn(decideOneStep), mark = useServerFn(markReviewCheck), saveFn = useServerFn(saveOneStepReview);
+  const identityKind = item.kind === "buyer" ? "buyer" as const : "seller" as const;
+  const identityQuery = useIdentityReview(identityKind, item.kind === "advisor" ? null : item.id);
+  const identityRemaining = item.kind === "advisor" ? 0 : identityQuery.data?.findings.length ?? item.identityCount ?? 0;
   const { lang, setLang } = useTextLang();
   const [saved, setSaved] = useState<Saved>(() => savedOf(item));
   const [name, setName] = useState(saved.name);
@@ -155,6 +159,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
       dirtyRef.current = false;
       setSaved({ name, headline, headlineTh, texts }); setSavedAt(res.savedAt);
       void qc.invalidateQueries({ queryKey: KEY });
+      void qc.invalidateQueries({ queryKey: ["identity-review", identityKind, item.id] });
     },
     onError: (e: Error) => toast.error(t(e.message)),
   });
@@ -197,6 +202,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
   const closeEdit = async () => {
     setEditing(false);
     await qc.invalidateQueries({ queryKey: KEY });
+    await qc.invalidateQueries({ queryKey: ["identity-review", identityKind, item.id] });
     const fresh = (qc.getQueryData(KEY) as any)?.[item.kind === "seller" ? "sellers" : item.kind === "buyer" ? "buyers" : "advisors"]?.find((i: OneStepItem) => i.id === item.id) as OneStepItem | undefined;
     if (fresh && JSON.stringify(fresh.translation) + fresh.suggestedName + fresh.suggestedHeadline !== before.current) toast.success(t("Saved. The review shows the new details."));
     setTimeout(() => editBtn.current?.focus(), 0);
@@ -257,6 +263,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
         </tr>; })}</tbody></table>
         <div className="os-visual"><h4>{t("For a visual check")}</h4><div>{[["Name", r.personName || pName?.th || item.person], ["Position", r.personTitle || pTitle?.th], ["Email address", r.email], ["Contact number", r.phone]].map(([label, value]) => <div key={label}><span>{t(label ?? "")}</span><strong className={!value ? "os-muted" : ""}>{value || t("Not given")}</strong></div>)}</div></div>
       </section>
+      {item.kind !== "advisor" && <IdentityReviewPanel kind={identityKind} itemId={item.id} beforeAction={async () => { if (dirtyRef.current) await doSave(true); }} onChanged={() => void qc.invalidateQueries({ queryKey: KEY })} />}
       {item.kind === "advisor" && !!r.credentials?.length && <section><h3>{t("Licences and credentials")}</h3><ul className="divide-y divide-border">{r.credentials.map(c => <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 py-2 text-sm"><span className="min-w-0 break-words">{licenceName(c, language === "th")}{c.note && <span className="block text-xs text-muted-foreground">{c.note}</span>}</span><CredMark status={c.status} /></li>)}</ul></section>}
       <section><h3>{t(item.kind === "seller" ? "What buyers will see" : item.kind === "buyer" ? "What sellers will see" : "What sellers and buyers will see")}</h3><div className="os-previews"><Preview item={item} name={name} card={card} lang={lang} exclusive={false} />{item.kind !== "advisor" && <Preview item={item} name={name} card={card} lang={lang} exclusive />}</div></section>
     </div> : <div className="os-body">
@@ -292,7 +299,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
       <div className="os-leave-actions"><Button variant="outline" onClick={stay}>{t("Keep editing")}</Button><Button variant="outline" onClick={() => { const go = leave?.go; dirtyRef.current = false; setLeave(null); discard(); go?.(); }}>{t("Discard")}</Button><Button className="os-sb-save" disabled={save.isPending} onClick={async () => { const go = leave?.go; try { await doSave(); } catch { return; } setLeave(null); go?.(); }}>{t("Save")}</Button></div>
     </DialogContent></Dialog>
     <Dialog open={!!dialog} onOpenChange={v => !v && setDialog(null)}><DialogContent className="max-w-[660px]" aria-describedby="os-dialog-description"><DialogTitle>{dialog === "approve" ? fill("Verify and publish {name}?") : dialog === "decline" ? fill("Decline {name}?") : t("Request changes")}</DialogTitle>
-      {dialog === "approve" ? <><p id="os-dialog-description" className="sr-only">{t("Verify and publish")}</p><ul className="ap-will">{dirty && <li><Check size={16} />{t("Your unsaved changes are saved first.")}</li>}<li><Check size={16} />{fill("{name} gets the {badge} badge.", { badge: t(badge) })}</li><li><Check size={16} />{fill(item.kind === "seller" ? '{ref} goes live in Browse listings as "{listing name}", where buyers can find it and request an NDA.' : item.kind === "buyer" ? '{ref} goes live in Browse investors as "{listing name}", where sellers can find and invite it.' : '{ref} goes live in Browse advisors as "{listing name}", where sellers and buyers can find it.')}</li>{item.kind !== "advisor" && <li><Check size={16} />{fill(item.kind === "seller" ? "{first name} can connect with buyers." : "NDAs open for {first name}.")}</li>}<li><Check size={16} />{fill(`{first name} gets one email: "${email}".`)}</li></ul>{!!stillOpen.length && <p className="os-note">{fill("Still open: {list}. You can verify anyway, or go back and check.", { list: stillOpen.map(v => `${t(v.label)} (${t(v.result === "by_hand" ? "check by hand" : (v.resultLabel ?? "differs").toLowerCase())})`).join(" · ") })}</p>}
+      {dialog === "approve" ? <><p id="os-dialog-description" className="sr-only">{t("Verify and publish")}</p><ul className="ap-will">{dirty && <li><Check size={16} />{t("Your unsaved changes are saved first.")}</li>}<li><Check size={16} />{fill("{name} gets the {badge} badge.", { badge: t(badge) })}</li><li><Check size={16} />{fill(item.kind === "seller" ? '{ref} goes live in Browse listings as "{listing name}", where buyers can find it and request an NDA.' : item.kind === "buyer" ? '{ref} goes live in Browse investors as "{listing name}", where sellers can find and invite it.' : '{ref} goes live in Browse advisors as "{listing name}", where sellers and buyers can find it.')}</li>{item.kind !== "advisor" && <li><Check size={16} />{fill(item.kind === "seller" ? "{first name} can connect with buyers." : "NDAs open for {first name}.")}</li>}<li><Check size={16} />{fill(`{first name} gets one email: "${email}".`)}</li></ul>{!!stillOpen.length && <p className="os-note">{fill("Still open: {list}. You can verify anyway, or go back and check.", { list: stillOpen.map(v => `${t(v.label)} (${t(v.result === "by_hand" ? "check by hand" : (v.resultLabel ?? "differs").toLowerCase())})`).join(" · ") })}</p>}{!!identityRemaining && <p className="os-note">{fill("Identity check: {n} identifying words still need review. You can publish anyway, or go back and fix them.", { n: String(identityRemaining) })}</p>}
         {(noTh.length > 0 || noEn.length > 0) && <div className="os-note">{noTh.length > 0 && <p><b>{t("Still without Thai:")}</b> {fill("{rows}. Thai readers see the English there.", { rows: noTh.join(", ") })}</p>}{noEn.length > 0 && <p><b>{t("Still without English:")}</b> {fill("{rows}. English readers see the Thai there.", { rows: noEn.join(", ") })}</p>}<p>{t(noTh.length && noEn.length ? "You can verify anyway, or go back and add them." : noTh.length ? "You can verify anyway, or go back and add the Thai." : "You can verify anyway, or go back and add the English.")}</p></div>}</> : <>
         <p id="os-dialog-description" className="os-muted">{fill(dialog === "request_changes" ? `{first name} gets an email and sees your note on My Company. The ${item.kind === "seller" ? "listing" : "profile"} stays hidden until it's verified and published.` : item.kind === "seller" ? "The listing stays hidden, and {first name} can't connect with buyers. {first name} gets an email with the reasons and can register again." : item.kind === "buyer" ? "The profile stays hidden, and {first name} can't sign NDAs. {first name} gets an email with the reasons and can register again." : "The profile stays hidden from Browse advisors. {first name} gets an email with the reasons and can register again.")}</p>
         <div><h4>{t("Reasons")}</h4><p className="os-muted">{t("Choose one or more")}</p><div className="os-reasons">{DECISION_REASONS.map(reason => <label key={reason}><input type="checkbox" checked={reasons.includes(reason)} onChange={e => setReasons(p => e.target.checked ? [...p, reason] : p.filter(x => x !== reason))} />{t(reason)}</label>)}</div></div>

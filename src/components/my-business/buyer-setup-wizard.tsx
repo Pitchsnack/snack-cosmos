@@ -35,7 +35,7 @@ import type { EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-ada
 import { buyerInvestorKey, BuyerInformationForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
 import {
   AUM_BANDS, COUNTRIES, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, THAI_PROVINCES_77,
-  TICKET_BANDS, WIZARD_TYPES, ALL_TYPES, sortActsFor, typeLabel, bandText, descriptionError, descriptionLeaks, regError, showsStages, typeName, yearError,
+  TICKET_BANDS, WIZARD_TYPES, ALL_TYPES, sortActsFor, typeLabel, bandText, descriptionError, regError, showsStages, typeName, yearError,
   type Band,
 } from "@/lib/investor-bands";
 import { isCorporateBuyer } from "@/lib/investor-browse";
@@ -265,7 +265,6 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const individual = a.role === "individual";
   /** After sign-up an Individual Investor's firm question asks only for the address. */
   const addrOnly = individual && nameShort;
-  const leaks = descriptionLeaks(a.desc, a.name, a.web);
   const descErr = a.desc.trim() ? descriptionError(a.desc) : null;
   const agent = a.role === "agent";
   const stagesShown = showsStages(a.type, agent ? a.acts : null);
@@ -285,7 +284,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     deals: a.deals.some((d) => DEAL_TYPES.includes(d)) || a.deals.length ? null : tr("Pick at least one deal type."),
     stages: !stagesShown || a.stages.length ? null : tr("Pick at least one stage."),
     sectors: manyError(a.picks, a.sectors.includes(SECTOR_AGNOSTIC), L),
-    desc: !a.desc.trim() ? L("Add a short description.", "กรุณากรอกคำอธิบายสั้น") : descErr || (leaks.length ? "leak" : null),
+    desc: !a.desc.trim() ? L("Add a short description.", "กรุณากรอกคำอธิบายสั้น") : descErr,
     about: !a.about.trim() ? L("Add a long description.", "กรุณากรอกคำอธิบายแบบยาว") : buyerAboutError(a.about, data.investor.short_description) ? L("Keep it to 80 words.", "โปรดเขียนไม่เกิน 80 คำ") : null,
     team: teamHasName(a.people) && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(a.people[0]?.email.trim() ?? "") ? null : L("Add the first person's full name and valid email address.", "กรุณากรอกชื่อ-นามสกุลและอีเมลที่ถูกต้องของบุคคลแรก"),
     photos: med.logo && med.photos > 0 ? null : med.logo ? L("To continue, add at least 1 photo.", "เพิ่มรูปภาพอย่างน้อย 1 รูปเพื่อดำเนินการต่อ") : tr("Both are needed to continue."),
@@ -326,7 +325,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     const next = { ...a, ...patch };
     // On a Live profile only valid descriptions reach sellers.
     if ("description" in server && live) {
-      const bad = (next.desc.trim() && descriptionError(next.desc)) || descriptionLeaks(next.desc, next.name, next.web).length;
+      const bad = next.desc.trim() && descriptionError(next.desc);
       if (bad) return;
     }
     queue(server);
@@ -610,7 +609,6 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
                 onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
                 onChange={(e) => { const desc = singleLineDescription(e.target.value); setMarks((m) => ({ ...m, desc: false })); set({ desc }, { description: desc }); }} />
               {descErr && (touched.desc || forced.desc || descErr !== "Write at least 10 characters.") && <p className="mt-1.5 text-[13px] text-[#DC2626]">{tr(descErr)}</p>}
-              {leaks.length > 0 && <p className="mt-2 rounded-[10px] border border-[#F3D9A6] bg-[#FFF4E0] px-3.5 py-2.5 text-[13px] text-[#8A5A06]">{tr("Your description mentions")} <b>{leaks.join(", ")}</b>{setupText(". Sellers read it before an NDA, so leave out names, websites and contact details.")}</p>}
             </div>
             <div>
               <div className="seller-field-label"><label htmlFor="w-about"><DashLabel main={L(...DESC_LABELS.long.main)} rest={L(...DESC_LABELS.long.rest)} />{marks.about && <AutoFilled />}</label><small className={descriptionWords(a.about) > 80 ? "!text-[#DC2626]" : ""}>{descriptionWords(a.about)} / 80 {L("words", "คำ")}</small></div>
@@ -668,7 +666,6 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             <span className="text-destructive">{((touched.desc || forced.desc) || descErr !== 'Write at least 10 characters.') && descErr ? tr(descErr) : ''}</span>
             <span className="text-muted-foreground">{descriptionWords(a.desc)} / 25 {L('words','คำ')}</span>
           </div>
-          {leaks.length > 0 && <p className="mt-2 rounded-[10px] border border-[#F3D9A6] bg-[#FFF4E0] px-3.5 py-2.5 text-[13px] text-[#8A5A06]">{tr("Your description mentions")} <b>{leaks.join(", ")}</b>{setupText(". Sellers read it before an NDA, so leave out names, websites and contact details.")}</p>}
           <div className="mt-5 rounded-[12px] border border-[#E9EBF0] bg-[#FBFBFD] p-4 dark:border-border dark:bg-muted/30">
             <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">{tr("How sellers see you")}</div>
             <PublicInvestorCard empty={tr("Not added")} i={{

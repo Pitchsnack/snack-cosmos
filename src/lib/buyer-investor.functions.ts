@@ -4,7 +4,7 @@ import { optionalCompanyName } from "./company-name";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { buyerAboutError, buyerSetupDescriptionsComplete, descriptionChanged } from './buyer-description';
 import {
-  AUM_KEYS, REV_KEYS, TICKET_KEYS, bandOf, descriptionError, sortActsFor, descriptionLeaks, regError, ticketColumns, yearError,
+  AUM_KEYS, REV_KEYS, TICKET_KEYS, bandOf, descriptionError, sortActsFor, regError, ticketColumns, yearError,
 } from "@/lib/investor-bands";
 
 /**
@@ -323,11 +323,8 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     // Same checks as Review & complete (section 5); the buyer can't save past them.
     const { data: stored } = await sb.from("investors").select("short_description, short_description_th").eq("id", investorId).single();
     const problem =
-      (descriptionChanged(data.description, r.p.description) && data.description && (descriptionError(data.description) ||
-        (descriptionLeaks(data.description, data.investor_name, data.website_url ?? "").length ? "Your description mentions names, websites or contact details." : null))) ||
-      (descriptionChanged(data.description_th, r.p.description_th) && data.description_th && (descriptionError(data.description_th) || (descriptionLeaks(data.description_th, data.investor_name, data.website_url ?? "").length ? "Your Thai description mentions names, websites or contact details." : null))) ||
-      (descriptionChanged(data.suggested_headline ?? undefined, r.p.suggested_headline) && data.suggested_headline && descriptionLeaks(data.suggested_headline, data.investor_name, data.website_url ?? "").length && "What you want to buy mentions names, websites or contact details.") ||
-      (descriptionChanged(data.suggested_headline_th ?? undefined, r.p.suggested_headline_th) && data.suggested_headline_th && descriptionLeaks(data.suggested_headline_th, data.investor_name, data.website_url ?? "").length && "Your Thai What you want to buy mentions names, websites or contact details.") ||
+      (descriptionChanged(data.description, r.p.description) && data.description && descriptionError(data.description)) ||
+      (descriptionChanged(data.description_th, r.p.description_th) && data.description_th && descriptionError(data.description_th)) ||
       (relation !== "individual" && regError(data.registration_no ?? "", data.country ?? "")) ||
       buyerAboutError(data.short_description, stored?.short_description) ||
       buyerAboutError(data.short_description_th, stored?.short_description_th) ||
@@ -476,7 +473,7 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     const { sb, p, investorId } = r;
     const { data: cur } = await sb.from("investors").select("investor_name, website_url, wizard").eq("id", investorId).single();
     if (descriptionChanged(data.description, p.description) && data.description && p.status === "live") {
-      const bad = descriptionError(data.description) || descriptionLeaks(data.description, data.investor_name ?? cur.investor_name ?? "", data.website_url ?? cur.website_url ?? "").length;
+      const bad = descriptionError(data.description);
       if (bad) throw new Error("Description not saved: it needs a fix.");
     }
     const inv: Record<string, unknown> = { updated_by: context.userId, updated_at: new Date().toISOString() };

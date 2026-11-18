@@ -2,7 +2,7 @@ import { sellerWordingError } from './seller-listing-wording';
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { pickDraft, runIdentityCheck, type HiddenDraft } from "@/lib/hidden-profile";
+import { pickDraft, type HiddenDraft } from "@/lib/hidden-profile";
 
 /**
  * Approval flow: sellers submit a snapshot (version) of both views, Admin
@@ -41,7 +41,8 @@ async function buildSnapshot(sb: any, startupId: string, hp: any) {
   const { count: photos } = await sb.from("startup_media").select("id", { count: "exact", head: true }).eq("startup_id", startupId);
   const draft = pickDraft(hp as HiddenDraft);
   const people = ((founders ?? []) as { full_name: string | null }[]).map((f) => f.full_name ?? "").filter(Boolean);
-  const findings = runIdentityCheck(draft, { ...st, people, customers: [] });
+  // Legacy snapshots no longer carry user-facing identity flags. Admin uses identity-review.server.
+  const findings: { field: string; term: string; reason: string }[] = [];
   return {
     public: draft,
     private: { ...st, people, financial_years: ((fin ?? []) as any[]).map((f) => f.fiscal_year), photos: photos ?? 0 },
@@ -77,11 +78,7 @@ export const submitListing = createServerFn({ method: "POST" })
       if (error) throw new Error(error);
     }
     const snapshot = await buildSnapshot(sb, data.startupId, hp);
-    if (snapshot.identity_flags.length) throw new Error("Identity check isn't clean yet");
-    // The identity check also reads the suggested listing name and headline.
-    const { runIdentityCheck } = await import("@/lib/hidden-profile");
-    const extra = runIdentityCheck({ headline: listingName, description: hp.headline || hp.headline_th || hp.suggested_headline } as any, { ...st, people: [], customers: [] } as any);
-    if (extra.length) throw new Error(`Identity check: mentions ${extra.map((f) => f.term).join(", ")}`);
+    // Identity wording is reviewed and fixed by Admin; it never blocks the seller.
     const version = (hp.version ?? 0) + 1;
     const { error: e2 } = await sb.from("listing_submissions").insert({
       hidden_profile_id: hp.id, startup_id: hp.startup_id, tenant_id: hp.tenant_id, version, snapshot, submitted_by: context.userId,
@@ -89,9 +86,11 @@ export const submitListing = createServerFn({ method: "POST" })
     if (e2) throw new Error(e2.message);
     const now = new Date().toISOString();
     const { error: e3 } = await sb.from("hidden_profiles").update({
-      approval_status: "in_review", version, submitted_at: now, submitted_by: context.userId, updated_by: context.userId,
+      approval_status: "in_review", version, submitted_at: now, submitted_by: context.userId, updated_by: context.userId, identity_notice_count: 0,
     }).eq("id", hp.id);
     if (e3) throw new Error(e3.message);
+    const { captureIdentityBaseline } = await import("./identity-review.server");
+    await captureIdentityBaseline(await admin(), "seller", hp.id);
     const action = version > 1 ? "resubmit" : "submit";
     await logEvent({ item_type: "listing", item_id: hp.id, startup_id: hp.startup_id, subject_user_id: context.userId, version, action, actor_id: context.userId });
     await notify(context.userId, hp.tenant_id, "Submitted for approval", `${hp.code_name || hp.ref_no} (v${version}) is in review. Admin usually reviews within 1 business day.`);
@@ -323,8 +322,10 @@ export const decideListing = createServerFn({ method: "POST" })
       // Admin-chosen public image goes live now, replacing the locked placeholder.
       const cover = hp.pending_cover ?? hp.cover_image_url ?? null;
       const pub = { ...pickDraft(hp), cover_image_url: cover };
+      const { loadIdentityReview } = await import("./identity-review.server");
+      const identityReview = await loadIdentityReview(sb, "seller", hp.id);
       patch = {
-        ...base, approval_status: "live", status: "live", live: pub, live_snapshot: sub?.snapshot ? { ...sub.snapshot, public: pub } : null,
+        ...base, identity_notice_count: identityReview.fixed.length, approval_status: "live", status: "live", live: pub, live_snapshot: sub?.snapshot ? { ...sub.snapshot, public: pub } : null,
         cover_image_url: cover, directory_category: data.category ?? hp.directory_category ?? null, featured: !!data.featured,
         new_until: data.isNew === false ? null : new Date(Date.now() + 14 * 86_400_000).toISOString(),
         has_unpublished_changes: false, published_at: hp.live && hp.published_at ? hp.published_at : now, published_by: context.userId,

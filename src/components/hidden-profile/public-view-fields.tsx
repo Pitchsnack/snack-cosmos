@@ -15,8 +15,8 @@ import { EditSec } from "@/components/common/edit-section";
 import { TabHead, useTr } from "@/components/common/edit-info-popup";
 import { SectorArt } from "@/components/hidden-profile/bits";
 import {
-  DEAL_TYPES, HANDOVER_MONTHS, HIDDEN_FIELD_LABEL, identityTerms, pickDraft, runIdentityCheck, suggestCodeName,
-  type EntryFacts, type HiddenDraft, type HiddenProfileRow, type HiddenTextField,
+  DEAL_TYPES, HANDOVER_MONTHS, identityTerms, pickDraft, suggestCodeName,
+  type EntryFacts, type HiddenDraft, type HiddenProfileRow,
 } from "@/lib/hidden-profile";
 import {
   revenueBand, suggestBusinessDescription, suggestCodeNames, suggestCustomersSummary, suggestHeadline, suggestHighlights, type ListingSource,
@@ -111,7 +111,6 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
     return () => { live = false; clearTimeout(t); };
   }, [d.code_name, row?.startup_id, savedName]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const findings = useMemo(() => (facts ? runIdentityCheck(d, facts) : []), [d, facts]);
   const counts: Record<PublicTab, number> = {
     identity: ((canName ? d.code_name : d.suggested_listing_name)?.trim() ? 0 : 1) + (d.headline.trim() || d.headline_th?.trim() ? 0 : 1) + (d.description.trim() || d.description_th?.trim() ? 0 : 1) + ([0, 1, 2].every((i) => d.highlights[i]?.trim() || d.highlights_th?.[i]?.trim()) ? 0 : 1),
     deal: ((DEAL_TYPES as readonly string[]).includes(d.deal_type ?? "") ? 0 : 1) + (d.owner_stays ? 0 : 1),
@@ -128,7 +127,7 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
   return {
     wordingErrors,
     d, setD, ideas: { codeIdeas, headlineIdea, descIdea, highlightIdeas, customersIdea },
-    fillAll, findings, counts, dirty, changedFromRow, payload, nameState, nameTaken: canName && nameState === "taken", canName,
+    fillAll, counts, dirty, changedFromRow, payload, nameState, nameTaken: canName && nameState === "taken", canName,
   };
 }
 export type PublicDraftState = ReturnType<typeof usePublicDraft>;
@@ -138,23 +137,6 @@ const MISSING = "text-[#DC2626] dark:text-red-400";
 const BOX = "h-[42px] rounded-[9px] border-[#D7DCE3] px-[13px] text-[15px] placeholder:text-[#9CA3AF] focus-visible:border-[#2563EB] focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] dark:border-input";
 const AREA = "rounded-[9px] border-[#D7DCE3] px-[13px] py-[10px] text-[15px] leading-[1.5] placeholder:text-[#9CA3AF] focus-visible:border-[#2563EB] focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] dark:border-input";
 const MISS_BOX = "border-[#F87171]";
-
-function IdentityMsg({ pd }: { pd: PublicDraftState }) {
-  if (!pd.findings.length) return null;
-  const fields = [...new Set(pd.findings.map((f) => f.field))];
-  return (
-    <p className="mb-3 flex items-start gap-1.5 text-[14px] text-destructive">
-      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-      Identity check: {pd.findings.length} detail{pd.findings.length === 1 ? "" : "s"} could name the company ({fields.map((k) => HIDDEN_FIELD_LABEL[k as HiddenTextField]).join(", ")})
-    </p>
-  );
-}
-
-function FlagMsg({ pd, k }: { pd: PublicDraftState; k: HiddenTextField }) {
-  const hits = pd.findings.filter((f) => f.field === k);
-  if (!hits.length) return null;
-  return <p className="mt-1 text-[11.5px] text-destructive">Could name the company: {hits.map((f) => `"${f.term}" (${f.reason.toLowerCase()})`).join(", ")}</p>;
-}
 
 export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, refNo, tour }: {
   tab: PublicTab; pd: PublicDraftState; sector: string | null;
@@ -166,7 +148,6 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
   const { d, setD, ideas } = pd;
   const [tourAnchor, setTourAnchor] = useState<HTMLDivElement | null>(null);
   const set = <K extends keyof HiddenDraft>(k: K, v: HiddenDraft[K]) => setD((p) => ({ ...p, [k]: v }));
-  const flag = (k: HiddenTextField) => (pd.findings.some((f) => f.field === k) ? "border-destructive" : "");
   // Bilingual texts: the picked text language edits `{field}` or `{field}_th`.
   const { lang, switchable } = useTextLang();
   const appTh = useTr()("en", "th") === "th";
@@ -187,7 +168,6 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
     const hlMissing = ![0, 1, 2].every((i) => hlEn[i]?.trim() || hlTh[i]?.trim());
     return (
       <div>
-        <IdentityMsg pd={pd} />
         <TabHead title={tr("Marketplace listing name", "ชื่อประกาศใน Marketplace")}>{fill}</TabHead>
         <div className="mt-4 grid grid-cols-[260px_minmax(0,1fr)] items-start gap-7 max-sm:grid-cols-1 max-sm:gap-4">
           <BuyerPreview d={d} sector={sector} pickedImage={pickedImage} source={source} refNo={refNo} />
@@ -202,7 +182,6 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
                 <SellerWordingInput id="hp-headline" language={lang} kind="headline" value={tv("headline")} placeholder={tr("e.g. Profitable logistics firm with its own fleet and warehouses in five main cities", "เช่น บริษัทโลจิสติกส์ที่มีกำไร มีรถขนส่งและคลังสินค้าของตนเองในห้าเมืองหลัก")} onChange={v => tset("headline", v)} />
                 <SellerWordingMessage value={tv("headline")} kind="headline" language={lang} />
               </FieldRow>
-              <FlagMsg pd={pd} k="headline" />
             </EditSec>
             </div>
             <p className={`seller-wording-note ${tour?.open ? 'tour-hidden' : ''}`}><Pencil size={14} aria-hidden />{tr("PitchSnack may refine your wording before publishing to make it clear and professional, while ensuring it does not reveal your company’s identity.", "PitchSnack อาจปรับถ้อยคำของท่านก่อนเผยแพร่ให้ชัดเจนและเป็นมืออาชีพ โดยจะไม่เปิดเผยว่าเป็นบริษัทของท่าน")}</p>
@@ -210,9 +189,8 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
             </div>
             <EditSec id="description" tone="seller" active={section === "description"}>
               <FieldRow label={tr("Description", "คำอธิบาย")} after={<LangTag />} htmlFor="hp-description" missing={!both("description")} right={`${tv("description").length}/420`} suggest={ideas.descIdea ? () => tset("description", ideas.descIdea) : undefined}>
-                <Textarea id="hp-description" lang={lang} maxLength={420} value={tv("description")} placeholder={tph("description", ideas.descIdea)} onChange={(e) => tset("description", e.target.value)} className={cn(AREA, "h-[112px] min-h-[112px] resize-y", !both("description") && MISS_BOX, flag("description"))} />
+                <Textarea id="hp-description" lang={lang} maxLength={420} value={tv("description")} placeholder={tph("description", ideas.descIdea)} onChange={(e) => tset("description", e.target.value)} className={cn(AREA, "h-[112px] min-h-[112px] resize-y", !both("description") && MISS_BOX)} />
               </FieldRow>
-              <FlagMsg pd={pd} k="description" />
             </EditSec>
             <EditSec id="highlights" tone="seller" active={section === "highlights"}>
               <FieldRow label={tr("Highlights", "จุดเด่น")} after={<LangTag />} missing={hlMissing} right={tr("3 required", "ต้องมี 3 ข้อ")}
@@ -238,13 +216,11 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
                   })}
                 </div>
               </FieldRow>
-              <FlagMsg pd={pd} k="highlights" />
             </EditSec>
             <EditSec id="customers" tone="seller" active={section === "customers"}>
               <FieldRow label={tr("Customer profile (do not mention names)", "ลักษณะลูกค้า (ห้ามระบุชื่อ)")} after={<LangTag />} htmlFor="hp-customers_summary" right={tr("Optional", "ไม่บังคับ")} suggest={ideas.customersIdea ? () => tset("customers_summary", ideas.customersIdea) : undefined}>
-                <Textarea id="hp-customers_summary" lang={lang} value={tv("customers_summary")} placeholder={tph("customers_summary", ideas.customersIdea)} onChange={(e) => tset("customers_summary", e.target.value)} className={cn(AREA, "h-20 min-h-20 resize-y", flag("customers_summary"))} />
+                <Textarea id="hp-customers_summary" lang={lang} value={tv("customers_summary")} placeholder={tph("customers_summary", ideas.customersIdea)} onChange={(e) => tset("customers_summary", e.target.value)} className={cn(AREA, "h-20 min-h-20 resize-y")} />
               </FieldRow>
-              <FlagMsg pd={pd} k="customers_summary" />
             </EditSec>
           </div>
         </div>
@@ -256,7 +232,6 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
   const dealOk = (DEAL_TYPES as readonly string[]).includes(d.deal_type ?? "");
   return (
     <div>
-      <IdentityMsg pd={pd} />
       <TabHead title={tr("Deal Info", "ข้อมูลดีล")} />
       <EditSec id="deal" tone="seller" active={section === "deal" || section === "terms"}>
         <div className="space-y-[22px]">
@@ -275,9 +250,8 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
         </div>
         <OwnerHandover d={d} set={set} />
         <FieldRow label={tr("Reason for sale", "เหตุผลที่ขาย")} after={<LangTag />} htmlFor="hp-reason" right={tr("Optional", "ไม่บังคับ")}>
-          <Textarea id="hp-reason" lang={lang} value={tv("reason")} placeholder={tph("reason")} onChange={(e) => tset("reason", e.target.value || null)} className={cn(AREA, "h-24 min-h-24 resize-y", flag("reason"))} />
+          <Textarea id="hp-reason" lang={lang} value={tv("reason")} placeholder={tph("reason")} onChange={(e) => tset("reason", e.target.value || null)} className={cn(AREA, "h-24 min-h-24 resize-y")} />
         </FieldRow>
-        <FlagMsg pd={pd} k="reason" />
         </div>
       </EditSec>
     </div>

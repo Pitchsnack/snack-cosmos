@@ -1450,6 +1450,7 @@ export type Database = {
           description_th: string | null
           geography: string | null
           headline: string | null
+          identity_review_original: Json | null
           investor_id: string | null
           legal_name: string | null
           live_since: string | null
@@ -1504,6 +1505,7 @@ export type Database = {
           description_th?: string | null
           geography?: string | null
           headline?: string | null
+          identity_review_original?: Json | null
           investor_id?: string | null
           legal_name?: string | null
           live_since?: string | null
@@ -1558,6 +1560,7 @@ export type Database = {
           description_th?: string | null
           geography?: string | null
           headline?: string | null
+          identity_review_original?: Json | null
           investor_id?: string | null
           legal_name?: string | null
           live_since?: string | null
@@ -3773,6 +3776,8 @@ export type Database = {
           highlights: string[]
           highlights_th: string[] | null
           id: string
+          identity_notice_count: number
+          identity_review_original: Json | null
           live: Json | null
           live_snapshot: Json | null
           market_tags: string[] | null
@@ -3842,6 +3847,8 @@ export type Database = {
           highlights?: string[]
           highlights_th?: string[] | null
           id?: string
+          identity_notice_count?: number
+          identity_review_original?: Json | null
           live?: Json | null
           live_snapshot?: Json | null
           market_tags?: string[] | null
@@ -3911,6 +3918,8 @@ export type Database = {
           highlights?: string[]
           highlights_th?: string[] | null
           id?: string
+          identity_notice_count?: number
+          identity_review_original?: Json | null
           live?: Json | null
           live_snapshot?: Json | null
           market_tags?: string[] | null
@@ -3966,6 +3975,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      identity_review_fixes: {
+        Row: {
+          admin_id: string
+          created_at: string
+          field: string
+          finding_id: string
+          id: string
+          item_id: string
+          item_type: string
+          new_value: string | null
+          old_value: string | null
+          reason: string
+          version: number
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          field: string
+          finding_id: string
+          id?: string
+          item_id: string
+          item_type: string
+          new_value?: string | null
+          old_value?: string | null
+          reason: string
+          version?: number
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          field?: string
+          finding_id?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          new_value?: string | null
+          old_value?: string | null
+          reason?: string
+          version?: number
+        }
+        Relationships: []
       }
       income_statement_items: {
         Row: {

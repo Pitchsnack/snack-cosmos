@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { resumeListing, submitListing, unpublishListing } from "@/lib/approvals.functions";
 import { getStartup } from "@/lib/startups.functions";
-import { runIdentityCheck, type EntryFacts, type HiddenDraft, type HiddenProfileRow } from "@/lib/hidden-profile";
+import { type HiddenDraft, type HiddenProfileRow } from "@/lib/hidden-profile";
 import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approval/review-company-dialog";
 import { SentForApprovalDialog } from "@/components/approval/sent-for-approval";
 import { WithdrawDialog } from "@/components/approval/withdraw-dialog";
@@ -58,18 +58,6 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
   const a = profile.approval_status ?? "draft";
   const pub = profile as HiddenDraft;
   const s = st.data as any;
-  const facts: EntryFacts = {
-    startup_name: s?.startup_name ?? "",
-    registered_name: s?.registered_name ?? null,
-    website_url: s?.website_url ?? null,
-    city: s?.city ?? null,
-  };
-  const findings = runIdentityCheck({
-    ...pub,
-    code_name: (profile as any).suggested_listing_name ?? pub.code_name,
-    headline: (profile as any).suggested_headline ?? pub.headline,
-  }, facts);
-  const identityWords = [...new Set(findings.map((f) => f.term))];
   const asking = profile.asking_price_thb ?? profile.asking_price;
   const reviewData: ReviewCompanyData = {
     suggestedName: (profile as any).suggested_listing_name ?? null,
@@ -84,7 +72,7 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
       ["Deal type", pub.deal_type ?? ""],
       ["Owner handover", handoverLine(pub.owner_stays, pub.handover_months) ?? ""],
       ["Sector", s?.sector ?? ""],
-    ], identityWords, identityApplies: true,
+    ], identityWords: [], identityApplies: false,
     exclusiveRows: [
       { label: "Company name", value: s?.startup_name ?? "", note: "PitchSnack checks your registration." },
       { label: "Registration number", value: s?.registered_number ?? "", note: null },

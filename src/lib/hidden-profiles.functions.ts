@@ -10,7 +10,6 @@ import {
   isBuyerVisible,
   missingForPublish,
   pickDraft,
-  runIdentityCheck,
   suggestCodeName,
   handoverLine,
   suggestRegion,
@@ -20,7 +19,7 @@ import {
 } from "@/lib/hidden-profile";
 
 const COLS =
-  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, asking_price_thb, asking_price_band, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, owner_stays, handover_months, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, pending_cover, new_until, featured, directory_category, submitted_at, decided_at, decision_note, decision_reasons, decision_fields, suggested_listing_name, suggested_headline, headline_th, description_th, highlights_th, customers_summary_th, reason_th";
+  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, asking_price_thb, asking_price_band, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, owner_stays, handover_months, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, pending_cover, new_until, featured, directory_category, submitted_at, decided_at, decision_note, decision_reasons, decision_fields, suggested_listing_name, suggested_headline, headline_th, description_th, highlights_th, customers_summary_th, reason_th, identity_notice_count";
 
 type Sb = SupabaseClient<Database>;
 
@@ -184,6 +183,7 @@ export const saveHiddenProfile = createServerFn({ method: "POST" })
         ...(data.draft.highlights_th ? { highlights_th: data.draft.highlights_th } : {}),
         has_unpublished_changes: isBuyerVisible(cur as { approval_status?: string | null }),
         ...approvalPatch,
+        ...(!adminReview ? { identity_notice_count: 0 } : {}),
         updated_by: context.userId,
       })
       .eq("startup_id", data.startupId)
@@ -205,8 +205,6 @@ export const publishHiddenProfile = createServerFn({ method: "POST" })
     const facts = await loadFacts(sb, data.startupId);
 
     const draft = pickDraft(data.draft as HiddenDraft);
-    const findings = runIdentityCheck(draft, facts);
-    if (findings.length) throw new Error(`Identity check failed: ${findings.length} detail(s) could name the company`);
     const missing = missingForPublish(draft);
     if (missing.length) throw new Error(`Missing: ${missing.join(", ")}`);
     const { data: cur } = await sb.from("hidden_profiles").select("*").eq("startup_id", data.startupId).maybeSingle();
@@ -225,6 +223,7 @@ export const publishHiddenProfile = createServerFn({ method: "POST" })
         ...cleaned,
         has_unpublished_changes: wasLive,
         ...(wasLive ? { approval_status: "live_edits_pending" } : {}),
+        ...(!isAdm ? { identity_notice_count: 0 } : {}),
         updated_by: context.userId,
       })
       .eq("startup_id", data.startupId)

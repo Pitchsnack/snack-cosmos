@@ -17,12 +17,12 @@ function WantTour({ anchor, onClose }: { anchor: HTMLElement | null; onClose: (f
   return <AfterWizardTour anchor={anchor} onClose={onClose} title={L('Last step: Acquisition target company', 'ขั้นตอนสุดท้าย: บริษัทเป้าหมายในการเข้าซื้อกิจการ')} text={L('Be specific about the type of company you want to acquire. Sellers will use this information to assess whether their business matches your criteria before deciding to contact you.', 'โปรดระบุประเภทบริษัทที่ท่านต้องการเข้าซื้อกิจการให้ชัดเจน ผู้ขายจะใช้ข้อมูลนี้ประเมินว่าธุรกิจของตนตรงกับเกณฑ์ของท่านหรือไม่ ก่อนตัดสินใจติดต่อท่าน')} />;
 }
 
-export function BuyerDescriptionEditor({ i, leaks, value, onChange, forced, children, suggest, source, lang, want, onWant, wantLeaks = [], tour }: { i: CardInvestor; leaks: string[]; value: string; onChange: (value: string) => void; forced?: boolean; children?: ReactNode; suggest?: () => void; source?: ReactNode; lang?: 'en' | 'th'; want: string; onWant: (value: string) => void; wantLeaks?: string[]; tour?: { open: boolean; close: (focusField: boolean) => void } }) {
+export function BuyerDescriptionEditor({ i, value, onChange, forced, children, suggest, source, lang, want, onWant, tour }: { i: CardInvestor; value: string; onChange: (value: string) => void; forced?: boolean; children?: ReactNode; suggest?: () => void; source?: ReactNode; lang?: 'en' | 'th'; want: string; onWant: (value: string) => void; tour?: { open: boolean; close: (focusField: boolean) => void } }) {
   const L = useTr();
   const [touched, setTouched] = useState(false);
   const problem = buyerDescriptionError(value);
   const visibleProblem = problem === 'Write at least 10 characters.' && !touched && !forced ? null : problem;
-  const message = visibleProblem || (leaks.length ? 'leak' : null);
+  const message = visibleProblem;
   const root = useRef<HTMLDivElement>(null);
   // State, not a ref, so the tour re-renders once the anchor exists on first mount.
   const [wantAnchor, setWantAnchor] = useState<HTMLDivElement | null>(null);
@@ -48,9 +48,7 @@ export function BuyerDescriptionEditor({ i, leaks, value, onChange, forced, chil
     });
     previous.current = values;
   }, [value, i.ticketBand, i.aumBand, i.revBand, i.dealTypes.join('|'), i.geography]);
-  const escaped = [...leaks].sort((a,b) => b.length-a.length).map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  const pattern = escaped.length ? new RegExp(`(${escaped.join('|')})`, 'gi') : null;
-  const description = !value.trim() ? <span className="buyer-preview-empty">{L('Your description shows here.', 'คำอธิบายของท่านจะแสดงที่นี่')}</span> : pattern ? value.split(pattern).map((part, index) => leaks.some((word) => word.toLowerCase() === part.toLowerCase()) ? <mark key={index}>{part}</mark> : part) : value;
+  const description = !value.trim() ? <span className="buyer-preview-empty">{L('Your description shows here.', 'คำอธิบายของท่านจะแสดงที่นี่')}</span> : value;
   const wantLine = want.trim()
     ? <p className="standard-card-want" title={`${L('Wants to buy:', 'ต้องการซื้อ:')} ${want.trim()}`}><b>{L('Wants to buy:', 'ต้องการซื้อ:')}</b> {want.trim()}</p>
     : <p className="standard-card-want standard-card-want-empty"><b>{L('Wants to buy:', 'ต้องการซื้อ:')}</b> {L('what you want to buy', 'สิ่งที่ท่านต้องการซื้อ')}</p>;
@@ -63,19 +61,19 @@ export function BuyerDescriptionEditor({ i, leaks, value, onChange, forced, chil
         placeholder={L('e.g. Profitable logistics firm with its own distribution channel in main cities', 'เช่น บริษัทโลจิสติกส์ที่มีกำไร และมีช่องทางจัดจำหน่ายของตนเองในเมืองหลัก')}
         onChange={(e) => onWant(singleLineDescription(e.target.value))}
         onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
-        aria-invalid={wantOver || !!wantLeaks.length} aria-describedby="buyer-want-help buyer-want-message"
+        aria-invalid={wantOver} aria-describedby="buyer-want-help buyer-want-message"
         className={`buyer-want-input ${wantOver ? 'buyer-want-invalid' : ''}`} />
       </FieldRow>
       </div>
       <p id="buyer-want-help" className="buyer-description-help" style={tour?.open ? { visibility: 'hidden' } : undefined}>{L("Sellers see it on your card in Browse investors. Admin reviews it before it's published.", 'ผู้ขายจะเห็นข้อความนี้บนการ์ดของท่านในหน้าค้นหานักลงทุน ผู้ดูแลระบบจะตรวจสอบก่อนเผยแพร่')}</p>
-      <div id="buyer-want-message" aria-live="polite">{wantOver ? <p className="buyer-description-error">{L('Keep it to 80 characters.', 'โปรดเขียนไม่เกิน 80 ตัวอักษร')}</p> : wantLeaks.length ? <p className="buyer-description-warning">{L('It mentions', 'ข้อความกล่าวถึง')} <b>{wantLeaks.join(', ')}</b>{L('. Sellers read it before an NDA, so leave out names, websites and contact details.', ' ผู้ขายจะอ่านก่อนลงนาม NDA โปรดไม่ระบุชื่อ เว็บไซต์ และข้อมูลติดต่อ')}</p> : null}</div>
+      <div id="buyer-want-message" aria-live="polite">{wantOver ? <p className="buyer-description-error">{L('Keep it to 80 characters.', 'โปรดเขียนไม่เกิน 80 ตัวอักษร')}</p> : null}</div>
       {tour?.open && <WantTour anchor={wantAnchor} onClose={tour.close} />}
     </section><section data-edit-sec="description" className="buyer-description-field">
       <FieldRow htmlFor="f-description" label={<>{L('Description', 'คำอธิบาย')} <span className="buyer-label-explanation">{L('(1–2 sentences)', '(1–2 ประโยค)')}</span></>} after={!source && <LangTag />} source={source} suggest={suggest} right={<span className={descriptionWords(value) > 25 ? 'text-destructive font-semibold' : ''}>{descriptionWords(value)} / 25 {L('words','คำ')}</span>}>
       <Textarea id="f-description" lang={lang} value={value} onChange={(e) => onChange(singleLineDescription(e.target.value))} onBlur={() => setTouched(true)} onKeyDown={(e) => {if(e.key === 'Enter') e.preventDefault();}} aria-invalid={!!message} aria-describedby="buyer-description-help buyer-description-message" className="buyer-description-textarea" />
       </FieldRow>
       <p id="buyer-description-help" className="buyer-description-help">{L("Up to 25 words. Leave out your firm's name, website and contact details.", 'ไม่เกิน 25 คำ โปรดอย่าระบุชื่อบริษัท เว็บไซต์ และข้อมูลติดต่อ')}</p>
-      <div id="buyer-description-message" aria-live="polite">{message === 'leak' ? <p className="buyer-description-warning">{L('Your description mentions', 'คำอธิบายของท่านกล่าวถึง')} <b>{leaks.join(', ')}</b>{L('. Sellers read it before an NDA, so leave out names, websites and contact details.', ' ผู้ขายจะอ่านก่อนลงนาม NDA โปรดไม่ระบุชื่อ เว็บไซต์ และข้อมูลติดต่อ')}</p> : message ? <p className="buyer-description-error">{message === 'Keep it to 2 sentences.' ? L(message,'โปรดเขียนไม่เกิน 2 ประโยค') : message === 'Keep it to 25 words.' ? L(message,'โปรดเขียนไม่เกิน 25 คำ') : L(message,'โปรดเขียนอย่างน้อย 10 ตัวอักษร')}</p> : null}</div>
+      <div id="buyer-description-message" aria-live="polite">{message ? <p className="buyer-description-error">{message === 'Keep it to 2 sentences.' ? L(message,'โปรดเขียนไม่เกิน 2 ประโยค') : message === 'Keep it to 25 words.' ? L(message,'โปรดเขียนไม่เกิน 25 คำ') : L(message,'โปรดเขียนอย่างน้อย 10 ตัวอักษร')}</p> : null}</div>
     </section>{children}</div>
   </div>;
 }

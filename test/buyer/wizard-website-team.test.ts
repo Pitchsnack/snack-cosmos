@@ -18,7 +18,7 @@ describe("buyer wizard: Industries first, Website with descriptions, Team", () =
   });
   it("Website step fails when the short description names the firm or the long one passes 80 words", () => {
     expect(buyerWebValid("www.lakeshore.com", "Family office backing Thai firms.", "", "Lakeshore", true)).toBe(true);
-    expect(buyerWebValid("www.lakeshore.com", "Lakeshore backs Thai firms.", "", "Lakeshore", true)).toBe(false);
+    expect(buyerWebValid("www.lakeshore.com", "Lakeshore backs Thai firms.", "", "Lakeshore", true)).toBe(true);
     expect(buyerWebValid("www.lakeshore.com", "", Array(81).fill("word").join(" "), "Lakeshore", true)).toBe(false);
   });
   it("Finish requires both the short and long descriptions", () => {

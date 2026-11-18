@@ -6,6 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resetApprovalNotice } from "@/lib/approval-notices.functions";
 import { TR_LIST, TR_MAX, setupLanguageOf, trBase, type TrKey, type TrRow } from "@/lib/review-translation";
 import { advisorReview, buyerReview, sellerReview, waitingDays, type OneStepItem, type OneStepKind } from "@/lib/one-step.server";
+import { buyerIdentityFacts, buyerIdentityValues, scanIdentityReview, sellerIdentityFacts, sellerIdentityValues } from "@/lib/identity-review";
 
 /**
  * One-step approval: one Admin decision per profile/listing publishes AND
@@ -91,12 +92,12 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
 
     // ---- sellers: hidden_profiles waiting or sent back
     const { data: hps, error: hpError } = await sb.from("hidden_profiles")
-      .select("id, startup_id, ref_no, code_name, description, highlights, customers_summary, deal_type, owner_stays, handover_months, asking_price_thb, asking_price_band, approval_status, submitted_at, submitted_by, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, review_checks, headline_th, description_th, highlights_th, customers_summary_th, published_headline_th, review_draft, review_saved_at, reason, reason_th")
+      .select("id, startup_id, ref_no, code_name, description, highlights, customers_summary, deal_type, owner_stays, handover_months, asking_price_thb, asking_price_band, approval_status, submitted_at, submitted_by, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_headline, review_checks, headline_th, description_th, highlights_th, customers_summary_th, published_headline_th, review_draft, review_saved_at, reason, reason_th, named_customers")
       .in("approval_status", ["in_review", "changes_requested"]).order("submitted_at", { ascending: true });
     if (hpError) throw new Error(hpError.message);
     const stIds = [...new Set((hps ?? []).map((h: any) => h.startup_id).filter(Boolean))];
     const { data: sts } = stIds.length
-      ? await sb.from("startups").select("id, startup_name, registered_name, registered_number, website_url, email, city, sector, year_founded, last_year_revenue, business_address, contact_number, startup_name_th, business_address_th, short_description, short_description_th, long_description, long_description_th, product_tags, product_tags_th, market_tags, market_tags_th").in("id", stIds)
+      ? await sb.from("startups").select("id, startup_name, registered_name, registered_number, website_url, email, city, sector, year_founded, last_year_revenue, business_address, contact_number, startup_name_th, registered_name_th, business_address_th, short_description, short_description_th, long_description, long_description_th, product_tags, product_tags_th, market_tags, market_tags_th, address_line1, address_city_district, company_size").in("id", stIds)
       : { data: [] };
     const stBy = new Map<string, any>((sts ?? []).map((s: any) => [s.id, s]));
     const { data: founders } = stIds.length
@@ -108,12 +109,12 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
 
     // ---- buyers: buyer_profiles waiting or sent back
     const { data: bps, error: bpError } = await sb.from("buyer_profiles")
-      .select("user_id, ref_no, investor_id, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline, description, geography, suggested_headline_th, published_headline_th, description_th, review_draft, review_saved_at, sectors, city, country, people, buyer_relation, revenue_band, contact_number, address")
+      .select("user_id, ref_no, investor_id, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline, description, geography, suggested_headline_th, published_headline_th, description_th, review_draft, review_saved_at, sectors, city, country, people, buyer_relation, revenue_band, contact_number, address, legal_name, portfolio, aum_exact")
       .in("approval_status", ["in_review", "changes_requested"]).order("submitted_at", { ascending: true });
     if (bpError) throw new Error(bpError.message);
     const invIds = [...new Set((bps ?? []).map((b: any) => b.investor_id).filter(Boolean))];
     const { data: invs } = invIds.length
-      ? await sb.from("investors").select("id, investor_name, investor_type, country, website_url, registration_no, year_founded, email, aum_band, ticket_band, revenue_min_band, investment_focus, preferred_industries, preferred_stages, address_line1, address_line2, address_city_district, address_province_state, postal_code, investor_name_th, address_th, short_description, short_description_th, keywords, keywords_th").in("id", invIds)
+      ? await sb.from("investors").select("id, investor_name, investor_type, country, website_url, registration_no, year_founded, email, aum_band, ticket_band, revenue_min_band, investment_focus, preferred_industries, preferred_stages, address_line1, address_line2, address_city_district, address_province_state, postal_code, investor_name_th, address_th, short_description, short_description_th, keywords, keywords_th, team_size").in("id", invIds)
       : { data: [] };
     const invBy = new Map<string, any>((invs ?? []).map((i: any) => [i.id, i]));
     const verByUser = await (await import("./profile-verification.server")).verificationsByUsers(sb, (bps ?? []).map((b: any) => b.user_id), "id, status, review_checks");
@@ -145,6 +146,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
         chip: hp.approval_status === "changes_requested" ? "sent_back" : "waiting",
         suggestedName: hp.suggested_listing_name, suggestedHeadline: hp.suggested_headline,
         publishedName: hp.code_name, publishedHeadline: hp.published_headline, review,
+        identityCount: scanIdentityReview(sellerIdentityValues(hp, st ?? {}), sellerIdentityFacts(st ?? {}, foundersBy.get(hp.startup_id) ?? [], hp)).length,
         ...extras({ person: uBy.get(hp.submitted_by), draft: hp.review_draft, savedAt: hp.review_saved_at, suggestedTh: hp.headline_th, publishedTh: hp.published_headline_th, descriptionTh: hp.description_th,
           rows: [
             tr("company_name", "company", "Company name", st?.startup_name, st?.startup_name_th),
@@ -178,6 +180,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
         chip: p.approval_status === "changes_requested" ? "sent_back" : "waiting",
         suggestedName: buyerListingName(inv?.investor_type, p.ref_no, p.suggested_listing_name || p.published_listing_name), suggestedHeadline: p.suggested_headline || p.published_headline,
         publishedName: p.published_listing_name, publishedHeadline: p.published_headline, review,
+        identityCount: scanIdentityReview(buyerIdentityValues(p), buyerIdentityFacts(p, inv ?? {})).length,
         ...extras({ person: uBy.get(p.user_id), draft: p.review_draft, savedAt: p.review_saved_at, suggestedTh: p.suggested_headline_th, publishedTh: p.published_headline_th, descriptionTh: p.description_th,
           rows: [
             tr("company_name", "company", p.buyer_relation === "individual" ? "Name" : "Company Name", inv?.investor_name, inv?.investor_name_th),
@@ -342,7 +345,10 @@ export const decideOneStep = createServerFn({ method: "POST" })
         const cover = hp.pending_cover ?? hp.cover_image_url ?? null;
         const { pickDraft } = await import("@/lib/hidden-profile");
         const pub = { ...pickDraft(hp), code_name: (data.publishedName ?? "").trim(), headline: (data.publishedHeadline ?? "").trim(), headline_th: data.publishedHeadlineTh?.trim() || (pickDraft(hp) as any).headline_th || null, cover_image_url: cover };
+        const { loadIdentityReview } = await import("./identity-review.server");
+        const identityReview = await loadIdentityReview(sb, "seller", hp.id);
         const { error } = await sb.from("hidden_profiles").update({
+          identity_notice_count: identityReview.fixed.length,
           approval_status: "live", status: "live", live: pub,
           live_snapshot: sub?.snapshot ? { ...sub.snapshot, public: pub } : null,
           code_name: (data.publishedName ?? "").trim(), published_headline: (data.publishedHeadline ?? "").trim(),
@@ -594,18 +600,17 @@ export const registerBuyerCompany = createServerFn({ method: "POST" })
       ? await sb.from("investors").select("investor_name, investor_type, ticket_band, preferred_stages, preferred_industries, setup_done_at, website_url, registration_no, linkedin_url, email").eq("id", p.investor_id).maybeSingle()
       : { data: null };
 
-    // Buyer suggestions are retired; existing readiness and public identity checks remain.
-    const { descriptionLeaks } = await import("@/lib/investor-bands");
+    // Identity wording never blocks registration; Admin reviews it after submission.
     const missing = buyerRegistrationMissing(inv, p);
     if (missing.length) throw new Error(`Add ${missing.join(", ")} before registering.`);
-    const leaks = descriptionLeaks(p.description ?? "", inv?.investor_name ?? "", inv?.website_url ?? "");
-    if (leaks.length) throw new Error(`Identity check: mentions ${leaks.join(", ")}`);
 
     const now = new Date().toISOString();
     const { error } = await sb.from("buyer_profiles").update({
       approval_status: "in_review", submitted_at: now, decision_note: null, decision_reasons: [], updated_at: now,
     }).eq("user_id", uid);
     if (error) throw new Error(error.message);
+    const { captureIdentityBaseline } = await import("./identity-review.server");
+    await captureIdentityBaseline(sb, "buyer", uid);
 
     // The verification row goes with the profile, filled from it — no separate form.
     const { data: u } = await sb.from("users").select("email").eq("id", uid).maybeSingle();

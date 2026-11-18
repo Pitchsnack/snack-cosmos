@@ -20,7 +20,6 @@ import {
   Flag, Loader2, Plus, RefreshCw, Search, Send, ShieldCheck, Star, X,
 } from "lucide-react";
 import { registerAdvisorFirm } from "@/lib/approvals-one-step.functions";
-import { descriptionLeaks } from "@/lib/investor-bands";
 import { ReviewCompanyDialog, type ReviewCompanyData } from "@/components/approval/review-company-dialog";
 import { SentForApprovalDialog } from "@/components/approval/sent-for-approval";
 import { WithdrawDialog } from "@/components/approval/withdraw-dialog";

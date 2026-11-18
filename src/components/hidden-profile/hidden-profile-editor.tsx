@@ -1,6 +1,6 @@
 import { bandInText, bandOf, fmtThb, thbWords } from "@/lib/asking-price";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Sparkles, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,6 @@ import {
   moneyRange,
   pickDraft,
   identityTerms,
-  runIdentityCheck,
   staffRange,
   suggestCodeName,
   type EntryFacts,
@@ -112,13 +111,7 @@ export function HiddenProfileEditor({
 
 
 
-  const findings = useMemo(() => (facts ? runIdentityCheck(d, facts) : []), [d, facts]);
   const missing = useMemo(() => missingForPublish(d), [d]);
-  const byField = useMemo(() => {
-    const m = new Map<HiddenTextField, string[]>();
-    for (const f of findings) m.set(f.field, [...(m.get(f.field) ?? []), `"${f.term}" (${f.reason.toLowerCase()})`]);
-    return m;
-  }, [findings]);
   const dirty = JSON.stringify(pickDraft(row)) !== JSON.stringify(d);
   const isLive = isBuyerVisible(row);
   const liveChanged = isLive && (row.has_unpublished_changes || dirty);
@@ -126,9 +119,8 @@ export function HiddenProfileEditor({
   const payload = { startupId: row.startup_id, draft: { ...d, highlights: d.highlights.map((h) => h.trim()) } };
   const f = facts ?? ({} as EntryFacts);
 
-  const flagCls = (k: HiddenTextField) => (byField.has(k) ? "border-destructive focus-visible:ring-destructive" : "");
-  const Msg = ({ k }: { k: HiddenTextField }) =>
-    byField.has(k) ? <p className="text-[11px] text-destructive">Could name the company: {byField.get(k)!.join(", ")}</p> : null;
+  const flagCls = (_k: HiddenTextField) => "";
+  const Msg = ({ k: _k }: { k: HiddenTextField }) => null;
 
   return (
     <div className="flex min-h-[60vh] flex-col">
@@ -146,20 +138,6 @@ export function HiddenProfileEditor({
           )}
         </div>
 
-        <div className={cn("rounded-md border px-3 py-2 text-xs", findings.length ? "border-destructive/40 bg-destructive/5 text-destructive" : "border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400")}>
-          {findings.length ? (
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5 font-medium"><AlertTriangle className="h-3.5 w-3.5" />Identity check: {findings.length} detail{findings.length === 1 ? "" : "s"} could name the company</div>
-              <ul className="list-disc pl-5">
-                {[...byField.keys()].map((k) => (
-                  <li key={k}><a href={`#hp-${k}`} className="underline">{HIDDEN_FIELD_LABEL[k]}</a></li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" />Identity check: Passed</span>
-          )}
-        </div>
 
         <Section n={1} title="Anonymous identity">
           <Field id="code_name" label="Code name (unique in the Marketplace)">

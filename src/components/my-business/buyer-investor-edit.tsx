@@ -22,7 +22,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { isCorporateBuyer } from "@/lib/investor-browse";
 import {
   AUM_BANDS, DEAL_TYPES, GEOGRAPHY, INDIVIDUAL_TYPE, REV_BANDS, SECTOR_AGNOSTIC, STAGE_OPTIONS, TICKET_BANDS,
-  descriptionError, descriptionLeaks, regError, showsStages, sortActsFor, yearError,
+  descriptionError, regError, showsStages, sortActsFor, yearError,
 } from "@/lib/investor-bands";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -356,12 +356,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   };
 
   const autoEnrich = <InvestorAutoEnrichButton websiteUrl={f.website_url} onEnriched={applyEnrichment} disabled={busy} />;
-  const leaks = descriptionLeaks(bv("description"), f.investor_name, f.website_url);
-  const wantLeaks = descriptionLeaks(bv("suggested_headline"), f.investor_name, f.website_url);
-  const suggestion = () => {
-    const next = suggestBuyerDescription({type:typeOf, industries, geography:focus}, tl);
-    return descriptionLeaks(next, f.investor_name, f.website_url).length ? suggestBuyerDescription({type:"", industries:[], geography:[]}, tl) : next;
-  };
+  const suggestion = () => suggestBuyerDescription({type:typeOf, industries, geography:focus}, tl);
   const suggest = () => bset("description")(suggestion());
   const fillTab = async () => {
     if (!bv("description").trim()) suggest();
@@ -386,13 +381,13 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
     }
     const wantOver = (v: string) => Array.from(v).length > 80;
     const checks: [string, string | null][] = [
-      ["suggested_headline", wantOver(f.suggested_headline) ? "Keep it to 80 characters." : descriptionChanged(f.suggested_headline, (data.buyer as any).suggested_headline) && f.suggested_headline.trim() && descriptionLeaks(f.suggested_headline, f.investor_name, f.website_url).length ? "leak" : null],
-      ["suggested_headline_th", wantOver(thx.suggested_headline) ? "Keep it to 80 characters." : descriptionChanged(thx.suggested_headline, (data.buyer as any).suggested_headline_th) && thx.suggested_headline.trim() && descriptionLeaks(thx.suggested_headline, f.investor_name, f.website_url).length ? "leak" : null],
+      ["suggested_headline", wantOver(f.suggested_headline) ? "Keep it to 80 characters." : null],
+      ["suggested_headline_th", wantOver(thx.suggested_headline) ? "Keep it to 80 characters." : null],
       ["year_founded", individual ? null : yearError(f.year_founded)],
       ["investor_name", f.investor_name.trim().length < 2 ? "Add your firm's name." : null],
       ["website_url", /^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(f.website_url.trim()) ? null : "Enter a valid website address, e.g. www.yourfirm.com"],
-      ["description", descriptionChanged(f.description, data.buyer.description) && f.description.trim() ? descriptionError(f.description) || (descriptionLeaks(f.description, f.investor_name, f.website_url).length ? "leak" : null) : null],
-      ["description_th", descriptionChanged(thx.description, data.buyer.description_th) && thx.description.trim() ? descriptionError(thx.description) || (descriptionLeaks(thx.description, f.investor_name, f.website_url).length ? "leak" : null) : null],
+      ["description", descriptionChanged(f.description, data.buyer.description) && f.description.trim() ? descriptionError(f.description) : null],
+      ["description_th", descriptionChanged(thx.description, data.buyer.description_th) && thx.description.trim() ? descriptionError(thx.description) : null],
       ["short_description", buyerAboutError(f.short_description, inv.short_description, !!directory)],
       ["short_description_th", buyerAboutError(thx.short_description, inv.short_description_th, !!directory)],
       ["registration_no", individual ? null : regError(f.registration_no, f.country)],
@@ -707,7 +702,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 </div>}
           {(tab === "description" || tab === "mandate") && <div className="buyer-description-mandate">
           <ListingEditorTitle title={tr("Your card in Browse investors")}><AutoFillTabButton onClick={fillTab} disabled={busy} /></ListingEditorTitle>
-          <BuyerDescriptionEditor lang={tl} source={setup ? <Tag s={src.description} /> : undefined} suggest={suggest} value={bv("description")} onChange={bset("description")} leaks={leaks} forced={!!errs.description || !!errs.description_th} want={bv("suggested_headline")} onWant={bset("suggested_headline")} wantLeaks={wantLeaks} tour={tourOpen ? { open: true, close: closeTour } : undefined} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} >          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
+          <BuyerDescriptionEditor lang={tl} source={setup ? <Tag s={src.description} /> : undefined} suggest={suggest} value={bv("description")} onChange={bset("description")} forced={!!errs.description || !!errs.description_th} want={bv("suggested_headline")} onWant={bset("suggested_headline")} tour={tourOpen ? { open: true, close: closeTour } : undefined} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} >          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
         {directory && <CompactFields><div className="space-y-1.5"><Label>{setupText("AUM")}</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>{setupText("Min Ticket Size")}</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>{setupText("Max Ticket Size")}</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
 <div className="buyer-mandate-money">        {showsFund && (
           <S cur={setup ? undefined : sec} id="fund">

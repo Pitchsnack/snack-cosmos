@@ -39,8 +39,8 @@ import { cn } from "@/lib/utils";
 import { CompanyMenu, DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company-menu";
 import type { DeleteDraftTarget } from "@/components/common/delete-draft";
 import { useSessionContext } from "@/hooks/use-session-context";
-import { AlertTriangle, CheckCircle2, Flag } from "lucide-react";
-import { bandText, descriptionLeaks, typeName } from "@/lib/investor-bands";
+import { Flag } from "lucide-react";
+import { bandText, typeName } from "@/lib/investor-bands";
 import { buyerProgressFor, type BuyerRelation } from "@/lib/buyer-wizard";
 import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
 import { BuyerPrivateCardBody, BuyerPrivatePanel, useBuyerInvestor } from "@/components/my-business/buyer-private-view";
@@ -503,7 +503,6 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
     if (iv.website_url) void startEnrichment({ data: { role: "buyer", id: iv.id, website: iv.website_url } }).catch(() => {});
     void navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
   };
-  const leaks = descriptionLeaks(p.description ?? "", org.name ?? "", org.website ?? "");
   const since = p.status === "live" && p.live_since ? `Live since ${fmtDateL(p.live_since, language)}` : p.status === "paused" ? `Paused since ${fmtDateL(p.updated_at ?? p.live_since ?? new Date().toISOString(), language)}` : "Not published yet";
   // One-step approval: Register your company opens the review pop-up.
   const registerFn = useServerFn(registerBuyerCompany);
@@ -529,7 +528,7 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
       ["Min. target revenue", bandText(invRow?.revenue_min_band) ?? ""],
       ["Investment Focus", (invRow?.investment_focus ?? []).join(" · ")], ["Geography", p.geography ?? ""],
       ["Industries", (invRow?.preferred_industries ?? p.sectors ?? []).join(" · ")], ["Public description", p.description ?? ""],
-    ], identityWords: leaks, identityApplies: true,
+    ], identityWords: [], identityApplies: false,
     exclusiveRows: [
       ...(rel === "individual" ? [{ label: "Your name", value: inv.data?.account.name ?? "", note: "PitchSnack checks your name and address against your ID." }] : [
         { label: "Firm name", value: org.name ?? "", note: "PitchSnack checks your registration." },
@@ -561,12 +560,6 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
               <span className="truncate">{setupText(title)} · {p.ref_no}</span><span className="shrink-0">{setupText(since)}</span>
             </div>
           } />
-        </div>
-        <div className={cn("my-4 flex items-start gap-2 text-[13px]", leaks.length ? "text-[#B42318]" : "text-[#15803D] dark:text-green-400")}>
-          {leaks.length ? <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> : <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />}
-          {leaks.length
-            ? <span><b className="font-semibold">{setupText("Identity check:")}</b> {leaks.join(", ")}{setupText("· remove them in Edit public view.")}</span>
-            : <span><b className="font-semibold">{setupText("Identity check passed")}</b>{setupText("· no firm name, website or contact details in the public text.")}</span>}
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E9EBEF] bg-[#FAFAFB] px-5 py-3.5 text-[13px] text-[#6A7181] dark:border-border dark:bg-muted/40 dark:text-muted-foreground">

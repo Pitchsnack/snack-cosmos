@@ -1,3 +1,11 @@
+# Admin-only identity check
+- [x] Remove seller/buyer identity warnings and submission/setup/save blocks while retaining static privacy guidance.
+- [x] Build one server-side pre-NDA finding engine excluding province/region/country and covering only the brief's seller/buyer fields, with province-aware bilingual fixes.
+- [x] Add Identity check to active seller/buyer Admin approval reviews with contextual/preview highlights, audited fixes, focused Edit and non-blocking publish warning.
+- [x] Show the exact bilingual post-approval PitchSnack word-change notice until the seller next edits the listing.
+- [x] Add focused rule tests; 29 Vitest and 13 Bun tests pass, TypeScript is clean, and a real Admin finding/preview renders without browser errors. Admin screenshot delivered.
+- [ ] Live one-click before/after and seller no-warning screenshots remain unverified: there are no pending seller/buyer reviews, and existing live listing wording was not changed for a screenshot.
+
 # Founder story year synchronization
 - [x] Leave the founder-story year empty when the company year is missing, showing the existing bilingual hint.
 - [x] In the seller wizard and Edit information › About Owner, update blank or previously synchronized story years when the company year changes; preserve custom-typed years and existing bios.

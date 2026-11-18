@@ -85,18 +85,7 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
               {(data?.listingRows ?? []).map(([l, v]) => (
                 <div className="ap-rw" key={l}><span>{t(l)}</span><span>{v ? t(v) : t("Not added")}</span></div>
               ))}
-              {data?.identityApplies && (
-                <div className="ap-rw">
-                  <span>{t("Identity check")}</span>
-                  <span>
-                    {data.identityWords.length ? (
-                      <span className="ap-warnline"><TriangleAlert className="h-3.5 w-3.5" />{t("Mentions")} {data.identityWords.join(", ")}. {t("Leave out names, websites and contact details.")}</span>
-                    ) : (
-                      <span className="ap-ok"><Check className="h-3.5 w-3.5" />{t("Clean")} · {role === "buyer" ? t("Description") : role === "seller" ? t("no name, website or contact in the listing name, headline, description, highlights or customer profile") : t("no name, website or contact in the listing name, headline or description")}</span>
-                    )}
-                  </span>
-                </div>
-              )}
+
             </div>
           </section>
 

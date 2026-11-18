@@ -70,6 +70,8 @@ export type OneStepItem = {
   suggestedHeadlineTh: string | null;
   publishedHeadlineTh: string | null;
   descriptionTh: string | null;
+  /** Server-derived Admin-only count; sellers/buyers never receive findings. */
+  identityCount?: number;
 };
 
 /* ------------------------------------------------------------- helpers */

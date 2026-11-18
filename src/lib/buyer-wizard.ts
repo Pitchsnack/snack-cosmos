@@ -1,7 +1,7 @@
 import { setupAnswered } from "./setup-step-state";
 import { isValidUrl } from "./seller-wizard";
 import { buyerAboutError } from "./buyer-description";
-import { descriptionError, descriptionLeaks, regError, yearError, showsStages } from "./investor-bands";
+import { descriptionError, regError, yearError, showsStages } from "./investor-bands";
 /** Buyer investor-profile setup wizard: question order, visibility by role, progress. */
 export type BuyerRelation = "individual" | "corporate" | "agent";
 export type QId = "role" | "type" | "name" | "web" | "aum" | "ticket" | "rev" | "deals" | "sectors" | "photos" | "desc" | "team" | "review";
@@ -41,7 +41,7 @@ export function normalizeBuyerReached(rel: BuyerRelation | null, reached: string
 export function buyerWebValid(web: string, desc: string, about: string, name: string, firm: boolean): boolean {
   // Individual Investors may leave the website blank; a typed one must still be valid.
   if (firm ? !isValidUrl(web) : !!web.trim() && !isValidUrl(web)) return false;
-  return !(desc.trim() && descriptionError(desc)) && !descriptionLeaks(desc, name, web).length && !buyerAboutError(about, null);
+  return !(desc.trim() && descriptionError(desc)) && !buyerAboutError(about, null);
 }
 
 export const teamHasName = (people: { name: string }[] | undefined) => (people ?? []).some((p) => p.name.trim().length > 0);
@@ -113,7 +113,7 @@ export function buyerProgressFor(rel: BuyerRelation | null, iv: {
     deals: !!buyer?.deal_types.length && (!showsStages(type, rel === "agent" ? acts : null) || !!iv?.preferred_stages?.length),
     sectors: (iv?.preferred_industries ?? []).includes("Sector Agnostic") || (!!iv?.sector_picks?.types.length && (!iv.sector_picks.types.includes("other") || !!iv.sector_picks.other.length)),
     photos: !!iv?.logo_path && !!iv?.media?.length,
-    desc: !!desc.trim() && !descriptionError(desc) && !descriptionLeaks(desc, iv?.investor_name ?? "", iv?.website_url ?? "").length,
+    desc: !!desc.trim() && !descriptionError(desc),
     team: teamHasName(people),
     review: false,
   };
