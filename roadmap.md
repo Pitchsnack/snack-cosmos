@@ -1,3 +1,8 @@
+# Image drop behavior sweep
+- [x] Audited sign-up/+ Add LogoPicker; seller Images & Logo, legacy logo and PhotosQ; buyer EntityMediaEditor and wizard; advisor LogoDrop, AttachmentCard and SetupReview; Admin create/edit LogoSlot and media editors; uploadPending, seller syncMedia, saveBuyerMedia and advisor save functions.
+- [x] Fixed the remaining occupied AttachmentCard logo and advisor SetupReview photo targets; all other listed surfaces already replace the pending image and retain existing validation, ownership checks and saved data.
+- [x] Nine placement/autosave tests, TypeScript and preview build pass. Human-paced real PNG drops replaced both seller PS-1005's occupied logo and photo previews without browser errors and were cancelled without saving; other surfaces were code-checked rather than browser-run.
+
 # Existing photo slot drag and drop
 - [x] Fix occupied Images & Logo photo slots ignoring file drops: dropping now replaces that slot, extra files fill empty slots, and the same occupied-slot handling covers the shared entity editor.
 - [x] Five focused placement tests and TypeScript pass; a real PNG drop on PS-1005 showed Drop to replace and changed the preview with no browser errors. Cancelled without saving, leaving stored company media unchanged; preview build OK.

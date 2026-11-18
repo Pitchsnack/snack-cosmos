@@ -280,8 +280,14 @@ function LogoSpace({ slot, label, removeLabel, onFile, onRemove }: {
   const box = "h-[120px] w-[120px] shrink-0 rounded-[12px]";
   if (src) {
     return (
-      <div className={cn("relative", box)}>
-        <img src={src} alt="" className="h-full w-full rounded-[12px] border border-[#E6E8EC] object-cover dark:border-border" />
+      <div data-logo-slot="attachment"
+        onDragEnter={(e) => { if (!hasFiles(e)) return; e.preventDefault(); setOver(true); }}
+        onDragOver={(e) => { if (!hasFiles(e)) return; e.preventDefault(); setOver(true); }}
+        onDragLeave={() => setOver(false)}
+        onDrop={(e: DragEvent) => { e.preventDefault(); e.stopPropagation(); setOver(false); onFile(e.dataTransfer.files?.[0]); }}
+        className={cn("relative rounded-[12px] border-2 border-transparent transition-colors", box, over && "border-[#2563EB] bg-[#EEF4FF]")}>
+        <img src={src} alt="" className="h-full w-full rounded-[10px] border border-[#E6E8EC] object-cover dark:border-border" />
+        {over && <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-[#2563EB] px-2 py-1 text-[11px] font-semibold text-white">{language === "th" ? "วางเพื่อเปลี่ยนรูป" : "Drop to replace"}</span>}
         <button type="button" aria-label={removeLabel} onClick={onRemove}
           className="absolute -right-2 -top-2 grid h-[22px] w-[22px] place-items-center rounded-full bg-[rgba(21,26,40,0.72)] text-white">
           <X className="h-3 w-3" />
@@ -291,7 +297,7 @@ function LogoSpace({ slot, label, removeLabel, onFile, onRemove }: {
   }
   return (
     <>
-      <button type="button" aria-label={label} onClick={() => input.current?.click()}
+      <button type="button" data-logo-slot="attachment" aria-label={label} onClick={() => input.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
         onDrop={(e: DragEvent) => { e.preventDefault(); setOver(false); onFile(e.dataTransfer.files?.[0]); }}
         className={cn(box, "group flex flex-col items-center justify-center gap-1 border-[1.5px] border-dashed border-[#CBD1DA] bg-card text-[#6A7181] outline-none hover:border-[#8A90A0] hover:bg-[#FAFAFB] hover:text-[#4B5563] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4338CA] dark:border-border dark:hover:bg-muted",

@@ -2,7 +2,7 @@ import { AdvisorLicenceField } from "./advisor-licence-field";
 import { licenceName } from "@/lib/advisor-licences";
 import { setupText, tr, useTranslation } from "@/i18n/language";
 import { useTextLang } from "@/components/common/text-lang";
-import { useRef } from "react";
+import { useRef, useState, type DragEvent } from "react";
 import { Check, CircleAlert, FileText, Mail, Plus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -178,6 +178,12 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
   const photoInput = useRef<HTMLInputElement>(null);
   const photoSlot = useRef(0);
   const logoInput = useRef<HTMLInputElement>(null);
+  const [photoDrop, setPhotoDrop] = useState<number | null>(null);
+  const dropPhoto = (e: DragEvent, i: number) => {
+    e.preventDefault(); e.stopPropagation(); setPhotoDrop(null);
+    const file = e.dataTransfer.files?.[0];
+    if (file && !uploading) setSlot(i, { pendingFile: file });
+  };
 
   const missing = setupMissing(f, thai);
   const missIn = (sec: ReviewSec) => missing.filter((m) => m.sec === sec);
@@ -312,15 +318,19 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
                 {f.media.slots.map((s, i) => {
                   const url = s.pendingFile ? URL.createObjectURL(s.pendingFile) : s.signedUrl;
                   return url ? (
-                    <span key={i} className="relative h-[60px] w-[96px] flex-none overflow-hidden rounded-[9px] max-sm:flex-1">
+                    <span key={i} data-photo-slot={i + 1}
+                      onDragOver={(e) => { e.preventDefault(); setPhotoDrop(i); }} onDragLeave={() => setPhotoDrop(null)} onDrop={(e) => dropPhoto(e, i)}
+                      className={cn("relative h-[60px] w-[96px] flex-none overflow-hidden rounded-[9px] border-2 border-transparent max-sm:flex-1", photoDrop === i && "border-[#2563EB]")}>
                       <img src={url} alt="" className="h-full w-full object-cover" />
+                      {photoDrop === i && <span className="pointer-events-none absolute inset-x-1 top-1/2 -translate-y-1/2 rounded-full bg-[#2563EB] px-1 py-0.5 text-center text-[10px] font-semibold text-white">{language === "th" ? "วางเพื่อเปลี่ยนรูป" : "Drop to replace"}</span>}
                       <button type="button" aria-label={tr("Remove photo")} onClick={() => setSlot(i, { persistedPath: null, signedUrl: null, pendingFile: null })}
                         className="absolute right-1 top-1 grid h-5 w-5 cursor-pointer place-items-center rounded-full bg-black/55 text-white"><X className="h-3 w-3" /></button>
                     </span>
                   ) : (
-                    <button key={i} type="button" disabled={uploading} onClick={() => { photoSlot.current = i; photoInput.current?.click(); }}
-                      className="grid h-[60px] w-[96px] flex-none cursor-pointer place-items-center rounded-[9px] border-[1.5px] border-dashed border-[#C9CED8] text-[12px] font-semibold text-[#6B7280] hover:border-[#1E2A4A] max-sm:flex-1">
-                      {tr("Add photo")}
+                    <button key={i} type="button" data-photo-slot={i + 1} disabled={uploading} onClick={() => { photoSlot.current = i; photoInput.current?.click(); }}
+                      onDragOver={(e) => { e.preventDefault(); setPhotoDrop(i); }} onDragLeave={() => setPhotoDrop(null)} onDrop={(e) => dropPhoto(e, i)}
+                      className={cn("grid h-[60px] w-[96px] flex-none cursor-pointer place-items-center rounded-[9px] border-[1.5px] border-dashed border-[#C9CED8] text-[12px] font-semibold text-[#6B7280] hover:border-[#1E2A4A] max-sm:flex-1", photoDrop === i && "border-solid border-[#2563EB] bg-[#EEF4FF]")}>
+                      {photoDrop === i ? (language === "th" ? "วางไฟล์เพื่ออัปโหลด" : "Drop to upload") : tr("Add photo")}
                     </button>
                   );
                 })}
