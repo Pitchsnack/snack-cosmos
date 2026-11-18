@@ -29,6 +29,7 @@ export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sector
   name: string; sectorLine: string; note?: React.ReactNode; why?: string[]; L: L; wideAdd?: boolean; examples?: ExampleSet;
 }) {
   const [m, setM] = useState<EntityMediaState>(() => toState(initial));
+  const [saving, setSaving] = useState(false);
   const [count, setCount] = useState({ logo: !!initial.logoPath, photos: initial.slots.length });
   const handlers = useRef({ getUrl, persist, onCount });
   handlers.current = { getUrl, persist, onCount };
@@ -48,7 +49,7 @@ export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sector
       });
       setCount({ logo: !!logoPath, photos: list.length });
       current.onCount(!!logoPath, list.length);
-    }, (e) => toast.error((e as Error).message));
+    }, (e) => toast.error((e as Error).message), setSaving);
   }
   const onChange = (next: EntityMediaState) => {
     setM(next);
@@ -61,6 +62,7 @@ export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sector
       <AttachmentCard value={m} onChange={(x) => void onChange(x)} name={name} sectorLine={sectorLine} intro={null} showGuidance={false} photosOnly={photosOnly}
         photoGuide examples={examples}
         footer={<>
+          {saving && <p role="status" aria-live="polite" className="mb-2 text-[13px] text-muted-foreground">{L("Uploading your images… Continue unlocks when they are saved.", "กำลังอัปโหลดรูปภาพ… ปุ่มดำเนินการต่อจะกดได้เมื่อบันทึกเสร็จ")}</p>}
           {note && <p className="mt-2.5 flex items-start gap-1.5 text-[13px] text-[#6B7280] dark:text-muted-foreground">{note}</p>}
           <StepDone ok={ok} L={L} items={[...(photosOnly ? [] : [[count.logo, L("Logo", "โลโก้")] as [boolean, string]]), [count.photos > 0, L("At least 1 photo", "รูปภาพอย่างน้อย 1 รูป")]]} />
         </>} />
