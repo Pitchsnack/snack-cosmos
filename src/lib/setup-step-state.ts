@@ -15,3 +15,12 @@ export function setupStepState(key: string, current: string, valid: boolean, opt
   if (setupAnswered(key, valid, optional, order, reached)) return "done";
   return order.indexOf(key) < order.indexOf(reached ?? "") ? "missed" : "todo";
 }
+/**
+ * No jumping ahead: steps after the first unanswered step are locked. A step without an
+ * explicit `answered` flag counts as answered only when its state is "done".
+ * Returns the index of the first unanswered step (-1 when every step is answered).
+ */
+export function firstBlockingStep(steps: readonly { state: string; answered?: boolean }[]): number {
+  return steps.findIndex((s) => !(s.answered ?? s.state === "done"));
+}
+export const stepLocked = (i: number, block: number) => block >= 0 && i > block;

@@ -696,7 +696,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
             const names = id === "team" && hid("team", "team") ? { short: ["Languages", "ภาษา"] as [string,string], full: ["Languages", "ภาษา"] as [string,string] } : ADVISOR_STEP_NAMES[id];
             const state = setupStepState(id, cur, qValid(id), ["deal", "logo"], STEPS, reached);
             const tip = state === "here" ? L("You are here", "ท่านอยู่ที่ขั้นนี้") : state === "done" ? L("Answered · click to change", "ตอบแล้ว · กดเพื่อแก้ไข") : state === "missed" ? L("Not answered · click to answer", "ยังไม่ได้ตอบ · กดเพื่อตอบ") : L("Not reached yet · click to go there", "ยังไม่ถึงขั้นนี้ · กดเพื่อไปที่ขั้นนี้");
-            return {key:id, label:L(...names.short), full:L(...names.full), state, tip};
+            return {key:id, label:L(...names.short), full:L(...names.full), state, tip, answered: id !== "review" && questionAnswered(id, qValid(id), ["deal", "logo"], STEPS, reached)};
           })} />
           <div className={card} ref={cardRef}>
             <div key={cur} ref={qRef} className="animate-in fade-in duration-200">

@@ -1,9 +1,11 @@
 import { Check, CircleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { thaiStepLabel } from "@/i18n/th-company-setup";
+import { firstBlockingStep, stepLocked } from "@/lib/setup-step-state";
 
 export type StepState = "done" | "here" | "missed" | "todo";
-export type StepItem = { key: string; label: string; full: string; state: StepState; tip: string };
+/** `answered`: the step holds a valid answer (or an optional step was passed). Steps after the first unanswered one lock. */
+export type StepItem = { key: string; label: string; full: string; state: StepState; tip: string; answered?: boolean };
 
 /**
  * Numbered step bar shared by setup wizards and banners: one column per step,
@@ -19,23 +21,29 @@ export function StepBar({ steps, lineTo, onPick, variant = "wizard", label, step
   // circle size (desktop) and its vertical centre
   const size = b ? 28 : 32;
   const half = size / 2;
+  const block = firstBlockingStep(steps);
+  const th = /[\u0E00-\u0E7F]/.test(label);
+  const firstTip = block >= 0 ? (th ? `กรุณาตอบ${steps[block]!.full}ก่อน` : `Answer ${steps[block]!.full} first`) : "";
   return (
     <nav aria-label={label} className={cn("w-full", b ? "[--sb-ring:#F4F9FF] dark:[--sb-ring:#16283A]" : "[--sb-ring:#F5F6F8] dark:[--sb-ring:hsl(var(--background))]", className)}>
       <ol className="grid" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
-        {steps.map((s, i) => {
+        {steps.map((step, i) => {
+          let s = step;
           const last = i === steps.length - 1;
           const navy = i < lineTo;
+          const locked = stepLocked(i, block);
+          if (locked) s = { ...s, state: "todo", tip: firstTip };
           return (
             <li key={s.key} className="group relative flex min-w-0 flex-col items-center">
               {!last && (
                 <span aria-hidden="true" className={cn("absolute left-1/2 h-[2px] w-full", navy ? "bg-[#1E2A4A] dark:bg-[#8CA3D8]" : "bg-[#DCDFE5] dark:bg-border")}
                   style={{ top: `calc(${half}px - 1px)` }} />
               )}
-              <button type="button" onClick={() => onPick(s.key)} aria-current={s.state === "here" ? "step" : undefined}
+              <button type="button" onClick={locked ? undefined : () => onPick(s.key)} aria-disabled={locked || undefined} tabIndex={locked ? -1 : undefined} data-locked={locked || undefined} aria-current={s.state === "here" ? "step" : undefined}
                 aria-label={`${stepWord(i + 1)} · ${s.full}, ${s.tip}`}
-                className="relative z-[1] flex w-full min-w-0 flex-col items-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-4 max-[599px]:h-11 max-[599px]:w-full max-[599px]:justify-center">
+                className={cn("relative z-[1] flex w-full min-w-0 flex-col items-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-4 max-[599px]:h-11 max-[599px]:w-full max-[599px]:justify-center", locked ? "cursor-default" : "cursor-pointer")}>
                 <span aria-hidden="true"
-                  className={cn("grid place-items-center rounded-full font-bold transition-transform duration-150 group-hover:scale-[1.08] motion-reduce:transition-none motion-reduce:group-hover:scale-100",
+                  className={cn("grid place-items-center rounded-full font-bold transition-transform duration-150 motion-reduce:transition-none motion-reduce:group-hover:scale-100", !locked && "group-hover:scale-[1.08]",
                     b ? "h-7 w-7 text-[13px]" : "h-8 w-8 text-[14px]", lots ? "max-[599px]:h-5 max-[599px]:w-5 max-[599px]:text-[11px]" : many ? "max-[599px]:h-6 max-[599px]:w-6" : "max-[599px]:h-7 max-[599px]:w-7",
                     s.state === "done" && "bg-[#1E2A4A] text-white shadow-[0_0_0_4px_var(--sb-ring)] dark:bg-[#8CA3D8] dark:text-[#11161F]",
                     s.state === "here" && "border-2 border-[#1E2A4A] bg-white text-[#1E2A4A] shadow-[0_0_0_5px_rgba(30,42,74,.14)] dark:border-[#8CA3D8] dark:bg-card dark:text-[#C9D5F0]",
@@ -43,7 +51,7 @@ export function StepBar({ steps, lineTo, onPick, variant = "wizard", label, step
                     s.state === "todo" && "border-[1.5px] border-[#C9CED8] bg-white font-semibold text-[#6B7280] shadow-[0_0_0_4px_var(--sb-ring)] dark:border-border dark:bg-card dark:text-muted-foreground")}>
                   {s.state === "done" ? <Check className={b ? "h-3.5 w-3.5" : "h-4 w-4"} strokeWidth={3} /> : s.state === "missed" && missedIcon ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" className="h-4 w-4 max-[599px]:h-3 max-[599px]:w-3"><path d="M12 5v9M12 19h.01" /></svg> : i + 1}
                 </span>
-                <span aria-hidden="true" lang={/[\u0E00-\u0E7F]/.test(s.label) ? "th" : "en"} className={cn("mt-2 w-[calc(100%-4px)] min-w-0 whitespace-normal hyphens-auto text-center [word-break:keep-all] [overflow-wrap:break-word] group-hover:underline max-[599px]:hidden", lots ? "text-[11.5px] leading-[1.3]" : b ? "mt-1.5 text-[12px] leading-[1.35]" : "text-[12.5px] leading-[1.35]",
+                <span aria-hidden="true" lang={/[\u0E00-\u0E7F]/.test(s.label) ? "th" : "en"} className={cn("mt-2 w-[calc(100%-4px)] min-w-0 whitespace-normal hyphens-auto text-center [word-break:keep-all] [overflow-wrap:break-word] max-[599px]:hidden", !locked && "group-hover:underline", lots ? "text-[11.5px] leading-[1.3]" : b ? "mt-1.5 text-[12px] leading-[1.35]" : "text-[12.5px] leading-[1.35]",
                   s.state === "done" && "font-medium text-[#374151] dark:text-foreground",
                   s.state === "here" && "font-bold text-[#151A28] dark:text-foreground",
                   s.state === "missed" && "font-semibold text-[#B91C1C] dark:text-red-400",

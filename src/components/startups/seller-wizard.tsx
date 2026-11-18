@@ -5,6 +5,7 @@ import { tr, useTranslation } from "@/i18n/language";
 import { checked } from "@/components/setup/verified-tags";
 import { useEffect, useRef, useState } from "react";
 import { Lock, Check as CheckIcon, Sparkles, Loader2, Calendar, Users } from "lucide-react";
+import { firstBlockingStep, stepLocked } from "@/lib/setup-step-state";
 import { StepBar, MissedNote, type StepItem } from "@/components/common/step-bar";
 import { Button } from "@/components/ui/button";
 import { WebsiteCheckLink } from "@/components/startups/website-check-link";
@@ -210,11 +211,11 @@ export function SellerWizard({
       : L("Not reached yet · click to go there", "ยังไม่ถึงขั้นนี้ · กดเพื่อไปที่ขั้นนี้");
   const items: StepItem[] = barKeys.map((k, i) => {
     const state: StepItem["state"] = inBar && bar[i] === step ? "here" : k !== "review" && answered[k] ? "done" : k !== "review" && isMissed(k, d) ? "missed" : "todo";
-    return { key: k, label: L(...STEP_SHORT[k]), full: L(...STEP_FULL[k]), state, tip: tipOf(k, state) };
+    return { key: k, label: L(...STEP_SHORT[k]), full: L(...STEP_FULL[k]), state, tip: tipOf(k, state), answered: k !== "review" && !!answered[k] };
   });
   const farIdx = stepIdx(laterKey(reached, inBar ? cur.id : null));
   const lineTo = Math.max(0, barKeys.filter((k) => stepIdx(k) <= farIdx).length - 1);
-  const missed = items.map((it, i) => ({ key: it.key, n: i + 1, full: it.full, st: it.state })).filter((x) => x.st === "missed");
+  const missed = items.map((it, i) => ({ key: it.key, n: i + 1, full: it.full, st: it.state })).filter((x, i) => x.st === "missed" && !stepLocked(i, firstBlockingStep(items)));
   const openStep = (k: string) => { setFull(null); focusTitle.current = true; go(STEPS.findIndex((x) => x.id === k)); };
   const stepWord = (n: number) => L(`Step ${n}`, `ขั้นที่ ${n}`);
 

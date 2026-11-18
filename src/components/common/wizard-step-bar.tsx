@@ -1,11 +1,13 @@
 import { StepBar, MissedNote, type StepItem } from "./step-bar";
 import { useTranslation } from "@/i18n/language";
+import { firstBlockingStep, stepLocked } from "@/lib/setup-step-state";
 
 /** Role wizards adapt their own validation into the seller's shared presentation. */
 export function WizardStepBar({ steps, lineTo, onPick }: { steps: StepItem[]; lineTo: number; onPick: (key: string) => void }) {
   const th = useTranslation().language === "th";
   const L = (en: string, thai: string) => th ? thai : en;
-  const missed = steps.flatMap((s, i) => s.state === "missed" ? [{ key: s.key, n: i + 1, full: s.full }] : []);
+  const block = firstBlockingStep(steps);
+  const missed = steps.flatMap((s, i) => s.state === "missed" && !stepLocked(i, block) ? [{ key: s.key, n: i + 1, full: s.full }] : []);
   return <div className="mt-[18px]">
     <StepBar missedIcon steps={steps} lineTo={lineTo} onPick={onPick} label={L("Setup steps", "ขั้นตอนการตั้งค่า")}
       stepWord={(n) => L(`Step ${n}`, `ขั้นที่ ${n}`)} missedWord={L("Not answered", "ยังไม่ได้ตอบ")} />

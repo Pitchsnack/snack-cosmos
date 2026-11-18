@@ -2,7 +2,7 @@ import { WizardStepBar } from "@/components/common/wizard-step-bar";
 import { FromDbdTag, IdentityLockNote, LOCKED_INPUT, LockWrap } from "@/components/common/identity-lock";
 import { isIdentityLocked } from "@/lib/identity-lock";
 import { BUYER_STEP_NAMES } from "@/lib/setup-step-labels";
-import { furthestStep, setupStepState } from "@/lib/setup-step-state";
+import { furthestStep, setupAnswered, setupStepState } from "@/lib/setup-step-state";
 import { buyerProgressFor } from "@/lib/buyer-wizard";
 import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
@@ -740,7 +740,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             const names = id === "name" && addrOnly ? { short: ["Address", "ที่อยู่"] as [string,string], full: ["Your address", "ที่อยู่ของท่าน"] as [string,string] } : id === "aum" && corp ? { short: ["Revenue", "รายได้"] as [string,string], full: ["Group annual revenue", "รายได้ต่อปีของกลุ่มบริษัท"] as [string,string] } : BUYER_STEP_NAMES[id];
             const state = setupStepState(id, cur, qValid(id) && (id !== "desc" || !!a.desc.trim()), ["rev", "desc"], stepsAll.map(s => s.id), reached);
             const tip = state === "here" ? L("You are here", "ท่านอยู่ที่ขั้นนี้") : state === "done" ? L("Answered · click to change", "ตอบแล้ว · กดเพื่อแก้ไข") : state === "missed" ? L("Not answered · click to answer", "ยังไม่ได้ตอบ · กดเพื่อตอบ") : L("Not reached yet · click to go there", "ยังไม่ถึงขั้นนี้ · กดเพื่อไปที่ขั้นนี้");
-            return {key:id, label:L(...names.short), full:L(...names.full), state, tip};
+            return {key:id, label:L(...names.short), full:L(...names.full), state, tip, answered: id !== "review" && setupAnswered(id, qValid(id) && (id !== "desc" || !!a.desc.trim()), ["rev", "desc"], stepsAll.map(s => s.id), reached)};
           })} />
           <div className={card}>
             <div key={step.id} ref={qRef} className="animate-in fade-in duration-200">

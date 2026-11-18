@@ -32,7 +32,7 @@ export const sellerSetupKey = (id: string) => ["seller-setup", id];
 function toDraft(s: SellerSetup, open?: string): SellerDraft {
   const d: SellerDraft = {
     ...emptyDraft(), role: s.role, name: s.name, reg: s.reg, web: s.web, year: s.year, city: s.city,
-    rev: s.rev, size: s.size, sector: s.sector, pick: s.pick, licences: s.licences as SellerDraft["licences"], iso: s.iso, addr: s.addr,
+    rev: s.rev, size: s.size, sector: s.sector, pick: s.pick, licences: s.licences as SellerDraft["licences"], iso: s.iso, addr: s.addr, regConfirmed: !!s.identity?.lockedAt,
     reached: s.reached,
     shortDescription:s.shortDescription,longDescription:s.longDescription,productTags:s.productTags,marketTags:s.marketTags,
     shortDescriptionTh:s.shortDescriptionTh,longDescriptionTh:s.longDescriptionTh,productTagsTh:s.productTagsTh,marketTagsTh:s.marketTagsTh,

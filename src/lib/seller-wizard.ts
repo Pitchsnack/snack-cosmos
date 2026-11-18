@@ -126,7 +126,7 @@ export function sellerSkips(d: SellerDraft, fromSignup: string[] = []): Set<stri
   if (f.has("year") && f.has("size") && validFoundedYear(d.year) && d.size) s.add("founded");
   if (f.has("sector") && d.sector) s.add("sector");
   // The company check confirmed name, number and address at sign-up: skip while all still hold a value.
-  if (f.has("address") && !!d.name.trim() && /^\d{13}$/.test(d.reg) && addrComplete(d.addr)) s.add("name");
+  if (f.has("address") && sellerValid(d).name) s.add("name");
   if (d.noUpload) s.add("photos");
   if (d.setupDoneAt) s.add("listing");
   return s;
@@ -233,7 +233,7 @@ export function sellerListingValid(d: Pick<SellerDraft, 'listingName' | 'headlin
 }
 export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
   return {
-    role: !!d.role, name: !!d.name.trim() && /^\d{13}$/.test(d.reg) && addrComplete(d.addr),
+    role: !!d.role, name: !!d.name.trim() && /^\d{13}$/.test(d.reg) && (addrComplete(d.addr) || (!!d.regConfirmed && !!(d.addr.street.trim() || d.addr.province))),
     sector: !!d.sector, web: websiteFieldsAnswered(d), founded: validFoundedYear(d.year) && !!d.size,
     rev: !!d.rev, lic: d.licences.length + d.iso.length > 0 || stepIdx(d.reached) > stepIdx("lic"),
     photos: !!d.hasLogo && (d.photos ?? 0) > 0, deal: !!d.deal, handover: d.stays === "yes" || d.stays === "no",
@@ -272,6 +272,8 @@ export interface SellerDraft {
   role: SellerRelation | null;
   name: string;
   reg: string;
+  /** The company check confirmed name + number ("Yes, this is my company"); the official address may lack a postcode. */
+  regConfirmed?: boolean;
   web: string;
   year: string;
   city: string;
