@@ -17,4 +17,20 @@ describe("dropping photos", () => {
     const s = empty(); s[0] = { ...EMPTY_SLOT, persistedPath: "p" };
     expect(names(placePhotos(s, [f("a"), f("b"), f("c")]))).toEqual([null, "a", "b"]);
   });
+  it("a drop on an occupied space replaces that photo and preserves the others", () => {
+    const s = empty();
+    s[0] = { ...EMPTY_SLOT, persistedPath: "first" };
+    s[1] = { ...EMPTY_SLOT, persistedPath: "second" };
+    const next = placePhotos(s, [f("replacement")], 1);
+    expect(next[0]?.persistedPath).toBe("first");
+    expect(next[1]).toMatchObject({ persistedPath: null, signedUrl: null, pendingFile: expect.any(File) });
+    expect(names(next)).toEqual([null, "replacement", null]);
+  });
+  it("extra files dropped on an occupied space fill only the remaining empty spaces", () => {
+    const s = empty();
+    s[0] = { ...EMPTY_SLOT, persistedPath: "first" };
+    s[1] = { ...EMPTY_SLOT, persistedPath: "second" };
+    expect(names(placePhotos(s, [f("replacement"), f("third")], 1))).toEqual([null, "replacement", "third"]);
+    expect(placePhotos(s, [f("replacement"), f("third")], 1)[0]?.persistedPath).toBe("first");
+  });
 });

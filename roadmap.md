@@ -1,3 +1,7 @@
+# Existing photo slot drag and drop
+- [x] Fix occupied Images & Logo photo slots ignoring file drops: dropping now replaces that slot, extra files fill empty slots, and the same occupied-slot handling covers the shared entity editor.
+- [x] Five focused placement tests and TypeScript pass; a real PNG drop on PS-1005 showed Drop to replace and changed the preview with no browser errors. Cancelled without saving, leaving stored company media unchanged; preview build OK.
+
 # Admin-only identity check
 - [x] Remove seller/buyer identity warnings and submission/setup/save blocks while retaining static privacy guidance.
 - [x] Build one server-side pre-NDA finding engine excluding province/region/country and covering only the brief's seller/buyer fields, with province-aware bilingual fixes.

@@ -619,8 +619,16 @@ function SlotCell({
     <div className="relative">
       {preview ? (
         <div
-          className="group relative cursor-pointer"
+          className={cn("group relative cursor-pointer rounded-md border-2 border-transparent transition-colors", dragging && "border-primary bg-accent/40")}
           onClick={() => setPreviewOpen(true)}
+          onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setDragging(true); }}
+          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragging(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setDragging(false); }}
+          onDrop={(e) => {
+            e.preventDefault(); e.stopPropagation(); setDragging(false);
+            const f = e.dataTransfer.files?.[0];
+            if (f && f.type.startsWith("image/")) onPick(f);
+          }}
         >
           <ImageWithSkeleton
             src={preview}

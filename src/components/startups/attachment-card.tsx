@@ -28,15 +28,15 @@ export function attachmentMissing(m: EntityMediaState) {
   return (filled(m.logo) ? 0 : 1) + (m.slots.some(filled) ? 0 : 1);
 }
 
-/** Put files into empty photo spaces: the first at `at` (when empty), the rest in the next empty ones. */
+/** Drop on a space to add or replace its photo; extra files fill the remaining empty spaces. */
 export function placePhotos(slots: EntityMediaState["slots"], files: File[], at?: number): EntityMediaState["slots"] {
   const next = [...slots] as EntityMediaState["slots"];
   const order = [0, 1, 2];
-  if (at !== undefined && !filled(next[at]!)) order.splice(order.indexOf(at), 1), order.unshift(at);
+  if (at !== undefined) order.splice(order.indexOf(at), 1), order.unshift(at);
   let k = 0;
   for (const i of order) {
     if (k >= files.length) break;
-    if (filled(next[i]!)) continue;
+    if (filled(next[i]!) && i !== at) continue;
     next[i] = { ...EMPTY_SLOT, pendingFile: files[k++]! };
   }
   return next;
@@ -232,8 +232,14 @@ function PhotoSpace({ slot, n, example, dragging, removeLabel, onFiles, onRemove
   useEffect(() => { if (!dragging) setOver(false); }, [dragging]);
   if (src) {
     return (
-      <div className="relative aspect-[10/7] w-full rounded-[10px]">
-        <img src={src} alt="" className="h-full w-full rounded-[10px] border border-[#E6E8EC] object-cover dark:border-border" />
+      <div data-photo-slot={n}
+        onDragEnter={(e) => { if (!hasFiles(e)) return; e.preventDefault(); setOver(true); }}
+        onDragOver={(e) => { if (!hasFiles(e)) return; e.preventDefault(); setOver(true); }}
+        onDragLeave={() => setOver(false)}
+        onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setOver(false); onFiles(e.dataTransfer.files); }}
+        className={cn("relative aspect-[10/7] w-full overflow-hidden rounded-[10px] border-2 border-transparent transition-colors", over && "border-[#2563EB] bg-[#EEF4FF]")}>
+        <img src={src} alt="" className="h-full w-full rounded-[8px] border border-[#E6E8EC] object-cover dark:border-border" />
+        {over && <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-[#2563EB] px-2.5 py-1 text-[12px] font-semibold text-white">{tr("Drop to replace", "วางเพื่อเปลี่ยนรูป")}</span>}
         <button type="button" aria-label={removeLabel} onClick={onRemove}
           className="absolute right-1.5 top-1.5 grid h-[26px] w-[26px] place-items-center rounded-full bg-[rgba(21,26,40,0.72)] text-white">
           <X className="h-3.5 w-3.5" />
@@ -244,7 +250,7 @@ function PhotoSpace({ slot, n, example, dragging, removeLabel, onFiles, onRemove
   const exLabel = tr(`e.g. ${example.en}`, `ตัวอย่าง: ${example.th}`);
   return (
     <>
-      <button type="button" aria-label={tr(`Add photo ${n}`, `เพิ่มรูปภาพที่ ${n}`)} onClick={() => input.current?.click()}
+      <button type="button" data-photo-slot={n} aria-label={tr(`Add photo ${n}`, `เพิ่มรูปภาพที่ ${n}`)} onClick={() => input.current?.click()}
         onDragOver={(e) => { if (!hasFiles(e)) return; e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); setOver(false); onFiles(e.dataTransfer.files); }}
         className={cn("group relative aspect-[10/7] w-full overflow-hidden rounded-[10px] border-[1.5px] border-dashed border-[#CBD1DA] bg-[#F3F5F8] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] dark:border-border dark:bg-muted",
