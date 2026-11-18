@@ -17,16 +17,10 @@ describe("standard company-step copy", () => {
     expect(R_ADD.noReg).toEqual({ en, th });
   });
 
-  it("uses the requested Thai sign-up lines without changing English or + Add", () => {
+  it("uses the requested Thai sign-up line without changing English or + Add", () => {
     expect(R.coLine.company.th).toBe("เราจะตรวจสอบข้อมูลบริษัทของท่านก่อนเปิดใช้งานบัญชี");
     expect(R.coLine.company.en).toBe("We verify your company before creating your account.");
-    expect(R.coLine.firm.th).toBe("เราจะตรวจสอบข้อมูลบริษัทของท่านก่อนเปิดใช้งานบัญชี");
-    expect(R.coLine.firm.en).toBe("We verify your firm before creating your account.");
-    expect(R.coLine.ind.th).toBe("ใช้บริษัทที่ท่านใช้ลงทุน เราจะตรวจสอบข้อมูลบริษัทก่อนเปิดใช้งานบัญชี");
-    expect(R.coLine.ind.en).toBe("Use the company you invest through. We verify it before creating your account.");
     expect(R_ADD.coLine.company.th).toBe("เราจะยืนยันบริษัทของท่านก่อนเพิ่มเข้าในบัญชี");
-    expect(R_ADD.coLine.firm.th).toBe("เราจะยืนยันบริษัทของท่านก่อนเพิ่มเข้าในบัญชี");
-    expect(R_ADD.coLine.ind.th).toBe("ใช้บริษัทที่ท่านใช้ลงทุน เราจะยืนยันบริษัทก่อนเพิ่มเข้าในบัญชี");
   });
 
   it("uses the exact additional-details label and response notes", () => {

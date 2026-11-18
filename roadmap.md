@@ -1,8 +1,3 @@
-# Company step role-by-role follow-up
-- [x] Compare the replacement brief with the built shared flow and apply the exact Individual Investor Thai sign-up line without changing + Add.
-- [ ] Audit seller, buyer firm/Individual Investor/authorised representative and advisor sign-up and + Add entry points separately.
-- [ ] Run focused regression checks and capture EN/TH assisted-form and after-No screenshots for seller, buyer and advisor without creating accounts or sending requests.
-
 # Shared company step, assisted form and rejected-number retry
 - [x] Apply the exact bilingual registration link and sign-up Thai help line in every seller/buyer/advisor sign-up and + Add entry point.
 - [x] Make assisted setup a standalone screen with the specified fields, responsive buttons, Back behavior and unchanged request sending.
