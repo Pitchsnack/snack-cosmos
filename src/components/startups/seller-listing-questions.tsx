@@ -48,6 +48,7 @@ function toState(m: WizardMedia["initial"]): EntityMediaState {
 }
 export function PhotosQ({ media, d, set, L, sectorLine }: { media: WizardMedia; d: SellerDraft; set: Set; L: L; sectorLine: string }) {
   const [m, setM] = useState<EntityMediaState>(() => toState(media.initial));
+  const [saving, setSaving] = useState(false);
   const upUrl = useServerFn(createStartupMediaUploadUrl);
   const save = useServerFn(updateStartup);
   const handlers = useRef({ media, upUrl, save, set });
@@ -70,7 +71,7 @@ export function PhotosQ({ media, d, set, L, sectorLine }: { media: WizardMedia; 
       };
       setM(kept);
       current.set({ hasLogo: !!logoPath, photos: list.length });
-    }, (e) => toast.error((e as Error).message));
+    }, (e) => toast.error((e as Error).message), setSaving);
   }
   const onChange = (next: EntityMediaState) => {
     setM(next);
@@ -79,7 +80,7 @@ export function PhotosQ({ media, d, set, L, sectorLine }: { media: WizardMedia; 
   const ok = !!d.hasLogo && (d.photos ?? 0) > 0;
   return (
     <AttachmentCard value={m} onChange={(x) => void onChange(x)} name={media.facts.name} sectorLine={sectorLine} intro={null} showGuidance={false} photoGuide examples="seller"
-      footer={<StepDone ok={ok} L={L} items={[[!!d.hasLogo, L("Logo", "โลโก้")], [(d.photos ?? 0) > 0, L("At least 1 photo", "รูปภาพอย่างน้อย 1 รูป")]]} />} />
+      footer={<>{saving && <p role="status" aria-live="polite" className="mb-2 text-[13px] text-muted-foreground">{L("Uploading your images… Continue unlocks when they are saved.", "กำลังอัปโหลดรูปภาพ… ปุ่มดำเนินการต่อจะกดได้เมื่อบันทึกเสร็จ")}</p>}<StepDone ok={ok} L={L} items={[[!!d.hasLogo, L("Logo", "โลโก้")], [(d.photos ?? 0) > 0, L("At least 1 photo", "รูปภาพอย่างน้อย 1 รูป")]]} /></>} />
   );
 }
 

@@ -11,6 +11,7 @@ export class LatestChangeQueue<T> {
   constructor(
     private readonly worker: (value: T, isLatest: () => boolean) => Promise<void>,
     private readonly onError: (error: unknown) => void,
+    private readonly onBusy?: (busy: boolean) => void,
   ) {}
 
   push(value: T): void {
@@ -20,6 +21,7 @@ export class LatestChangeQueue<T> {
 
   private async flush(): Promise<void> {
     this.running = true;
+    this.onBusy?.(true);
     try {
       while (this.pending) {
         const job = this.pending;
@@ -32,6 +34,7 @@ export class LatestChangeQueue<T> {
       }
     } finally {
       this.running = false;
+      this.onBusy?.(false);
     }
   }
 }
