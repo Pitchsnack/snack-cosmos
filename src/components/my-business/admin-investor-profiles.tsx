@@ -1,6 +1,7 @@
 import { setupText } from "@/i18n/language";
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { finishAddYes } from "@/lib/add-company-finish";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { Loader2, Plus } from "lucide-react";
@@ -33,6 +34,7 @@ export function useAddInvestorProfile() {
   const add = useServerFn(addInvestorProfile);
   const apply = useServerFn(applyAddCheck);
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const lock = useRef(false);
@@ -41,10 +43,13 @@ export function useAddInvestorProfile() {
     if (lock.current) return;
     lock.current = true; setBusy(true);
     try {
-      const { id } = await add();
-      await apply({ data: { attemptId: y.attemptId, kind: "buyer", profileId: id, session: y.session, answers: y.answers } });
-      setOpen(false);
-      await navigate({ to: "/marketplace/my-company", search: { open: id } as never });
+      await finishAddYes("buyer", {
+        create: () => add(),
+        apply: (id) => apply({ data: { attemptId: y.attemptId, kind: "buyer", profileId: id, session: y.session, answers: y.answers } }),
+        refresh: (key) => qc.invalidateQueries({ queryKey: [...key] }),
+        close: () => setOpen(false),
+        go: (to, search) => navigate({ to: to as "/marketplace/my-company", search: search as never }),
+      });
     } finally { lock.current = false; setBusy(false); }
   };
   const run = async () => { setOpen(true); };

@@ -38,6 +38,7 @@ import { FirmCard, FirmLogo, ServiceChip, Stars, VerifiedAdvisorChip } from "@/c
 import { myFirmViews } from "@/lib/advisor-enquiries.functions";
 import { applyAddCheck } from "@/lib/add-company-check.functions";
 import { AddCompanyCheck, type AddCheckYes } from "@/components/setup/add-company-check";
+import { finishAddYes } from "@/lib/add-company-finish";
 import { createAdvisorDraft, getMapsEmbedKey, listMyAdvisorFirms, saveAdvisorServices, setAdvisorFirmStatus } from "@/lib/advisor-firm.functions";
 import { startProfileEnrichment } from "@/lib/website-enrichment.functions";
 import {
@@ -84,11 +85,13 @@ function useAddFirm() {
     if (busy) return;
     setBusy(true);
     try {
-      const { id } = await create();
-      await apply({ data: { attemptId: y.attemptId, kind: "advisor", profileId: id, session: y.session, answers: y.answers } });
-      setOpen(false);
-      await qc.invalidateQueries({ queryKey: ADVISOR_FIRMS_KEY });
-      await navigate({ to: "/marketplace/my-company", search: { open: id } as never });
+      await finishAddYes("advisor", {
+        create: () => create(),
+        apply: (id) => apply({ data: { attemptId: y.attemptId, kind: "advisor", profileId: id, session: y.session, answers: y.answers } }),
+        refresh: (key) => qc.invalidateQueries({ queryKey: [...key] }),
+        close: () => setOpen(false),
+        go: (to, search) => navigate({ to: to as "/marketplace/my-company", search: search as never }),
+      });
     } finally { setBusy(false); }
   };
   const add = () => setOpen(true);

@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { finishAddYes } from "@/lib/add-company-finish";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +18,7 @@ export function AddBusinessButton({ label = "Add My Business", size }: { label?:
   const add = useServerFn(addDraftBusiness);
   const { data: session } = useSessionContext();
   const apply = useServerFn(applyAddCheck);
+  const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const lock = useRef(false);
@@ -24,10 +27,13 @@ export function AddBusinessButton({ label = "Add My Business", size }: { label?:
     if (lock.current) return;
     lock.current = true; setBusy(true);
     try {
-      const { id } = await add({ data: { tenantId: session?.activeWorkspace?.tenantId ?? null } });
-      await apply({ data: { attemptId: y.attemptId, kind: "seller", profileId: id, session: y.session, answers: y.answers } });
-      setOpen(false);
-      await navigate({ to: "/my-startups", search: { open: id } as never });
+      await finishAddYes("seller", {
+        create: () => add({ data: { tenantId: session?.activeWorkspace?.tenantId ?? null } }),
+        apply: (id) => apply({ data: { attemptId: y.attemptId, kind: "seller", profileId: id, session: y.session, answers: y.answers } }),
+        refresh: (key) => qc.invalidateQueries({ queryKey: [...key] }),
+        close: () => setOpen(false),
+        go: (to, search) => navigate({ to: to as "/my-startups", search: search as never }),
+      });
     } finally { lock.current = false; setBusy(false); }
   };
   return (
