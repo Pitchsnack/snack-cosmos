@@ -327,7 +327,7 @@ export function SellerWizard({
             </div></div>
         </div>
       ) },
-    photos: { t: L("Add your logo and photos", "เพิ่มโลโก้และรูปภาพ"), h: L("Add your logo and at least 1 photo (up to 3) of the premises, the team or the products. Buyers see them like this after you approve their NDA.", "เพิ่มโลโก้และรูปภาพอย่างน้อย 1 รูป (สูงสุด 3 รูป) ของสถานที่ ทีมงาน หรือสินค้า ผู้ซื้อจะเห็นแบบนี้หลังจากท่านอนุมัติ NDA"),
+    photos: { t: L("Add your logo and photos", "เพิ่มโลโก้และรูปภาพ"), h: L("Your logo and at least 1 photo (up to 3). Buyers see them after you approve their NDA.", "โลโก้และรูปภาพอย่างน้อย 1 รูป (ไม่เกิน 3 รูป) ผู้ซื้อจะเห็นหลังจากท่านอนุมัติ NDA"),
       body: media ? <PhotosQ media={media} d={d} set={set} L={L} sectorLine={[d.sector, d.addr.province].filter(Boolean).join(" · ")} /> : null },
     deal: { t: L("What kind of deal are you looking for?", "ท่านต้องการดีลแบบใด"), h: L("Buyers see this on your listing.", "ผู้ซื้อจะเห็นข้อมูลนี้ในประกาศของท่าน"),
       body: <DealQ d={d} pick={pick} L={L} /> },

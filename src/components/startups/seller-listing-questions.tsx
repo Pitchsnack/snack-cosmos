@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AttachmentCard } from "@/components/startups/attachment-card";
+import { StepDone } from "@/components/common/logo-photos-step";
 import { EMPTY_SLOT, uploadPending, type EntityMediaState } from "@/components/media/entity-media-editor";
 import { LatestChangeQueue } from "@/lib/media/latest-change-queue";
 import { createStartupMediaUploadUrl, updateStartup } from "@/lib/startups.functions";
@@ -76,35 +77,9 @@ export function PhotosQ({ media, d, set, L, sectorLine }: { media: WizardMedia; 
     queue.current?.push(next);
   };
   const ok = !!d.hasLogo && (d.photos ?? 0) > 0;
-  const dot = (on: boolean, label: string) => (
-    <span className={cn("flex items-center gap-2 font-semibold", on ? "text-[#15803D]" : "text-[#6B7280]")}>
-      <span className={cn("grid h-4 w-4 place-items-center rounded-full", on ? "bg-[#15803D]" : "border-[1.5px] border-[#C9CED8] bg-white")}>{on && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3.2} />}</span>{label}
-    </span>
-  );
   return (
-    <div>
-      <AttachmentCard value={m} onChange={(x) => void onChange(x)} name={media.facts.name} sectorLine={sectorLine} wideAdd />
-      {ok ? (
-        <p className="mt-[18px] flex items-center gap-1.5 text-[13.5px] font-semibold text-[#15803D]"><CircleCheck className="h-4 w-4" />{L("Your logo and photos are added. You can change them later in My Company.", "เพิ่มโลโก้และรูปภาพแล้ว ท่านเปลี่ยนได้ภายหลังที่บริษัทของฉัน")}</p>
-      ) : (
-        <>
-          <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px]">
-            {dot(!!d.hasLogo, L("Logo", "โลโก้"))}{dot((d.photos ?? 0) > 0, L("At least 1 photo", "รูปภาพอย่างน้อย 1 รูป"))}
-            <span className="text-[#6B7280]">{L("Both are needed to continue.", "ต้องมีทั้งสองอย่างจึงจะไปต่อได้")}</span>
-          </div>
-          <div className="mt-[22px] rounded-[12px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4 dark:border-border dark:bg-[#16283A]">
-            <p className="text-[14.5px] font-bold">{L("Why add them", "ทำไมต้องเพิ่ม")}</p>
-            <ul className="mt-2.5 space-y-1.5">
-              {[L("Create a logo and good-quality business photos to help buyers to understand and remember your company.", "สร้างโลโก้และรูปภาพกิจการคุณภาพดี เพื่อช่วยให้ผู้ซื้อเข้าใจและจดจำบริษัทของท่าน"),
-                L("Make a stronger first impression.", "สร้างความประทับใจแรกที่ดีกว่า"),
-                L("Help your profile get noticed. Some investors may skip listings without images when reviewing many opportunities.", "ช่วยให้โปรไฟล์ของท่านโดดเด่น นักลงทุนบางรายอาจข้ามประกาศที่ไม่มีรูปภาพเมื่อพิจารณาหลายโอกาส")].map((x) => (
-                <li key={x} className="flex items-start gap-2 text-[14px] text-[#434A5C] dark:text-muted-foreground"><Check className="mt-[3px] h-3.5 w-3.5 shrink-0 text-[#15803D]" strokeWidth={2.8} />{x}</li>
-              ))}
-            </ul>
-          </div>
-        </>
-      )}
-    </div>
+    <AttachmentCard value={m} onChange={(x) => void onChange(x)} name={media.facts.name} sectorLine={sectorLine} intro={null} showGuidance={false} photoGuide examples="seller"
+      footer={<StepDone ok={ok} L={L} items={[[!!d.hasLogo, L("Logo", "โลโก้")], [(d.photos ?? 0) > 0, L("At least 1 photo", "รูปภาพอย่างน้อย 1 รูป")]]} />} />
   );
 }
 

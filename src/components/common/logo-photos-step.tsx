@@ -6,6 +6,7 @@ import { AttachmentCard } from "@/components/startups/attachment-card";
 import { EMPTY_SLOT, uploadPending, type EntityMediaState, type UploadFn } from "@/components/media/entity-media-editor";
 import { LatestChangeQueue } from "@/lib/media/latest-change-queue";
 import { cn } from "@/lib/utils";
+import type { ExampleSet } from "@/components/media/example-photos";
 
 type L = (en: string, th: string) => string;
 export type StepMedia = { logoPath: string | null; logoUrl: string | null; slots: { slot: number; path: string; url: string | null }[] };
@@ -20,12 +21,12 @@ function toState(m: StepMedia): EntityMediaState {
  * The seller wizard's Logo and photos step for any profile: the Attachment card,
  * a note line, the checklist and Why add them. Each change uploads and saves as it finishes.
  */
-export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sectorLine, note, why, L, wideAdd = false }: {
+export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sectorLine, note, L, wideAdd = false, examples = "firm" }: {
   initial: StepMedia;
   getUrl: UploadFn;
   persist: (logoPath: string | null, media: { slot: 1 | 2 | 3; image_path: string }[]) => Promise<unknown>;
   onCount: (hasLogo: boolean, photos: number) => void;
-  name: string; sectorLine: string; note: React.ReactNode; why: string[]; L: L; wideAdd?: boolean;
+  name: string; sectorLine: string; note?: React.ReactNode; why?: string[]; L: L; wideAdd?: boolean; examples?: ExampleSet;
 }) {
   const [m, setM] = useState<EntityMediaState>(() => toState(initial));
   const [count, setCount] = useState({ logo: !!initial.logoPath, photos: initial.slots.length });
@@ -54,35 +55,29 @@ export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sector
     queue.current?.push(next);
   };
   const ok = count.logo && count.photos > 0;
-  const dot = (on: boolean, label: string) => (
-    <span className={cn("flex items-center gap-2 font-semibold", on ? "text-[#15803D]" : "text-[#6B7280]")}>
-      <span className={cn("grid h-4 w-4 place-items-center rounded-full", on ? "bg-[#15803D]" : "border-[1.5px] border-[#C9CED8] bg-white")}>{on && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3.2} />}</span>{label}
-    </span>
-  );
+  const photosOnly = wideAdd && count.logo;
   return (
     <div>
-      <div className="max-[599px]:[&_.attachment-card]:p-[14px]">
-        <AttachmentCard value={m} onChange={(x) => void onChange(x)} name={name} sectorLine={sectorLine} intro={null} showGuidance={false} wideAdd={wideAdd} photosOnly={wideAdd && count.logo} />
-      </div>
-      <p className="mt-2.5 flex items-start gap-1.5 text-[13px] text-[#6B7280] dark:text-muted-foreground">{note}</p>
-      {ok ? (
-        <p className="mt-[18px] flex items-center gap-1.5 text-[13.5px] font-semibold text-[#15803D]"><CircleCheck className="h-4 w-4" />{L("Your logo and photos are added. You can change them later in My Company.", "เพิ่มโลโก้และรูปภาพแล้ว ท่านเปลี่ยนได้ภายหลังที่บริษัทของฉัน")}</p>
-      ) : (
-        <>
-          <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px]">
-            {!(wideAdd && count.logo) && dot(count.logo, L("Logo", "โลโก้"))}{dot(count.photos > 0, L("At least 1 photo", "รูปภาพอย่างน้อย 1 รูป"))}
-            {!(wideAdd && count.logo) && <span className="text-[#6B7280]">{L("Both are needed to continue.", "ต้องมีทั้งสองอย่างจึงจะไปต่อได้")}</span>}
-          </div>
-          <div className="mt-[22px] rounded-[12px] border border-[#D6E7FC] bg-[#F4F9FF] px-[18px] py-4 dark:border-border dark:bg-[#16283A]">
-            <p className="text-[14.5px] font-bold">{L("Why add them", "ทำไมต้องเพิ่ม")}</p>
-            <ul className="mt-2.5 space-y-1.5">
-              {why.map((x) => (
-                <li key={x} className="flex items-start gap-2 text-[14px] text-[#434A5C] dark:text-muted-foreground"><Check className="mt-[3px] h-3.5 w-3.5 shrink-0 text-[#15803D]" strokeWidth={2.8} />{x}</li>
-              ))}
-            </ul>
-          </div>
-        </>
-      )}
+      <AttachmentCard value={m} onChange={(x) => void onChange(x)} name={name} sectorLine={sectorLine} intro={null} showGuidance={false} photosOnly={photosOnly}
+        photoGuide examples={examples}
+        footer={<>
+          {note && <p className="mt-2.5 flex items-start gap-1.5 text-[13px] text-[#6B7280] dark:text-muted-foreground">{note}</p>}
+          <StepDone ok={ok} L={L} items={[...(photosOnly ? [] : [[count.logo, L("Logo", "โลโก้")] as [boolean, string]]), [count.photos > 0, L("At least 1 photo", "รูปภาพอย่างน้อย 1 รูป")]]} />
+        </>} />
+    </div>
+  );
+}
+
+/** Under the drop box: the checklist until done, then the one done line. */
+export function StepDone({ ok, items, L }: { ok: boolean; items: [boolean, string][]; L: L }) {
+  if (ok) return <p className="mt-[14px] flex items-center gap-1.5 text-[13.5px] font-semibold text-[#15803D]"><CircleCheck className="h-4 w-4" />{L("Your logo and photos are added. You can change them later in My Company.", "เพิ่มโลโก้และรูปภาพแล้ว ท่านเปลี่ยนได้ภายหลังใน My Company")}</p>;
+  return (
+    <div className="mt-[14px] flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px]">
+      {items.map(([on, label]) => (
+        <span key={label} className={cn("flex items-center gap-2 font-semibold", on ? "text-[#15803D]" : "text-[#6B7280]")}>
+          <span className={cn("grid h-4 w-4 place-items-center rounded-full", on ? "bg-[#15803D]" : "border-[1.5px] border-[#C9CED8] bg-white")}>{on && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3.2} />}</span>{label}
+        </span>
+      ))}
     </div>
   );
 }

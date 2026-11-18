@@ -599,7 +599,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
           <Err m={show("cname")} /><Err m={show("email")} /><Err m={show("phone")} />
         </div>
       ) },
-    logo: { req: false, t: tr("Add your logo and photos"), h: tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your work. Sellers and buyers see them on your profile."),
+    logo: { req: false, t: tr("Add your logo and photos"), h: L("Your logo and at least 1 photo (up to 3). Sellers and buyers see them on your profile.", "โลโก้และรูปภาพอย่างน้อย 1 รูป (ไม่เกิน 3 รูป) ผู้ขายและผู้ซื้อจะเห็นในโปรไฟล์ของท่าน"),
       body: (
         <div>
           <LogoPhotosStep L={L} name={a.name || tr("Your firm")} sectorLine={[tr(a.type), [a.city || a.addr.province, tr(a.country)].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
@@ -611,7 +611,6 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
               await flush();
             }}
             onCount={() => setHint(null)}
-            note={<><Eye className="mt-[2px] h-[14px] w-[14px] flex-none" />{tr("Sellers and buyers see your logo on your card, and your photos on your profile.")}</>}
             why={[tr("Help sellers and buyers understand and remember your firm."), L("Make a stronger first impression.", "สร้างความประทับใจแรกที่ดีกว่า"), tr("Help sellers and buyers trust you. People choosing an adviser want to see who they'll work with.")]} />
           {hint && <p className="mt-2 text-[13px] text-[#6B7280]">{hint}</p>}
         </div>

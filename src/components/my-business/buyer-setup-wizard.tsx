@@ -645,7 +645,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
         <ManyTypeQuestion picks={a.picks} agnostic={a.sectors.includes(SECTOR_AGNOSTIC)} words={buyerWords(L)} error={forced.sectors ? errors.sectors : null}
           onChange={(p, ag) => { const v = ag ? [SECTOR_AGNOSTIC] : picksToSectors(p); set({ sectors: v, picks: p }, { preferred_industries: v, sector_picks: ag ? null : p }); }} />
       ) },
-    photos: { req: true, t: signupLogo ? (individual ? L("Add photos of you or your work", "เพิ่มรูปภาพของท่านหรือผลงานของท่าน") : L("Add photos of your firm", "เพิ่มรูปภาพของบริษัท")) : tr("Add your logo and photos"), h: signupLogo ? L("Your logo from sign-up is already in place. Add at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA.", "โลโก้จากการสมัครใส่ไว้แล้ว เพิ่มรูปภาพอย่างน้อย 1 รูป (สูงสุด 3 รูป) ของสำนักงาน ทีมงาน หรือพอร์ตการลงทุนของท่าน ผู้ขายจะเห็นแบบนี้หลังจากอนุมัติ NDA ของท่าน") : tr("Add your firm's logo and at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA."),
+    photos: { req: true, t: signupLogo ? (individual ? L("Add photos of you or your work", "เพิ่มรูปภาพของท่านหรือผลงานของท่าน") : L("Add photos of your firm", "เพิ่มรูปภาพของบริษัท")) : tr("Add your logo and photos"), h: signupLogo ? L("Your logo from sign-up is already in place. Add at least 1 photo (up to 3) of your office, your team or your portfolio. Sellers see them like this after they approve your NDA.", "โลโก้จากการสมัครใส่ไว้แล้ว เพิ่มรูปภาพอย่างน้อย 1 รูป (สูงสุด 3 รูป) ของสำนักงาน ทีมงาน หรือพอร์ตการลงทุนของท่าน ผู้ขายจะเห็นแบบนี้หลังจากอนุมัติ NDA ของท่าน") : L("Your logo and at least 1 photo (up to 3). Sellers see them after they approve your NDA.", "โลโก้และรูปภาพอย่างน้อย 1 รูป (ไม่เกิน 3 รูป) ผู้ขายจะเห็นหลังจากอนุมัติ NDA ของท่าน"),
       body: (
         <LogoPhotosStep L={L} wideAdd name={a.name || tr("Your firm")}
           sectorLine={[typeLabel(agent ? a.acts[0] ?? "" : a.type), [a.city || a.addr.province, a.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
@@ -653,7 +653,6 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           getUrl={({ kind, ext }) => upUrl({ data: { kind, ext, investor_id: data.investor.id } })}
           persist={(logo_path, media) => saveMedia({ data: { investor_id: data.investor.id, logo_path, media } })}
           onCount={(logo, photos) => setMed({ logo, photos })}
-          note={<><Lock className="mt-[2px] h-[14px] w-[14px] flex-none" />{tr("Before an NDA, sellers see your investor type's cover, never your logo or photos.")}</>}
           why={[tr("Help sellers understand and remember your firm once they approve your NDA."), L("Make a stronger first impression.", "สร้างความประทับใจแรกที่ดีกว่า"), tr("Help sellers trust you. Sellers who share their details want to see who they're dealing with.")]} />
       ) },
     desc: { req: false, t: tr("How would you describe your firm to sellers?"), h: tr("In one line. Sellers read it before any NDA, so leave out names, websites and contact details."),
