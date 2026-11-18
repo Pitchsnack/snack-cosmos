@@ -6,6 +6,8 @@ export const FounderStorySchema = z.object({
   mode: z.enum(["lines", "own"]),
   lang: z.enum(["en", "th"]),
   parts: z.object(Object.fromEntries(STORY_KEYS.map(k => [k, z.string().max(120)])) as Record<StoryKey, z.ZodString>),
+  /** Parts written from earlier answers (true) rather than typed by the owner. */
+  auto: z.object(Object.fromEntries(STORY_KEYS.map(k => [k, z.boolean().optional()])) as Record<StoryKey, z.ZodOptional<z.ZodBoolean>>).partial().optional(),
 });
 export type FounderStory = z.infer<typeof FounderStorySchema>;
 export type StoryLine = (string | StoryKey[])[];
@@ -81,4 +83,59 @@ export function syncFounderStoriesYear<T extends FounderStoryCarrier>(founders: 
     };
   });
   return changed ? next : founders;
+}
+
+/** Parts an earlier answer can write; "top" and "since" stay hints. */
+export const AUTO_STORY_KEYS = ["grew", "now", "from", "who", "where"] as const;
+export type StoryFills = Partial<Record<StoryKey, string>>;
+
+const NOW_BY_POSITION: Record<string, [string, string]> = {
+  "Owner": ["the company as its owner", "บริษัทในฐานะเจ้าของ"],
+  "Family business owner": ["the family business as its owner", "ธุรกิจครอบครัวในฐานะเจ้าของ"],
+  "Founder": ["the company as its founder", "บริษัทในฐานะผู้ก่อตั้ง"],
+  "Co-founder": ["the company as a co-founder", "บริษัทในฐานะผู้ร่วมก่อตั้ง"],
+  "CEO": ["the company as CEO", "บริษัทในฐานะซีอีโอ"],
+  "CTO": ["the company as CTO", "บริษัทในฐานะซีทีโอ"],
+  "CFO": ["the company as CFO", "บริษัทในฐานะซีเอฟโอ"],
+  "C-suite": ["the company as a senior executive", "บริษัทในฐานะผู้บริหารระดับสูง"],
+};
+/** "What they lead today" from the founder's first known Position. */
+export function nowFromPosition(position: string | null | undefined, lang: "en" | "th"): string {
+  for (const p of (position ?? "").split(",").map(x => x.trim())) {
+    const hit = NOW_BY_POSITION[p];
+    if (hit) return hit[lang === "th" ? 1 : 0];
+  }
+  return "";
+}
+
+/** Fill empty or still auto-filled parts from answers; typed parts are never overwritten. */
+export function applyStoryFills(story: FounderStory, fills: StoryFills): FounderStory {
+  const parts = {...story.parts};
+  const auto = {...(story.auto ?? {})};
+  let changed = false;
+  for (const k of AUTO_STORY_KEYS) {
+    if (fills[k] === undefined || (parts[k].trim() && !auto[k])) continue;
+    const v = plainStoryPart((fills[k] ?? "").trim());
+    if (parts[k] !== v) { parts[k] = v; changed = true; }
+    if (!!auto[k] !== !!v) { auto[k] = !!v || undefined; changed = true; }
+  }
+  if (!changed) return story;
+  for (const k of STORY_KEYS) if (!auto[k]) delete auto[k];
+  return {...story, parts, auto};
+}
+
+/** Owner typing in a part makes it their own words. */
+export function typeStoryPart(story: FounderStory, key: StoryKey, value: string): FounderStory {
+  const auto = {...(story.auto ?? {})};
+  delete auto[key];
+  return {...story, parts: {...story.parts, [key]: value}, auto};
+}
+
+/** Remove the company name and website from written text. */
+export function stripIdentifying(text: string, banned: string[]): string {
+  let out = text;
+  for (const b of banned.map(x => x.trim()).filter(x => x.length >= 3)) {
+    out = out.split(new RegExp(b.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi")).join("");
+  }
+  return out.replace(/\s{2,}/g, " ").replace(/^[\s,]+|[\s,]+$/g, "");
 }

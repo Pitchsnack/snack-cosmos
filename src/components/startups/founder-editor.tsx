@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FounderStoryEditor } from "./founder-story-editor";
 import { LangTag, useTextLang } from "@/components/common/text-lang";
-import { type FounderStory, initialFounderStory, composeFounderBio } from "@/lib/founder-story";
+import { type FounderStory, initialFounderStory, composeFounderBio, applyStoryFills, nowFromPosition } from "@/lib/founder-story";
+import { useQuery } from "@tanstack/react-query";
+import { writeFounderStoryParts, type StoryAnswers } from "@/lib/founder-story.functions";
 import { useTranslation } from "@/i18n/language";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -42,6 +44,20 @@ interface Props {
   keepOne?: boolean;
   /** Private setup contact details, rendered with the shared two-row layout. */
   contactFields?: (founder: FounderDraft, index: number) => React.ReactNode;
+  /** Earlier answers the story's parts are written from (never the company name or website in the text). */
+  answers?: Omit<StoryAnswers, "lang">;
+}
+
+function useWrittenParts(answers: Omit<StoryAnswers, "lang"> | undefined, lang: "en" | "th") {
+  const write = useServerFn(writeFounderStoryParts);
+  const clip = answers && { ...answers, short: answers.short.slice(0, 1000), products: answers.products.slice(0, 2), markets: answers.markets.slice(0, 10), province: answers.province.slice(0, 80) };
+  return useQuery({
+    queryKey: ["founder-story-parts", lang, clip],
+    queryFn: () => write({ data: { ...clip!, lang } }),
+    enabled: !!clip,
+    staleTime: Infinity,
+    retry: false,
+  }).data;
 }
 
 const POSITION_OPTIONS = [
@@ -252,7 +268,7 @@ export function PositionMultiSelect({
   );
 }
 
-export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", salesFor, addOnOpen, requiredName, keepOne, contactFields }: Props) {
+export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", salesFor, addOnOpen, requiredName, keepOne, contactFields, answers }: Props) {
   const {language} = useTranslation();
   const tr = (en: string, th: string) => (language === "th" ? th : en);
   const { lang: textLang, switchable } = useTextLang();
@@ -272,6 +288,25 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
     });
     if(JSON.stringify(next)!==JSON.stringify(value)) onChange(next);
   },[requiredName,year,sales,value]);
+  const writtenEn = useWrittenParts(answers, "en"), writtenTh = useWrittenParts(answers, "th");
+  useEffect(() => {
+    if (!answers) return;
+    const fill = (bio: string | null | undefined, story: FounderStory | null | undefined, lang: "en" | "th", position: string | null | undefined) => {
+      if (!story && bio) return story;
+      const base = initialFounderStory(bio, story, lang, year, salesFor?.(lang) ?? sales);
+      if (base.mode !== "lines") return story;
+      const next = applyStoryFills(base, { ...(lang === "th" ? writtenTh : writtenEn), now: nowFromPosition(position, lang) });
+      return next === base && story ? story : next;
+    };
+    let changed = false;
+    const next = value.map(f => {
+      const en = fill(f.bio, f.bio_story, "en", f.position), th = fill(f.bio_th, f.bio_story_th, "th", f.position);
+      if (en === f.bio_story && th === f.bio_story_th) return f;
+      changed = true;
+      return { ...f, bio_story: en, bio_story_th: th, bio: en && en !== f.bio_story ? composeFounderBio(en) : f.bio, bio_th: th && th !== f.bio_story_th ? composeFounderBio(th) : f.bio_th };
+    });
+    if (changed) onChange(next);
+  }, [answers ? JSON.stringify(answers) : "", writtenEn, writtenTh, value]); // eslint-disable-line react-hooks/exhaustive-deps
   const add = () => {
     focusIndex.current = value.length;
     onChange([...value, {full_name:"", bio_story:null}]);

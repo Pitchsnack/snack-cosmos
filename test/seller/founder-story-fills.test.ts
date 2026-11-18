@@ -1,0 +1,31 @@
+import { describe, expect, it } from "vitest";
+import { applyStoryFills, initialFounderStory, nowFromPosition, stripIdentifying, typeStoryPart } from "../../src/lib/founder-story";
+
+describe("founder story written from answers", () => {
+  it("fills empty parts and marks them auto-filled", () => {
+    const s = applyStoryFills(initialFounderStory(null, null, "en", "2025", ""), { grew: "a maker of snacks", who: "restaurants" });
+    expect(s.parts.grew).toBe("a maker of snacks");
+    expect(s.auto?.grew).toBe(true);
+  });
+  it("never overwrites a typed part", () => {
+    const typed = typeStoryPart(initialFounderStory(null, null, "en", "", ""), "grew", "my words");
+    expect(applyStoryFills(typed, { grew: "a maker of snacks" }).parts.grew).toBe("my words");
+  });
+  it("auto-filled parts follow changed answers", () => {
+    const s = applyStoryFills(initialFounderStory(null, null, "en", "", ""), { from: "snacks" });
+    expect(applyStoryFills(s, { from: "frozen foods" }).parts.from).toBe("frozen foods");
+  });
+  it("leaves how many and how long as hints", () => {
+    const s = applyStoryFills(initialFounderStory(null, null, "en", "", ""), { top: "5", since: "10" });
+    expect(s.parts.top).toBe("");
+    expect(s.parts.since).toBe("");
+  });
+  it("maps Position to what they lead today", () => {
+    expect(nowFromPosition("Owner", "en")).toBe("the company as its owner");
+    expect(nowFromPosition("Family business owner", "th")).toBe("ธุรกิจครอบครัวในฐานะเจ้าของ");
+    expect(nowFromPosition("CEO", "th")).toBe("บริษัทในฐานะซีอีโอ");
+  });
+  it("removes company name and website", () => {
+    expect(stripIdentifying("snacks from Acme Foods via acme.co.th", ["Acme Foods", "acme.co.th"])).not.toMatch(/acme/i);
+  });
+});

@@ -1581,7 +1581,8 @@ export function StartupForm({
         <p className="text-xs text-destructive">{tr("⚠ Missing: add at least one founder", "⚠ ยังขาด: เพิ่มผู้ก่อตั้งอย่างน้อยหนึ่งคน")}</p>
       )}
       <EditSec id="founders" tone="seller" active={secOn("founders")}>
-        <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} year={yearFounded} sales={founderRevenueLabel(lastYearRevenue, th ? "th" : "en")} salesFor={(l) => founderRevenueLabel(lastYearRevenue, l)} addOnOpen={section === "founders-add"} />
+        <FounderEditor value={founders} onChange={setFounders} tenantId={tenantId} startupId={startup?.id} year={yearFounded} sales={founderRevenueLabel(lastYearRevenue, th ? "th" : "en")} salesFor={(l) => founderRevenueLabel(lastYearRevenue, l)} addOnOpen={section === "founders-add"}
+          answers={{ short: shortBi.en || shortBi.th || "", products: productBi.en.length ? productBi.en : productBi.th, markets: marketBi.en.length ? marketBi.en : marketBi.th, province: city || "", banned: [startupName, websiteUrl].filter(Boolean) as string[] }} />
         <p className="mt-2 flex gap-1.5 text-[12.5px] text-muted-foreground"><Shield size={14} className="shrink-0" />{tr("PitchSnack checks the owner's name against your company's list of directors, and the year founded and the sales against your company's records.", "PitchSnack ตรวจสอบชื่อเจ้าของกับรายชื่อกรรมการของบริษัท และตรวจสอบปีที่ก่อตั้งและยอดขายกับข้อมูลของบริษัท")}</p>
       </EditSec>
 
