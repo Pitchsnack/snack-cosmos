@@ -17,7 +17,7 @@ import { useWebsiteEnrichment } from "@/components/setup/use-website-enrichment"
 import { ContactPersonFields } from "@/components/setup/contact-person-fields";
 import { SellerListingIdentity } from './seller-listing-identity';
 import { SectionBand, SectionHeading } from "@/components/setup/section-band";
-import { founderRevenueLabel } from "@/lib/founder-story";
+import { founderRevenueLabel, syncFounderStoriesYear } from "@/lib/founder-story";
 import { mergeWebsiteEnrich } from "@/lib/seller-website-enrich";
 import { SellerTypeQuestion } from "@/components/common/business-type-question";
 import type { SectorPick } from "@/lib/business-types";
@@ -151,6 +151,7 @@ export function SellerWizard({
     if (savedTimer.current) window.clearTimeout(savedTimer.current);
   }, []);
   const set = (patch: Partial<SellerDraft>) => setD((p) => ({ ...p, ...patch }));
+  const setCompanyYear = (year: string) => setD((p) => ({ ...p, year, founders: syncFounderStoriesYear(p.founders ?? [], p.year, year) }));
   // The address's province answers "where is the company" (the business's City).
   const setAddr = (p: Partial<SellerAddr>) => setD((x) => { const addr = { ...x.addr, ...p }; return { ...x, addr, city: addr.province }; });
   const go = (n: number) => {
@@ -286,7 +287,7 @@ export function SellerWizard({
       </div> },
     founded: {t:L("When was your company founded, and how big is it?","บริษัทของท่านก่อตั้งเมื่อไร และมีขนาดเท่าไร"),h:L("The year it was registered or started trading, and how many people work there today.","ปีที่จดทะเบียนหรือเริ่มดำเนินธุรกิจ และจำนวนพนักงานในปัจจุบัน"),body:<div>
       <div className="seller-founded-row">
-        <div><label htmlFor="sw-year" className={fieldLbl}>{L("Year founded","ปีที่ก่อตั้ง")} <span className="text-destructive">*</span><FromDbdTag show={yearLocked} /></label><div className={`seller-founded-input ${yearLocked ? "bg-muted/50" : ""} ${touched.year && foundedYearError(d.year) ? "has-error" : ""}`}><Calendar size={18}/><input id="sw-year" readOnly={yearLocked} aria-readonly={yearLocked || undefined} className={yearLocked ? "cursor-not-allowed" : undefined} inputMode="numeric" maxLength={4} value={d.year} onChange={e => { if (!yearLocked) set({year:e.target.value.replace(/\D/g,"").slice(0,4)}); }} onBlur={() => setTouched(p => ({...p,year:true}))} aria-invalid={!!touched.year && !!foundedYearError(d.year)} placeholder="e.g. 2014"/></div></div>
+        <div><label htmlFor="sw-year" className={fieldLbl}>{L("Year founded","ปีที่ก่อตั้ง")} <span className="text-destructive">*</span><FromDbdTag show={yearLocked} /></label><div className={`seller-founded-input ${yearLocked ? "bg-muted/50" : ""} ${touched.year && foundedYearError(d.year) ? "has-error" : ""}`}><Calendar size={18}/><input id="sw-year" readOnly={yearLocked} aria-readonly={yearLocked || undefined} className={yearLocked ? "cursor-not-allowed" : undefined} inputMode="numeric" maxLength={4} value={d.year} onChange={e => { if (!yearLocked) setCompanyYear(e.target.value.replace(/\D/g,"").slice(0,4)); }} onBlur={() => setTouched(p => ({...p,year:true}))} aria-invalid={!!touched.year && !!foundedYearError(d.year)} placeholder="e.g. 2014"/></div></div>
         <div><label htmlFor="sw-size" className={fieldLbl}>{L("Company size (employees)","ขนาดบริษัท (พนักงาน)")} <span className="text-destructive">*</span></label><div className="seller-founded-input"><Users size={18}/><select id="sw-size" value={d.size ?? ""} onChange={e => set({size:e.target.value || null})}><option value="">{L("Choose a range","เลือกช่วงจำนวน")}</option>{WIZARD_SIZES.map(x => <option value={x.value} key={x.value}>{tr(x.label)}</option>)}</select></div></div>
       </div>
       {(touched.year || d.year.length === 4) && foundedYearError(d.year) && <p className="mt-2 text-[13.5px] text-destructive" role="alert">{foundedYearError(d.year) === "digits" ? L("Enter the year with 4 digits, for example 2014","กรุณากรอกปีเป็นตัวเลข 4 หลัก เช่น 2014") : foundedYearError(d.year) === "thai" ? L(`That looks like a Thai year (พ.ศ.). Enter it in ค.ศ.: ${Number(d.year)-543}`,`ดูเหมือนเป็นปี พ.ศ. กรุณากรอกเป็นปี ค.ศ.: ${Number(d.year)-543}`) : L(`Enter a year between 1800 and ${new Date().getFullYear()}`,`กรุณากรอกปีระหว่าง 1800 ถึง ${new Date().getFullYear()}`)}</p>}

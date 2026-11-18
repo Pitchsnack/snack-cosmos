@@ -88,7 +88,7 @@ import { buildStartupFormSnapshot } from "@/lib/forms/build-startup-form-snapsho
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 import { UnsavedChangesDialog } from "@/components/common/unsaved-changes-dialog";
 import { ButtonSpinner } from "@/components/ui/PitchSnackLoader";
-import { composeFounderBio, initialFounderStory, founderRevenueLabel } from "@/lib/founder-story";
+import { composeFounderBio, initialFounderStory, founderRevenueLabel, syncFounderStoriesYear } from "@/lib/founder-story";
 // Preview-only feature flag. Production stays OFF pending Option A backend
 // PRD (MASTER_AGENT authorization + physical tenant-database readiness).
 const WORKSPACE_ENFORCEMENT_ENABLED =
@@ -470,6 +470,10 @@ export function StartupForm({
       bio_story: f.bio_story ?? null, bio_th: f.bio_th ?? null, bio_story_th: f.bio_story_th ?? null, photo_url: f.photo_url,
     })) ?? [],
   );
+  const changeYearFounded = (nextYear: string) => {
+    setFounders((current) => syncFounderStoriesYear(current, yearFounded, nextYear));
+    setYearFounded(nextYear);
+  };
 
   // Logo + Media — hydrated from persisted paths in edit mode.
   const [media, setMedia] = useState<EntityMediaState>(() => hydrateMediaState(startup));
@@ -823,7 +827,7 @@ export function StartupForm({
     };
     handle("Company Name", !!r.startupName, isEmpty(startupName), () => setStartupName(r.startupName!));
     handle("Registered Name", !!r.registeredName, isEmpty(registeredName), () => setRegisteredName(r.registeredName!));
-    handle("Year Founded", !!r.yearFounded, isEmpty(yearFounded), () => setYearFounded(String(r.yearFounded)));
+    handle("Year Founded", !!r.yearFounded, isEmpty(yearFounded), () => changeYearFounded(String(r.yearFounded)));
     handle("Email", !!r.email, isEmpty(email), () => setEmail(r.email!));
     handle("Headquarters", !!r.headquarters, isEmpty(headquarters), () => {
       setHeadquarters(r.headquarters!);
@@ -1028,7 +1032,7 @@ export function StartupForm({
             <div className="space-y-1.5">
               <Label>Year Founded</Label>
               <Input type="number" min={1800} max={new Date().getFullYear()}
-                value={yearFounded} onChange={(e) => setYearFounded(e.target.value)} placeholder="e.g. 2020" />
+                value={yearFounded} onChange={(e) => changeYearFounded(e.target.value)} placeholder="e.g. 2020" />
             </div>
             <div className="space-y-1.5">
               <Label>Registered Number</Label>
@@ -1265,7 +1269,7 @@ export function StartupForm({
           <div className="space-y-1.5">
             <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>{tr("Year Founded", "ปีที่ก่อตั้ง")}<FromDbdTag show={lockYear} /></Label>
             <LockableInput locked={lockYear} type="number" min={1800} max={new Date().getFullYear()}
-              value={yearFounded} onChange={(e) => setYearFounded(e.target.value)}
+              value={yearFounded} onChange={(e) => changeYearFounded(e.target.value)}
               placeholder={miss(isStrEmpty(yearFounded)) ? missingPh("Year Founded") : tr("e.g. 2020", "เช่น 2020")}
               className={miss(isStrEmpty(yearFounded)) ? MISSING_INPUT : undefined} />
           </div>

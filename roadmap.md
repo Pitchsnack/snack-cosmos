@@ -1,3 +1,8 @@
+# Founder story year synchronization
+- [x] Leave the founder-story year empty when the company year is missing, showing the existing bilingual hint.
+- [x] In the seller wizard and Edit information › About Owner, update blank or previously synchronized story years when the company year changes; preserve custom-typed years and existing bios.
+- [x] Six focused tests and 86 seller regressions pass; live unsaved Edit information checks covered empty, changed and custom years with About Owner closed between changes; preview build OK.
+
 # Photo deletion during autosave
 - [x] Queue the latest seller, buyer and advisor wizard media change instead of dropping clicks made while an upload/save is running; never restore stale completed state over a newer deletion.
 - [x] Delete storage objects only when their path is absent from every incoming slot, so moving a photo left does not delete its file.

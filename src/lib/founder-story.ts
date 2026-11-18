@@ -47,3 +47,38 @@ export function initialFounderStory(bio: string | null | undefined, saved: Found
   parts.sales = plainStoryPart(sales.replace(/\s*[–-]\s*/g, "–"));
   return {mode: bio ? "own" : "lines", lang, parts};
 }
+
+/** Follow company-year changes only while the story year is empty or still synchronized. */
+export function syncFounderStoryYear(story: FounderStory | null | undefined, previousYear: string, nextYear: string): FounderStory | null | undefined {
+  if (!story || previousYear === nextYear) return story;
+  const currentYear = story.parts.year;
+  if (currentYear && currentYear !== previousYear) return story;
+  return {...story, parts: {...story.parts, year: plainStoryPart(nextYear)}};
+}
+
+export type FounderStoryCarrier = {
+  bio?: string | null;
+  bio_story?: FounderStory | null;
+  bio_th?: string | null;
+  bio_story_th?: FounderStory | null;
+};
+
+/** Parent forms call this even while the founder editor is on another, unmounted step. */
+export function syncFounderStoriesYear<T extends FounderStoryCarrier>(founders: T[], previousYear: string, nextYear: string): T[] {
+  if (previousYear === nextYear) return founders;
+  let changed = false;
+  const next = founders.map((founder) => {
+    const en = syncFounderStoryYear(founder.bio_story, previousYear, nextYear);
+    const th = syncFounderStoryYear(founder.bio_story_th, previousYear, nextYear);
+    if (en === founder.bio_story && th === founder.bio_story_th) return founder;
+    changed = true;
+    return {
+      ...founder,
+      bio_story: en,
+      bio_story_th: th,
+      bio: en !== founder.bio_story && en?.mode === "lines" ? composeFounderBio(en) : founder.bio,
+      bio_th: th !== founder.bio_story_th && th?.mode === "lines" ? composeFounderBio(th) : founder.bio_th,
+    };
+  });
+  return changed ? next : founders;
+}
