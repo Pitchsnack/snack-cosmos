@@ -50,7 +50,7 @@ export function FounderStoryEditor({bio, story: saved, year, sales, onChange, la
   const textarea = useRef<HTMLTextAreaElement>(null);
   const focusOwn = useRef(false);
   useEffect(() => {if (focusOwn.current) {textarea.current?.focus(); focusOwn.current = false;}}, [story.mode]);
-  const isAuto = (k: StoryKey) => !!story.parts[k] && (!!story.auto?.[k] || (k === "year" && story.parts.year === year) || (k === "sales" && story.parts.sales === sales));
+  const isAuto = (k: StoryKey) => !!story.parts[k] && (!!story.auto?.[k] || (k === "year" && story.parts.year === year) || (k === "sales" && story.parts.sales.replace(/\s*[–-]\s*/g, "–") === sales.replace(/\s*[–-]\s*/g, "–")));
   const anyAuto = story.mode === "lines" && STORY_LINES[lang].some(line => line.some(t => typeof t !== "string" && isAuto(t[0])));
   function update(next: FounderStory, ownBio = bio ?? "") {
     const current = {...next, lang};
@@ -66,7 +66,7 @@ export function FounderStoryEditor({bio, story: saved, year, sales, onChange, la
             onChange={v => update(typeStoryPart(story, token[0], v))} />)}</div>)}
       </div>}
     <div className="founder-story-footer">
-      <span>{story.mode === "own" ? tr("Your own words.", "ข้อความที่ท่านเขียนเอง") : anyAuto ? tr("Buyers read this after you approve their NDA. We've written it from your answers. Click any part to change it.", "ผู้ซื้อจะอ่านส่วนนี้หลังจากท่านอนุมัติ NDA เราเขียนจากคำตอบของท่านแล้ว คลิกส่วนใดก็ได้เพื่อแก้ไข") : tr("Click a highlighted part to change it.", "คลิกส่วนที่ไฮไลต์เพื่อแก้ไข")}</span>
+      <span>{story.mode === "own" ? tr("Your own words.", "ข้อความที่ท่านเขียนเอง") : tr("Click a highlighted part to change it.", "คลิกส่วนที่ไฮไลต์เพื่อแก้ไข")}</span>
       <Button variant="link" type="button" className="h-auto p-0 text-[13px] font-semibold text-link"
         onClick={() => {
           if (story.mode === "lines") {focusOwn.current = true; update({...story, mode:"own"}, composeFounderBio(story, lang));}

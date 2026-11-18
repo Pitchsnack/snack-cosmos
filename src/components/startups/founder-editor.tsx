@@ -295,7 +295,7 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
       if (!story && bio) return story;
       const base = initialFounderStory(bio, story, lang, year, salesFor?.(lang) ?? sales);
       if (base.mode !== "lines") return story;
-      const next = applyStoryFills(base, { ...(lang === "th" ? writtenTh : writtenEn), now: nowFromPosition(position, lang) });
+      const next = applyStoryFills(base, { ...(lang === "th" ? writtenTh : writtenEn), year, sales: salesFor?.(lang) ?? sales, now: nowFromPosition(position, lang) });
       return next === base && story ? story : next;
     };
     let changed = false;

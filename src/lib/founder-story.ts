@@ -43,11 +43,18 @@ export function composeFounderBio(story: FounderStory, lang = story.lang): strin
     .map(line => line.map(token => typeof token === "string" ? token : story.parts[token[0]]).join("")).join("\n");
 }
 export function initialFounderStory(bio: string | null | undefined, saved: FounderStory | null | undefined, lang: "en" | "th", year: string, sales: string): FounderStory {
-  if (saved) return saved;
+  const normalizedSales = (value: string) => value.replace(/\s*[–-]\s*/g, "–");
+  if (saved) {
+    const auto = {...(saved.auto ?? {})};
+    let changed = false;
+    if (year && saved.parts.year === year && auto.year === undefined) { auto.year = true; changed = true; }
+    if (sales && normalizedSales(saved.parts.sales) === normalizedSales(sales) && auto.sales === undefined) { auto.sales = true; changed = true; }
+    return changed ? {...saved, auto} : saved;
+  }
   const parts = Object.fromEntries(STORY_KEYS.map(k => [k, ""])) as Record<StoryKey, string>;
   parts.year = plainStoryPart(year);
-  parts.sales = plainStoryPart(sales.replace(/\s*[–-]\s*/g, "–"));
-  return {mode: bio ? "own" : "lines", lang, parts};
+  parts.sales = plainStoryPart(normalizedSales(sales));
+  return {mode: bio ? "own" : "lines", lang, parts, auto: {year: !!year || undefined, sales: !!sales || undefined}};
 }
 
 /** Follow company-year changes only while the story year is empty or still synchronized. */
@@ -86,7 +93,7 @@ export function syncFounderStoriesYear<T extends FounderStoryCarrier>(founders: 
 }
 
 /** Parts an earlier answer can write; "top" and "since" stay hints. */
-export const AUTO_STORY_KEYS = ["grew", "now", "from", "who", "where"] as const;
+export const AUTO_STORY_KEYS = ["year", "grew", "now", "sales", "from", "who", "where"] as const;
 export type StoryFills = Partial<Record<StoryKey, string>>;
 
 const NOW_BY_POSITION: Record<string, [string, string]> = {
@@ -115,7 +122,8 @@ export function applyStoryFills(story: FounderStory, fills: StoryFills): Founder
   let changed = false;
   for (const k of AUTO_STORY_KEYS) {
     if (fills[k] === undefined || (parts[k].trim() && !auto[k])) continue;
-    const v = plainStoryPart((fills[k] ?? "").trim());
+    const raw = (fills[k] ?? "").trim();
+    const v = plainStoryPart(k === "sales" ? raw.replace(/\s*[–-]\s*/g, "–") : raw);
     if (parts[k] !== v) { parts[k] = v; changed = true; }
     if (!!auto[k] !== !!v) { auto[k] = !!v || undefined; changed = true; }
   }
@@ -134,7 +142,18 @@ export function typeStoryPart(story: FounderStory, key: StoryKey, value: string)
 /** Remove the company name and website from written text. */
 export function stripIdentifying(text: string, banned: string[]): string {
   let out = text;
-  for (const b of banned.map(x => x.trim()).filter(x => x.length >= 3)) {
+  const identifying = new Set<string>();
+  for (const value of banned.map(x => x.trim()).filter(x => x.length >= 3)) {
+    identifying.add(value);
+    try {
+      const host = new URL(value.includes("://") ? value : `https://${value}`).hostname;
+      if (host) {
+        identifying.add(host);
+        identifying.add(host.replace(/^www\./, ""));
+      }
+    } catch { /* A company name is not a URL. */ }
+  }
+  for (const b of identifying) {
     out = out.split(new RegExp(b.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi")).join("");
   }
   return out.replace(/\s{2,}/g, " ").replace(/^[\s,]+|[\s,]+$/g, "");

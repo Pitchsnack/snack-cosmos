@@ -28,4 +28,22 @@ describe("founder story written from answers", () => {
   it("removes company name and website", () => {
     expect(stripIdentifying("snacks from Acme Foods via acme.co.th", ["Acme Foods", "acme.co.th"])).not.toMatch(/acme/i);
   });
+  it("updates answer-based year and sales when those answers change", () => {
+    const original = initialFounderStory(null, null, "en", "2025", "฿50M – 100M");
+    const updated = applyStoryFills(original, { year: "2026", sales: "฿100M – 250M" });
+    expect(updated.parts.year).toBe("2026");
+    expect(updated.parts.sales).toBe("฿100M–250M");
+  });
+  it("keeps typed year and sales unchanged when answers change", () => {
+    const original = initialFounderStory(null, null, "en", "2025", "฿50M – 100M");
+    const typedYear = typeStoryPart(original, "year", "2024");
+    const typedSales = typeStoryPart(typedYear, "sales", "my sales wording");
+    const updated = applyStoryFills(typedSales, { year: "2026", sales: "฿100M – 250M" });
+    expect(updated.parts.year).toBe("2024");
+    expect(updated.parts.sales).toBe("my sales wording");
+  });
+  it("removes the website host when the saved answer includes its full URL", () => {
+    const result = stripIdentifying("Visit www.acme.co.th or acme.co.th", ["Acme Foods", "https://www.acme.co.th/about"]);
+    expect(result).not.toMatch(/acme\.co\.th/i);
+  });
 });

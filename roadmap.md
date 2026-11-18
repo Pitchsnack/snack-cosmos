@@ -1,3 +1,8 @@
+# Founder story written from earlier answers
+- [x] Compared the uploaded brief with both seller editing places; corrected the help placement, protected every company-name variant and website host, and kept answer-based year/sales blue and synchronized while typed parts stay unchanged.
+- [x] Twenty-one focused tests pass. Real completed sellers verified EN/TH generation, all seven available parts blue, Thai translation, About Owner typing/own-words mode and company-name removal; no browser errors. Later-answer updates are covered by focused tests rather than changing live answers.
+- [x] Captured the requested English and Thai About the founder screenshots for a seller with completed earlier answers.
+
 # Reliable photo drops in every role
 - [x] Accept desktop file drags over every shared empty/occupied photo slot without file-type detection during dragover; keep existing validation on drop.
 - [x] Prevent slot illustrations, labels and icons from cancelling drags; stop handled drops bubbling into the page-level filler.
