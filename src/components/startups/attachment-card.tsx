@@ -24,19 +24,29 @@ function usePreview(slot: SlotState) {
 const filled = (s: SlotState) => !!(s.pendingFile || s.signedUrl || s.persistedPath);
 const hasFiles = (e: { dataTransfer: DataTransfer | null }) => !!e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files");
 
+/** A failed stored image is an empty, replaceable space; a new pending file always wins. */
+export function photoSlotFilled(s: SlotState, brokenUrls: ReadonlySet<string> = new Set()) {
+  return filled(s) && (!!s.pendingFile || !s.signedUrl || !brokenUrls.has(s.signedUrl));
+}
+
 export function attachmentMissing(m: EntityMediaState) {
   return (filled(m.logo) ? 0 : 1) + (m.slots.some(filled) ? 0 : 1);
 }
 
 /** Drop on a space to add or replace its photo; extra files fill the remaining empty spaces. */
-export function placePhotos(slots: EntityMediaState["slots"], files: File[], at?: number): EntityMediaState["slots"] {
+export function placePhotos(
+  slots: EntityMediaState["slots"],
+  files: File[],
+  at?: number,
+  isFilled: (s: SlotState) => boolean = filled,
+): EntityMediaState["slots"] {
   const next = [...slots] as EntityMediaState["slots"];
   const order = [0, 1, 2];
   if (at !== undefined) order.splice(order.indexOf(at), 1), order.unshift(at);
   let k = 0;
   for (const i of order) {
     if (k >= files.length) break;
-    if (filled(next[i]!) && i !== at) continue;
+    if (isFilled(next[i]!) && i !== at) continue;
     next[i] = { ...EMPTY_SLOT, pendingFile: files[k++]! };
   }
   return next;
@@ -61,11 +71,13 @@ export function AttachmentCard({ value, onChange, name, sectorLine, intro, showG
 }) {
   const tr = useTr();
   const hasLogo = filled(value.logo);
-  const photos = value.slots.filter(filled).length;
+  const [brokenUrls, setBrokenUrls] = useState<ReadonlySet<string>>(new Set());
+  const isPhotoFilled = (s: SlotState) => photoSlotFilled(s, brokenUrls);
+  const photos = value.slots.filter(isPhotoFilled).length;
   const ex = EXAMPLES[examples];
   const [dragging, setDragging] = useState(false);
-  const latest = useRef({ value, onChange });
-  latest.current = { value, onChange };
+  const latest = useRef({ value, onChange, isPhotoFilled });
+  latest.current = { value, onChange, isPhotoFilled };
 
   const takeAll = (list: FileList | File[] | null | undefined) => {
     const ok: File[] = [];
@@ -78,8 +90,8 @@ export function AttachmentCard({ value, onChange, name, sectorLine, intro, showG
   const addPhotos = (list: FileList | File[] | null | undefined, at?: number) => {
     const files = takeAll(list);
     if (!files.length) return;
-    const { value: v, onChange: change } = latest.current;
-    change({ ...v, slots: placePhotos(v.slots, files, at) });
+    const { value: v, onChange: change, isPhotoFilled: occupied } = latest.current;
+    change({ ...v, slots: placePhotos(v.slots, files, at, occupied) });
   };
   const setLogo = (f: File | null) => onChange({ ...value, logo: f ? { ...EMPTY_SLOT, pendingFile: f } : { ...EMPTY_SLOT } });
   const removePhoto = (i: number) => {
@@ -139,8 +151,10 @@ export function AttachmentCard({ value, onChange, name, sectorLine, intro, showG
             <div className="mt-4 grid grid-cols-3 gap-[10px] max-sm:gap-2">
               {value.slots.map((s, i) => (
                 <PhotoSpace key={i} slot={s} n={i + 1} example={ex[i]!} dragging={dragging}
+                  broken={!s.pendingFile && !!s.signedUrl && brokenUrls.has(s.signedUrl)}
                   removeLabel={tr(`Remove photo ${i + 1}`, `ลบรูปภาพที่ ${i + 1}`)}
-                  onFiles={(files) => addPhotos(files, i)} onRemove={() => removePhoto(i)} />
+                  onFiles={(files) => addPhotos(files, i)} onRemove={() => removePhoto(i)}
+                  onBroken={(url) => setBrokenUrls((old) => old.has(url) ? old : new Set(old).add(url))} />
               ))}
             </div>
           </div>
@@ -205,7 +219,7 @@ function DropBox({ photos, dragging, onFiles }: { photos: number; dragging: bool
   const tr = useTr();
   const input = useRef<HTMLInputElement>(null);
   return (
-    <div onDragOver={(e) => { if (hasFiles(e)) e.preventDefault(); }} onDrop={(e) => { e.preventDefault(); onFiles(e.dataTransfer.files); }}
+    <div onDragOver={(e) => { e.preventDefault(); }} onDrop={(e) => { e.preventDefault(); e.stopPropagation(); onFiles(e.dataTransfer.files); }}
       className={cn("mt-[14px] flex flex-col items-center rounded-[14px] border-2 border-dashed border-[#AEB8C9] bg-[#FAFBFD] p-5 text-center transition-colors dark:border-border dark:bg-muted/40",
         dragging && "border-solid border-[#2563EB] bg-[#EEF4FF] dark:border-[#2563EB] dark:bg-[#16283A]")}>
       <span aria-hidden className="grid h-10 w-10 place-items-center rounded-[10px] bg-[#E8F0FE] text-[#2563EB]"><Upload className="h-5 w-5" /></span>
@@ -221,24 +235,24 @@ function DropBox({ photos, dragging, onFiles }: { photos: number; dragging: bool
   );
 }
 
-function PhotoSpace({ slot, n, example, dragging, removeLabel, onFiles, onRemove }: {
-  slot: SlotState; n: number; example: (typeof EXAMPLES)["seller"][number]; dragging: boolean; removeLabel: string;
-  onFiles: (f: FileList | null) => void; onRemove: () => void;
+function PhotoSpace({ slot, n, example, dragging, broken, removeLabel, onFiles, onRemove, onBroken }: {
+  slot: SlotState; n: number; example: (typeof EXAMPLES)["seller"][number]; dragging: boolean; broken: boolean; removeLabel: string;
+  onFiles: (f: FileList | null) => void; onRemove: () => void; onBroken: (url: string) => void;
 }) {
   const tr = useTr();
   const input = useRef<HTMLInputElement>(null);
   const src = usePreview(slot);
   const [over, setOver] = useState(false);
   useEffect(() => { if (!dragging) setOver(false); }, [dragging]);
-  if (src) {
+  if (src && !broken) {
     return (
       <div data-photo-slot={n}
-        onDragEnter={(e) => { if (!hasFiles(e)) return; e.preventDefault(); setOver(true); }}
-        onDragOver={(e) => { if (!hasFiles(e)) return; e.preventDefault(); setOver(true); }}
+        onDragEnter={(e) => { e.preventDefault(); setOver(true); }}
+        onDragOver={(e) => { e.preventDefault(); setOver(true); }}
         onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setOver(false); onFiles(e.dataTransfer.files); }}
         className={cn("relative aspect-[10/7] w-full overflow-hidden rounded-[10px] border-2 border-transparent transition-colors", over && "border-[#2563EB] bg-[#EEF4FF]")}>
-        <img src={src} alt="" className="h-full w-full rounded-[8px] border border-[#E6E8EC] object-cover dark:border-border" />
+        <img src={src} alt="" onError={() => onBroken(src)} className="pointer-events-none h-full w-full rounded-[8px] border border-[#E6E8EC] object-cover dark:border-border" />
         {over && <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-[#2563EB] px-2.5 py-1 text-[12px] font-semibold text-white">{tr("Drop to replace", "วางเพื่อเปลี่ยนรูป")}</span>}
         <button type="button" aria-label={removeLabel} onClick={onRemove}
           className="absolute right-1.5 top-1.5 grid h-[26px] w-[26px] place-items-center rounded-full bg-[rgba(21,26,40,0.72)] text-white">
@@ -251,16 +265,17 @@ function PhotoSpace({ slot, n, example, dragging, removeLabel, onFiles, onRemove
   return (
     <>
       <button type="button" data-photo-slot={n} aria-label={tr(`Add photo ${n}`, `เพิ่มรูปภาพที่ ${n}`)} onClick={() => input.current?.click()}
-        onDragOver={(e) => { if (!hasFiles(e)) return; e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
-        onDrop={(e) => { e.preventDefault(); setOver(false); onFiles(e.dataTransfer.files); }}
+        onDragEnter={(e) => { e.preventDefault(); setOver(true); }}
+        onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
+        onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setOver(false); onFiles(e.dataTransfer.files); }}
         className={cn("group relative aspect-[10/7] w-full overflow-hidden rounded-[10px] border-[1.5px] border-dashed border-[#CBD1DA] bg-[#F3F5F8] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] dark:border-border dark:bg-muted",
           over && "border-2 border-solid border-[#2563EB]")}>
-        <ExamplePhoto kind={example.kind} className="absolute inset-0 h-full w-full opacity-[.38] transition-opacity group-hover:opacity-50" />
+        <ExamplePhoto kind={example.kind} className="pointer-events-none absolute inset-0 h-full w-full opacity-[.38] transition-opacity group-hover:opacity-50" />
         {over ? (
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-[#2563EB] px-2.5 py-1 text-[12px] font-semibold text-white">{tr("Drop to upload", "วางไฟล์เพื่ออัปโหลด")}</span>
+          <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-[#2563EB] px-2.5 py-1 text-[12px] font-semibold text-white">{tr("Drop to upload", "วางไฟล์เพื่ออัปโหลด")}</span>
         ) : (<>
-          <span aria-hidden className="absolute left-1/2 top-1/2 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-[#151A28] shadow-[0_2px_6px_rgba(16,24,40,.18)]"><Plus className="h-4 w-4" strokeWidth={2.6} /></span>
-          <span aria-hidden className="absolute bottom-1.5 left-1/2 max-w-[calc(100%-8px)] -translate-x-1/2 truncate rounded-full bg-white px-2 py-[2px] text-[11.5px] font-medium text-[#434A5C] max-sm:text-[10.5px]">
+          <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-[#151A28] shadow-[0_2px_6px_rgba(16,24,40,.18)]"><Plus className="pointer-events-none h-4 w-4" strokeWidth={2.6} /></span>
+          <span aria-hidden className="pointer-events-none absolute bottom-1.5 left-1/2 max-w-[calc(100%-8px)] -translate-x-1/2 truncate rounded-full bg-white px-2 py-[2px] text-[11.5px] font-medium text-[#434A5C] max-sm:text-[10.5px]">
             {exLabel}{dragging && tr(" · drop here", " · วางที่นี่")}
           </span>
         </>)}

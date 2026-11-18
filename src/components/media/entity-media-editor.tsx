@@ -249,25 +249,26 @@ function usePreview(slot: SlotState): string | null {
 }
 
 /** Thumbnail with skeleton placeholder while the image is loading. */
-function ImageWithSkeleton({ src, alt, width, height, className }: {
-  src: string; alt: string; width: number; height: number; className?: string;
+function ImageWithSkeleton({ src, alt, width, height, className, onError }: {
+  src: string; alt: string; width: number; height: number; className?: string; onError?: () => void;
 }) {
   const [loaded, setLoaded] = useState(false);
   useEffect(() => { setLoaded(false); }, [src]);
   return (
-    <div className="relative" style={{ width, height }}>
-      {!loaded && <Skeleton className="absolute inset-0 rounded-md" />}
+    <div className="pointer-events-none relative" style={{ width, height }}>
+      {!loaded && <Skeleton className="pointer-events-none absolute inset-0 rounded-md" />}
       <img
         src={src}
         alt={alt}
         className={cn(
-          "rounded-md border border-border transition-opacity duration-200",
+          "pointer-events-none rounded-md border border-border transition-opacity duration-200",
           loaded ? "opacity-100" : "opacity-0",
           className,
         )}
         style={{ width, height }}
         loading="lazy"
         onLoad={() => setLoaded(true)}
+        onError={onError}
       />
     </div>
   );
@@ -436,6 +437,7 @@ function MediaSlots({
 }) {
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
   const [dragSlot, setDragSlot] = useState<number | null>(null);
+  const [brokenUrls, setBrokenUrls] = useState<ReadonlySet<string>>(new Set());
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [snipSlot, setSnipSlot] = useState<SlotNumber | null>(null);
   const [capturing, setCapturing] = useState(false);
@@ -445,7 +447,9 @@ function MediaSlots({
   const screenshotEnabled = !!screenshot; // opt-in per entity type
   const supportsScreenshot = screenshotEnabled && mediaCaptureAdapter.isScreenshotSupported();
 
-  const filled = value.filter((s) => s.pendingFile || s.signedUrl || s.persistedPath).length;
+  const broken = (s: SlotState) => !s.pendingFile && !!s.signedUrl && brokenUrls.has(s.signedUrl);
+  const occupied = (s: SlotState) => !!(s.pendingFile || s.signedUrl || s.persistedPath) && !broken(s);
+  const filled = value.filter(occupied).length;
 
   const handleFileForSlot = (i: number, file: File) => {
     const v = validateImageFile(file);
@@ -460,7 +464,7 @@ function MediaSlots({
     }
     const availableSlots = value
       .map((s, i) => ({ s, slot: (i + 1) as SlotNumber }))
-      .filter(({ s }) => !s.isLocked && !s.pendingFile && !s.signedUrl && !s.persistedPath)
+      .filter(({ s }) => !s.isLocked && !occupied(s))
       .map(({ slot }) => slot);
     if (availableSlots.length === 0) {
       toast.error("No empty slot — Clear or unlock a slot first.");
@@ -519,6 +523,8 @@ function MediaSlots({
             key={i}
             slot={slot}
             index={i}
+            broken={broken(slot)}
+            onBroken={(url) => setBrokenUrls((old) => old.has(url) ? old : new Set(old).add(url))}
             dragging={dragSlot === i}
             setDragging={(b) => setDragSlot(b ? i : null)}
             onPick={(f) => handleFileForSlot(i, f)}
@@ -590,12 +596,14 @@ function MediaSlots({
 }
 
 function SlotCell({
-  slot, index, dragging, setDragging,
+  slot, index, broken, onBroken, dragging, setDragging,
   onPick, onClear, onToggleLock, onPreview, onSnip, snipSupported,
   registerInput, onClickPick,
 }: {
   slot: SlotState;
   index: number;
+  broken: boolean;
+  onBroken: (url: string) => void;
   dragging: boolean;
   setDragging: (b: boolean) => void;
   onPick: (f: File) => void;
@@ -617,7 +625,7 @@ function SlotCell({
 
   return (
     <div className="relative">
-      {preview ? (
+      {preview && !broken ? (
         <div
           className={cn("group relative cursor-pointer rounded-md border-2 border-transparent transition-colors", dragging && "border-primary bg-accent/40")}
           onClick={() => setPreviewOpen(true)}
@@ -636,6 +644,7 @@ function SlotCell({
             width={96}
             height={64}
             className="object-cover"
+            onError={() => onBroken(preview)}
           />
           <div className="absolute inset-0 rounded-md bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
             <button
@@ -688,13 +697,13 @@ function SlotCell({
           onDragLeave={(e) => { e.preventDefault(); setDragging(false); }}
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
-            e.preventDefault(); setDragging(false);
+            e.preventDefault(); e.stopPropagation(); setDragging(false);
             const f = e.dataTransfer.files?.[0];
             if (f && f.type.startsWith("image/")) onPick(f);
           }}
         >
-          <Upload className={`h-3.5 w-3.5 ${dragging ? "text-primary" : "text-muted-foreground"}`} />
-          <span className="text-[8px] text-muted-foreground mt-0.5">Slot {index + 1}</span>
+          <Upload className={`pointer-events-none h-3.5 w-3.5 ${dragging ? "text-primary" : "text-muted-foreground"}`} />
+          <span className="pointer-events-none text-[8px] text-muted-foreground mt-0.5">Slot {index + 1}</span>
           {snipSupported && (
             <button
               type="button"

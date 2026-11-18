@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { placePhotos } from "@/components/startups/attachment-card";
+import { photoSlotFilled, placePhotos } from "@/components/startups/attachment-card";
 import { EMPTY_SLOT, type EntityMediaState } from "@/components/media/entity-media-editor";
 
 const f = (n: string) => new File(["x"], n, { type: "image/png" });
@@ -32,5 +32,17 @@ describe("dropping photos", () => {
     s[1] = { ...EMPTY_SLOT, persistedPath: "second" };
     expect(names(placePhotos(s, [f("replacement"), f("third")], 1))).toEqual([null, "replacement", "third"]);
     expect(placePhotos(s, [f("replacement"), f("third")], 1)[0]?.persistedPath).toBe("first");
+  });
+  it("a broken stored image is empty and accepts the next dropped photo", () => {
+    const s = empty();
+    s[0] = { ...EMPTY_SLOT, persistedPath: "missing", signedUrl: "https://img.invalid/missing" };
+    const broken = new Set(["https://img.invalid/missing"]);
+    expect(photoSlotFilled(s[0], broken)).toBe(false);
+    expect(names(placePhotos(s, [f("replacement")], undefined, (slot) => photoSlotFilled(slot, broken)))).toEqual(["replacement", null, null]);
+  });
+  it("a pending replacement is filled even when the old stored URL failed", () => {
+    const oldUrl = "https://img.invalid/missing";
+    const slot = { ...EMPTY_SLOT, persistedPath: "missing", signedUrl: oldUrl, pendingFile: f("new") };
+    expect(photoSlotFilled(slot, new Set([oldUrl]))).toBe(true);
   });
 });

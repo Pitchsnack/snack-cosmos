@@ -1,3 +1,9 @@
+# Reliable photo drops in every role
+- [x] Accept desktop file drags over every shared empty/occupied photo slot without file-type detection during dragover; keep existing validation on drop.
+- [x] Prevent slot illustrations, labels and icons from cancelling drags; stop handled drops bubbling into the page-level filler.
+- [x] Treat broken stored image URLs as empty spaces so they accept replacements and do not hide the photo drop box.
+- [x] Cover seller/buyer/advisor setup and Edit information through the shared components; 11 placement/autosave tests and TypeScript pass. Real empty-type and replacement drops passed in seller Edit information, buyer Edit information and the advisor editor through Admin; broken stored-photo recovery passed in seller. Every edit was cancelled without saving; separate role-account and wizard browser runs were not needed to prove the shared handler.
+
 # Image drop behavior sweep
 - [x] Audited sign-up/+ Add LogoPicker; seller Images & Logo, legacy logo and PhotosQ; buyer EntityMediaEditor and wizard; advisor LogoDrop, AttachmentCard and SetupReview; Admin create/edit LogoSlot and media editors; uploadPending, seller syncMedia, saveBuyerMedia and advisor save functions.
 - [x] Fixed the remaining occupied AttachmentCard logo and advisor SetupReview photo targets; all other listed surfaces already replace the pending image and retain existing validation, ownership checks and saved data.
