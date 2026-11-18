@@ -1,3 +1,8 @@
+# Photo deletion during autosave
+- [x] Queue the latest seller, buyer and advisor wizard media change instead of dropping clicks made while an upload/save is running; never restore stale completed state over a newer deletion.
+- [x] Delete storage objects only when their path is absent from every incoming slot, so moving a photo left does not delete its file.
+- [x] Add four focused regression tests; verify a delayed real upload deleted with one click stays gone after reload, and a shifted survivor still loads after reload. Restored Automation Test Seller Eleven to zero photos with its original logo unchanged; preview build OK.
+
 # Shared company step, assisted form and rejected-number retry
 - [x] Apply the exact bilingual registration link and sign-up Thai help line in every seller/buyer/advisor sign-up and + Add entry point.
 - [x] Make assisted setup a standalone screen with the specified fields, responsive buttons, Back behavior and unchanged request sending.

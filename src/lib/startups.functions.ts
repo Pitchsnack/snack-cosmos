@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { optionalCompanyName } from "./company-name";
 import { FounderStorySchema, composeFounderBio, type FounderStory } from "@/lib/founder-story";
+import { orphanedStartupMediaPaths } from "@/lib/media/startup-media-sync";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   ISO_STANDARDS,
@@ -663,16 +664,10 @@ async function syncMedia(
     .from("startup_media")
     .select("slot, image_url")
     .eq("startup_id", startupId);
-  const existingBySlot = new Map<number, string>(
-    ((existing ?? []) as Array<{ slot: number; image_url: string }>).map((r) => [r.slot, r.image_url]),
+  const orphanPaths = orphanedStartupMediaPaths(
+    (existing ?? []) as Array<{ slot: number; image_url: string }>,
+    media,
   );
-  const incomingBySlot = new Map<number, string>(media.map((m) => [m.slot, m.image_path]));
-
-  const orphanPaths: string[] = [];
-  for (const [slot, oldPath] of existingBySlot) {
-    const newPath = incomingBySlot.get(slot);
-    if (!newPath || newPath !== oldPath) orphanPaths.push(oldPath);
-  }
 
   // Delete DB rows not in incoming list.
   const keepSlots = media.map((m) => m.slot);

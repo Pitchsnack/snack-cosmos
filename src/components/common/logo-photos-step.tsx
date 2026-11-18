@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AttachmentCard } from "@/components/startups/attachment-card";
 import { EMPTY_SLOT, uploadPending, type EntityMediaState, type UploadFn } from "@/components/media/entity-media-editor";
+import { LatestChangeQueue } from "@/lib/media/latest-change-queue";
 import { cn } from "@/lib/utils";
 
 type L = (en: string, th: string) => string;
@@ -28,14 +29,15 @@ export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sector
 }) {
   const [m, setM] = useState<EntityMediaState>(() => toState(initial));
   const [count, setCount] = useState({ logo: !!initial.logoPath, photos: initial.slots.length });
-  const busy = useRef(false);
-  const onChange = async (next: EntityMediaState) => {
-    setM(next);
-    if (busy.current) return;
-    busy.current = true;
-    try {
-      const { logoPath, media: list } = await uploadPending(next, getUrl, supabase.storage.from("startup-media"));
-      await persist(logoPath, list);
+  const handlers = useRef({ getUrl, persist, onCount });
+  handlers.current = { getUrl, persist, onCount };
+  const queue = useRef<LatestChangeQueue<EntityMediaState> | null>(null);
+  if (!queue.current) {
+    queue.current = new LatestChangeQueue(async (next, isLatest) => {
+      const current = handlers.current;
+      const { logoPath, media: list } = await uploadPending(next, current.getUrl, supabase.storage.from("startup-media"));
+      await current.persist(logoPath, list);
+      if (!isLatest()) return;
       setM({
         logo: { ...next.logo, pendingFile: null, persistedPath: logoPath, signedUrl: next.logo.pendingFile ? URL.createObjectURL(next.logo.pendingFile) : next.logo.signedUrl },
         slots: next.slots.map((s, i) => {
@@ -44,9 +46,12 @@ export function LogoPhotosStep({ initial, getUrl, persist, onCount, name, sector
         }) as EntityMediaState["slots"],
       });
       setCount({ logo: !!logoPath, photos: list.length });
-      onCount(!!logoPath, list.length);
-    } catch (e) { toast.error((e as Error).message); }
-    finally { busy.current = false; }
+      current.onCount(!!logoPath, list.length);
+    }, (e) => toast.error((e as Error).message));
+  }
+  const onChange = (next: EntityMediaState) => {
+    setM(next);
+    queue.current?.push(next);
   };
   const ok = count.logo && count.photos > 0;
   const dot = (on: boolean, label: string) => (

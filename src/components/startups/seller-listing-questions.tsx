@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AttachmentCard } from "@/components/startups/attachment-card";
 import { EMPTY_SLOT, uploadPending, type EntityMediaState } from "@/components/media/entity-media-editor";
+import { LatestChangeQueue } from "@/lib/media/latest-change-queue";
 import { createStartupMediaUploadUrl, updateStartup } from "@/lib/startups.functions";
 import { checkListingName } from "@/lib/hidden-profiles.functions";
 import { DEAL_TYPES, HANDOVER_MONTHS } from "@/lib/hidden-profile";
@@ -48,15 +49,17 @@ export function PhotosQ({ media, d, set, L, sectorLine }: { media: WizardMedia; 
   const [m, setM] = useState<EntityMediaState>(() => toState(media.initial));
   const upUrl = useServerFn(createStartupMediaUploadUrl);
   const save = useServerFn(updateStartup);
-  const busy = useRef(false);
-  const onChange = async (next: EntityMediaState) => {
-    setM(next);
-    if (busy.current) return;
-    busy.current = true;
-    try {
-      // Each change is saved as it finishes: the same logo and photos the Attachment card shows.
-      const { logoPath, media: list } = await uploadPending(next, ({ kind, ext }) => upUrl({ data: { tenantId: media.tenantId, startupId: media.startupId, kind, ext } }), supabase.storage.from("startup-media"));
-      await save({ data: { id: media.startupId, logoPath, media: list } as never });
+  const handlers = useRef({ media, upUrl, save, set });
+  handlers.current = { media, upUrl, save, set };
+  const queue = useRef<LatestChangeQueue<EntityMediaState> | null>(null);
+  if (!queue.current) {
+    queue.current = new LatestChangeQueue(async (next, isLatest) => {
+      const current = handlers.current;
+      // Save each change in order. If another click arrived meanwhile, its newer
+      // optimistic state stays on screen and becomes the final queued save.
+      const { logoPath, media: list } = await uploadPending(next, ({ kind, ext }) => current.upUrl({ data: { tenantId: current.media.tenantId, startupId: current.media.startupId, kind, ext } }), supabase.storage.from("startup-media"));
+      await current.save({ data: { id: current.media.startupId, logoPath, media: list } as never });
+      if (!isLatest()) return;
       const kept: EntityMediaState = {
         logo: { ...next.logo, pendingFile: null, persistedPath: logoPath, signedUrl: next.logo.pendingFile ? URL.createObjectURL(next.logo.pendingFile) : next.logo.signedUrl },
         slots: next.slots.map((s, i) => {
@@ -65,9 +68,12 @@ export function PhotosQ({ media, d, set, L, sectorLine }: { media: WizardMedia; 
         }) as EntityMediaState["slots"],
       };
       setM(kept);
-      set({ hasLogo: !!logoPath, photos: list.length });
-    } catch (e) { toast.error((e as Error).message); }
-    finally { busy.current = false; }
+      current.set({ hasLogo: !!logoPath, photos: list.length });
+    }, (e) => toast.error((e as Error).message));
+  }
+  const onChange = (next: EntityMediaState) => {
+    setM(next);
+    queue.current?.push(next);
   };
   const ok = !!d.hasLogo && (d.photos ?? 0) > 0;
   const dot = (on: boolean, label: string) => (
