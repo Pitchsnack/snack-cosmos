@@ -276,7 +276,9 @@ export const confirmRegCompany = createServerFn({ method: "POST" })
     const addrEn = co.addressEn ?? null;
     // The register gives one line; split it into the wizards' own address fields.
     const { splitThaiAddress } = await import("./thai-address");
+    const { inferThaiPostalCode } = await import("./thai-postal.server");
     const sp = splitThaiAddress(co.addressTh);
+    if (!sp.postal) sp.postal = inferThaiPostalCode({ subdistrict: sp.unit, district: sp.district, province: sp.province }) ?? "";
     const parts = { address_line1: sp.street || null, address_line2: sp.unit || null, address_city_district: sp.district || null, address_province_state: sp.province || null, postal_code: sp.postal || null };
     if (a.role === "seller") {
       const { data: st } = await sb.from("startups").select("setup_from_signup").eq("id", pid).maybeSingle();

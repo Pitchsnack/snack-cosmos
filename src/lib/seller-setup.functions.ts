@@ -123,7 +123,7 @@ const ListingInput = z.object({
 
 /** The listing questions save to the business's listing (made here if it isn't there yet), as the seller. */
 async function saveListingAnswers(userSb: any, startupId: string, userId: string, l?: z.infer<typeof ListingInput>, strengths?: {highlights?:string[];highlightsTh?:string[]}) {
-  const { data: cur, error: readError } = await userSb.from("hidden_profiles").select("id,code_name,suggested_listing_name,headline,headline_th").eq("startup_id", startupId).maybeSingle();
+  const { data: cur, error: readError } = await userSb.from("hidden_profiles").select("id,code_name,suggested_listing_name,headline,headline_th,highlights,highlights_th,highlight_translations").eq("startup_id", startupId).maybeSingle();
   if(readError) throw new Error(readError.message);
   const patch: Record<string, unknown> = l ? {
     deal_type: l.deal, owner_stays: l.stays, handover_months: l.stays === "yes" ? l.months ?? 6 : null,
@@ -143,8 +143,17 @@ async function saveListingAnswers(userSb: any, startupId: string, userId: string
       if (error) throw new Error(error);
     }
   }
-  if(strengths?.highlights !== undefined) patch.highlights=strengthRows(strengths.highlights).map(text=>text.trim());
-  if(strengths?.highlightsTh !== undefined) patch.highlights_th=strengthRows(strengths.highlightsTh).map(text=>text.trim());
+  if (strengths?.highlights !== undefined || strengths?.highlightsTh !== undefined) {
+    const { planHighlightSave } = await import("./highlight-translations");
+    const { resolveHighlightPlan } = await import("./highlight-translations.server");
+    const resolved = await resolveHighlightPlan(planHighlightSave(
+      { en: cur?.highlights, th: cur?.highlights_th, translations: cur?.highlight_translations },
+      { en: strengths.highlights, th: strengths.highlightsTh },
+    ));
+    patch.highlights = resolved.en;
+    patch.highlights_th = resolved.th;
+    patch.highlight_translations = resolved.translations;
+  }
   if (!cur) {
     const { data: st, error: startupError } = await userSb.from("startups").select("tenant_id, city").eq("id", startupId).single();
     if(startupError || !st) throw new Error(startupError?.message ?? 'Business unavailable');

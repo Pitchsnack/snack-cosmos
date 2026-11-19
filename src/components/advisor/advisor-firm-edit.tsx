@@ -385,7 +385,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <F label={tr("Country")} req><select id="fe-country" className={sel} value={f.country} onChange={e=>changeCountry(e.target.value)}><option value="">{tr("Choose a country")}</option>{COUNTRIES.map(c=><option key={c} value={c}>{tr(c)}</option>)}</select></F>
           <F label={tr("City / province")} req err={show("city")}><Input id="fe-city" value={thai ? f.addr.province : f.city} onChange={e=>thai ? set("addr", {...f.addr,province:e.target.value}) : set("city",e.target.value)} /></F>
         </CompactFields><div>
-          <AddressBox noteOutside compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("Sellers and buyers see it as a link that opens a map. PitchSnack checks it against your registered address.")}
+          <AddressBox noteOutside explainMissing={!setup} compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("Sellers and buyers see it as a link that opens a map. PitchSnack checks it against your registered address.")}
             onChange={(p) => set("addr", { ...f.addr, ...p })} show={showAddr} onBlur={(k) => setTouched((t) => ({ ...t, [`a-${k}`]: true }))} />
           {src.addr && f.addr.street && <div className="mt-1.5"><Tag t={src.addr} /></div>}
         </div>

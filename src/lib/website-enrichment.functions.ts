@@ -78,7 +78,7 @@ async function saveSuggestions(data: Input, o: Owned, result: Record<string, unk
     return filled;
   }
 
-  const { data: hp } = await o.sb.from("hidden_profiles").select("highlights").eq("startup_id", data.id).maybeSingle();
+  const { data: hp } = await o.sb.from("hidden_profiles").select("highlights,highlights_th,highlight_translations").eq("startup_id", data.id).maybeSingle();
   const { mergeWebsiteEnrich } = await import("./seller-website-enrich");
   const draft = {
     shortDescription: o.row.short_description ?? "", longDescription: o.row.long_description ?? "",
@@ -93,7 +93,13 @@ async function saveSuggestions(data: Input, o: Owned, result: Record<string, unk
   }
   if (Object.keys(patch).length) { patch.updated_at = new Date().toISOString(); await o.sb.from("startups").update(patch).eq("id", data.id); }
   if (merged.patch.highlights) {
-    await o.sb.from("hidden_profiles").update({ highlights: merged.patch.highlights }).eq("startup_id", data.id);
+    const { planHighlightSave } = await import("./highlight-translations");
+    const { resolveHighlightPlan } = await import("./highlight-translations.server");
+    const resolved = await resolveHighlightPlan(planHighlightSave(
+      { en: hp?.highlights, th: hp?.highlights_th, translations: hp?.highlight_translations },
+      { en: merged.patch.highlights },
+    ));
+    await o.sb.from("hidden_profiles").update({ highlights: resolved.en, highlights_th: resolved.th, highlight_translations: resolved.translations }).eq("startup_id", data.id);
     filled.push("highlights");
   }
   return filled;

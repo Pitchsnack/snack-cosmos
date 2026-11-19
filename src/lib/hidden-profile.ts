@@ -1,3 +1,5 @@
+import type { HighlightTranslation } from "@/lib/highlight-translations";
+
 /**
  * Hidden profile — pure helpers shared by the browser and the server.
  * Ranges, the identity check and the publish requirements live here so the
@@ -84,6 +86,8 @@ export interface HiddenDraft {
   headline_th?: string;
   description_th?: string;
   highlights_th?: string[];
+  /** Owner/Admin editor metadata; automatic targets follow their source until edited. */
+  highlight_translations?: HighlightTranslation[];
   customers_summary_th?: string;
   reason_th?: string | null;
 }
@@ -398,6 +402,7 @@ export function pickDraft(r: Partial<HiddenDraft>): HiddenDraft {
     headline_th: r.headline_th ?? "",
     description_th: r.description_th ?? "",
     highlights_th: [...(r.highlights_th ?? []), "", "", "", ""].slice(0, 4),
+    highlight_translations: r.highlight_translations ?? [],
     customers_summary_th: r.customers_summary_th ?? "",
     reason_th: r.reason_th ?? null,
   };

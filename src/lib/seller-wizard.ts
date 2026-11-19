@@ -230,7 +230,7 @@ export function sellerListingValid(d: Pick<SellerDraft, 'listingName' | 'headlin
 }
 export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
   return {
-    role: !!d.role, name: !!d.name.trim() && /^\d{13}$/.test(d.reg) && (addrComplete(d.addr) || (!!d.regConfirmed && !!(d.addr.street.trim() || d.addr.province))),
+    role: !!d.role, name: !!d.name.trim() && /^\d{13}$/.test(d.reg) && (addrComplete(d.addr) || (!!d.regConfirmed && !!(d.addr.street.trim() || d.addr.province) && /^\d{5}$/.test(d.addr.postal))),
     sector: !!d.sector, web: websiteFieldsAnswered(d), founded: validFoundedYear(d.year) && !!d.size,
     rev: !!d.rev, lic: d.licences.length + d.iso.length > 0 || stepIdx(d.reached) > stepIdx("lic"),
     photos: !!d.hasLogo && (d.photos ?? 0) > 0, deal: !!d.deal, handover: d.stays === "yes" || d.stays === "no",
@@ -269,7 +269,7 @@ export interface SellerDraft {
   role: SellerRelation | null;
   name: string;
   reg: string;
-  /** The company check confirmed name + number ("Yes, this is my company"); the official address may lack a postcode. */
+  /** The company check confirmed name + number; an unresolved official postcode keeps Company open. */
   regConfirmed?: boolean;
   web: string;
   year: string;

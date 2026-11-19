@@ -1504,7 +1504,7 @@ export function StartupForm({
         </EditSec>}
         <div className="space-y-1.5">
           <Label htmlFor="addr-street">{tr("Business Address", "ที่อยู่ธุรกิจ")}</Label>
-          <AddressBox noteOutside a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars={false}
+          <AddressBox noteOutside explainMissing a={addr} thai={(headquarters || "Thailand") === "Thailand"} city={addr.district} compact title={null} stars
             onCity={(v) => setAddr((x) => ({ ...x, district: v }))}
             onChange={(p) => setAddr((x) => ({ ...x, ...p }))} show={() => null} onBlur={() => {}}
             note={tr("PitchSnack checks your registered address.", "PitchSnack ตรวจสอบที่อยู่ที่จดทะเบียนไว้")} />

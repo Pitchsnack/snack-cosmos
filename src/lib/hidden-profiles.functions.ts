@@ -19,7 +19,7 @@ import {
 } from "@/lib/hidden-profile";
 
 const COLS =
-  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, asking_price_thb, asking_price_band, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, owner_stays, handover_months, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, pending_cover, new_until, featured, directory_category, submitted_at, decided_at, decision_note, decision_reasons, decision_fields, suggested_listing_name, suggested_headline, headline_th, description_th, highlights_th, customers_summary_th, reason_th, identity_notice_count";
+  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, asking_price_thb, asking_price_band, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, owner_stays, handover_months, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, pending_cover, new_until, featured, directory_category, submitted_at, decided_at, decision_note, decision_reasons, decision_fields, suggested_listing_name, suggested_headline, headline_th, description_th, highlights_th, customers_summary_th, reason_th, identity_notice_count, highlight_translations";
 
 type Sb = SupabaseClient<Database>;
 
@@ -136,6 +136,7 @@ const DraftSchema = z.object({
   headline_th: z.string().optional(),
   description_th: z.string().max(420).optional(),
   highlights_th: z.array(z.string().max(200)).max(4).optional(),
+  highlight_translations: z.array(z.object({ index: z.number().int().min(0).max(3), target: z.enum(["en", "th"]), source: z.string().max(200) })).max(8).optional(),
   customers_summary_th: z.string().max(400).optional(),
   reason_th: z.string().max(400).nullable().optional(),
   // One-step approval: the seller's suggested listing name and headline.
@@ -169,18 +170,26 @@ export const saveHiddenProfile = createServerFn({ method: "POST" })
       const error = sellerWordingChangedError(value as string | null, (cur as Record<string, unknown>)[field] as string | null, kind);
       if (error) throw new Error(error);
     }
+    const { planHighlightSave } = await import("./highlight-translations");
+    const { resolveHighlightPlan } = await import("./highlight-translations.server");
+    const highlights = await resolveHighlightPlan(planHighlightSave(
+      { en: cur.highlights, th: cur.highlights_th, translations: cur.highlight_translations },
+      { en: data.draft.highlights, th: data.draft.highlights_th },
+    ));
+    const resolvedDraft = { ...draftNoCover, highlights: highlights.en, highlights_th: highlights.th, highlight_translations: highlights.translations };
     const adminReview = !!isAdmin && ["in_review", "changes_requested"].includes((cur as any).approval_status);
     if (adminReview) {
       const { recordAdminEdits } = await import("@/lib/approvals.functions");
-      await recordAdminEdits(cur, draftNoCover as Record<string, unknown>, context.userId);
+      await recordAdminEdits(cur, resolvedDraft as Record<string, unknown>, context.userId);
     }
     const approvalPatch = !adminReview && (cur as { approval_status?: string }).approval_status === "live" ? { approval_status: "live_edits_pending" } : {};
     const { data: row, error } = await sb
       .from("hidden_profiles")
       .update({
-        ...draftNoCover,
-        highlights: data.draft.highlights,
-        ...(data.draft.highlights_th ? { highlights_th: data.draft.highlights_th } : {}),
+        ...resolvedDraft,
+        highlights: highlights.en,
+        highlights_th: highlights.th,
+        highlight_translations: highlights.translations,
         has_unpublished_changes: isBuyerVisible(cur as { approval_status?: string | null }),
         ...approvalPatch,
         ...(!adminReview ? { identity_notice_count: 0 } : {}),
@@ -210,7 +219,13 @@ export const publishHiddenProfile = createServerFn({ method: "POST" })
     const { data: cur } = await sb.from("hidden_profiles").select("*").eq("startup_id", data.startupId).maybeSingle();
     const wasLive = isBuyerVisible(cur as { approval_status?: string | null } | null);
     const { data: isAdm } = await (sb as any).rpc("is_control", { _user_id: context.userId });
-    const cleaned: Record<string, unknown> = { ...draft, highlights: draft.highlights.filter((h) => h.trim()), highlights_th: (draft.highlights_th ?? []).filter((h) => h.trim()) };
+    const { planHighlightSave } = await import("./highlight-translations");
+    const { resolveHighlightPlan } = await import("./highlight-translations.server");
+    const highlights = await resolveHighlightPlan(planHighlightSave(
+      { en: cur?.highlights, th: cur?.highlights_th, translations: cur?.highlight_translations },
+      { en: draft.highlights, th: draft.highlights_th },
+    ));
+    const cleaned: Record<string, unknown> = { ...draft, highlights: highlights.en, highlights_th: highlights.th, highlight_translations: highlights.translations };
     if (!isAdm) delete cleaned.code_name;
     for (const [field, kind] of [[isAdm ? "code_name" : "suggested_listing_name", "name"], ["headline", "headline"], ["headline_th", "headline"]] as const) {
       if (cleaned[field] === undefined) continue;

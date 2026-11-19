@@ -24,6 +24,7 @@ import {
 import { checkListingName } from "@/lib/hidden-profiles.functions";
 import { cn } from "@/lib/utils";
 import { LangTag, missingLangHint, useTextLang } from "@/components/common/text-lang";
+import { isTranslatedHighlight, withoutHighlightTranslation } from "@/lib/highlight-translations";
 import { usePermissions } from "@/hooks/use-session-context";
 import { founderRevenueLabel } from "@/lib/founder-story";
 import { countryLabel } from "@/i18n/th-edit-info";
@@ -161,7 +162,13 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
   const hlEn = d.highlights, hlTh = d.highlights_th ?? ["", "", "", ""];
   const hlOwn = lang === "th" ? hlTh : hlEn, hlOth = lang === "th" ? hlEn : hlTh;
   const hlView = switchable ? hlOwn : hlOwn.map((h, i) => h || hlOth[i] || "");
-  const hlSet = (next: string[]) => setD((p) => ({ ...p, [lang === "th" ? "highlights_th" : "highlights"]: next }));
+  const hlSet = (next: string[]) => setD((p) => {
+    const target = lang === "th" ? "th" : "en";
+    const before = lang === "th" ? p.highlights_th ?? [] : p.highlights;
+    let translations = p.highlight_translations ?? [];
+    next.forEach((value, i) => { if (value.trim() !== (before[i] ?? "").trim()) translations = withoutHighlightTranslation(translations, i, target); });
+    return { ...p, [lang === "th" ? "highlights_th" : "highlights"]: next, highlight_translations: translations };
+  });
 
   if (tab === "identity") {
     const fill = <AutoFillTabButton onClick={pd.fillAll} />;
@@ -208,6 +215,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
                         ) : (
                           <span aria-hidden className={cn("grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border text-[11px] font-semibold", req && ring ? "border-[#F87171] text-[#DC2626]" : "border-[#DCDFE5] text-[#6A7181]")}>{i + 1}</span>
                         )}
+                        {isTranslatedHighlight({ en: hlEn, th: hlTh, translations: d.highlight_translations ?? [] }, i, lang) && <span className="lang-tag shrink-0">{tr("Translated", "แปลอัตโนมัติ")}</span>}
                         <input aria-label={name} value={h} lang={lang} placeholder={switchable && !hlOwn[i] && hlOth[i] ? missingLangHint(lang, appTh, true) : name}
                           onChange={(e) => hlSet(hlOwn.map((x, j) => (j === i ? e.target.value : x)))}
                           className="h-11 min-w-0 flex-1 border-0 bg-transparent text-[15px] outline-none placeholder:text-[#9CA3AF]" />

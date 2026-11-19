@@ -108,9 +108,11 @@ export const applyAddCheck = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
     const web = ans.company.website ? ans.company.website.replace(/^https?:\/\//i, "").replace(/\/+$/, "") : null;
     const { splitThaiAddress } = await import("./thai-address");
+    const { inferThaiPostalCode } = await import("./thai-postal.server");
     const { picksToSectors, normPicks } = await import("./business-types");
     const { uploadHeldLogo, saveDbdAfterYes } = await import("./reg-lookup.server");
     const sp = splitThaiAddress(co.addressTh);
+    if (!sp.postal) sp.postal = inferThaiPostalCode({ subdistrict: sp.unit, district: sp.district, province: sp.province }) ?? "";
     const addrEn = co.addressEn ?? null;
     const add = (l: unknown, ...k: string[]) => Array.from(new Set([...(Array.isArray(l) ? l : []), ...k]));
     const parts = { address_line1: sp.street || null, address_line2: sp.unit || null, address_city_district: sp.district || null, address_province_state: sp.province || null, postal_code: sp.postal || null };

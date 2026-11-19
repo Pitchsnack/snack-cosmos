@@ -651,7 +651,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </div>}
         <div className="relative [&>*:not(.edit-sec-box)]:relative" data-edit-sec={sec === "address" ? "address" : "country"}>
           {!setup && sec === "country" && <div aria-hidden="true" className="edit-sec-box is-buyer" />}
-          <AddressBox noteOutside compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
+          <AddressBox noteOutside explainMissing={!setup} compact a={addr} thai={thaiAddr} city={addr.district} onCity={(v) => setAddr({ district: v })} onChange={setAddr}
             title={individual ? tr("Address") : tr("Registered address")}
             note={tr("PitchSnack checks your registered address.")}
             country={f.country} onCountry={changeCountry} countryErr={addrShow && addrDirty && !f.country ? tr("Choose a country.") : null}

@@ -1,3 +1,10 @@
+# Bilingual Highlights and registered-address postal codes
+- [x] Detect each typed/generated Highlight's language, save it to that language, translate the other language, and preserve user-edited translations across seller wizard/Edit information paths for Control and non-Control; buyers/advisors retain their existing fields because they have no Highlights.
+- [x] Mark untouched automatic translations bilingually, clear the mark on edit, and backfill one-language existing profiles: 16 listings/50 rows filled, no unresolved Highlight translations and no one-language sets remain.
+- [x] Resolve missing Thai postal codes after sign-up/+ Add company confirmation; require only Postal code when no unique match exists and retain all other company-check behavior.
+- [x] Add required red asterisks and bilingual missing-field explanations in Edit information › Address; filled 3 existing profiles. The 30 unresolved profiles have no usable sub-district/district address to match and remain listed in the authorised repair report.
+- [x] Twenty-one focused language/translation/postal/setup tests, TypeScript and preview build pass; verified the example company's Listing Highlights and Address in English and Thai, including automatic-translation tags, 10220, red stars and exact missing-postcode messages.
+
 # Founder story written from earlier answers
 - [x] Compared the uploaded brief with both seller editing places; corrected the help placement, protected every company-name variant and website host, and kept answer-based year/sales blue and synchronized while typed parts stay unchanged.
 - [x] Twenty-one focused tests pass. Real completed sellers verified EN/TH generation, all seven available parts blue, Thai translation, About Owner typing/own-words mode and company-name removal; no browser errors. Later-answer updates are covered by focused tests rather than changing live answers.

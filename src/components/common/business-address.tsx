@@ -1,5 +1,5 @@
 import { setupText } from "@/i18n/language";
-import { tr } from "@/i18n/language";
+import { tr, useTranslation } from "@/i18n/language";
 import { COUNTRIES as COUNTRY_LIST, THAI_PROVINCES_77 } from "@/lib/investor-bands";
 import { cn } from "@/lib/utils";
 const Req = () => <span aria-hidden className="ml-1 text-destructive">*</span>;
@@ -18,16 +18,31 @@ export function addrErrors(a: Addr, thai: boolean, city: string) {
     : { street: a.street.trim() ? null : tr("Add the street and number."), district: city.trim() ? null : tr("Add the city or district."), province: null, postal: null };
 }
 
-export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, compact, note, need, title = tr("Business address"), stars = true, country, onCountry, countryErr, noteOutside = false }: {
+export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, compact, note, need, title = tr("Business address"), stars = true, country, onCountry, countryErr, noteOutside = false, explainMissing = false }: {
   a: Addr; thai: boolean; city: string; onCity?: (v: string) => void; onChange: (p: Partial<Addr>) => void;
   show: (k: keyof Addr) => string | null; onBlur: (k: keyof Addr) => void; compact?: boolean; note: string;
   /** Setup wizards: mark fields still needed light blue (see common/need-fill). */
   need?: boolean; title?: string | null; stars?: boolean;
   /** Buyers and advisors: Country is the box's first field (sellers have none: Thailand, fixed). */
   country?: string; onCountry?: (c: string) => void; countryErr?: string | null; noteOutside?: boolean;
+  /** Edit information: explain the tab's missing count directly under each empty required field. */
+  explainMissing?: boolean;
 }) {
   const errs = addrErrors(a, thai, city) as Record<keyof Addr, string | null | undefined>;
-  const nd = (k: keyof Addr) => (need && errs[k] ? { "data-need": "1", "aria-invalid": show(k) ? true : undefined } : { "aria-invalid": show(k) ? true : undefined });
+  const { language } = useTranslation();
+  const appTh = language === "th";
+  const missing = (k: keyof Addr) => {
+    if (!explainMissing) return null;
+    const labels: Record<keyof Addr, [string, string]> = {
+      street: ["No. and street", "เลขที่และถนน"], unit: ["Floor/unit/soi", "ชั้น/ห้อง/ซอย"],
+      district: ["City/District", "เขต/อำเภอ"], province: ["Province/State", "จังหวัด/รัฐ"], postal: ["postal code", "รหัสไปรษณีย์"],
+    };
+    const empty = k === "street" ? !a.street.trim() : k === "district" ? !(thai ? a.district : city).trim() : k === "province" ? thai && !a.province : k === "postal" ? thai && !a.postal : false;
+    if (!empty) return null;
+    return appTh ? `⚠ ยังไม่ได้กรอก${labels[k][1]}` : `⚠ Missing: ${labels[k][0]}`;
+  };
+  const shown = (k: keyof Addr) => show(k) || missing(k);
+  const nd = (k: keyof Addr) => (need && errs[k] ? { "data-need": "1", "aria-invalid": shown(k) ? true : undefined } : { "aria-invalid": shown(k) ? true : undefined });
   const nc = (k: keyof Addr) => (need && errs[k] ? "need-fill" : "");
   const inp = cn(compact ? "h-[42px] text-[14px]" : "h-[50px] text-[16px]", "w-full rounded-[12px] border border-[#DCDFE5] bg-white px-3.5 outline-none focus:border-[#1E2A4A] dark:border-border dark:bg-background");
   const lbl = "mb-1.5 block text-[14px] font-semibold";
@@ -37,8 +52,8 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
     <div>
       <label className={lbl} htmlFor="addr-street">{thai ? tr("No. and street") : tr("Street and number")}{stars && <Req />}</label>
       <input id="addr-street" aria-required autoComplete="address-line1" maxLength={120} placeholder={tr(thai ? "e.g. 191 Sukhumvit Road" : "e.g. 1 Raffles Place")}
-        className={cn(inp, nc("street"), show("street") && bad)} {...nd("street")} value={a.street} onBlur={() => onBlur("street")} onChange={(e) => onChange({ street: e.target.value })} />
-      <Err m={show("street")} />
+        className={cn(inp, nc("street"), shown("street") && bad)} {...nd("street")} value={a.street} onBlur={() => onBlur("street")} onChange={(e) => onChange({ street: e.target.value })} />
+      <Err m={shown("street")} />
     </div>
   );
   const unit = (
@@ -53,19 +68,19 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
       <label className={lbl} htmlFor="addr-district">{tr("City/District")}{stars && <Req />}</label>
       {thai ? (
         <input id="addr-district" aria-required autoComplete="address-level2" maxLength={80} placeholder={tr("e.g. Watthana")}
-          className={cn(inp, nc("district"), show("district") && bad)} {...nd("district")} value={a.district} onBlur={() => onBlur("district")} onChange={(e) => onChange({ district: e.target.value })} />
+          className={cn(inp, nc("district"), shown("district") && bad)} {...nd("district")} value={a.district} onBlur={() => onBlur("district")} onChange={(e) => onChange({ district: e.target.value })} />
       ) : (
         <input id="addr-district" aria-required autoComplete="address-level2" maxLength={80} placeholder={setupText("e.g. Singapore")}
-          className={cn(inp, nc("district"), show("district") && bad)} {...nd("district")} value={city} onBlur={() => onBlur("district")} onChange={(e) => onCity?.(e.target.value)} />
+          className={cn(inp, nc("district"), shown("district") && bad)} {...nd("district")} value={city} onBlur={() => onBlur("district")} onChange={(e) => onCity?.(e.target.value)} />
       )}
-      <Err m={show("district")} />
+      <Err m={shown("district")} />
     </div>
   );
   const province = (
     <div>
       <label className={lbl} htmlFor="addr-province">{tr("Province/State")}{thai ? (stars ? <Req /> : null) : <Opt />}</label>
       {thai ? (
-        <select id="addr-province" aria-required autoComplete="address-level1" className={cn(inp, nc("province"), "pr-8", show("province") && bad)} {...nd("province")} value={a.province}
+        <select id="addr-province" aria-required autoComplete="address-level1" className={cn(inp, nc("province"), "pr-8", shown("province") && bad)} {...nd("province")} value={a.province}
           onBlur={() => onBlur("province")} onChange={(e) => onChange({ province: e.target.value })}>
           <option value="">{tr("Choose a province")}</option>
           {THAI_PROVINCES_77.map((p) => <option key={p} value={p}>{tr(p)}</option>)}
@@ -73,16 +88,16 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
       ) : (
         <input id="addr-province" autoComplete="address-level1" maxLength={80} className={inp} value={a.province} onChange={(e) => onChange({ province: e.target.value })} />
       )}
-      <Err m={show("province")} />
+      <Err m={shown("province")} />
     </div>
   );
   const postal = (
     <div>
       <label className={lbl} htmlFor="addr-postal">{tr("Postal code")}{thai ? (stars ? <Req /> : null) : <Opt />}</label>
       <input id="addr-postal" aria-required={thai} autoComplete="postal-code" inputMode={thai ? "numeric" : undefined} maxLength={thai ? 5 : 12}
-        placeholder={thai ? tr("5 digits") : undefined} className={cn(inp, nc("postal"), show("postal") && bad)} {...nd("postal")} value={a.postal} onBlur={() => onBlur("postal")}
+        placeholder={thai ? tr("5 digits") : undefined} className={cn(inp, nc("postal"), shown("postal") && bad)} {...nd("postal")} value={a.postal} onBlur={() => onBlur("postal")}
         onChange={(e) => onChange({ postal: thai ? e.target.value.replace(/\D/g, "").slice(0, 5) : e.target.value.slice(0, 12) })} />
-      <Err m={show("postal")} />
+      <Err m={shown("postal")} />
     </div>
   );
   return (

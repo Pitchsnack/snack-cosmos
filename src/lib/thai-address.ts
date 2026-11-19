@@ -6,6 +6,13 @@ export type SplitAddr = { street: string; unit: string; district: string; provin
 const TH_PROVINCES = "กรุงเทพมหานคร|อำนาจเจริญ|อ่างทอง|บึงกาฬ|บุรีรัมย์|ฉะเชิงเทรา|ชัยนาท|ชัยภูมิ|จันทบุรี|เชียงใหม่|เชียงราย|ชลบุรี|ชุมพร|กาฬสินธุ์|กำแพงเพชร|กาญจนบุรี|ขอนแก่น|กระบี่|ลำปาง|ลำพูน|เลย|ลพบุรี|แม่ฮ่องสอน|มหาสารคาม|มุกดาหาร|นครนายก|นครปฐม|นครพนม|นครราชสีมา|นครสวรรค์|นครศรีธรรมราช|น่าน|นราธิวาส|หนองบัวลำภู|หนองคาย|นนทบุรี|ปทุมธานี|ปัตตานี|พังงา|พัทลุง|พะเยา|เพชรบูรณ์|เพชรบุรี|พิจิตร|พิษณุโลก|พระนครศรีอยุธยา|แพร่|ภูเก็ต|ปราจีนบุรี|ประจวบคีรีขันธ์|ระนอง|ราชบุรี|ระยอง|ร้อยเอ็ด|สระแก้ว|สกลนคร|สมุทรปราการ|สมุทรสาคร|สมุทรสงคราม|สระบุรี|สตูล|สิงห์บุรี|ศรีสะเกษ|สงขลา|สุโขทัย|สุพรรณบุรี|สุราษฎร์ธานี|สุรินทร์|ตาก|ตรัง|ตราด|อุบลราชธานี|อุดรธานี|อุทัยธานี|อุตรดิตถ์|ยะลา|ยโสธร".split("|");
 const PROV_EN: Record<string, string> = Object.fromEntries(TH_PROVINCES.map((t, i) => [t, THAI_PROVINCES_77[i]!]));
 
+/** Canonical Thai province name for the postal table; accepts the app's English province value. */
+export function thaiProvinceName(value: string | null | undefined) {
+  const raw = (value ?? "").trim();
+  const index = THAI_PROVINCES_77.findIndex((name) => name.toLocaleLowerCase() === raw.toLocaleLowerCase());
+  return index >= 0 ? TH_PROVINCES[index] ?? raw : raw;
+}
+
 /**
  * Splits e.g. "99/1 หมู่ที่ 3 ถนนสุขุมวิท แขวงคลองตัน เขตคลองเตย กรุงเทพมหานคร 10110".
  * Street keeps house number, moo and road; sub-district goes to the second line; any part not found stays empty.

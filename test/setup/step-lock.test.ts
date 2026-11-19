@@ -23,8 +23,11 @@ describe("no jumping ahead", () => {
 
 describe("seller Company after + Add", () => {
   const base = { ...emptyDraft(), name: "Acme", reg: "0125569028942", addr: { street: "99/59", unit: "", district: "เมืองนนทบุรี", province: "Nonthaburi", postal: "" } };
-  it("counts as answered once the company check confirmed it, even without a postcode", () => {
-    expect(sellerValid({ ...base, regConfirmed: true }).name).toBe(true);
+  it("keeps Company open after confirmation until a missing postcode is answered", () => {
+    expect(sellerValid({ ...base, regConfirmed: true }).name).toBe(false);
+  });
+  it("accepts a confirmed official address once its postcode is present", () => {
+    expect(sellerValid({ ...base, regConfirmed: true, addr: { ...base.addr, postal: "10110" } }).name).toBe(true);
   });
   it("still needs a postcode when not confirmed", () => {
     expect(sellerValid(base).name).toBe(false);

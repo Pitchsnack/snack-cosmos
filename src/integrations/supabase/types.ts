@@ -3773,6 +3773,7 @@ export type Database = {
           has_unpublished_changes: boolean
           headline: string
           headline_th: string | null
+          highlight_translations: Json
           highlights: string[]
           highlights_th: string[] | null
           id: string
@@ -3844,6 +3845,7 @@ export type Database = {
           has_unpublished_changes?: boolean
           headline?: string
           headline_th?: string | null
+          highlight_translations?: Json
           highlights?: string[]
           highlights_th?: string[] | null
           id?: string
@@ -3915,6 +3917,7 @@ export type Database = {
           has_unpublished_changes?: boolean
           headline?: string
           headline_th?: string | null
+          highlight_translations?: Json
           highlights?: string[]
           highlights_th?: string[] | null
           id?: string
