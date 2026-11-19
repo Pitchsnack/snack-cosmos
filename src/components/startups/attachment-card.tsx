@@ -8,6 +8,16 @@ import { useTr } from "@/components/common/edit-info-popup";
 import { cn } from "@/lib/utils";
 import { LogoDropLabel } from "@/components/login/signup-reg-parts";
 import { useTranslation } from "@/i18n/language";
+import { HatMark } from "@/components/ui/PitchSnackLoader";
+
+/** Hat loader over a stored image until it has painted. */
+function useImgLoading(src: string | null) {
+  const [done, setDone] = useState<string | null>(null);
+  return { loading: !!src && done !== src, onLoad: () => setDone(src) };
+}
+function ImgLoader({ label }: { label: string }) {
+  return <span role="status" aria-label={label} className="pointer-events-none absolute inset-0 grid place-items-center rounded-[10px] bg-muted"><HatMark size="sm" /></span>;
+}
 
 /**
  * Edit information › Images & Logo › Attachment and the setup wizards' Logo and photos step:
@@ -244,6 +254,7 @@ function PhotoSpace({ slot, n, example, dragging, broken, removeLabel, onFiles, 
   const src = usePreview(slot);
   const [over, setOver] = useState(false);
   useEffect(() => { if (!dragging) setOver(false); }, [dragging]);
+  const img = useImgLoading(src);
   if (src && !broken) {
     return (
       <div data-photo-slot={n}
@@ -252,7 +263,8 @@ function PhotoSpace({ slot, n, example, dragging, broken, removeLabel, onFiles, 
         onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setOver(false); onFiles(e.dataTransfer.files); }}
         className={cn("relative aspect-[10/7] w-full overflow-hidden rounded-[10px] border-2 border-transparent transition-colors", over && "border-[#2563EB] bg-[#EEF4FF]")}>
-        <img src={src} alt="" onError={() => onBroken(src)} className="pointer-events-none h-full w-full rounded-[8px] border border-[#E6E8EC] object-cover dark:border-border" />
+        <img src={src} alt="" onLoad={img.onLoad} onError={() => { img.onLoad(); onBroken(src); }} className="pointer-events-none h-full w-full rounded-[8px] border border-[#E6E8EC] object-cover dark:border-border" />
+        {img.loading && <ImgLoader label={tr(`Loading photo ${n}`, `กำลังโหลดรูปภาพที่ ${n}`)} />}
         {over && <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-[#2563EB] px-2.5 py-1 text-[12px] font-semibold text-white">{tr("Drop to replace", "วางเพื่อเปลี่ยนรูป")}</span>}
         <button type="button" aria-label={removeLabel} onClick={onRemove}
           className="absolute right-1.5 top-1.5 grid h-[26px] w-[26px] place-items-center rounded-full bg-[rgba(21,26,40,0.72)] text-white">
@@ -293,6 +305,7 @@ function LogoSpace({ slot, label, removeLabel, onFile, onRemove }: {
   const src = usePreview(slot);
   const [over, setOver] = useState(false);
   const box = "h-[120px] w-[120px] shrink-0 rounded-[12px]";
+  const img = useImgLoading(src);
   if (src) {
     return (
       <div data-logo-slot="attachment"
@@ -301,7 +314,8 @@ function LogoSpace({ slot, label, removeLabel, onFile, onRemove }: {
         onDragLeave={() => setOver(false)}
         onDrop={(e: DragEvent) => { e.preventDefault(); e.stopPropagation(); setOver(false); onFile(e.dataTransfer.files?.[0]); }}
         className={cn("relative rounded-[12px] border-2 border-transparent transition-colors", box, over && "border-[#2563EB] bg-[#EEF4FF]")}>
-        <img src={src} alt="" className="h-full w-full rounded-[10px] border border-[#E6E8EC] object-cover dark:border-border" />
+        <img src={src} alt="" onLoad={img.onLoad} onError={img.onLoad} className="h-full w-full rounded-[10px] border border-[#E6E8EC] object-cover dark:border-border" />
+        {img.loading && <ImgLoader label={language === "th" ? "กำลังโหลดโลโก้" : "Loading logo"} />}
         {over && <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-[#2563EB] px-2 py-1 text-[11px] font-semibold text-white">{language === "th" ? "วางเพื่อเปลี่ยนรูป" : "Drop to replace"}</span>}
         <button type="button" aria-label={removeLabel} onClick={onRemove}
           className="absolute -right-2 -top-2 grid h-[22px] w-[22px] place-items-center rounded-full bg-[rgba(21,26,40,0.72)] text-white">
