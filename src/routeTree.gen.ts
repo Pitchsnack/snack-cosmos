@@ -32,6 +32,7 @@ import { Route as AuthenticatedCompanyRiskRouteImport } from './routes/_authenti
 import { Route as AuthenticatedCompanyValuationRouteImport } from './routes/_authenticated/company-valuation'
 import { Route as AuthenticatedConnectionsRouteImport } from './routes/_authenticated/connections'
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
+import { Route as AuthenticatedControlDescriptionRepairRouteImport } from './routes/_authenticated/control-description-repair'
 import { Route as AuthenticatedCreditRiskRouteImport } from './routes/_authenticated/credit-risk'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
@@ -256,6 +257,12 @@ const AuthenticatedContactsRoute = AuthenticatedContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedControlDescriptionRepairRoute =
+  AuthenticatedControlDescriptionRepairRouteImport.update({
+    id: '/control-description-repair',
+    path: '/control-description-repair',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedCreditRiskRoute = AuthenticatedCreditRiskRouteImport.update({
   id: '/credit-risk',
   path: '/credit-risk',
@@ -887,6 +894,7 @@ export interface FileRoutesByFullPath {
   '/company-valuation': typeof AuthenticatedCompanyValuationRoute
   '/connections': typeof AuthenticatedConnectionsRoute
   '/contacts': typeof AuthenticatedContactsRouteWithChildren
+  '/control-description-repair': typeof AuthenticatedControlDescriptionRepairRoute
   '/credit-risk': typeof AuthenticatedCreditRiskRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRouteWithChildren
@@ -1015,6 +1023,7 @@ export interface FileRoutesByTo {
   '/company-risk': typeof AuthenticatedCompanyRiskRoute
   '/company-valuation': typeof AuthenticatedCompanyValuationRoute
   '/connections': typeof AuthenticatedConnectionsRoute
+  '/control-description-repair': typeof AuthenticatedControlDescriptionRepairRoute
   '/credit-risk': typeof AuthenticatedCreditRiskRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/email-alerts': typeof AuthenticatedEmailAlertsRoute
@@ -1135,6 +1144,7 @@ export interface FileRoutesById {
   '/_authenticated/company-valuation': typeof AuthenticatedCompanyValuationRoute
   '/_authenticated/connections': typeof AuthenticatedConnectionsRoute
   '/_authenticated/contacts': typeof AuthenticatedContactsRouteWithChildren
+  '/_authenticated/control-description-repair': typeof AuthenticatedControlDescriptionRepairRoute
   '/_authenticated/credit-risk': typeof AuthenticatedCreditRiskRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRouteWithChildren
@@ -1266,6 +1276,7 @@ export interface FileRouteTypes {
     | '/company-valuation'
     | '/connections'
     | '/contacts'
+    | '/control-description-repair'
     | '/credit-risk'
     | '/dashboard'
     | '/deals'
@@ -1394,6 +1405,7 @@ export interface FileRouteTypes {
     | '/company-risk'
     | '/company-valuation'
     | '/connections'
+    | '/control-description-repair'
     | '/credit-risk'
     | '/dashboard'
     | '/email-alerts'
@@ -1513,6 +1525,7 @@ export interface FileRouteTypes {
     | '/_authenticated/company-valuation'
     | '/_authenticated/connections'
     | '/_authenticated/contacts'
+    | '/_authenticated/control-description-repair'
     | '/_authenticated/credit-risk'
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
@@ -1808,6 +1821,13 @@ declare module '@tanstack/react-router' {
       path: '/contacts'
       fullPath: '/contacts'
       preLoaderRoute: typeof AuthenticatedContactsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/control-description-repair': {
+      id: '/_authenticated/control-description-repair'
+      path: '/control-description-repair'
+      fullPath: '/control-description-repair'
+      preLoaderRoute: typeof AuthenticatedControlDescriptionRepairRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/credit-risk': {
@@ -2830,6 +2850,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCompanyValuationRoute: typeof AuthenticatedCompanyValuationRoute
   AuthenticatedConnectionsRoute: typeof AuthenticatedConnectionsRoute
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRouteWithChildren
+  AuthenticatedControlDescriptionRepairRoute: typeof AuthenticatedControlDescriptionRepairRoute
   AuthenticatedCreditRiskRoute: typeof AuthenticatedCreditRiskRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRouteWithChildren
@@ -2887,6 +2908,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCompanyValuationRoute: AuthenticatedCompanyValuationRoute,
   AuthenticatedConnectionsRoute: AuthenticatedConnectionsRoute,
   AuthenticatedContactsRoute: AuthenticatedContactsRouteWithChildren,
+  AuthenticatedControlDescriptionRepairRoute:
+    AuthenticatedControlDescriptionRepairRoute,
   AuthenticatedCreditRiskRoute: AuthenticatedCreditRiskRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRouteWithChildren,

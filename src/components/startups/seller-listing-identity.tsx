@@ -9,6 +9,8 @@ import { checkListingName } from '@/lib/hidden-profiles.functions';
 import { sellerListingSource } from '@/lib/seller-listing-text';
 import { suggestHeadline } from '@/lib/public-listing';
 import { isTranslatedListingText, withoutListingTextTranslation } from '@/lib/listing-text-translations';
+import { DescriptionStoryEditor } from './description-story-editor';
+import { isDescriptionStoryTranslated } from '@/lib/description-story';
 
 export function SellerListingIdentity({ d, set, th, refNo, cover, startupId }: { d: SellerDraft; set: (patch: Partial<SellerDraft>) => void; th: boolean; refNo?: string; cover?: string | null; startupId?: string }) {
   const L = (en: string, thai: string) => th ? thai : en;
@@ -44,10 +46,15 @@ export function SellerListingIdentity({ d, set, th, refNo, cover, startupId }: {
       listingTextTranslations: withoutListingTextTranslation(d.listingTextTranslations, field, target),
     });
   };
-  const translated = (field: 'headline' | 'description') => isTranslatedListingText({
-    headline: d.headline, headlineTh: d.headlineTh, description: d.description, descriptionTh: d.descriptionTh,
-    translations: d.listingTextTranslations,
-  }, field, language) ? <span className="lang-tag">{L('Translated', 'แปลอัตโนมัติ')}</span> : null;
+  const translated = (field: 'headline' | 'description') => {
+    const automatic = field === 'description' && d.descriptionStory && d.descriptionStoryTh
+      ? isDescriptionStoryTranslated({ en: d.descriptionStory, th: d.descriptionStoryTh }, language)
+      : isTranslatedListingText({
+        headline: d.headline, headlineTh: d.headlineTh, description: d.description, descriptionTh: d.descriptionTh,
+        translations: d.listingTextTranslations,
+      }, field, language);
+    return automatic ? <span className="lang-tag">{L('Translated', 'แปลอัตโนมัติ')}</span> : null;
+  };
 
   return <div className="grid min-w-0 grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,1fr)_260px]">
     <div className="min-w-0 space-y-5">
@@ -69,7 +76,29 @@ export function SellerListingIdentity({ d, set, th, refNo, cover, startupId }: {
       </div>
       <div>
         <div className="seller-field-label"><label htmlFor="sw-listing-description">{L('Description', 'คำอธิบาย')} <em>*</em>{translated('description')}</label><small>{description.length}/420</small></div>
-        <textarea id="sw-listing-description" lang={language} maxLength={420} rows={5} value={description} onChange={event => setText('description', event.target.value)} className="seller-wording-input min-h-28 resize-y" />
+        <DescriptionStoryEditor
+          id="sw-listing-description"
+          large
+          lang={language}
+          description={d.description ?? ''}
+          descriptionTh={d.descriptionTh ?? ''}
+          story={d.descriptionStory}
+          storyTh={d.descriptionStoryTh}
+          source={source}
+          handover={{ stays: d.stays, months: d.months }}
+          tr={L}
+          onChange={value => {
+            const nextText = th ? value.texts.th : value.texts.en;
+            const currentText = th ? d.descriptionTh ?? '' : d.description ?? '';
+            set({
+              description: value.texts.en,
+              descriptionTh: value.texts.th,
+              descriptionStory: value.stories.en,
+              descriptionStoryTh: value.stories.th,
+              listingTextTranslations: nextText !== currentText ? withoutListingTextTranslation(d.listingTextTranslations, 'description', language) : d.listingTextTranslations,
+            });
+          }}
+        />
       </div>
       <p className="seller-wording-note"><Pencil size={14} aria-hidden/>{L('PitchSnack may refine your wording before publishing to make it clear and professional, while ensuring it does not reveal your company’s identity.', 'PitchSnack อาจปรับถ้อยคำของท่านก่อนเผยแพร่ให้ชัดเจนและเป็นมืออาชีพ โดยจะไม่เปิดเผยว่าเป็นบริษัทของท่าน')}</p>
     </div>

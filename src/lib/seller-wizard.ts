@@ -5,6 +5,7 @@
  */
 import type { RegulatoryLicence } from "@/lib/compliance";
 import type { FounderStory } from "@/lib/founder-story";
+import type { DescriptionStory } from "@/lib/description-story";
 import { strengthCount, STRENGTH_MAX } from './seller-strengths';
 import { sellerWordingCount } from './seller-listing-wording';
 
@@ -296,6 +297,8 @@ export interface SellerDraft {
   headlineTh?: string;
   description?: string;
   descriptionTh?: string;
+  descriptionStory?: DescriptionStory | null;
+  descriptionStoryTh?: DescriptionStory | null;
   listingTextTranslations?: import('./listing-text-translations').ListingTextTranslation[];
   registeredName?: string;
   setupDoneAt?: string | null;
@@ -366,6 +369,7 @@ export function listingPayload(d: SellerDraft) {
     deal: (d.deal ?? null) as never, stays: d.stays ?? null, months: (d.stays === "yes" ? d.months ?? 6 : null) as never,
     price: d.price && d.price > 0 ? d.price : null, name: d.listingName?.trim() ?? null,
     headline: d.headline, headlineTh: d.headlineTh, description: d.description, descriptionTh: d.descriptionTh,
+    descriptionStory: d.descriptionStory, descriptionStoryTh: d.descriptionStoryTh,
     listingTextTranslations: d.listingTextTranslations,
   };
 }

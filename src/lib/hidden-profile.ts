@@ -1,5 +1,6 @@
 import type { HighlightTranslation } from "@/lib/highlight-translations";
 import type { ListingTextTranslation } from "@/lib/listing-text-translations";
+import type { DescriptionStory } from "@/lib/description-story";
 
 /**
  * Hidden profile — pure helpers shared by the browser and the server.
@@ -90,6 +91,9 @@ export interface HiddenDraft {
   /** Owner/Admin editor metadata; automatic targets follow their source until edited. */
   highlight_translations?: HighlightTranslation[];
   listing_text_translations?: ListingTextTranslation[];
+  /** Seller Description's editable sentence rows; description remains the buyer text. */
+  description_story?: DescriptionStory | null;
+  description_story_th?: DescriptionStory | null;
   customers_summary_th?: string;
   reason_th?: string | null;
 }
@@ -406,6 +410,8 @@ export function pickDraft(r: Partial<HiddenDraft>): HiddenDraft {
     highlights_th: [...(r.highlights_th ?? []), "", "", "", ""].slice(0, 4),
     highlight_translations: r.highlight_translations ?? [],
     listing_text_translations: r.listing_text_translations ?? [],
+    description_story: r.description_story ?? null,
+    description_story_th: r.description_story_th ?? null,
     customers_summary_th: r.customers_summary_th ?? "",
     reason_th: r.reason_th ?? null,
   };

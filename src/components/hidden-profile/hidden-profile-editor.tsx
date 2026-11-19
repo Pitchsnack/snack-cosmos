@@ -27,7 +27,8 @@ import {
   type HiddenProfileRow,
   type HiddenTextField,
 } from "@/lib/hidden-profile";
-import { suggestCodeNames, suggestBusinessDescription, suggestHeadline, suggestHighlights, suggestCustomersSummary, type ListingSource } from "@/lib/public-listing";
+import { suggestCodeNames, suggestHeadline, suggestHighlights, suggestCustomersSummary, type ListingSource } from "@/lib/public-listing";
+import { composeDescription, initialDescriptionStory } from "@/lib/description-story";
 import { useHiddenProfileActions } from "@/hooks/use-hidden-profiles";
 import { cn } from "@/lib/utils";
 
@@ -65,7 +66,7 @@ export function HiddenProfileEditor({
     setCodeIdx((i) => i + 1);
   };
   const headlineIdea = useMemo(() => (source ? suggestHeadline(source, opts) : ""), [source, opts]);
-  const descIdea = useMemo(() => (source ? suggestBusinessDescription(source, opts) : ""), [source, opts]);
+  const descIdea = useMemo(() => (source ? composeDescription(initialDescriptionStory("", null, "en", source, { stays: d.owner_stays, months: d.handover_months })) : ""), [source, d.owner_stays, d.handover_months]);
   const highlightIdeas = useMemo(() => (source ? suggestHighlights(source, opts).filter(Boolean) : []), [source, opts]);
   const customersIdea = useMemo(() => (source ? suggestCustomersSummary(source, opts) : ""), [source, opts]);
   const fillHighlights = () =>

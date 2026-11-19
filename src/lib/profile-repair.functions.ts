@@ -8,6 +8,11 @@ export type SellerListingTextRepairReport = {
   headlineThFilled: number;
   descriptionEnFilled: number;
   descriptionThFilled: number;
+  descriptionsReplaced: number;
+  descriptionsKept: number;
+  alreadySentences: number;
+  replacedRefs: string[];
+  keptRefs: string[];
   unresolved: string[];
 };
 
@@ -22,12 +27,14 @@ export const repairSellerListingTexts = createServerFn({ method: "POST" })
     const sb = supabaseAdmin as any;
     const { ensureAutomaticSellerListing } = await import("./seller-listing-text.server");
     const { data: listings, error } = await sb.from("hidden_profiles")
-      .select("startup_id,ref_no,created_by,code_name,suggested_listing_name,headline,headline_th,description,description_th")
+      .select("startup_id,ref_no,created_by,code_name,suggested_listing_name,headline,headline_th,description,description_th,description_story,description_story_th")
       .order("ref_no");
     if (error) throw new Error(error.message);
     const report: SellerListingTextRepairReport = {
       profilesChanged: 0, listingNamesFilled: 0, headlineEnFilled: 0, headlineThFilled: 0,
-      descriptionEnFilled: 0, descriptionThFilled: 0, unresolved: [],
+      descriptionEnFilled: 0, descriptionThFilled: 0,
+      descriptionsReplaced: 0, descriptionsKept: 0, alreadySentences: 0,
+      replacedRefs: [], keptRefs: [], unresolved: [],
     };
     const controlByUser = new Map<string, boolean>();
     for (const row of listings ?? []) {
@@ -43,8 +50,20 @@ export const repairSellerListingTexts = createServerFn({ method: "POST" })
           }
           creatorControl = controlByUser.get(creator) ?? false;
         }
+        const beforeEn = row.description?.trim() ?? "";
+        const beforeTh = row.description_th?.trim() ?? "";
+        const alreadySentences = row.description_story?.mode === "lines" && row.description_story_th?.mode === "lines";
         const result = await ensureAutomaticSellerListing(sb, row.startup_id, creatorControl, context.userId);
-        if (!result?.filled.length) continue;
+        if (!result) continue;
+        if (alreadySentences) report.alreadySentences += 1;
+        else if (result.legacyAutomaticDescription && (result.description !== beforeEn || result.descriptionTh !== beforeTh)) {
+          report.descriptionsReplaced += 1;
+          report.replacedRefs.push(ref);
+        } else {
+          report.descriptionsKept += 1;
+          report.keptRefs.push(ref);
+        }
+        if (!result.filled.length) continue;
         report.profilesChanged += 1;
         if (result.filled.includes("code_name") || result.filled.includes("suggested_listing_name")) report.listingNamesFilled += 1;
         if (result.filled.includes("headline")) report.headlineEnFilled += 1;

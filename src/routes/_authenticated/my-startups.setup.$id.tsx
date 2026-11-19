@@ -41,7 +41,9 @@ function toDraft(s: SellerSetup, open?: string): SellerDraft {
     hasLogo: !!s.media.logoPath, photos: s.media.slots.length,
     deal: s.listing.deal, stays: s.listing.stays, months: s.listing.months, price: s.listing.price,
     listingName: s.listing.name, nameOk: s.listing.name ? true : undefined,
-    headline: s.listing.headline, headlineTh: s.listing.headlineTh, description: s.listing.description, descriptionTh: s.listing.descriptionTh, listingTextTranslations: s.listing.translations, registeredName: s.registeredName, setupDoneAt: s.setupDoneAt,
+    headline: s.listing.headline, headlineTh: s.listing.headlineTh, description: s.listing.description, descriptionTh: s.listing.descriptionTh,
+    descriptionStory: s.listing.descriptionStory, descriptionStoryTh: s.listing.descriptionStoryTh,
+    listingTextTranslations: s.listing.translations, registeredName: s.registeredName, setupDoneAt: s.setupDoneAt,
   };
   // Opens the step asked for, else the first question without an answer (skipped included), else Review.
   const key = normalizeSellerStep(open) ?? firstUnanswered(d, s.fromSignup);
@@ -105,6 +107,8 @@ function Page() {
           headlineTh: result.listing.headlineTh,
           description: result.listing.description,
           descriptionTh: result.listing.descriptionTh,
+          descriptionStory: result.listing.descriptionStory,
+          descriptionStoryTh: result.listing.descriptionStoryTh,
           listingTextTranslations: result.listing.translations,
         };
       }}

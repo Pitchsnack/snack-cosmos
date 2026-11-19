@@ -1,3 +1,9 @@
+# Seller Description set sentences
+- [ ] Replace automatic seller Description paragraphs with five bilingual editable sentence rows in wizard step 13 and Edit information › Listing Identity, reusing founder-story part styling and write-it-yourself mode.
+- [ ] Populate parts from existing answers, omit incomplete lines from buyer text, preserve the 420-character limit and protected translations, and persist the parts server-side.
+- [ ] Replace only automatically written existing Descriptions, preserve seller-written text, and report replaced/kept counts plus PS-1040 and PS-1006 buyer text.
+- [ ] Add focused tests and verify Control/non-Control EN/TH flows, owner handover, incomplete lines, manual mode, translation marks, screenshots and no unrelated changes; remove any temporary test profiles.
+
 # Automatic seller listing texts and tag fallbacks
 - [x] Generate and save empty seller listing names, bilingual headlines and bilingual descriptions without overwriting seller text; preserve limits, identity checks and Admin approval.
 - [x] Add Description to wizard step 13 and Review, remove seller Listing Identity auto-fill/Suggest controls, and synchronize untouched automatic translations.

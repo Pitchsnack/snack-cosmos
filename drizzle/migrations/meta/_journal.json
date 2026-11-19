@@ -1072,6 +1072,13 @@
       "when": 1795078898132,
       "tag": "0152_public_discovery_bilingual_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 153,
+      "version": "7",
+      "when": 1795098430472,
+      "tag": "0153_seller_description_sentence_parts",
+      "breakpoints": true
     }
   ]
 }

@@ -3765,6 +3765,8 @@ export type Database = {
           decision_note: string | null
           decision_reasons: string[]
           description: string
+          description_story: Json | null
+          description_story_th: Json | null
           description_th: string | null
           directory_category: string | null
           featured: boolean
@@ -3838,6 +3840,8 @@ export type Database = {
           decision_note?: string | null
           decision_reasons?: string[]
           description?: string
+          description_story?: Json | null
+          description_story_th?: Json | null
           description_th?: string | null
           directory_category?: string | null
           featured?: boolean
@@ -3911,6 +3915,8 @@ export type Database = {
           decision_note?: string | null
           decision_reasons?: string[]
           description?: string
+          description_story?: Json | null
+          description_story_th?: Json | null
           description_th?: string | null
           directory_category?: string | null
           featured?: boolean

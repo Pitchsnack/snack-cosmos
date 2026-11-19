@@ -1,4 +1,5 @@
 import { sellerWordingChangedError } from './seller-listing-wording';
+import { DescriptionStorySchema } from './description-story';
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -19,7 +20,7 @@ import {
 } from "@/lib/hidden-profile";
 
 const COLS =
-  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, asking_price_thb, asking_price_band, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, owner_stays, handover_months, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, pending_cover, new_until, featured, directory_category, submitted_at, decided_at, decision_note, decision_reasons, decision_fields, suggested_listing_name, suggested_headline, headline_th, description_th, highlights_th, customers_summary_th, reason_th, identity_notice_count, highlight_translations, listing_text_translations";
+  "id, startup_id, tenant_id, ref_no, status, published_at, unpublished_at, code_name, cover_art, region, headline, description, highlights, customers_summary, asking_price, asking_price_thb, asking_price_band, stake_pct, deal_type, structure, reason, handover, process, open_to, nda_approver, owner_stays, handover_months, live, has_unpublished_changes, views, ndas_approved, updated_at, product_tags, market_tags, cover_image_url, approval_status, version, pending_cover, new_until, featured, directory_category, submitted_at, decided_at, decision_note, decision_reasons, decision_fields, suggested_listing_name, suggested_headline, headline_th, description_th, highlights_th, customers_summary_th, reason_th, identity_notice_count, highlight_translations, listing_text_translations, description_story, description_story_th";
 
 type Sb = SupabaseClient<Database>;
 
@@ -138,6 +139,8 @@ const DraftSchema = z.object({
   highlights_th: z.array(z.string().max(200)).max(4).optional(),
   highlight_translations: z.array(z.object({ index: z.number().int().min(0).max(3), target: z.enum(["en", "th"]), source: z.string().max(200) })).max(8).optional(),
   listing_text_translations: z.array(z.object({ field: z.enum(["headline", "description"]), target: z.enum(["en", "th"]), source: z.string().max(420) })).max(4).optional(),
+  description_story: DescriptionStorySchema.nullable().optional(),
+  description_story_th: DescriptionStorySchema.nullable().optional(),
   customers_summary_th: z.string().max(400).optional(),
   reason_th: z.string().max(400).nullable().optional(),
   // One-step approval: the seller's suggested listing name and headline.
@@ -177,16 +180,17 @@ export const saveHiddenProfile = createServerFn({ method: "POST" })
       { en: cur.highlights, th: cur.highlights_th, translations: cur.highlight_translations },
       { en: data.draft.highlights, th: data.draft.highlights_th },
     ));
-    const { planListingTextSave } = await import("./listing-text-translations");
-    const { resolveListingTextPlan } = await import("./listing-text-translations.server");
-    const listingTexts = await resolveListingTextPlan(planListingTextSave(cur, {
+    const { resolveSellerListingTextSave } = await import("./seller-listing-save.server");
+    const listingTexts = await resolveSellerListingTextSave(cur, {
       headline: data.draft.headline, headlineTh: data.draft.headline_th,
       description: data.draft.description, descriptionTh: data.draft.description_th,
-    }));
+      descriptionStory: data.draft.description_story, descriptionStoryTh: data.draft.description_story_th,
+    });
     const resolvedDraft = {
       ...draftNoCover,
       headline: listingTexts.headline, headline_th: listingTexts.headlineTh,
       description: listingTexts.description, description_th: listingTexts.descriptionTh,
+      ...(listingTexts.stories ? { description_story: listingTexts.stories.en, description_story_th: listingTexts.stories.th } : {}),
       listing_text_translations: listingTexts.translations,
       highlights: highlights.en, highlights_th: highlights.th, highlight_translations: highlights.translations,
     };
@@ -238,16 +242,17 @@ export const publishHiddenProfile = createServerFn({ method: "POST" })
       { en: cur?.highlights, th: cur?.highlights_th, translations: cur?.highlight_translations },
       { en: draft.highlights, th: draft.highlights_th },
     ));
-    const { planListingTextSave } = await import("./listing-text-translations");
-    const { resolveListingTextPlan } = await import("./listing-text-translations.server");
-    const listingTexts = await resolveListingTextPlan(planListingTextSave(cur, {
+    const { resolveSellerListingTextSave } = await import("./seller-listing-save.server");
+    const listingTexts = await resolveSellerListingTextSave(cur, {
       headline: draft.headline, headlineTh: draft.headline_th,
       description: draft.description, descriptionTh: draft.description_th,
-    }));
+      descriptionStory: draft.description_story, descriptionStoryTh: draft.description_story_th,
+    });
     const cleaned: Record<string, unknown> = {
       ...draft,
       headline: listingTexts.headline, headline_th: listingTexts.headlineTh,
       description: listingTexts.description, description_th: listingTexts.descriptionTh,
+      ...(listingTexts.stories ? { description_story: listingTexts.stories.en, description_story_th: listingTexts.stories.th } : {}),
       listing_text_translations: listingTexts.translations,
       highlights: highlights.en, highlights_th: highlights.th, highlight_translations: highlights.translations,
     };

@@ -1,4 +1,5 @@
-import { suggestBusinessDescription, suggestCodeNameFor, suggestHeadline, type ListingSource } from "./public-listing";
+import { suggestCodeNameFor, suggestHeadline, type ListingSource } from "./public-listing";
+import { composeDescription, initialDescriptionStory } from "./description-story";
 
 export type SellerListingAnswers = {
   name: string;
@@ -20,6 +21,8 @@ export type SellerListingAnswers = {
   headlineTh?: string;
   description?: string;
   descriptionTh?: string;
+  stays?: "yes" | "no" | null;
+  months?: number | null;
 };
 
 export function sellerListingSource(d: SellerListingAnswers): ListingSource {
@@ -33,8 +36,10 @@ export function sellerListingSource(d: SellerListingAnswers): ListingSource {
     company_size: d.size,
     last_year_revenue: d.rev,
     sector: d.sector,
-    product_tags: d.productTags?.length ? d.productTags : d.productTagsTh ?? [],
-    market_tags: d.marketTags?.length ? d.marketTags : d.marketTagsTh ?? [],
+    product_tags: d.productTags ?? [],
+    market_tags: d.marketTags ?? [],
+    product_tags_th: d.productTagsTh ?? [],
+    market_tags_th: d.marketTagsTh ?? [],
     regulatory_licenses: d.licences ?? [],
     iso_standards: d.iso ?? [],
   };
@@ -47,6 +52,6 @@ export function withAutomaticSellerListingText<T extends SellerListingAnswers>(d
     ...d,
     listingName: d.listingName?.trim() || suggestCodeNameFor(source),
     headline: d.headline?.trim() || d.headlineTh?.trim() ? d.headline : suggestHeadline(source),
-    description: d.description?.trim() || d.descriptionTh?.trim() ? d.description : suggestBusinessDescription(source),
+    description: d.description?.trim() || d.descriptionTh?.trim() ? d.description : composeDescription(initialDescriptionStory("", null, "en", source, { stays: d.stays, months: d.months })),
   };
 }

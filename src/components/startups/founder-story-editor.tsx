@@ -5,7 +5,7 @@ import { useTranslation } from "@/i18n/language";
 import { useTr } from "@/components/common/edit-info-popup";
 import { composeFounderBio, initialFounderStory, plainStoryPart, typeStoryPart, STORY_HINTS, STORY_LINES, type FounderStory, type StoryKey } from "@/lib/founder-story";
 
-function StoryPart({value, hint, auto, onChange}: {value: string; hint: string; auto?: boolean; onChange: (v: string) => void}) {
+export function StoryPart({value, hint, auto, maxLength = 120, onChange}: {value: string; hint: string; auto?: boolean; maxLength?: number; onChange: (v: string) => void}) {
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -18,8 +18,8 @@ function StoryPart({value, hint, auto, onChange}: {value: string; hint: string; 
     const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
     if (!range || !el.contains(range.commonAncestorContainer)) return;
     const selected = range.toString().length;
-    const remaining = Math.max(0, 120 - (el.textContent?.length ?? 0) + selected);
-    const plain = plainStoryPart(text).slice(0, remaining);
+    const remaining = Math.max(0, maxLength - (el.textContent?.length ?? 0) + selected);
+    const plain = Array.from(text.replace(/[\r\n\u2028\u2029]+/g, " ")).slice(0, remaining).join("");
     range.deleteContents();
     const node = document.createTextNode(plain);
     range.insertNode(node); range.setStartAfter(node); range.collapse(true);
@@ -33,9 +33,9 @@ function StoryPart({value, hint, auto, onChange}: {value: string; hint: string; 
     onBeforeInput={e => {
       const event = e.nativeEvent as InputEvent;
       if (event.inputType === "insertParagraph" || event.inputType === "insertLineBreak") e.preventDefault();
-      if (event.data && (ref.current?.textContent?.length ?? 0) - (window.getSelection()?.toString().length ?? 0) + event.data.length > 120) e.preventDefault();
+      if (event.data && (ref.current?.textContent?.length ?? 0) - (window.getSelection()?.toString().length ?? 0) + event.data.length > maxLength) e.preventDefault();
     }}
-    onInput={e => {const el = e.currentTarget; const plain = plainStoryPart(el.textContent ?? ""); if (el.textContent !== plain) el.textContent = plain; onChange(plain);}} />;
+    onInput={e => {const el = e.currentTarget; const plain = Array.from((el.textContent ?? "").replace(/[\r\n\u2028\u2029]+/g, " ")).slice(0, maxLength).join(""); if (el.textContent !== plain) el.textContent = plain; onChange(plain);}} />;
 }
 
 export function FounderStoryEditor({bio, story: saved, year, sales, onChange, lang: forced}: {

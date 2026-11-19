@@ -6,6 +6,7 @@
 import { findTermsIn, identityTerms, type EntryFacts } from "@/lib/hidden-profile";
 import type { LastLoginStep } from "@/lib/last-login";
 import { SELLER_SECTOR_EXAMPLES } from './seller-sector-examples';
+import { composeDescription, initialDescriptionStory } from './description-story';
 
 export interface ListingSource {
   startup_name: string;
@@ -480,6 +481,8 @@ export function buildPublicListing(
     description_th?: string | null;
     highlights_th?: string[] | null;
     customers_summary_th?: string | null;
+    owner_stays?: "yes" | "no" | null;
+    handover_months?: number | null;
   } | null,
   hasFinancials: boolean,
 ): PublicListing {
@@ -488,7 +491,7 @@ export function buildPublicListing(
   const dec = decadeLabel(s.year_founded);
   return {
     headline: p?.headline?.trim() || "",
-    description: p?.description?.trim() || suggestBusinessDescription(s) || suggestDescription(s.long_description || s.short_description, terms),
+    description: p?.description?.trim() || composeDescription(initialDescriptionStory("", null, "en", s, { stays: p?.owner_stays, months: p?.handover_months })) || suggestDescription(s.long_description || s.short_description, terms),
     highlights: (p?.highlights ?? []).map((h) => h?.trim() ?? "").filter(Boolean).slice(0, 4),
     customerProfile: p?.customers_summary?.trim() || "",
     productTags: cleanTags(p?.product_tags ?? s.product_tags, terms),

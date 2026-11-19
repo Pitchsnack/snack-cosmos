@@ -19,7 +19,7 @@ import {
   type EntryFacts, type HiddenDraft, type HiddenProfileRow,
 } from "@/lib/hidden-profile";
 import {
-  revenueBand, suggestBusinessDescription, suggestCodeNames, suggestCustomersSummary, suggestHeadline, suggestHighlights, type ListingSource,
+  revenueBand, suggestCodeNames, suggestCustomersSummary, suggestHeadline, suggestHighlights, type ListingSource,
 } from "@/lib/public-listing";
 import { checkListingName } from "@/lib/hidden-profiles.functions";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,8 @@ import { isTranslatedListingText, withoutListingTextTranslation } from "@/lib/li
 import { usePermissions } from "@/hooks/use-session-context";
 import { founderRevenueLabel } from "@/lib/founder-story";
 import { countryLabel } from "@/i18n/th-edit-info";
+import { DescriptionStoryEditor } from "@/components/startups/description-story-editor";
+import { composeDescription, initialDescriptionStory, isDescriptionStoryTranslated } from "@/lib/description-story";
 
 /**
  * Edit information › Listing view: Listing Identity and Deal Terms, as two tabs
@@ -62,7 +64,7 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
     return pool.slice(0, 4);
   }, [source, opts]);
   const headlineIdea = useMemo(() => (source ? suggestHeadline(source, opts) : ""), [source, opts]);
-  const descIdea = useMemo(() => (source ? suggestBusinessDescription(source, opts) : ""), [source, opts]);
+  const descIdea = useMemo(() => (source ? composeDescription(initialDescriptionStory("", null, "en", source, { stays: d.owner_stays, months: d.handover_months })) : ""), [source, d.owner_stays, d.handover_months]);
   const highlightIdeas = useMemo(() => (source ? suggestHighlights(source, opts).filter(Boolean) : []), [source, opts]);
   const customersIdea = useMemo(() => (source ? suggestCustomersSummary(source, opts) : ""), [source, opts]);
 
@@ -175,10 +177,15 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
 
   if (tab === "identity") {
     const hlMissing = ![0, 1, 2].every((i) => hlEn[i]?.trim() || hlTh[i]?.trim());
-    const translated = (field: "headline" | "description") => isTranslatedListingText({
-      headline: d.headline, headlineTh: d.headline_th, description: d.description, descriptionTh: d.description_th,
-      translations: d.listing_text_translations,
-    }, field, lang) ? <span className="lang-tag">{tr("Translated", "แปลอัตโนมัติ")}</span> : null;
+    const translated = (field: "headline" | "description") => {
+      const automatic = field === "description" && d.description_story && d.description_story_th
+        ? isDescriptionStoryTranslated({ en: d.description_story, th: d.description_story_th }, lang)
+        : isTranslatedListingText({
+          headline: d.headline, headlineTh: d.headline_th, description: d.description, descriptionTh: d.description_th,
+          translations: d.listing_text_translations,
+        }, field, lang);
+      return automatic ? <span className="lang-tag">{tr("Translated", "แปลอัตโนมัติ")}</span> : null;
+    };
     return (
       <div>
         <TabHead title={tr("Marketplace listing name", "ชื่อประกาศใน Marketplace")} />
@@ -201,7 +208,29 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
             </div>
             <EditSec id="description" tone="seller" active={section === "description"}>
               <FieldRow label={tr("Description", "คำอธิบาย")} after={<><LangTag />{translated("description")}</>} htmlFor="hp-description" missing={!both("description")} right={`${tv("description").length}/420`}>
-                <Textarea id="hp-description" lang={lang} maxLength={420} value={tv("description")} placeholder={tph("description", ideas.descIdea)} onChange={(e) => tset("description", e.target.value)} className={cn(AREA, "h-[112px] min-h-[112px] resize-y", !both("description") && MISS_BOX)} />
+                {source ? <DescriptionStoryEditor
+                  id="hp-description"
+                  lang={lang}
+                  description={d.description}
+                  descriptionTh={d.description_th ?? ""}
+                  story={d.description_story}
+                  storyTh={d.description_story_th}
+                  source={source}
+                  handover={{ stays: d.owner_stays, months: d.handover_months }}
+                  tr={tr}
+                  onChange={value => setD(p => {
+                    const currentText = lang === "th" ? p.description_th ?? "" : p.description;
+                    const nextText = lang === "th" ? value.texts.th : value.texts.en;
+                    return {
+                      ...p,
+                      description: value.texts.en,
+                      description_th: value.texts.th,
+                      description_story: value.stories.en,
+                      description_story_th: value.stories.th,
+                      listing_text_translations: nextText !== currentText ? withoutListingTextTranslation(p.listing_text_translations, "description", lang) : p.listing_text_translations,
+                    };
+                  })}
+                /> : <Textarea id="hp-description" lang={lang} maxLength={420} value={tv("description")} placeholder={tph("description", ideas.descIdea)} onChange={(e) => tset("description", e.target.value)} className={cn(AREA, "h-[112px] min-h-[112px] resize-y", !both("description") && MISS_BOX)} />}
               </FieldRow>
             </EditSec>
             <p className={`seller-wording-note ${tour?.open ? 'tour-hidden' : ''}`}><Pencil size={14} aria-hidden />{tr("PitchSnack may refine your wording before publishing to make it clear and professional, while ensuring it does not reveal your company’s identity.", "PitchSnack อาจปรับถ้อยคำของท่านก่อนเผยแพร่ให้ชัดเจนและเป็นมืออาชีพ โดยจะไม่เปิดเผยว่าเป็นบริษัทของท่าน")}</p>

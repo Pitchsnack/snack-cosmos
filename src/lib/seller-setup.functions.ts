@@ -8,6 +8,7 @@ import type { SellerFounder } from "./seller-wizard";
 import { needsSellerIdentityTour, sellerWordingChangedError } from './seller-listing-wording';
 import { routeWizardTags, routeWizardText } from './bilingual-fields';
 import { withAutomaticSellerListingText } from './seller-listing-text';
+import { DescriptionStorySchema } from './description-story';
 
 /** Read only completion readiness, through the setup's existing access gate. */
 export const getSellerIdentityReadiness = createServerFn({ method: 'GET' })
@@ -44,7 +45,7 @@ export type SellerSetup = {
   /** The profile's contact email and Contact number (About Company), shown under the first founder. */
   contact: { email: string; phone: string };
   /** The listing's answers (empty until the listing exists). */
-  listing: { deal: string | null; stays: "yes" | "no" | null; months: number | null; price: number | null; name: string; headline: string; headlineTh: string; description: string; descriptionTh: string; translations: import('./listing-text-translations').ListingTextTranslation[]; refNo: string; cover: string | null };
+  listing: { deal: string | null; stays: "yes" | "no" | null; months: number | null; price: number | null; name: string; headline: string; headlineTh: string; description: string; descriptionTh: string; descriptionStory: import('./description-story').DescriptionStory | null; descriptionStoryTh: import('./description-story').DescriptionStory | null; translations: import('./listing-text-translations').ListingTextTranslation[]; refNo: string; cover: string | null };
   registeredName: string;
   media: { logoPath: string | null; logoUrl: string | null; slots: { slot: number; path: string; url: string | null }[] };
 };
@@ -158,12 +159,14 @@ const ListingInput = z.object({
   headlineTh: z.string().max(2000).optional(),
   description: z.string().max(420).optional(),
   descriptionTh: z.string().max(420).optional(),
+  descriptionStory: DescriptionStorySchema.nullable().optional(),
+  descriptionStoryTh: DescriptionStorySchema.nullable().optional(),
   listingTextTranslations: z.array(z.object({ field: z.enum(['headline','description']), target: z.enum(['en','th']), source: z.string().max(420) })).max(4).optional(),
 });
 
 /** The listing questions save to the business's listing (made here if it isn't there yet), as the seller. */
 async function saveListingAnswers(userSb: any, startupId: string, userId: string, l?: z.infer<typeof ListingInput>, strengths?: {highlights?:string[];highlightsTh?:string[]}) {
-  const { data: cur, error: readError } = await userSb.from("hidden_profiles").select("id,code_name,suggested_listing_name,headline,headline_th,description,description_th,listing_text_translations,highlights,highlights_th,highlight_translations").eq("startup_id", startupId).maybeSingle();
+  const { data: cur, error: readError } = await userSb.from("hidden_profiles").select("id,code_name,suggested_listing_name,headline,headline_th,description,description_th,description_story,description_story_th,listing_text_translations,highlights,highlights_th,highlight_translations").eq("startup_id", startupId).maybeSingle();
   if(readError) throw new Error(readError.message);
   const patch: Record<string, unknown> = l ? {
     deal_type: l.deal, owner_stays: l.stays, handover_months: l.stays === "yes" ? l.months ?? 6 : null,
@@ -183,15 +186,19 @@ async function saveListingAnswers(userSb: any, startupId: string, userId: string
       {en:cur?.description ?? null,th:cur?.description_th ?? null},
       {en:l.description === undefined ? undefined : l.description.trim(),th:l.descriptionTh === undefined ? undefined : l.descriptionTh.trim()},
     );
-    const { planListingTextSave } = await import('./listing-text-translations');
-    const { resolveListingTextPlan } = await import('./listing-text-translations.server');
-    const texts = await resolveListingTextPlan(planListingTextSave(cur, {
+    const { resolveSellerListingTextSave } = await import('./seller-listing-save.server');
+    const texts = await resolveSellerListingTextSave(cur, {
       headline: headline.en, headlineTh: headline.th, description: description.en, descriptionTh: description.th,
-    }));
+      descriptionStory: l.descriptionStory, descriptionStoryTh: l.descriptionStoryTh,
+    });
     patch.headline = texts.headline;
     patch.headline_th = texts.headlineTh;
     patch.description = texts.description;
     patch.description_th = texts.descriptionTh;
+    if (texts.stories) {
+      patch.description_story = texts.stories.en;
+      patch.description_story_th = texts.stories.th;
+    }
     patch.listing_text_translations = texts.translations;
     for (const [field, kind] of [[nameField, 'name'], ['headline', 'headline'], ['headline_th', 'headline']] as const) {
       if (patch[field] === undefined) continue;
@@ -234,7 +241,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
     const [{ data: s }, { data: o }, { data: hp }, { data: med }, {data:founders}] = await Promise.all([
       sb.from("startups").select("*").eq("id", data.id).single(),
       sb.from("startup_ownership").select("seller_relation").eq("startup_id", data.id).maybeSingle(),
-      sb.from("hidden_profiles").select("deal_type, owner_stays, handover_months, asking_price, asking_price_thb, code_name, suggested_listing_name, headline, headline_th, description, description_th, listing_text_translations, ref_no, cover_art, highlights, highlights_th").eq("startup_id", data.id).maybeSingle(),
+      sb.from("hidden_profiles").select("deal_type, owner_stays, handover_months, asking_price, asking_price_thb, code_name, suggested_listing_name, headline, headline_th, description, description_th, description_story, description_story_th, listing_text_translations, ref_no, cover_art, highlights, highlights_th").eq("startup_id", data.id).maybeSingle(),
       sb.from("startup_media").select("slot, image_url").eq("startup_id", data.id).order("slot"),
       sb.from("startup_founders").select("id,full_name,position,linkedin_url,bio,bio_story,bio_th,bio_story_th,photo_url").eq("startup_id",data.id).order("display_order"),
     ]);
@@ -266,7 +273,9 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       listing: {
         deal: DEALS.includes(hp?.deal_type) ? hp.deal_type : null, stays: hp?.owner_stays ?? null, months: hp?.handover_months ?? null,
         price: thbOf(hp), name: (control ? hp?.code_name : hp?.suggested_listing_name) ?? '',
-        headline: hp?.headline ?? '', headlineTh: hp?.headline_th ?? '', description: hp?.description ?? '', descriptionTh: hp?.description_th ?? '', translations: hp?.listing_text_translations ?? [], refNo: hp?.ref_no ?? '', cover: hp?.cover_art ?? null,
+        headline: hp?.headline ?? '', headlineTh: hp?.headline_th ?? '', description: hp?.description ?? '', descriptionTh: hp?.description_th ?? '',
+        descriptionStory: hp?.description_story ?? null, descriptionStoryTh: hp?.description_story_th ?? null,
+        translations: hp?.listing_text_translations ?? [], refNo: hp?.ref_no ?? '', cover: hp?.cover_art ?? null,
       },
       media: {
         logoPath: s.logo_url ?? null, logoUrl: s.logo_url ? signed.get(s.logo_url) ?? (/^https?:/.test(s.logo_url) ? s.logo_url : null) : null,
@@ -317,6 +326,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
         name: data.name, registeredName: existing?.registered_name, web: data.web, city: data.city, year: data.year, size: data.size, rev: data.rev, sector: data.sector,
         productTags: data.productTags, marketTags: data.marketTags, productTagsTh: data.productTagsTh, marketTagsTh: data.marketTagsTh, licences: data.licences, iso: data.iso,
         listingName: data.listing?.name ?? '', headline: data.listing?.headline, headlineTh: data.listing?.headlineTh, description: data.listing?.description, descriptionTh: data.listing?.descriptionTh,
+        stays: data.listing?.stays, months: data.listing?.months,
       });
       if (!existing?.setup_done_at && !sellerListingValid({ ...listingCheck, nameOk: true })) throw new Error('Complete Listing name, Headline and Description within their limits before finishing.');
     }
@@ -341,7 +351,9 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     }
     return { ok: true, listing: automaticListing ? {
       name: automaticListing.name, headline: automaticListing.headline, headlineTh: automaticListing.headlineTh,
-      description: automaticListing.description, descriptionTh: automaticListing.descriptionTh, translations: automaticListing.translations,
+      description: automaticListing.description, descriptionTh: automaticListing.descriptionTh,
+      descriptionStory: automaticListing.descriptionStory, descriptionStoryTh: automaticListing.descriptionStoryTh,
+      translations: automaticListing.translations,
     } : undefined };
   });
 
@@ -367,6 +379,7 @@ export const createMyBusiness = createServerFn({ method: "POST" })
       name: data.name, web: data.web, city: data.city, year: data.year, size: data.size, rev: data.rev, sector: data.sector,
       productTags: data.productTags, marketTags: data.marketTags, productTagsTh: data.productTagsTh, marketTagsTh: data.marketTagsTh, licences: data.licences, iso: data.iso,
       listingName: data.listing?.name ?? '', headline: data.listing?.headline, headlineTh: data.listing?.headlineTh, description: data.listing?.description, descriptionTh: data.listing?.descriptionTh,
+        stays: data.listing?.stays, months: data.listing?.months,
     });
     if (!sellerListingValid({ ...listingCheck, nameOk: true })) throw new Error('Complete Listing name, Headline and Description before finishing.');
     const id = await createSellerBusiness(sb, context.userId, {

@@ -564,6 +564,7 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .founder-story-sources { margin-top: 4px; font-size: 12px; color: var(--muted-foreground); }
 .founder-story-sources summary { cursor: pointer; font-weight: 600; }
 .founder-story-sources ul { margin: 4px 0 0 2px; display: grid; gap: 2px; }
+.description-story-large { border-radius: 14px; padding: 12px 18px; font-size: 18px; }
 .founder-own-bio { height: 180px; resize: vertical; }
 .startup-long-description { height: 264px; resize: vertical; font-size: 15px; line-height: 1.6; }
 @media (max-width: 639px) { .founder-story-footer { flex-direction: column; align-items: flex-start; } }
