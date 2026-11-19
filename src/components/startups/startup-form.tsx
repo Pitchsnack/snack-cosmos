@@ -67,7 +67,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AutoEnrichButton } from "./auto-enrich-button";
 import { AttachmentCard, attachmentMissing } from "./attachment-card";
 import { LogoDropLabel } from "@/components/login/signup-reg-parts";
 import { LicenceLists } from "./licence-lists";
@@ -1206,24 +1205,6 @@ export function StartupForm({
 
 
   // ── Field groups: stacked on create, one per tab on edit ──
-  const onEnriched = (r: EnrichStartupResult) => {
-    const { applied, skippedBecauseFilled } = applyEnrichment(r);
-    const fieldsReturned = Object.entries(r).filter(([k, v]) => {
-      if (k === "_debug" || v == null) return false;
-      if (Array.isArray(v)) return v.length > 0;
-      if (typeof v === "string") return v.trim().length > 0;
-      return true;
-    }).length;
-    if (fieldsReturned > 0 && applied.length === 0) {
-      const preview = skippedBecauseFilled.slice(0, 5).join(", ");
-      toast.info(
-        `Auto Enrich returned data but all target fields were already filled` +
-          (preview ? ` (skipped: ${preview}${skippedBecauseFilled.length > 5 ? "…" : ""})` : "") +
-          `. Clear a field and try again to overwrite.`,
-      );
-    }
-  };
-  const enrichBtn = <AutoEnrichButton websiteUrl={websiteUrl} disabled={submitting} onEnriched={onEnriched} />;
   const mediaJsx = (<>
       {/* Logo + Media + Auto Enrich (right-aligned, same row) */}
       <EditSec id="media" tone="seller" active={secOn("media")}><div className="flex items-start gap-4">
@@ -1232,29 +1213,6 @@ export function StartupForm({
             value={media}
             onChange={setMedia}
             screenshot={{ websiteUrl }}
-          />
-        </div>
-        <div className="pt-6 shrink-0">
-          <AutoEnrichButton
-            websiteUrl={websiteUrl}
-            disabled={submitting}
-            onEnriched={(r) => {
-              const { applied, skippedBecauseFilled } = applyEnrichment(r);
-              const fieldsReturned = Object.entries(r).filter(([k, v]) => {
-                if (k === "_debug" || v == null) return false;
-                if (Array.isArray(v)) return v.length > 0;
-                if (typeof v === "string") return v.trim().length > 0;
-                return true;
-              }).length;
-              if (fieldsReturned > 0 && applied.length === 0) {
-                const preview = skippedBecauseFilled.slice(0, 5).join(", ");
-                toast.info(
-                  `Auto Enrich returned data but all target fields were already filled` +
-                    (preview ? ` (skipped: ${preview}${skippedBecauseFilled.length > 5 ? "…" : ""})` : "") +
-                    `. Clear a field and try again to overwrite.`,
-                );
-              }
-            }}
           />
         </div>
       </div></EditSec>
@@ -1781,19 +1739,19 @@ export function StartupForm({
           <div role="tabpanel" id="sfv-panel" aria-labelledby={`sfv-tab-${curPriv}`} className="space-y-4">
             {curPriv === "images" && (
               <EditSec id="media" tone="seller" active={secOn("media") || secOn("photos") || secOn("logo")}>
-                <TabHead title={tr("Attachment", "ไฟล์แนบ")}>{enrichBtn}</TabHead>
+                <TabHead title={tr("Attachment", "ไฟล์แนบ")} />
                 <AttachmentCard value={media} onChange={setMedia} name={startupName} sectorLine={sectorLine} />
               </EditSec>
             )}
-            {curPriv === "about" && (<><TabHead title={tr("Company Info", "ข้อมูลบริษัท")}>{enrichBtn}</TabHead>{aboutJsx}</>)}
+            {curPriv === "about" && (<><TabHead title={tr("Company Info", "ข้อมูลบริษัท")} />{aboutJsx}</>)}
             {curPriv === "owner" && (<><TabHead title={tr("Owner Info", "ข้อมูลเจ้าของ")} />{peopleJsx}</>)}
             {curPriv === "admin" && (<><TabHead title={tr("Admin settings", "การตั้งค่าผู้ดูแล")} /><p className="text-sm text-muted-foreground">Only Admin sees this tab.</p>{adminJsx}</>)}
             {curPriv === "address" && (<><TabHead title={tr("Company Address", "ที่อยู่บริษัท")} />{addressJsx}</>)}
-            {curPriv === "market" && (<><TabHead title={tr("Market Target", "ตลาดเป้าหมาย")}>{enrichBtn}</TabHead>{marketJsx}</>)}
+            {curPriv === "market" && (<><TabHead title={tr("Market Target", "ตลาดเป้าหมาย")} />{marketJsx}</>)}
             {curPriv === "licenses" && (
               <EditSec id="licenses" tone="seller" active={secOn("licenses")}>
                 <TabHead title={tr("License and intellectual properties", "ใบอนุญาตและทรัพย์สินทางปัญญา")}
-                  line={<p className="mt-[2px] text-[13.5px] text-[#6A7181] dark:text-muted-foreground">{tr("Pick the licenses and standards the business holds.", "เลือกใบอนุญาตและมาตรฐานที่กิจการของท่านได้รับ")}</p>}>{enrichBtn}</TabHead>
+                  line={<p className="mt-[2px] text-[13.5px] text-[#6A7181] dark:text-muted-foreground">{tr("Pick the licenses and standards the business holds.", "เลือกใบอนุญาตและมาตรฐานที่กิจการของท่านได้รับ")}</p>} />
                 <div className="mt-4"><LicenceLists licences={regulatoryLicenses} onLicences={setRegulatoryLicenses} iso={isoStandards} onIso={setIsoStandards} /></div>
               </EditSec>
             )}
