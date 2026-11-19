@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { CompleteFirmInput, DraftFirmInput, advisorNeedsCompleteSave } from "@/lib/advisor-form-schema";
 import { DEAL_BANDS, feeWords, parsePct, type AdvisorFirm, type FeeDetail, type FeeType } from "@/lib/advisor-firm";
 import { shouldProtectSetupDone } from "@/lib/advisor-setup-completion";
+import { routeWizardText } from "@/lib/bilingual-fields";
 
 /**
  * Advisor › My Company. Owners (and Control) read and edit their firm
@@ -210,17 +211,27 @@ export const saveAdvisorWizard = createServerFn({ method: "POST" })
       languages: z.array(z.string().max(40)).max(20), sectors: z.array(z.string().max(80)).max(60), sector_agnostic: z.boolean(), sector_picks: z.object({ types: z.array(z.string().max(30)).max(5), kinds: z.record(z.string().max(20), z.array(z.string().max(30)).max(20)), other: z.array(z.string().max(80)).max(40) }).nullable(), email: nz(120), phone: nz(30), logo_path: nz(300), logo_source: z.enum(["upload", "enrich"]).nullable(),
       media: z.array(z.object({ slot: z.union([z.literal(1), z.literal(2), z.literal(3)]), image_path: z.string().min(1).max(300) })).max(3),
       setup_reached: z.enum(["type", "name", "web", "services", "deal", "team", "sectors", "contact", "logo", "desc", "review"]),
-      description: nz(300), long_description: nz(4000), contact_name: nz(120), contact_position: nz(120), setup_answered: z.array(z.string().max(20)).max(20), wizard_state: z.object({ fromSignup: z.array(z.string().max(20)).max(10).optional(), feeVisited: z.boolean().optional(), enrichSig: z.string().optional(), enrich: z.any().optional() }),
+      description: nz(300), description_th: nz(300), long_description: nz(4000), contact_name: nz(120), contact_position: nz(120), setup_answered: z.array(z.string().max(20)).max(20), wizard_state: z.object({ fromSignup: z.array(z.string().max(20)).max(10).optional(), feeVisited: z.boolean().optional(), enrichSig: z.string().optional(), enrich: z.any().optional() }),
     }).partial(),
     fees: z.record(z.string().max(60), FeeIn).optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = context.supabase as any;
-    const { data: current, error: readError } = await sb.from("advisor_firms").select("owner_user_id, wizard_state, logo_path, media").eq("id", data.id).maybeSingle();
+    const { data: current, error: readError } = await sb.from("advisor_firms").select("owner_user_id, wizard_state, logo_path, media, description, description_th").eq("id", data.id).maybeSingle();
     if (readError || !current) throw new Error("Firm profile not found.");
     if (current.owner_user_id !== context.userId) {
       const { data: control } = await sb.rpc("is_control", { _user_id: context.userId });
       if (!control) throw new Error("This firm profile isn't yours.");
+    }
+    if (data.patch.description !== undefined || data.patch.description_th !== undefined) {
+      const description=routeWizardText(
+        {en:current.description ?? null,th:current.description_th ?? null},
+        {en:data.patch.description,th:data.patch.description_th},
+      );
+      delete data.patch.description;
+      delete data.patch.description_th;
+      if (description.en !== undefined) data.patch.description=description.en;
+      if (description.th !== undefined) data.patch.description_th=description.th;
     }
     if (data.patch.wizard_state) data.patch.wizard_state = { ...(current.wizard_state ?? {}), ...data.patch.wizard_state };
     const own = `advisor/${context.userId}/`;
@@ -245,13 +256,14 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => DraftFirmInput.extend({
     legalName: z.string().trim().max(200).optional(),
+    routeDescriptionByContent: z.boolean().optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = context.supabase as any;
     await requireAdvisor(sb, context.userId);
     const own = `advisor/${context.userId}/`;
     const { data: current, error: readError } = data.id
-      ? await sb.from("advisor_firms").select("status, owner_user_id, logo_path, media").eq("id", data.id).maybeSingle()
+      ? await sb.from("advisor_firms").select("status, owner_user_id, logo_path, media, description, description_th").eq("id", data.id).maybeSingle()
       : { data: null, error: null };
     if (data.id && (readError || !current)) throw new Error("Firm profile not found.");
     const { EditCompleteFirmInput } = await import("./advisor-form-schema");
@@ -261,10 +273,17 @@ export const saveAdvisorFirm = createServerFn({ method: "POST" })
     if (data.logoPath && !data.logoPath.startsWith(own) && !existingPaths.has(data.logoPath)) throw new Error("Invalid logo file.");
     if (data.media?.some((m) => !m.image_path.startsWith(own) && !existingPaths.has(m.image_path))) throw new Error("Invalid photo file.");
     const thai = data.country === "Thailand";
+    const routedDescription:{en?:string|null;th?:string|null}=data.routeDescriptionByContent ? routeWizardText(
+      {en:current?.description ?? null,th:current?.description_th ?? null},
+      {en:data.description,th:data.descriptionTh},
+    ) : {};
     const row = {
       ...(data.media ? { media: data.media } : {}),
       name: data.name, firm_type: data.firmType, logo_path: data.logoPath, logo_source: data.logoPath ? data.logoSource ?? "upload" : null,
-      description: data.description, ...(data.descriptionTh !== undefined ? { description_th: data.descriptionTh || null } : {}), long_description: data.longDescription || null, contact_name: data.contactName || null, contact_position: data.contactPosition || null, year_founded: data.yearFounded, city: data.city, country: data.country, services: data.services,
+      description: data.routeDescriptionByContent ? (routedDescription.en === undefined ? current?.description ?? null : routedDescription.en) : data.description,
+      ...(data.routeDescriptionByContent
+        ? { description_th: routedDescription.th === undefined ? current?.description_th ?? null : routedDescription.th }
+        : data.descriptionTh !== undefined ? { description_th: data.descriptionTh || null } : {}), long_description: data.longDescription || null, contact_name: data.contactName || null, contact_position: data.contactPosition || null, year_founded: data.yearFounded, city: data.city, country: data.country, services: data.services,
       deal_size_band: data.dealBand, team_size: data.teamSize,
       languages: data.languages, sectors: data.sectors, ...(data.sectorAgnostic === undefined ? {} : { sector_agnostic: data.sectorAgnostic }), ...(data.legalName === undefined ? {} : { legal_name: data.legalName }), thai_name: data.thaiName,
       ...(data.englishName === undefined ? {} : { english_name: data.englishName }),

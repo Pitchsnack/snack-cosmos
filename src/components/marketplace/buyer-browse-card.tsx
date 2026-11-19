@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { useInvestorTypeImage } from "@/hooks/use-investor-type-image";
 import { FadeImg } from "@/components/hidden-profile/bits";
 import { ManagedBadge, useCoverFit } from "@/components/common/managed-badge";
+import { preferredLanguageText } from "@/lib/bilingual-fields";
+import { useTranslation } from "@/i18n/language";
 
 export function TypeIcon({ type, className }: { type: string | null; className?: string }) {
   const t = (type ?? "").toLowerCase();
@@ -58,7 +60,7 @@ export type CardInvestor = {
   refNo: string; codeName: string; name: string | null; type: string | null;
   /** One-step approval: Admin's published name and headline lead the card once live. */
   publishedListingName?: string | null; publishedHeadline?: string | null;
-  city: string | null; country: string | null; description: string | null;
+  city: string | null; country: string | null; description: string | null; descriptionTh?: string | null;
   sectors: string[]; stages: string[]; dealTypes: string[]; geography: string | null;
   verified: boolean; proofOfFunds: boolean;
   ticketLabel: string | null; aumLabel: string | null;
@@ -219,7 +221,8 @@ export function PublicInvestorCard({ i, className, onClick, selected, topRight, 
   /** Buyer's own Listing view preview only: an Edit link on each card part. Off by default. */
   editable?: (k: CardPart) => void;
 }) {
-  const desc = i.description || (empty === "Not added" ? "Not added" : null);
+  const { language } = useTranslation();
+  const desc = preferredLanguageText(i.description, i.descriptionTh, language) || (empty === "Not added" ? "Not added" : null);
   const managed = !!showManaged && !!(i as { managed?: boolean }).managed;
   const fit = useCoverFit(managed, 1);
   return (
@@ -259,7 +262,7 @@ export function BuyerBrowseCard({ b, onClick, className, revLabel = null, bands,
   return (
     <PublicInvestorCard showManaged={managed} onClick={onClick} className={className} empty={empty} status={status} expanded={expanded} cardFooter={cardFooter} editable={editable} i={{
       refNo: b.refNo, codeName: b.codeName, name: null, type: b.type, city: b.city, country: b.country,
-      description: b.description, sectors: b.sectors, stages: b.stages, dealTypes: b.dealTypes, geography: (b as PublicBuyer & { geography?: string | null }).geography ?? null,
+      description: b.description, descriptionTh: b.descriptionTh, sectors: b.sectors, stages: b.stages, dealTypes: b.dealTypes, geography: (b as PublicBuyer & { geography?: string | null }).geography ?? null,
       verified: b.verified, proofOfFunds: b.proofOfFunds, ticketLabel: b.ticket, aumLabel: b.aum, revLabel,
       aumBand: bands?.aum, ticketBand: bands?.ticket, revBand: bands?.rev, relation, managed,
     } as CardInvestor} />

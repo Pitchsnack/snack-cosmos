@@ -6,6 +6,7 @@ import { strengthRows } from './seller-strengths';
 import { FounderStorySchema, composeFounderBio } from "./founder-story";
 import type { SellerFounder } from "./seller-wizard";
 import { needsSellerIdentityTour, sellerWordingChangedError } from './seller-listing-wording';
+import { routeWizardTags, routeWizardText } from './bilingual-fields';
 
 /** Read only completion readiness, through the setup's existing access gate. */
 export const getSellerIdentityReadiness = createServerFn({ method: 'GET' })
@@ -80,16 +81,30 @@ async function saveWizardFounders(sb:any, id:string, userId:string, founders:z.i
   // Reuse Edit information's founder projection; never carry IDs between businesses.
   const {data:st,error:stError} = await sb.from("startups").select("tenant_id").eq("id",id).single();
   if(stError || !st) throw new Error(stError?.message ?? "Business unavailable");
-  const {data:old,error:readError} = await sb.from("startup_founders").select("id").eq("startup_id",id).order("display_order");
+  const {data:old,error:readError} = await sb.from("startup_founders").select("id,bio,bio_story,bio_th,bio_story_th").eq("startup_id",id).order("display_order");
   if(readError) throw new Error(readError.message);
   const ids = new Set((old ?? []).map((f:any) => f.id)); const keep = new Set<string>();
   for(const [i,f] of founders.entries()) {
     // Empty new cards are unsaved UI drafts; named founders use the existing private table.
     if(!f.full_name.trim()) continue;
-    const patch={startup_id:id,tenant_id:st.tenant_id,full_name:f.full_name.trim(),position:f.position ?? null,linkedin_url:f.linkedin_url ?? null,
-      bio:f.bio_story?.mode === "lines" ? composeFounderBio(f.bio_story):f.bio ?? null,bio_story:f.bio_story ?? null,
-      bio_th:f.bio_story_th?.mode === "lines" ? composeFounderBio(f.bio_story_th):f.bio_th ?? null,bio_story_th:f.bio_story_th ?? null,
+    const patch:Record<string,unknown>={startup_id:id,tenant_id:st.tenant_id,full_name:f.full_name.trim(),position:f.position ?? null,linkedin_url:f.linkedin_url ?? null,
       photo_url:f.photo_url ?? null,display_order:i};
+    const previous=old?.find((row:any)=>row.id===f.id) ?? (!f.id ? old?.[i] : null);
+    const enText=f.bio_story?.mode === "lines" ? composeFounderBio(f.bio_story) : f.bio ?? null;
+    const thText=f.bio_story_th?.mode === "lines" ? composeFounderBio(f.bio_story_th) : f.bio_th ?? null;
+    const putStory=(target:"en"|"th",story:typeof f.bio_story|typeof f.bio_story_th,text:string|null)=>{
+      const saved=story ? {...story,lang:target} : null;
+      patch[target === "en" ? "bio" : "bio_th"]=saved?.mode === "lines" ? composeFounderBio(saved,target) : text;
+      patch[target === "en" ? "bio_story" : "bio_story_th"]=saved;
+    };
+    if(enText !== (previous?.bio ?? null)) {
+      const target=enText && /[\u0E00-\u0E7F]/.test(enText) ? "th" : "en";
+      putStory(target,f.bio_story,enText);
+    }
+    if(thText !== (previous?.bio_th ?? null)) {
+      const target=thText && !/[\u0E00-\u0E7F]/.test(thText) ? "en" : "th";
+      putStory(target,f.bio_story_th,thText);
+    }
     const existingId = f.id && ids.has(f.id) ? f.id : !f.id ? old?.[i]?.id : null;
     if(existingId) {const {error}=await sb.from("startup_founders").update(patch).eq("id",existingId).eq("startup_id",id);if(error) throw new Error(error.message);keep.add(existingId);}
     else {const {data:r,error}=await sb.from("startup_founders").insert(patch).select("id").single();if(error) throw new Error(error.message);if(r) keep.add(r.id);}
@@ -105,9 +120,30 @@ async function saveWizardFounders(sb:any, id:string, userId:string, founders:z.i
   const remove=(old ?? []).map((f:any)=>f.id).filter((id:string)=>!keep.has(id));
   if(remove.length) {const {error}=await sb.from("startup_founders").delete().eq("startup_id",id).in("id",remove);if(error) throw new Error(error.message);}
 }
-function websitePatch(data:Record<string,unknown>) {
-  const cols:Record<string,string>={shortDescription:"short_description",longDescription:"long_description",productTags:"product_tags",marketTags:"market_tags",shortDescriptionTh:"short_description_th",longDescriptionTh:"long_description_th",productTagsTh:"product_tags_th",marketTagsTh:"market_tags_th"};
-  return Object.fromEntries(Object.entries(cols).filter(([key])=>data[key] !== undefined).map(([key,col])=>[col,data[key]]));
+function websitePatch(data:Record<string,unknown>,current:Record<string,unknown>={}) {
+  const out:Record<string,unknown>={};
+  const textPairs=[
+    ["shortDescription","shortDescriptionTh","short_description","short_description_th"],
+    ["longDescription","longDescriptionTh","long_description","long_description_th"],
+  ] as const;
+  for(const [enKey,thKey,enCol,thCol] of textPairs) {
+    const routed=routeWizardText(
+      {en:(current[enCol] as string|null|undefined) ?? null,th:(current[thCol] as string|null|undefined) ?? null},
+      {en:data[enKey] as string|null|undefined,th:data[thKey] as string|null|undefined},
+    );
+    if(routed.en !== undefined) out[enCol]=routed.en;
+    if(routed.th !== undefined) out[thCol]=routed.th;
+  }
+  const tagPairs=[["productTags","productTagsTh","product_tags","product_tags_th"],["marketTags","marketTagsTh","market_tags","market_tags_th"]] as const;
+  for(const [enKey,thKey,enCol,thCol] of tagPairs) {
+    const routed=routeWizardTags(
+      {en:(current[enCol] as string[]|null|undefined) ?? [],th:(current[thCol] as string[]|null|undefined) ?? []},
+      {en:data[enKey] as string[]|undefined,th:data[thKey] as string[]|undefined},
+    );
+    if(routed.en !== undefined) out[enCol]=routed.en;
+    if(routed.th !== undefined) out[thCol]=routed.th;
+  }
+  return out;
 }
 
 const ListingInput = z.object({
@@ -135,8 +171,12 @@ async function saveListingAnswers(userSb: any, startupId: string, userId: string
     const nameField = control ? 'code_name' : 'suggested_listing_name';
     // Older callers send name:null and no identity twins: keep their saved wording untouched.
     if (l.name !== null) patch[nameField] = l.name;
-    if (l.headline !== undefined) patch.headline = l.headline.trim();
-    if (l.headlineTh !== undefined) patch.headline_th = l.headlineTh.trim();
+    const headline=routeWizardText(
+      {en:cur?.headline ?? null,th:cur?.headline_th ?? null},
+      {en:l.headline === undefined ? undefined : l.headline.trim(),th:l.headlineTh === undefined ? undefined : l.headlineTh.trim()},
+    );
+    if (headline.en !== undefined) patch.headline = headline.en;
+    if (headline.th !== undefined) patch.headline_th = headline.th;
     for (const [field, kind] of [[nameField, 'name'], ['headline', 'headline'], ['headline_th', 'headline']] as const) {
       if (patch[field] === undefined) continue;
       const error = sellerWordingChangedError(patch[field] as string | null, cur?.[field], kind);
@@ -240,8 +280,10 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     const sb = await admin();
     await assertCanSetup(sb, context.supabase, context.userId, data.id);
     const y = /^\d{4}$/.test(data.year) ? Number(data.year) : null;
+    const { data: currentTexts, error: currentTextsError } = await sb.from("startups").select("short_description,short_description_th,long_description,long_description_th,product_tags,product_tags_th,market_tags,market_tags_th").eq("id", data.id).single();
+    if (currentTextsError) throw new Error(currentTextsError.message);
     const patch: Record<string, unknown> = {
-      ...websitePatch(data),
+      ...websitePatch(data,currentTexts),
       registered_number: data.reg || null, website_url: data.web.trim() || null, year_founded: y,
       city: data.city || null, headquarters: "Thailand", last_year_revenue: data.rev, company_size: data.size, sector: data.sector, sector_pick: data.pick ?? null,
       regulatory_licenses: data.licences, iso_standards: data.iso, updated_by: context.userId, updated_at: new Date().toISOString(),

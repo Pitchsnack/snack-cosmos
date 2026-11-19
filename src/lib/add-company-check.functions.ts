@@ -115,7 +115,7 @@ export const applyAddCheck = createServerFn({ method: "POST" })
     if (!sp.postal) sp.postal = inferThaiPostalCode({ subdistrict: sp.unit, district: sp.district, province: sp.province }) ?? "";
     const addrEn = co.addressEn ?? null;
     const add = (l: unknown, ...k: string[]) => Array.from(new Set([...(Array.isArray(l) ? l : []), ...k]));
-    const parts = { address_line1: sp.street || null, address_line2: sp.unit || null, address_city_district: sp.district || null, address_province_state: sp.province || null, postal_code: sp.postal || null };
+    const parts = { address_line1: sp.street || null, address_line2: null, address_city_district: sp.district || null, address_province_state: sp.province || null, postal_code: sp.postal || null };
     const agn = !!ans.sector.agnostic;
     const p = normPicks(ans.sector.picks);
     const sectors = agn ? [] : picksToSectors(p);
@@ -127,7 +127,7 @@ export const applyAddCheck = createServerFn({ method: "POST" })
       const { error } = await sb.from("startups").update({
         startup_name: ans.company.name, website_url: web ? `https://${web}` : null, company_size: ans.company.size ? SZ_SELLER[ans.company.size] ?? null : null,
         sector: ans.sector.sector, sector_pick: ans.sector.pick ?? null, ...(logoPath ? { logo_url: logoPath } : {}),
-        registered_number: reg, reg_locked_at: now, registered_name: co.nameTh ?? co.nameEn, registered_date: co.regDate ?? co.regDateTh, registered_status: co.statusTh,
+        registered_number: reg, reg_locked_at: now, registered_name: co.nameTh ?? co.nameEn, english_name: co.nameEn ?? null, registered_date: co.regDate ?? co.regDateTh, registered_status: co.statusTh,
         business_address_th: co.addressTh, ...(addrEn ? { business_address: addrEn } : {}), ...parts, ...(sp.province ? { city: sp.province } : {}), year_founded: year,
         setup_from_signup: add(st?.setup_from_signup, "role", "name", ...(web ? ["web"] : []), ...(ans.company.size ? ["size"] : []), "sector", "reg", "year", "address", ...(logoPath ? ["logo"] : [])),
         updated_by: context.userId, updated_at: now,
@@ -169,8 +169,8 @@ export const applyAddCheck = createServerFn({ method: "POST" })
         name: ans.company.name, firm_type: ans.answer, website: web, team_size: team, sectors, sector_agnostic: agn, sector_picks: agn ? null : p,
         ...(logoPath ? { logo_path: logoPath, logo_source: "upload" } : {}),
         registration_no: reg, reg_locked_at: now, country: "Thailand", address_th: co.addressTh, year_founded: year,
-        addr_street: sp.street || null, addr_unit: sp.unit || null, addr_district: sp.district || null, addr_province: sp.province || null, addr_postal: sp.postal || null,
-        legal_name: co.nameEn ?? co.nameTh, thai_name: co.nameTh, dbd_name: co.nameTh ?? co.nameEn, dbd_status: co.statusTh, dbd_registered_on: co.regDate, dbd_checked_at: now,
+        addr_street: sp.street || null, addr_unit: null, addr_district: sp.district || null, addr_province: sp.province || null, addr_postal: sp.postal || null,
+        legal_name: co.nameEn ?? co.nameTh, thai_name: co.nameTh, english_name: co.nameEn ?? null, dbd_name: co.nameTh ?? co.nameEn, dbd_status: co.statusTh, dbd_registered_on: co.regDate, dbd_checked_at: now,
         setup_answered: add(f?.setup_answered, "sectors", ...(logoPath ? ["logo"] : [])),
         wizard_state: { ...ws, fromSignup: add(ws.fromSignup, "type", "name", ...(web ? ["web"] : []), ...(team ? ["team"] : []), "sectors", "reg", "year", "address", ...(logoPath ? ["logo"] : [])) },
       }).eq("id", data.profileId);

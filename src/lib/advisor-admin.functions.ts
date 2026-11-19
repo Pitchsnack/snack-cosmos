@@ -28,7 +28,7 @@ const FIELDS_TH: Record<string, string> = {
 void FIELDS_TH;
 
 export type AdminFirm = {
-  id: string; ref: string; name: string; firmType: string; city: string | null; country: string | null; description: string | null;
+  id: string; ref: string; name: string; firmType: string; city: string | null; country: string | null; description: string | null; descriptionTh: string | null;
   logoUrl: string | null; media: { slot: number; url: string | null }[]; status: string; services: string[]; sectors: string[]; sectorAgnostic: boolean; languages: string[];
   yearFounded: number | null; teamSize: number | null; dealBand: string | null; website: string | null; email: string | null; phone: string | null;
   legalName: string | null; thaiName: string | null; registrationNo: string | null; address: string;
@@ -76,7 +76,7 @@ async function loadFirms(sb: any, ids?: string[]): Promise<{ firms: AdminFirm[];
   }
   const of = (list: any[], id: string) => list.filter((x) => x.firm_id === id);
   const firms = (rows ?? []).map((r: any): AdminFirm => ({
-    id: r.id, ref: r.ref_no, name: r.name || "Untitled firm", firmType: r.firm_type ?? "", city: r.city, country: r.country, description: r.description,
+    id: r.id, ref: r.ref_no, name: r.name || "Untitled firm", firmType: r.firm_type ?? "", city: r.city, country: r.country, description: r.description, descriptionTh: r.description_th ?? null,
     logoUrl: r.logo_path ? urls[r.logo_path] ?? null : null, media: (Array.isArray(r.media) ? r.media : []).map((m: any) => ({ slot: m.slot, url: urls[m.image_path] ?? null })), status: r.status, services: r.services ?? [], sectors: r.sectors ?? [], sectorAgnostic: !!r.sector_agnostic,
     languages: r.languages ?? [], yearFounded: r.year_founded, teamSize: r.team_size, dealBand: r.deal_size_band, website: r.website, email: r.email, phone: r.phone,
     legalName: r.legal_name, thaiName: r.thai_name, registrationNo: r.registration_no, address: addr(r),

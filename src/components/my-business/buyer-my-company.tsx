@@ -53,7 +53,7 @@ const KEY = ["buyer-profile", "me"];
 function toPublicLocal(p: BuyerProfile, org: BuyerOrg): PublicBuyer {
   return {
     id: p.user_id, refNo: p.ref_no, codeName: typeName(org.type), name: null, type: org.type,
-    city: p.city, country: p.country, headline: p.headline, description: p.description,
+    city: p.city, country: p.country, headline: p.headline, description: p.description, descriptionTh: p.description_th,
     ticket: ticketRange(p.ticket_min, p.ticket_max), aum: aumRange(p.aum_value),
     sectors: p.sectors, stages: p.stages, dealTypes: p.deal_types, verified: org.verified,
     proofOfFunds: !!p.pof_verified_at, status: p.status, liveSince: p.live_since,
@@ -89,7 +89,7 @@ function Line({ label, children }: { label: string; children: React.ReactNode })
 
 const HELP: Record<BuyerItemKey, { cta: string; link: string; help: string; section: Section; view: View }> = {
   mandate: { cta: "Set your mandate", link: "Set →", help: "Ticket size, sectors, stages and deal types sellers filter on.", section: "mandate", view: "private" },
-  headline: { cta: "Write public headline", link: "Write →", help: "One line sellers see on your Browse investors card.", section: "public", view: "public" },
+  headline: { cta: "Write what you want to buy", link: "Write →", help: "One line telling sellers what you want to buy.", section: "public", view: "public" },
   people: { cta: "Add decision makers", link: "Add →", help: "Shared with sellers only after they approve your NDA.", section: "people", view: "private" },
   company: { cta: "Complete company details", link: "Add →", help: "Legal name, website and address for the private view.", section: "company", view: "private" },
   portfolio: { cta: "Add portfolio", link: "Add →", help: "Optional list of current holdings.", section: "portfolio", view: "private" },

@@ -3,7 +3,8 @@ export type BuyerHolding = { name: string; note: string };
 
 export type BuyerProfile = {
   user_id: string; ref_no: string; code_name: string;
-  headline: string | null; description: string | null; show_name: boolean;
+  headline: string | null; description: string | null; description_th?: string | null;
+  suggested_headline?: string | null; suggested_headline_th?: string | null; show_name: boolean;
   status: "draft" | "live" | "paused"; live_since: string | null;
   legal_name: string | null; address: string | null; city: string | null; country: string | null;
   logo_url: string | null; private_description: string | null;
@@ -24,7 +25,7 @@ export type BuyerOrg = {
 
 export type PublicBuyer = {
   id: string; refNo: string; codeName: string; name: string | null; type: string | null;
-  city: string | null; country: string | null; headline: string | null; description: string | null;
+  city: string | null; country: string | null; headline: string | null; description: string | null; descriptionTh?: string | null;
   ticket: string | null; aum: string | null; sectors: string[]; stages: string[]; dealTypes: string[];
   verified: boolean; proofOfFunds: boolean; status: string; liveSince: string | null;
 };
@@ -72,7 +73,7 @@ export type BuyerItemKey = "mandate" | "headline" | "people" | "company" | "port
 export function buyerCompleteness(p: BuyerProfile | null, org: BuyerOrg | null) {
   const items: { key: BuyerItemKey; label: string; weight: number; required: boolean; done: boolean }[] = [
     { key: "mandate", label: "Mandate", weight: 35, required: true, done: !!p && (p.ticket_min != null || p.ticket_max != null) && p.sectors.length > 0 && p.stages.length > 0 && p.deal_types.length > 0 },
-    { key: "headline", label: "Public headline", weight: 30, required: false, done: !!p?.headline?.trim() },
+    { key: "headline", label: "Wants to buy", weight: 30, required: false, done: !!(p?.suggested_headline?.trim() || p?.suggested_headline_th?.trim()) },
     { key: "people", label: "Decision makers", weight: 15, required: false, done: (p?.people.length ?? 0) > 0 },
     { key: "company", label: "Company details", weight: 10, required: false, done: !!org?.name && !!p?.address && !!org?.website },
     { key: "portfolio", label: "Portfolio", weight: 10, required: false, done: (p?.portfolio.length ?? 0) > 0 },

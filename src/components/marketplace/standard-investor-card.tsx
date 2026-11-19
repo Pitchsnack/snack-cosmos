@@ -9,6 +9,7 @@ import { contactPlace, cardValue } from '@/lib/marketplace-contacts';
 import { cn } from '@/lib/utils';
 import type { LastLoginStep } from '@/lib/last-login';
 import type { SellerFavPrivate } from '@/lib/investor-browse.functions';
+import { preferredLanguageText } from '@/lib/bilingual-fields';
 
 /**
  * The buyer card takes the seller card's shape: US$ ranges only on the
@@ -37,6 +38,11 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
   const secondLabel = isCorporateBuyer(type) ? 'Group revenue' : 'AUM';
   const figures = [band('Ticket size', p?.ticket_band ?? i.ticketBand)];
   if (!individual) figures.push(band(secondLabel, p?.aum_band ?? i.aumBand));
+  const description = p
+    ? language === 'th'
+      ? p.short_description_th || p.short_description || p.long_description_th || p.long_description
+      : p.short_description || p.short_description_th || p.long_description || p.long_description_th
+    : preferredLanguageText(i.description, i.descriptionTh, language);
   const photo = p?.media.find((m) => m.image_signed_url)?.image_signed_url;
   const initials = name?.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const cell = (f: StandardFigure) => <div key={f.label}><dl className="standard-card-cell">
@@ -54,7 +60,7 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
     </>}
   </div>;
   return <StandardBrowseCard title={name || cardValue(typeName(type, i.actsFor), language) || ''} subtitle={name ? cardValue(typeName(type, p?.acts_for_types ?? i.actsFor), language) || undefined : undefined}
-    refNo={i.refNo} place={contactPlace(p?.city || i.city || p?.country || i.country, language)} description={p ? p.short_description || p.long_description : i.description}
+    refNo={i.refNo} place={contactPlace(p?.city || i.city || p?.country || i.country, language)} description={description}
     status={cardNdaStatus(i.status)} hideStatus={hideStatus} newDays={i.newDays} managed={i.managed} topRight={topRight} selected={selected} onOpen={onClick} className={cn('standard-investor-card', className)} sourceType={i.type ?? i.codeName} tag={tag}
     lastLogin={lastLoginStep ?? i.lastLoginStep} lastLoginTooltip={t('When the buyer last logged in to PitchSnack')}
     cover={(children) => p ? <div className="standard-card-private-cover">{photo ? <img src={photo} alt="" /> : <div className="standard-card-logo">{p.logo_signed_url ? <img src={p.logo_signed_url} alt="" /> : initials}</div>}{children}</div> : <BuyerCover type={i.type} src={i.coverUrl}>{children}</BuyerCover>}

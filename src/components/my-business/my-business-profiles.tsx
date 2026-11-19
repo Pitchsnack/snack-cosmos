@@ -38,6 +38,7 @@ import { ReportOffers, ReportHeaderAction } from "@/components/my-business/repor
 import {useReportPrices} from '@/hooks/use-report-prices';
 
 import { CompanyScrollLayout } from "./company-scroll-layout";
+import { sellerDescriptionTagsDone, sellerHeadlineDone } from "@/lib/profile-completeness";
 
 type View = "public" | "private";
 
@@ -48,18 +49,16 @@ type Item = { key: ItemKey; label: string; weight: number; required: boolean; do
 
 function useCompleteness(s: StartupListItem) {
   const reportPrice=useReportPrices();
-  const { row } = useHiddenProfile(s.id);
-  const { data: facts } = useEntryFacts(s.id);
+  const row = s.setup_profile;
   const { hasData } = useHasFinancials(s.id);
-  const tags = (s.product_tags?.length ?? 0) + (s.market_tags?.length ?? 0);
   const items: Item[] = [
-    { key: "desc", label: "Description & tags", weight: 20, required: false, done: !!s.short_description?.trim() && tags > 0 },
+    { key: "desc", label: "Description & tags", weight: 20, required: false, done: sellerDescriptionTagsDone(s) },
     { key: "logo", label: "Logo & photos", weight: 20, required: false, done: !!s.logo_signed_url && !!s.tile_image_signed_url },
     { key: "fin", label: `Verified financial report ${reportPrice("financials")}`, weight: 0, required: false, done: false },
     { key: "valuation", label: `Estimated valuation ${reportPrice("valuation")}`, weight: 0, required: false, done: false },
     { key: "terms", label: "Deal terms", weight: 20, required: true, done: !!row && !!row.deal_type && !!row.owner_stays },
-    { key: "hidden", label: "Public headline", weight: 25, required: true, done: !!row && !!row.headline?.trim() },
-    { key: "people", label: "Founders", weight: 15, required: false, done: (facts?.people?.length ?? 0) > 0 },
+    { key: "hidden", label: "Public headline", weight: 25, required: true, done: sellerHeadlineDone(row) },
+    { key: "people", label: "Founders", weight: 15, required: false, done: s.founder_names.length > 0 },
   ];
   const pct = items.reduce((a, i) => a + (i.done ? i.weight : 0), 0);
   return { items, pct, missingRequired: items.filter((i) => i.required && !i.done).length, hasData };

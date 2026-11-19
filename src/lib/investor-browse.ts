@@ -27,6 +27,7 @@ export type PublicInvestor = {
   city: string | null;
   country: string | null;
   description: string | null;
+  descriptionTh?: string | null;
   sectors: string[];
   stages: string[];
   dealTypes: string[];

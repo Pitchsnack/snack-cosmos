@@ -57,7 +57,7 @@ function fromFirm(f: AdvisorFirm): A {
     addr: { street: f.addrStreet ?? "", unit: f.addrUnit ?? "", district: thai ? f.addrDistrict ?? "" : "", province: f.addrProvince ?? (thai ? f.city ?? "" : ""), postal: f.addrPostal ?? "" },
     web: f.website ?? "", services: f.services, fees: { ...f.feeDetails }, deal: f.dealBand ?? "",
     team: f.teamSize ? String(f.teamSize) : "", langs: f.languages, sectors: f.sectors, picks: normPicks(f.sectorPicks), agnostic: !!f.sectorAgnostic, email: f.email ?? "", phone: f.phone ?? "",
-    logo: { path: f.logoPath, url: f.logoUrl, name: null, sizeKb: null, source: f.logoSource }, photos: f.media?.length ?? 0, desc: f.description ?? "",
+    logo: { path: f.logoPath, url: f.logoUrl, name: null, sizeKb: null, source: f.logoSource }, photos: f.media?.length ?? 0, desc: f.description ?? f.descriptionTh ?? "",
     long: f.longDescription ?? "", cname: f.contactName ?? "", cpos: f.contactPosition ?? "",
   };
 }

@@ -138,7 +138,7 @@ export function toPublic(p: BuyerProfile, bv: { company_name?: string | null; bu
     name: null, // never before an approved NDA
     type: bv?.buyer_type ?? null,
     city: p.city, country: p.country,
-    headline: p.headline, description: p.description,
+    headline: p.headline, description: p.description, descriptionTh: p.description_th,
     ticket: ticketRange(p.ticket_min, p.ticket_max),
     aum: aumRange(p.aum_value),
     sectors: p.sectors, stages: p.stages, dealTypes: p.deal_types,

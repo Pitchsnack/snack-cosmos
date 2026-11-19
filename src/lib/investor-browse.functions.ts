@@ -47,11 +47,13 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
     // No code names: before an NDA sellers see the investor type.
     const actsFor = bp?.buyer_relation === "agent" ? sortActsFor(r.acts_for_types) : [];
     const codeName = typeName(type, actsFor);
-    let description: string | null = bp ? bp.description ?? null : null;
-    if (description && r.investor_name) {
+    const publicText = (value: string | null) => {
+      if (!value || !r.investor_name) return value;
       const esc = String(r.investor_name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      description = description.replace(new RegExp(esc, "gi"), codeName);
-    }
+      return value.replace(new RegExp(esc, "gi"), codeName);
+    };
+    const description = publicText(bp ? bp.description ?? null : null);
+    const descriptionTh = publicText(bp ? bp.description_th ?? null : null);
     const aum = bandOf(r.aum_band), tkt = bandOf(r.ticket_band), rev = bandOf(r.revenue_min_band);
     return {
       id: r.id,
@@ -69,6 +71,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
       city: bp?.city ?? null,
       country: r.country ?? bp?.country ?? null,
       description,
+      descriptionTh,
       sectors: (r.preferred_industries ?? bp?.sectors ?? []) as string[],
       stages: (r.preferred_stages ?? bp?.stages ?? []) as string[],
       dealTypes: (bp?.deal_types ?? []) as string[],
@@ -114,7 +117,7 @@ export type SellerFavPrivate = {
   investor_name: string; investor_type: string | null; acts_for_types: string[]; country: string | null; city: string | null;
   website_url: string | null; linkedin_url: string | null; email: string | null; year_founded: number | null;
   aum: string | null; min_ticket_size: string | null; max_ticket_size: string | null; revenue_min_m: number | null; revenue_max_m: number | null;
-  short_description: string | null; long_description: string | null; keywords: string[]; investment_focus: string[];
+  short_description: string | null; short_description_th?: string | null; long_description: string | null; long_description_th?: string | null; keywords: string[]; investment_focus: string[];
   preferred_stages: string[]; preferred_industries: string[]; logo_signed_url: string | null;
   aum_band: string | null; ticket_band: string | null; revenue_min_band: string | null;
   people: { name: string; role: string; email: string; phone: string }[];
@@ -190,7 +193,7 @@ export async function loadSellerFavourites(userId:string) {
           email: r.email ?? null, year_founded: r.year_founded ?? null, aum: r.aum ?? null,
           min_ticket_size: r.min_ticket_size ?? null, max_ticket_size: r.max_ticket_size ?? null,
           revenue_min_m: r.revenue_min_m == null ? null : Number(r.revenue_min_m), revenue_max_m: r.revenue_max_m == null ? null : Number(r.revenue_max_m),
-          short_description: r.short_description ?? null, long_description: r.long_description ?? null,
+          short_description: r.short_description ?? null, short_description_th: r.short_description_th ?? null, long_description: r.long_description ?? null, long_description_th: r.long_description_th ?? null,
           keywords: r.keywords ?? [], investment_focus: r.investment_focus ?? [], preferred_stages: r.preferred_stages ?? [], preferred_industries: r.preferred_industries ?? [],
           logo_signed_url: !r.logo_url ? null : /^https?:/.test(r.logo_url) ? r.logo_url : signed[r.logo_url] ?? null,
           aum_band: r.aum_band ?? null, ticket_band: r.ticket_band ?? null, revenue_min_band: r.revenue_min_band ?? null,

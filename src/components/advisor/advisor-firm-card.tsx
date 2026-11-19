@@ -8,7 +8,8 @@ import { StatusPill } from "@/components/marketplace/buyer-browse-card";
 import { dealBandLabels, initials, reviewStats, serviceOf, type AdvisorFirm } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
 import { LAST_LOGIN_LABEL, type LastLoginStep } from "@/lib/last-login";
-import { tr } from "@/i18n/language";
+import { tr, useTranslation } from "@/i18n/language";
+import { preferredLanguageText } from "@/lib/bilingual-fields";
 
 /** Advisor firm card: the investor public card's layout with firm content. */
 
@@ -131,6 +132,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
   /** Replaces the cover (Admin's directory cover with its bookmark). */
   cover?: React.ReactNode;
 }) {
+  const { language } = useTranslation();
   const deal = dealBandLabels(f.dealBand);
   const { n, avg } = reviewStats(f.reviews);
   const services = f.services.map(tr).filter(Boolean);
@@ -154,7 +156,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
       subtitleContent={<>{line}{line && " · "}{n > 0
         ? <><span className="standard-card-star">★ {avg.toFixed(1)}</span> ({n})</>
         : <><span className="standard-card-star">☆</span> <span className="standard-card-star-zero">0 (0)</span></>}</>}
-      description={f.description?.trim() || tr("No description yet.")}
+      description={preferredLanguageText(f.description, f.descriptionTh, language) || tr("No description yet.")}
       cover={(children) => <div className="standard-advisor-cover">{cover ?? <FirmCover f={f} noStatus={noStatus} />}{children}</div>}
       figures={[
         { label: tr("Typical deal size"), value: deal?.usd ?? null, node: deal ? undefined : empty(tr("Not added")) },

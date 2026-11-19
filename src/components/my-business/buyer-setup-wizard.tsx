@@ -89,7 +89,7 @@ function fromData(d: Data): A {
       const prov = (iv.address_province_state as string) || "";
       return { street: (iv.address_line1 as string) ?? "", unit: (iv.address_line2 as string) ?? "", district: (iv.address_city_district as string) ?? "", province: prov || ((inv.country ?? "Thailand") === "Thailand" && inv.city ? inv.city : ""), postal: (iv.postal_code as string) ?? "" };
     })(),
-    about: inv.short_description ?? "",
+    about: inv.short_description ?? inv.short_description_th ?? "",
     people: d.people.length ? d.people : [{ name: d.account.name, role: d.buyer.relation === "individual" ? "Individual investor" : d.account.title, role_th: d.buyer.relation === "individual" ? "นักลงทุนรายบุคคล" : "", email: (d.account as { email?: string }).email ?? "", phone: "" }],
     acts: d.buyer.relation === "agent" ? sortActsFor(inv.acts_for_types?.length ? inv.acts_for_types : inv.investor_type ? [inv.investor_type] : []) : [],
   };
@@ -226,7 +226,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const [fromProfile] = useState(startAt === "desc" && setupDone);
   // Website step: the card shows more (short and long description) once Continue runs Auto Enrich.
   // The descriptions show at once when the website came from sign-up (or there's none to read, for an Individual Investor).
-  const [webOpen, setWebOpen] = useState(() => (startAt === "desc") || data.buyer.relation === "individual" || (!!fromSignup?.includes("web") && isValidUrl(data.investor.website_url ?? "")) || !!(data.buyer.description?.trim() || data.investor.short_description?.trim()));
+  const [webOpen, setWebOpen] = useState(() => (startAt === "desc") || data.buyer.relation === "individual" || (!!fromSignup?.includes("web") && isValidUrl(data.investor.website_url ?? "")) || !!(data.buyer.description?.trim() || data.investor.short_description?.trim() || data.investor.short_description_th?.trim()));
   const enrichment = useWebsiteEnrichment("buyer", data.investor.id, a.web, !!fromSignup?.includes("web") && isValidUrl(a.web));
   const reading = enrichment.state.status === "running" && isValidUrl(a.web);
   const readFailed = enrichment.state.status === "failed";

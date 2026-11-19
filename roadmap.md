@@ -1,3 +1,10 @@
+# Bilingual completion, wizard language routing and company-check repairs
+- [ ] Count either-language values in seller, buyer and advisor completion; buyer's 30% item reads Wants to buy with its existing label and weight.
+- [ ] Route setup wizard text/tags by typed language, preserve the other language and reopen saved values; backfill only misplaced text where the correct column is empty and report counts.
+- [ ] Add buyer/advisor other-language description fallbacks across shared cards and panels.
+- [ ] Save seller/advisor English registered names, correct the Legal name label, and keep checked sub-districts in No. and street; backfill qualifying existing records and report counts.
+- [ ] Run focused tests and live test-account checks, capture PS-1040 completion and บริษัท เพ็ท มีโซ จำกัด Address screenshots, remove any temporary test profiles, and verify no unrelated behavior changed.
+
 # Bilingual Highlights and registered-address postal codes
 - [x] Detect each typed/generated Highlight's language, save it to that language, translate the other language, and preserve user-edited translations across seller wizard/Edit information paths for Control and non-Control; buyers/advisors retain their existing fields because they have no Highlights.
 - [x] Mark untouched automatic translations bilingually, clear the mark on edit, and backfill one-language existing profiles: 16 listings/50 rows filled, no unresolved Highlight translations and no one-language sets remain.

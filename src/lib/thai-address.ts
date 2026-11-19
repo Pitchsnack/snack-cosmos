@@ -15,7 +15,8 @@ export function thaiProvinceName(value: string | null | undefined) {
 
 /**
  * Splits e.g. "99/1 หมู่ที่ 3 ถนนสุขุมวิท แขวงคลองตัน เขตคลองเตย กรุงเทพมหานคร 10110".
- * Street keeps house number, moo and road; sub-district goes to the second line; any part not found stays empty.
+ * Street keeps house number, moo, road and sub-district. `unit` retains the sub-district
+ * only for postcode lookup; callers must not show it as Floor / unit / soi.
  */
 export function splitThaiAddress(raw: string | null | undefined): SplitAddr {
   const out: SplitAddr = { street: "", unit: "", district: "", province: "", postal: "" };
@@ -35,6 +36,6 @@ export function splitThaiAddress(raw: string | null | undefined): SplitAddr {
   if (dt) { out.district = dt[1]!; s = s.slice(0, dt.index).trim(); }
   const sd = /(?:แขวง|ตำบล|ต\.)\s*([^\s]+)\s*$/.exec(s);
   if (sd) { out.unit = `${/^(?:แขวง)/.test(sd[0]) ? "แขวง" : "ตำบล"}${sd[1]}`; s = s.slice(0, sd.index).trim(); }
-  out.street = s;
+  out.street = [s, out.unit].filter(Boolean).join(" ");
   return out;
 }

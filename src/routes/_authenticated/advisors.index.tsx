@@ -37,6 +37,7 @@ import type { EditSection } from "@/lib/advisor-firm";
 import { SECTOR_GROUPS } from "@/lib/sectors";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { preferredLanguageText } from "@/lib/bilingual-fields";
 
 const VFILTER = ["all", "unverified", "pending", "verified", "more_info", "declined"] as const;
 const SORTS = ["updated", "newest", "waiting", "name"] as const;
@@ -249,13 +250,15 @@ function GridCard({ f, fav, onFav, onOpen }: { f: AdminFirm; fav: boolean; onFav
 }
 
 function SplitCard({ f, selected, fav, onFav, onSelect }: { f: AdminFirm; selected: boolean; fav: boolean; onFav: () => void; onSelect: () => void }) {
+  const { language } = useTranslation();
+  const description = preferredLanguageText(f.description, f.descriptionTh, language);
   return (
     <div role="button" tabIndex={0} onClick={onSelect} onKeyDown={(e) => e.key === "Enter" && onSelect()}
       className={cn("cursor-pointer overflow-hidden rounded-lg border bg-card transition", selected ? "border-accent ring-2 ring-accent/30" : "border-border hover:border-muted-foreground/40")}>
       <AdminFirmCover f={f} fav={fav} onFav={onFav} />
       <div className="p-3">
       <div className="min-w-0"><div className="line-clamp-2 font-semibold">{f.name}</div><div className="truncate text-xs text-muted-foreground">{f.firmType || "—"}</div></div>
-      {f.description && <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{f.description}</p>}
+      {description && <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{description}</p>}
       <div className="mt-2 flex flex-wrap items-center gap-1">{f.services.slice(0, 3).map((x) => <span key={x} className="rounded-full bg-[#E0F5F2] px-2 py-0.5 text-[11px] font-medium text-[#0F766E]">{x}</span>)}</div>
       <div className="mt-1.5 truncate text-xs text-muted-foreground">Sectors: {f.sectorAgnostic ? "Sector agnostic" : f.sectors.join(", ") || "—"}</div>
       <div className="mt-1 text-right text-xs font-medium text-[#2563EB]">View details</div>
@@ -322,7 +325,7 @@ function Panel({ f, fav, onFav, onEdit }: { f: AdminFirm; fav: boolean; onFav: (
         </div>
       </div>
       <VerificationBox f={f} />
-      {f.description && <p className="text-sm leading-relaxed">{f.description}</p>}
+      {preferredLanguageText(f.description, f.descriptionTh, language) && <p className="text-sm leading-relaxed">{preferredLanguageText(f.description, f.descriptionTh, language)}</p>}
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] text-muted-foreground">
         {facts.filter(([, t]) => t).map(([I, t]) => <span key={t} className="inline-flex items-center gap-1.5"><I className="h-3.5 w-3.5" />{t}</span>)}
         {f.website && <a href={/^https?:/.test(f.website) ? f.website : `https://${f.website}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[#2563EB]"><Globe className="h-3.5 w-3.5" />Website →</a>}

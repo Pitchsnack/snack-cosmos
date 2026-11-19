@@ -265,7 +265,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       await save({
         data: {
           id: created?.id ?? firm?.id ?? null, name: f.name.trim(), firmType: f.firmType, logoPath: up.logoPath, logoSource: logoChanged ? "upload" : f.logo.source, media: up.media,
-          description: f.description.trim() || f.descriptionTh.trim(), descriptionTh: f.descriptionTh.trim() || null, longDescription: f.longDescription.trim(), contactName: f.contactName.trim(), contactPosition: f.contactPosition.trim() || null, yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
+          description: f.description.trim() || f.descriptionTh.trim(), descriptionTh: f.descriptionTh.trim() || null, routeDescriptionByContent: !!setup, longDescription: f.longDescription.trim(), contactName: f.contactName.trim(), contactPosition: f.contactPosition.trim() || null, yearFounded: f.yearFounded ? Number(f.yearFounded) : null, city: (thai ? f.addr.province : f.city).trim(), country: f.country,
           services: f.services, fees: Object.fromEntries(f.services.map((s) => [s, f.fees[s] ?? newFee()])),
           dealBand: f.dealBand || null, teamSize: f.teamSize ? Number(f.teamSize) : null, languages: f.languages, sectors: f.sectors, sectorAgnostic: f.sectorAgnostic,
           englishName: nul(f.englishName ?? ""), thaiName: nul(f.thaiName), registrationNo: nul(f.registrationNo),

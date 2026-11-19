@@ -23,7 +23,7 @@ export function CompanyNameFields({ name, nameLabel, thaiName, englishName, onTh
   return <div className="company-name-fields grid min-w-0 grid-cols-1 gap-4 min-[641px]:grid-cols-2">
     <div className="min-w-0 space-y-1.5">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <Label htmlFor={`${id}-legal`}>{thai ? "ชื่อนิติบุคคล" : "Legal name (Eng)"}<span className="ml-1 text-destructive">*</span></Label>
+        <Label htmlFor={`${id}-legal`}>{thai ? "ชื่อนิติบุคคล" : "Legal name"}<span className="ml-1 text-destructive">*</span></Label>
         <Button type="button" variant="unstyled" size="unstyled" className="text-xs font-medium text-link hover:underline" onClick={onChangeCompany}>
           {thai ? "แก้ไขในแท็บเกี่ยวกับบริษัท" : "Change in About Company"}
         </Button>

@@ -42,6 +42,8 @@ interface Props {
   addOnOpen?: boolean;
   requiredName?: boolean;
   keepOne?: boolean;
+  /** Setup only: reopen the saved story from either language without changing Edit information tabs. */
+  fallbackOtherLanguage?: boolean;
   /** Private setup contact details, rendered with the shared two-row layout. */
   contactFields?: (founder: FounderDraft, index: number) => React.ReactNode;
   /** Earlier answers the story's parts are written from (never the company name or website in the text). */
@@ -268,7 +270,7 @@ export function PositionMultiSelect({
   );
 }
 
-export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", salesFor, addOnOpen, requiredName, keepOne, contactFields, answers }: Props) {
+export function FounderEditor({ value, onChange, tenantId, startupId, year = "", sales = "", salesFor, addOnOpen, requiredName, keepOne, fallbackOtherLanguage = false, contactFields, answers }: Props) {
   const {language} = useTranslation();
   const tr = (en: string, th: string) => (language === "th" ? th : en);
   const { lang: textLang, switchable } = useTextLang();
@@ -357,8 +359,8 @@ export function FounderEditor({ value, onChange, tenantId, startupId, year = "",
                 />
               </div>
               {textLang === "th"
-                ? <FounderStoryEditor lang="th" bio={f.bio_th} story={f.bio_story_th} year={year} sales={salesFor?.("th") ?? sales} onChange={patch => update(i, {bio_th: patch.bio, bio_story_th: patch.bio_story})} />
-                : <FounderStoryEditor lang="en" bio={f.bio} story={f.bio_story} year={year} sales={salesFor?.("en") ?? sales} onChange={patch => update(i, patch)} />}
+                ? <FounderStoryEditor lang="th" bio={fallbackOtherLanguage ? f.bio_th || f.bio : f.bio_th} story={fallbackOtherLanguage ? f.bio_story_th || f.bio_story : f.bio_story_th} year={year} sales={salesFor?.("th") ?? sales} onChange={patch => update(i, {bio_th: patch.bio, bio_story_th: patch.bio_story})} />
+                : <FounderStoryEditor lang="en" bio={fallbackOtherLanguage ? f.bio || f.bio_th : f.bio} story={fallbackOtherLanguage ? f.bio_story || f.bio_story_th : f.bio_story} year={year} sales={salesFor?.("en") ?? sales} onChange={patch => update(i, patch)} />}
               {switchable && <div className="-mt-1"><LangTag className="!ml-0" /></div>}
               {(!keepOne || value.length > 1) && <div className="flex justify-end">
                 <Button

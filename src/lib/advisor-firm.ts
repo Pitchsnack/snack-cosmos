@@ -189,7 +189,7 @@ export type ChecklistKey = "description" | "services" | "fees" | "team-size" | "
 export type EditSection = "firm" | "logo" | "services" | "work" | "company" | "team" | "credentials" | "documents";
 export function firmChecklist(f: AdvisorFirm): { key: ChecklistKey; label: string; done: boolean; section: EditSection }[] {
   return [
-    { key: "description", label: "Description", done: !!f.description?.trim(), section: "firm" },
+    { key: "description", label: "Description", done: !!(f.description?.trim() || f.descriptionTh?.trim()), section: "firm" },
     { key: "services", label: "At least one service", done: f.services.length > 0, section: "services" },
     { key: "fees", label: "A fee for every service", done: f.services.length > 0 && f.services.every((s) => !!f.fees[s]?.trim()), section: "services" },
     { key: "team-size", label: "Team size", done: !!f.teamSize, section: "work" },

@@ -178,6 +178,8 @@ export interface StartupListItem extends StartupRow {
   owning_agent: { id: string; email: string; name: string | null } | null;
   owning_ai_agent: { id: string; email: string; name: string | null } | null;
   related_investors: Array<{ id: string; name: string }>;
+  founder_names: string[];
+  setup_profile: { deal_type: string | null; owner_stays: string | null; headline: string | null; headline_th: string | null } | null;
 }
 
 export interface StartupFounder {
@@ -242,14 +244,16 @@ async function logActivity(
 
 const SELECT_LIST = `
   id, tenant_id, startup_name, website_url, city, sector, business_model,
-  short_description, long_description, status, visibility, created_at, updated_at,
+  short_description, long_description, short_description_th, long_description_th, status, visibility, created_at, updated_at,
    logo_url, company_type, company_type_source, business_address, address_line1, address_line2, address_city_district, address_province_state, postal_code, registered_name, registered_number, reg_locked_at, company_size, last_year_revenue,
   year_founded, email, headquarters, region, investment_stage,
-  product_tags, market_tags, url_key, source_global_id, imported_at,
+  product_tags, market_tags, product_tags_th, market_tags_th, url_key, source_global_id, imported_at,
   tenants!inner(tenant_name),
   startup_ownership(owning_agent_user_id, users:owning_agent_user_id(id,email,first_name,last_name)),
   startup_ai_ownership(owning_ai_agent_id, users:owning_ai_agent_id(id,email,first_name,last_name)),
-  startup_investors(id, investors:investor_id(id, investor_name))
+   startup_investors(id, investors:investor_id(id, investor_name)),
+  startup_founders(full_name),
+  hidden_profiles(deal_type, owner_stays, headline, headline_th)
 `;
 
 const ListInput = z.object({
@@ -356,6 +360,8 @@ export const listStartups = createServerFn({ method: "GET" })
           id: string;
           investors: { id: string; investor_name: string } | null;
         }>;
+        startup_founders: Array<{ full_name: string | null }> | null;
+        hidden_profiles: { deal_type: string | null; owner_stays: string | null; headline: string | null; headline_th: string | null } | Array<{ deal_type: string | null; owner_stays: string | null; headline: string | null; headline_th: string | null }> | null;
       }
     >;
 
@@ -383,6 +389,8 @@ export const listStartups = createServerFn({ method: "GET" })
         owning_agent: own ? { id: own.id, email: own.email, name: [own.first_name, own.last_name].filter(Boolean).join(" ") || null } : null,
         owning_ai_agent: aiOwn ? { id: aiOwn.id, email: aiOwn.email, name: [aiOwn.first_name, aiOwn.last_name].filter(Boolean).join(" ") || null } : null,
         related_investors,
+        founder_names: (r.startup_founders ?? []).map((f) => f.full_name?.trim() ?? "").filter(Boolean),
+        setup_profile: firstEmbed(r.hidden_profiles) ?? null,
       };
     });
 
