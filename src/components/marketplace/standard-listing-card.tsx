@@ -32,12 +32,12 @@ export function StandardListingCard({ l, deal, privateData, publicOnly, status, 
     figures={[{ label: language==='th' && year ? `รายได้ปี ${Number(p?.fy || `20${year}`)+543}` : `${t('Revenue')}${year ? ` FY${year}` : ''}`, value: p ? (p.revenue != null ? fmtThb(p.revenue) : null) : publicRevenueLabel(l.revenueBand) }, { label: 'Deal type', value: deal?.dealType ? t(deal.dealType) : null }]}
     fit={{ label: 'Asking price', value: price, second: null }} textRow={{ label: 'Sector', value: cardValue(l.sector,language) }}
     more={<>
-      {!!l.highlights?.length && <StandardCardSection label="Highlights"><ul className="standard-card-highlights">{l.highlights.filter((v) => v.trim()).map((h, index) => <li key={index}><Check aria-hidden /><span>{h}</span></li>)}</ul></StandardCardSection>}
-      {!!l.productTags.length && <StandardCardSection label="Products & services"><StandardCardChips values={l.productTags} /></StandardCardSection>}
-      {!!l.marketTags.length && <StandardCardSection label="Markets"><StandardCardChips values={l.marketTags} market /></StandardCardSection>}
+      {!!lt.highlights.length && <StandardCardSection label="Highlights"><ul className="standard-card-highlights">{lt.highlights.filter((v) => v.trim()).map((h, index) => <li key={index}><Check aria-hidden /><span>{h}</span></li>)}</ul></StandardCardSection>}
+      {!!lt.productTags.length && <StandardCardSection label="Products & services"><StandardCardChips values={lt.productTags} /></StandardCardSection>}
+      {!!lt.marketTags.length && <StandardCardSection label="Markets"><StandardCardChips values={lt.marketTags} market /></StandardCardSection>}
       {(p?.employees || l.employees) && <StandardCardSection label="Company size">{p?.employees || l.employees}</StandardCardSection>}
       {!!l.certifications.length && <StandardCardSection label="Licences">{l.certifications.join(' · ')}</StandardCardSection>}
-      {l.customerProfile && <StandardCardSection label="Customer profile"><p className="whitespace-pre-line">{l.customerProfile}</p></StandardCardSection>}
+      {lt.customerProfile && <StandardCardSection label="Customer profile"><p className="whitespace-pre-line">{lt.customerProfile}</p></StandardCardSection>}
       {(l.codeName || date) && <div className="standard-card-meta">{[l.codeName, date ? `${t('Posted')} ${date}` : null].filter(Boolean).join(' · ')}</div>}
     </>} />;
 }

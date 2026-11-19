@@ -14,6 +14,6 @@ export const singleLineSellerWording = (value: string) => value.replace(/[\r\n]+
 export function sellerWordingChangedError(value: string | null | undefined, saved: string | null | undefined, kind: SellerWordingKind) {
   return (value ?? '').trim() === (saved ?? '').trim() ? null : sellerWordingError(value, kind);
 }
-export function needsSellerIdentityTour(row: { code_name?: string | null; suggested_listing_name?: string | null; headline?: string | null; headline_th?: string | null } | null, control: boolean) {
-  return !(control ? row?.code_name : row?.suggested_listing_name)?.trim() || !(row?.headline?.trim() || row?.headline_th?.trim());
+export function needsSellerIdentityTour(row: { code_name?: string | null; suggested_listing_name?: string | null; headline?: string | null; headline_th?: string | null; description?: string | null; description_th?: string | null } | null, control: boolean) {
+  return !(control ? row?.code_name : row?.suggested_listing_name)?.trim() || !(row?.headline?.trim() || row?.headline_th?.trim()) || !(row?.description?.trim() || row?.description_th?.trim());
 }

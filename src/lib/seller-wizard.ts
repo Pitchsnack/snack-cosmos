@@ -168,7 +168,7 @@ export const STEP_FULL: Record<StepKey, [string, string]> = {
   lic: ["Licences and certifications", "ใบอนุญาตและมาตรฐาน"], photos: ["Logo and photos", "โลโก้และรูปภาพ"],
   deal: ["Deal type", "รูปแบบดีล"], handover: ["Owner handover", "การส่งมอบงานของเจ้าของ"], price: ["Asking price (Estimate)", "ราคาที่ต้องการ (ประมาณการ)"],
   founder: ["About the founder", "เกี่ยวกับผู้ก่อตั้ง"], review: ["Review your answers", "ตรวจสอบข้อมูล"],
-  listing: ["Listing name and headline", "ชื่อประกาศและหัวข้อ"],
+  listing: ["Listing name, headline and description", "ชื่อประกาศ หัวข้อ และคำอธิบาย"],
 };
 /** Edit information's existing limits, not the reference's illustrative counters. */
 export const SELLER_DESCRIPTION_LIMITS = { short: 500, long: 5000, tag: 50, tags: 5 } as const;
@@ -222,10 +222,11 @@ export function sellerListingFindings(_d: Pick<SellerDraft, 'listingName' | 'hea
   // Identity findings are Admin-only; sellers never see field flags or gates.
   return { name: false, headline: false };
 }
-export function sellerListingValid(d: Pick<SellerDraft, 'listingName' | 'headline' | 'headlineTh' | 'name' | 'registeredName' | 'web' | 'nameOk'>) {
-  return !!d.listingName?.trim() && !!(d.headline?.trim() || d.headlineTh?.trim())
+export function sellerListingValid(d: Pick<SellerDraft, 'listingName' | 'headline' | 'headlineTh' | 'description' | 'descriptionTh' | 'name' | 'registeredName' | 'web' | 'nameOk'>) {
+  return !!d.listingName?.trim() && !!(d.headline?.trim() || d.headlineTh?.trim()) && !!(d.description?.trim() || d.descriptionTh?.trim())
     && !sellerWordingCount(d.listingName, 'name').over
     && !sellerWordingCount(d.headline, 'headline').over && !sellerWordingCount(d.headlineTh, 'headline').over
+    && (d.description?.length ?? 0) <= 420 && (d.descriptionTh?.length ?? 0) <= 420
     && d.nameOk !== false;
 }
 export function sellerValid(d: SellerDraft): Record<StepKey, boolean> {
@@ -293,6 +294,9 @@ export interface SellerDraft {
   listingName?: string;
   headline?: string;
   headlineTh?: string;
+  description?: string;
+  descriptionTh?: string;
+  listingTextTranslations?: import('./listing-text-translations').ListingTextTranslation[];
   registeredName?: string;
   setupDoneAt?: string | null;
   /** false while a typed name is taken or names the company. */
@@ -361,6 +365,7 @@ export function listingPayload(d: SellerDraft) {
   return {
     deal: (d.deal ?? null) as never, stays: d.stays ?? null, months: (d.stays === "yes" ? d.months ?? 6 : null) as never,
     price: d.price && d.price > 0 ? d.price : null, name: d.listingName?.trim() ?? null,
-    headline: d.headline, headlineTh: d.headlineTh,
+    headline: d.headline, headlineTh: d.headlineTh, description: d.description, descriptionTh: d.descriptionTh,
+    listingTextTranslations: d.listingTextTranslations,
   };
 }

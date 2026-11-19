@@ -3779,6 +3779,7 @@ export type Database = {
           id: string
           identity_notice_count: number
           identity_review_original: Json | null
+          listing_text_translations: Json
           live: Json | null
           live_snapshot: Json | null
           market_tags: string[] | null
@@ -3851,6 +3852,7 @@ export type Database = {
           id?: string
           identity_notice_count?: number
           identity_review_original?: Json | null
+          listing_text_translations?: Json
           live?: Json | null
           live_snapshot?: Json | null
           market_tags?: string[] | null
@@ -3923,6 +3925,7 @@ export type Database = {
           id?: string
           identity_notice_count?: number
           identity_review_original?: Json | null
+          listing_text_translations?: Json
           live?: Json | null
           live_snapshot?: Json | null
           market_tags?: string[] | null

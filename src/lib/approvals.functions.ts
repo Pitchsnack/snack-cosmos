@@ -30,7 +30,7 @@ async function notify(userId: string | null | undefined, tenantId: string | null
 }
 
 const STARTUP_COLS =
-  "id, tenant_id, startup_name, registered_name, registered_number, website_url, email, city, headquarters, region, company_type, year_founded, company_size, last_year_revenue, sector, business_model, product_tags, market_tags, long_description, short_description, regulatory_licenses, iso_standards";
+  "id, tenant_id, startup_name, registered_name, registered_number, website_url, email, city, headquarters, region, company_type, year_founded, company_size, last_year_revenue, sector, business_model, product_tags, market_tags, product_tags_th, market_tags_th, long_description, short_description, regulatory_licenses, iso_standards";
 
 async function buildSnapshot(sb: any, startupId: string, hp: any) {
   const { data: st, error } = await sb.from("startups").select(STARTUP_COLS).eq("id", startupId).maybeSingle();

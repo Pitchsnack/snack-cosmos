@@ -75,7 +75,7 @@ function Check({ on, label, onClick }: { on: boolean; label: string; onClick: ()
 }
 
 export function SellerWizard({
-  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, identity, title = tr("Add my business"), media, owner, listingPreview,
+  userId, initial, onExit, onCancel, onFinish, fromSignup = [], persist, identity, title = tr("Add my business"), media, owner, listingPreview, prepareListing,
 }: {
   /** Stored identity + DBD confirmation: filled values lock once confirmed. */
   identity?: { lockedAt: string | null; name: string | null; reg: string | null; year: number | null };
@@ -83,6 +83,8 @@ export function SellerWizard({
   media?: WizardMedia;
   owner?: { fullName: string; position: string };
   listingPreview?: { refNo?: string; cover?: string | null };
+  /** Writes current answers and returns automatic listing text before step 13 opens. */
+  prepareListing?: (d: SellerDraft) => Promise<Partial<SellerDraft>>;
   userId: string;
   initial: SellerDraft;
   onExit: () => void;
@@ -106,6 +108,9 @@ export function SellerWizard({
   const [otherLic, setOtherLic] = useState("");
   const [otherIso, setOtherIso] = useState("");
   const [justSaved, setJustSaved] = useState(false);
+  const [listingPreparing, setListingPreparing] = useState(false);
+  const [listingPrepareError, setListingPrepareError] = useState<string | null>(null);
+  const listingPrepared = useRef<string | null>(null);
   const [confirmExit, setConfirmExit] = useState(false);
   // A question opened from Review shows all its fields, even ones sign-up answered.
   const [full, setFull] = useState<number | null>(null);
@@ -129,6 +134,7 @@ export function SellerWizard({
   const firstRun = useRef(true);
   const step = Math.min(d.step, STEPS.length - 1);
   const cur = STEPS[step] ?? STEPS[0];
+  const listingSourceSignature = JSON.stringify([d.name,d.registeredName,d.web,d.addr.province,d.city,d.year,d.size,d.rev,d.sector,d.productTags,d.marketTags,d.productTagsTh,d.marketTagsTh,d.licences,d.iso]);
   const store = (x: SellerDraft) => persist?.(x);
   const shownOf = (x: SellerDraft, keep: number | null) => {
     const s = new Set(sellerShown(x, fromSignup));
@@ -151,6 +157,19 @@ export function SellerWizard({
     if (timer.current) window.clearTimeout(timer.current);
     if (savedTimer.current) window.clearTimeout(savedTimer.current);
   }, []);
+  useEffect(() => {
+    if (!prepareListing || !['founder','listing','review'].includes(cur.id) || listingPrepared.current === listingSourceSignature) return;
+    listingPrepared.current = listingSourceSignature;
+    let live = true;
+    setListingPreparing(true);
+    setListingPrepareError(null);
+    void prepareListing(d).then((patch) => {
+      if (live) setD((current) => ({ ...current, ...patch }));
+    }).catch((error) => {
+      if (live) setListingPrepareError(error instanceof Error ? error.message : L('Could not write the listing text. Please try again.', 'ไม่สามารถเขียนข้อความประกาศได้ กรุณาลองอีกครั้ง'));
+    }).finally(() => { if (live) setListingPreparing(false); });
+    return () => { live = false; };
+  }, [cur.id, listingSourceSignature]); // eslint-disable-line react-hooks/exhaustive-deps
   const set = (patch: Partial<SellerDraft>) => setD((p) => ({ ...p, ...patch }));
   const setCompanyYear = (year: string) => setD((p) => ({ ...p, year, founders: syncFounderStoriesYear(p.founders ?? [], p.year, year) }));
   // The address's province answers "where is the company" (the business's City).
@@ -345,7 +364,7 @@ export function SellerWizard({
       <p className="mt-3 text-[13px] text-muted-foreground">{L("PitchSnack checks the owner's name against your company's list of directors, and the year founded and the sales against your company's records.","PitchSnack ตรวจสอบชื่อเจ้าของกับรายชื่อกรรมการบริษัท และปีที่ก่อตั้งกับยอดขายตามข้อมูลบริษัทของท่าน")}</p>
     </>},
     listing: { t: L(...STEP_FULL.listing), h: L("Describe your business without naming it. Buyers see your listing name and headline first, and use them to decide whether to request an NDA.", "อธิบายธุรกิจของท่านโดยไม่เปิดเผยชื่อบริษัท ผู้ซื้อจะเห็นชื่อประกาศและพาดหัวของท่านเป็นอันดับแรก และใช้ข้อมูลนี้ตัดสินใจว่าจะส่งคำขอ NDA หรือไม่"),
-      body: <SellerListingIdentity d={d} set={set} th={th} refNo={listingPreview?.refNo} cover={listingPreview?.cover}/> },
+      body: <>{listingPreparing && <p role="status" className="mb-4 text-sm text-muted-foreground">{L('Writing your listing name, headline and description…', 'กำลังเขียนชื่อประกาศ หัวข้อ และคำอธิบาย…')}</p>}{listingPrepareError && <p role="alert" className="mb-4 text-sm text-destructive">{listingPrepareError}</p>}<SellerListingIdentity d={d} set={set} th={th} refNo={listingPreview?.refNo} cover={listingPreview?.cover} startupId={media?.startupId}/></> },
     review: { t: tr("Review your answers"), h: tr("Next, we'll auto-fill the rest of your profile. You can edit everything afterwards."),
       body: (
         <div>
@@ -387,7 +406,7 @@ export function SellerWizard({
             );
           })}
         </div>
-        {barKeys.includes('listing') && ([['Listing name', 'ชื่อประกาศ', d.listingName], ['Headline', 'หัวข้อ', th ? d.headlineTh || d.headline : d.headline || d.headlineTh]] as const).map(([en, thai, value]) => <div className="seller-review-row" key={en}><span>{L(en, thai)}</span><b className={!value?.trim() ? 'text-destructive' : ''}>{value || L('Not answered', 'ยังไม่ได้ตอบ')}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === 'listing'))}>{tr('Edit')}</Button></div>)}
+        {barKeys.includes('listing') && ([['Listing name', 'ชื่อประกาศ', d.listingName], ['Headline', 'หัวข้อ', th ? d.headlineTh || d.headline : d.headline || d.headlineTh], ['Description', 'คำอธิบาย', th ? d.descriptionTh || d.description : d.description || d.descriptionTh]] as const).map(([en, thai, value]) => <div className="seller-review-row" key={en}><span>{L(en, thai)}</span><b className={!value?.trim() ? 'text-destructive' : ''}>{value || L('Not answered', 'ยังไม่ได้ตอบ')}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === 'listing'))}>{tr('Edit')}</Button></div>)}
         <div className="seller-review-row mt-5"><span>{L(...STEP_FULL.founder)}</span><b className={d.founders?.[0]?.full_name.trim() ? "" : "text-destructive"}>{d.founders?.filter(f => f.full_name.trim()).map(f => f.full_name).join(", ") || L("Not answered","ยังไม่ได้ตอบ")}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === "founder"))}>{ok.founder ? tr("Edit") : L("Answer","ตอบคำถาม")}</Button></div>
         <div className="seller-review-row"><span>{L("Contact email and phone", "อีเมลและเบอร์โทรศัพท์")}</span><b className={ok.founder ? "" : "text-destructive"}>{[d.founders?.[0]?.email, d.founders?.[0]?.phone].filter(Boolean).join(" · ") || L("Not answered","ยังไม่ได้ตอบ")}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === "founder"))}>{ok.founder ? tr("Edit") : L("Answer","ตอบคำถาม")}</Button></div>
         {blockers.length > 0 && (
@@ -408,7 +427,7 @@ export function SellerWizard({
     ].filter((x): x is string => !!x)
     : cur.id === "founded" ? [!validFoundedYear(d.year) && L("Year founded", "ปีที่ก่อตั้ง"), !d.size && L("Company size", "ขนาดบริษัท")].filter((x): x is string => !!x)
     : cur.id === "price" ? [L("Asking price", "ราคาที่ต้องการขาย")]
-    : cur.id === "listing" ? [!d.listingName?.trim() && L("Listing name", "ชื่อประกาศ"), !(d.headline?.trim() || d.headlineTh?.trim()) && L("Headline", "หัวข้อ")].filter((x): x is string => !!x) : [];
+    : cur.id === "listing" ? [!d.listingName?.trim() && L("Listing name", "ชื่อประกาศ"), !(d.headline?.trim() || d.headlineTh?.trim()) && L("Headline", "หัวข้อ"), !(d.description?.trim() || d.descriptionTh?.trim()) && L("Description", "คำอธิบาย")].filter((x): x is string => !!x) : [];
   const blockedText = reading || valid[cur.id] || cur.id === "review" ? null
     : cur.id === "photos" ? (d.hasLogo ? continueBlockedLine([], lang, true) : null)
     : continueBlockedLine(missingNow, lang);
@@ -453,7 +472,7 @@ export function SellerWizard({
                 <Button variant="unstyled" size="unstyled" type="button" onClick={() => setConfirmExit(true)}
                   className={cur.id === "web" ? "seller-action" : "rounded-[10px] border border-border bg-card px-[18px] py-[11px] font-semibold text-foreground"}>{tr("Save & exit")}</Button>
               )}
-              <Button variant="unstyled" size="unstyled" type="button" ref={fwdRef} disabled={reading || (cur.id === "web" && !webExpanded ? !isValidUrl(d.web) : !valid[cur.id])}
+              <Button variant="unstyled" size="unstyled" type="button" ref={fwdRef} disabled={reading || listingPreparing || (cur.id === "web" && !webExpanded ? !isValidUrl(d.web) : !valid[cur.id])}
                 onClick={async () => {
                   if (cur.id === "review") {onFinish(d); return;}
                   if (cur.id === "web" && !webExpanded) {void runEnrich(); return;}
@@ -461,7 +480,7 @@ export function SellerWizard({
                   advance();
                 }}
                 className={cur.id === "web" ? "seller-action seller-action-primary" : "rounded-[10px] bg-primary px-6 py-3 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted"}>
-                {setupText(cur.id === "review" ? L("Finish setup","เสร็จสิ้นการตั้งค่า") : reading ? L("Reading…","กำลังอ่าน…") : full != null ? tr("Back to review") : tr("Continue"))}
+                {setupText(cur.id === "review" ? L("Finish setup","เสร็จสิ้นการตั้งค่า") : listingPreparing ? L("Writing…","กำลังเขียน…") : reading ? L("Reading…","กำลังอ่าน…") : full != null ? tr("Back to review") : tr("Continue"))}
 
               </Button>
             </div>

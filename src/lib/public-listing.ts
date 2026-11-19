@@ -22,6 +22,8 @@ export interface ListingSource {
   business_model?: string | null;
   product_tags?: string[] | null;
   market_tags?: string[] | null;
+  product_tags_th?: string[] | null;
+  market_tags_th?: string[] | null;
   long_description?: string | null;
   short_description?: string | null;
   regulatory_licenses?: { name: string }[] | null;
@@ -60,7 +62,7 @@ export interface PublicListing {
   /** Days since going live while under 14 (NEW); null otherwise. */
   newDays: number | null;
   /** Thai twins of the seller's texts; readers in Thai use them, falling back to English. */
-  th?: { headline: string; description: string; highlights: string[]; customerProfile: string };
+  th?: { headline: string; description: string; highlights: string[]; customerProfile: string; productTags?: string[]; marketTags?: string[] };
   /** A PitchSnack private client (Control, Admin-owned). Only the flag is sent. */
   managed?: boolean;
   /** Owner/team last-login bucket (never a timestamp); null = no login on record. */
@@ -72,7 +74,7 @@ export interface PublicListing {
 }
 
 export const HEADLINE_MAX = 90;
-export const DESCRIPTION_MAX = 220;
+export const DESCRIPTION_MAX = 420;
 
 export function factsFromSource(s: ListingSource): EntryFacts {
   return {
@@ -135,7 +137,8 @@ export function suggestDescription(overview: string | null | undefined, terms: {
   t = t.replace(/^[,\s]+/, "").replace(LEAD_VERB, "");
   t = t.replace(/^(a|an|the)\s+/i, "");
   if (!t) return "";
-  const out = `A ${t.charAt(0).toLowerCase()}${t.slice(1)}`.replace(/\s+,/g, ",");
+  const body = `${t.charAt(0).toLowerCase()}${t.slice(1)}`;
+  const out = `${/^[aeiou]/i.test(body) ? "An" : "A"} ${body}`.replace(/\s+,/g, ",");
   return out.length > DESCRIPTION_MAX ? `${out.slice(0, DESCRIPTION_MAX - 1).trimEnd()}…` : out;
 }
 
@@ -285,6 +288,14 @@ export function suggestCodeNameFor(s: ListingSource, index = 0): string {
 /** Descriptive, anonymous headline built from the business profile. */
 export function suggestHeadline(s: ListingSource, o?: SuggestOpts) {
   const a = applyGeo(activityProfile(s), o);
+  if (o?.language === "th") {
+    const examples = SELLER_SECTOR_EXAMPLES.find((row) => row.sector === s.sector);
+    const sector = examples?.thai || a.products.find((tag) => /[\u0E00-\u0E7F]/.test(tag)) || a.core;
+    const geoMap: Record<string, string> = { Bangkok: "กรุงเทพฯ", Nonthaburi: "นนทบุรี", Thailand: "ประเทศไทย", "Thailand, Thailand": "ประเทศไทย" };
+    const geo = a.geo ? geoMap[a.geo] ?? geoMap[a.geo.split(",")[0]] ?? (/[\u0E00-\u0E7F]/.test(a.geo) ? a.geo : "") : "";
+    const credentials = a.certs.length ? ` ที่ได้รับ${a.certs.slice(0, 2).join(" และ")}` : a.decade ? ` ที่ดำเนินงานตั้งแต่ทศวรรษ ${a.decade.replace("s", "")}` : "";
+    return Array.from(scrub(`ธุรกิจ${sector}${geo ? `ใน${geo}` : ""}${credentials}`, [...listingTerms(s), ...(o?.guard ?? [])])).slice(0, 100).join("").trimEnd();
+  }
   const credential = a.certs.some((c) => /^ISO/i.test(c))
     ? "ISO-Certified"
     : a.certs.length
@@ -298,7 +309,8 @@ export function suggestHeadline(s: ListingSource, o?: SuggestOpts) {
   const parts = scrub([credential, geo && !new RegExp(geo, "i").test(a.noun) ? geo : "", a.noun].filter(Boolean).join(" "), o?.guard);
   const full = scrub([parts, audience].filter(Boolean).join(" "), o?.guard);
   const h = titleCase(full || "Established Business");
-  return h.length > HEADLINE_MAX ? titleCase(parts).slice(0, HEADLINE_MAX).trimEnd() : h;
+  const capped = h.length > HEADLINE_MAX ? titleCase(parts).slice(0, HEADLINE_MAX).trimEnd() : h;
+  return capped.split(/\s+/).slice(0, 15).join(" ");
 }
 
 /** A brand-new anonymous description written from the profile, never from the company's own text. */
@@ -307,7 +319,8 @@ export function suggestBusinessDescription(s: ListingSource, o?: SuggestOpts) {
   const terms = [...listingTerms(s), ...(o?.guard ?? [])];
   const where = a.geo ? ` based in ${a.geo}` : "";
   const since = a.decade ? `, operating since the ${a.decade}` : "";
-  const sentences: string[] = [`A ${a.noun.toLowerCase()}${where}${since}.`];
+  const noun = a.noun.toLowerCase();
+  const sentences: string[] = [`${/^[aeiou]/i.test(noun) ? "An" : "A"} ${noun}${where}${since}.`];
   if (a.products.length) sentences.push(`The business ${a.verb} ${listOf(a.products.map(lower))}.`);
   const buyers = a.markets.filter((m) => !GEO_RE.test(m)).slice(0, 3).map(lower);
   const reach = a.markets.filter((m) => GEO_RE.test(m)).slice(0, 2).map(lower);
@@ -423,13 +436,20 @@ function lower(t: string) {
 }
 
 /** The listing's texts in the reader's language (Thai falls back to English per field). */
-export function listingText(l: Pick<PublicListing, "headline" | "description"> & { th?: PublicListing["th"]; highlights?: string[]; customerProfile?: string }, lang: string) {
-  const th = lang === "th" ? l.th : undefined;
+export function listingText(l: Pick<PublicListing, "headline" | "description"> & { th?: PublicListing["th"]; highlights?: string[]; customerProfile?: string; productTags?: string[]; marketTags?: string[] }, lang: string) {
+  const th = l.th;
+  const own = lang === "th" ? th : undefined;
   return {
-    headline: th?.headline || l.headline,
-    description: th?.description || l.description,
-    highlights: th?.highlights?.length ? th.highlights : l.highlights ?? [],
-    customerProfile: th?.customerProfile || l.customerProfile || "",
+    headline: own?.headline || l.headline || th?.headline || "",
+    description: own?.description || l.description || th?.description || "",
+    highlights: own?.highlights?.length ? own.highlights : l.highlights?.length ? l.highlights : th?.highlights ?? [],
+    customerProfile: own?.customerProfile || l.customerProfile || th?.customerProfile || "",
+    productTags: lang === "th"
+      ? th?.productTags?.length ? th.productTags : l.productTags ?? []
+      : l.productTags?.length ? l.productTags : th?.productTags ?? [],
+    marketTags: lang === "th"
+      ? th?.marketTags?.length ? th.marketTags : l.marketTags ?? []
+      : l.marketTags?.length ? l.marketTags : th?.marketTags ?? [],
   };
 }
 
@@ -498,6 +518,8 @@ export function buildPublicListing(
       description: p?.description_th?.trim() || "",
       highlights: (p?.highlights_th ?? []).map((h) => h?.trim() ?? "").filter(Boolean).slice(0, 4),
       customerProfile: p?.customers_summary_th?.trim() || "",
+      productTags: cleanTags(s.product_tags_th, terms),
+      marketTags: cleanTags(s.market_tags_th, terms),
     },
   };
 }

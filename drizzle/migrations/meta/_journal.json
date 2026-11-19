@@ -1058,6 +1058,20 @@
       "when": 1795062547094,
       "tag": "0150_highlight_translation_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 151,
+      "version": "7",
+      "when": 1795078531984,
+      "tag": "0151_seller_listing_text_translation_marks",
+      "breakpoints": true
+    },
+    {
+      "idx": 152,
+      "version": "7",
+      "when": 1795078898132,
+      "tag": "0152_public_discovery_bilingual_tags",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,10 @@
+# Automatic seller listing texts and tag fallbacks
+- [x] Generate and save empty seller listing names, bilingual headlines and bilingual descriptions without overwriting seller text; preserve limits, identity checks and Admin approval.
+- [x] Add Description to wizard step 13 and Review, remove seller Listing Identity auto-fill/Suggest controls, and synchronize untouched automatic translations.
+- [x] Backfill eligible existing seller profiles: 35 listings changed; 24 names, 11 English/34 Thai headlines and 19 English/34 Thai descriptions filled; no unresolved rows.
+- [x] Diagnose PS-1040 preview tags and add other-language tag fallbacks across preview, Browse, Split panels and Discovery.
+- [ ] Focused tests, TypeScript and preview build pass; PS-1040's real English preview shows its Thai product/market tags and generated bilingual texts. Full new-profile Control/non-Control + Add EN/TH wizard walkthroughs and their screenshots remain unchecked; no temporary test profiles were created.
+
 # Bilingual completion, wizard language routing and company-check repairs
 - [ ] Count either-language values in seller, buyer and advisor completion; buyer's 30% item reads Wants to buy with its existing label and weight.
 - [ ] Route setup wizard text/tags by typed language, preserve the other language and reopen saved values; backfill only misplaced text where the correct column is empty and report counts.

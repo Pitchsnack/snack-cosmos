@@ -7,6 +7,7 @@ import { FounderStorySchema, composeFounderBio } from "./founder-story";
 import type { SellerFounder } from "./seller-wizard";
 import { needsSellerIdentityTour, sellerWordingChangedError } from './seller-listing-wording';
 import { routeWizardTags, routeWizardText } from './bilingual-fields';
+import { withAutomaticSellerListingText } from './seller-listing-text';
 
 /** Read only completion readiness, through the setup's existing access gate. */
 export const getSellerIdentityReadiness = createServerFn({ method: 'GET' })
@@ -16,7 +17,7 @@ export const getSellerIdentityReadiness = createServerFn({ method: 'GET' })
     const { assertCanSetup } = await import('./seller-setup.server');
     const sb = await admin();
     await assertCanSetup(sb, context.supabase, context.userId, data.id);
-    const { data: row, error } = await sb.from('hidden_profiles').select('code_name,suggested_listing_name,headline,headline_th').eq('startup_id', data.id).maybeSingle();
+    const { data: row, error } = await sb.from('hidden_profiles').select('code_name,suggested_listing_name,headline,headline_th,description,description_th').eq('startup_id', data.id).maybeSingle();
     if (error) throw new Error(error.message);
     const { data: control, error: controlError } = await context.supabase.rpc('is_control', { _user_id: context.userId });
     if (controlError) throw new Error(controlError.message);
@@ -43,7 +44,7 @@ export type SellerSetup = {
   /** The profile's contact email and Contact number (About Company), shown under the first founder. */
   contact: { email: string; phone: string };
   /** The listing's answers (empty until the listing exists). */
-  listing: { deal: string | null; stays: "yes" | "no" | null; months: number | null; price: number | null; name: string; headline: string; headlineTh: string; refNo: string; cover: string | null };
+  listing: { deal: string | null; stays: "yes" | "no" | null; months: number | null; price: number | null; name: string; headline: string; headlineTh: string; description: string; descriptionTh: string; translations: import('./listing-text-translations').ListingTextTranslation[]; refNo: string; cover: string | null };
   registeredName: string;
   media: { logoPath: string | null; logoUrl: string | null; slots: { slot: number; path: string; url: string | null }[] };
 };
@@ -155,11 +156,14 @@ const ListingInput = z.object({
   name: z.string().trim().max(255).nullable(),
   headline: z.string().max(2000).optional(),
   headlineTh: z.string().max(2000).optional(),
+  description: z.string().max(420).optional(),
+  descriptionTh: z.string().max(420).optional(),
+  listingTextTranslations: z.array(z.object({ field: z.enum(['headline','description']), target: z.enum(['en','th']), source: z.string().max(420) })).max(4).optional(),
 });
 
 /** The listing questions save to the business's listing (made here if it isn't there yet), as the seller. */
 async function saveListingAnswers(userSb: any, startupId: string, userId: string, l?: z.infer<typeof ListingInput>, strengths?: {highlights?:string[];highlightsTh?:string[]}) {
-  const { data: cur, error: readError } = await userSb.from("hidden_profiles").select("id,code_name,suggested_listing_name,headline,headline_th,highlights,highlights_th,highlight_translations").eq("startup_id", startupId).maybeSingle();
+  const { data: cur, error: readError } = await userSb.from("hidden_profiles").select("id,code_name,suggested_listing_name,headline,headline_th,description,description_th,listing_text_translations,highlights,highlights_th,highlight_translations").eq("startup_id", startupId).maybeSingle();
   if(readError) throw new Error(readError.message);
   const patch: Record<string, unknown> = l ? {
     deal_type: l.deal, owner_stays: l.stays, handover_months: l.stays === "yes" ? l.months ?? 6 : null,
@@ -175,8 +179,20 @@ async function saveListingAnswers(userSb: any, startupId: string, userId: string
       {en:cur?.headline ?? null,th:cur?.headline_th ?? null},
       {en:l.headline === undefined ? undefined : l.headline.trim(),th:l.headlineTh === undefined ? undefined : l.headlineTh.trim()},
     );
-    if (headline.en !== undefined) patch.headline = headline.en;
-    if (headline.th !== undefined) patch.headline_th = headline.th;
+    const description=routeWizardText(
+      {en:cur?.description ?? null,th:cur?.description_th ?? null},
+      {en:l.description === undefined ? undefined : l.description.trim(),th:l.descriptionTh === undefined ? undefined : l.descriptionTh.trim()},
+    );
+    const { planListingTextSave } = await import('./listing-text-translations');
+    const { resolveListingTextPlan } = await import('./listing-text-translations.server');
+    const texts = await resolveListingTextPlan(planListingTextSave(cur, {
+      headline: headline.en, headlineTh: headline.th, description: description.en, descriptionTh: description.th,
+    }));
+    patch.headline = texts.headline;
+    patch.headline_th = texts.headlineTh;
+    patch.description = texts.description;
+    patch.description_th = texts.descriptionTh;
+    patch.listing_text_translations = texts.translations;
     for (const [field, kind] of [[nameField, 'name'], ['headline', 'headline'], ['headline_th', 'headline']] as const) {
       if (patch[field] === undefined) continue;
       const error = sellerWordingChangedError(patch[field] as string | null, cur?.[field], kind);
@@ -218,7 +234,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
     const [{ data: s }, { data: o }, { data: hp }, { data: med }, {data:founders}] = await Promise.all([
       sb.from("startups").select("*").eq("id", data.id).single(),
       sb.from("startup_ownership").select("seller_relation").eq("startup_id", data.id).maybeSingle(),
-      sb.from("hidden_profiles").select("deal_type, owner_stays, handover_months, asking_price, asking_price_thb, code_name, suggested_listing_name, headline, headline_th, ref_no, cover_art, highlights, highlights_th").eq("startup_id", data.id).maybeSingle(),
+      sb.from("hidden_profiles").select("deal_type, owner_stays, handover_months, asking_price, asking_price_thb, code_name, suggested_listing_name, headline, headline_th, description, description_th, listing_text_translations, ref_no, cover_art, highlights, highlights_th").eq("startup_id", data.id).maybeSingle(),
       sb.from("startup_media").select("slot, image_url").eq("startup_id", data.id).order("slot"),
       sb.from("startup_founders").select("id,full_name,position,linkedin_url,bio,bio_story,bio_th,bio_story_th,photo_url").eq("startup_id",data.id).order("display_order"),
     ]);
@@ -250,7 +266,7 @@ export const getSellerSetup = createServerFn({ method: "GET" })
       listing: {
         deal: DEALS.includes(hp?.deal_type) ? hp.deal_type : null, stays: hp?.owner_stays ?? null, months: hp?.handover_months ?? null,
         price: thbOf(hp), name: (control ? hp?.code_name : hp?.suggested_listing_name) ?? '',
-        headline: hp?.headline ?? '', headlineTh: hp?.headline_th ?? '', refNo: hp?.ref_no ?? '', cover: hp?.cover_art ?? null,
+        headline: hp?.headline ?? '', headlineTh: hp?.headline_th ?? '', description: hp?.description ?? '', descriptionTh: hp?.description_th ?? '', translations: hp?.listing_text_translations ?? [], refNo: hp?.ref_no ?? '', cover: hp?.cover_art ?? null,
       },
       media: {
         logoPath: s.logo_url ?? null, logoUrl: s.logo_url ? signed.get(s.logo_url) ?? (/^https?:/.test(s.logo_url) ? s.logo_url : null) : null,
@@ -272,6 +288,7 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     iso: z.array(z.string().max(80)).max(20),
     addr: AddrInput.optional(),
     done: z.boolean().optional(),
+    prepareListing: z.boolean().optional(),
     reached: z.enum(["role", "name", "web", "year", "rev", "size", "sector", "lic", "photos", "deal", "handover", "price", "founded", "founder", "listing", "review"]).nullable().optional(),
     listing: ListingInput.optional(),
   }).parse(d))
@@ -296,7 +313,12 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
       const { data: existing, error: existingError } = await sb.from('startups').select('setup_done_at,registered_name').eq('id', data.id).single();
       if (existingError) throw new Error(existingError.message);
       // Existing completed businesses retain their registration guard and after-wizard flow.
-      if (!existing?.setup_done_at && !sellerListingValid({ name: data.name, registeredName: existing?.registered_name, web: data.web, listingName: data.listing?.name ?? '', headline: data.listing?.headline, headlineTh: data.listing?.headlineTh })) throw new Error('Complete Listing name and Headline within their limits without revealing your company identity before finishing.');
+      const listingCheck = withAutomaticSellerListingText({
+        name: data.name, registeredName: existing?.registered_name, web: data.web, city: data.city, year: data.year, size: data.size, rev: data.rev, sector: data.sector,
+        productTags: data.productTags, marketTags: data.marketTags, productTagsTh: data.productTagsTh, marketTagsTh: data.marketTagsTh, licences: data.licences, iso: data.iso,
+        listingName: data.listing?.name ?? '', headline: data.listing?.headline, headlineTh: data.listing?.headlineTh, description: data.listing?.description, descriptionTh: data.listing?.descriptionTh,
+      });
+      if (!existing?.setup_done_at && !sellerListingValid({ ...listingCheck, nameOk: true })) throw new Error('Complete Listing name, Headline and Description within their limits before finishing.');
     }
     if (data.reached) {
       const { data: cur } = await sb.from("startups").select("setup_reached").eq("id", data.id).single();
@@ -310,7 +332,17 @@ export const saveSellerSetup = createServerFn({ method: "POST" })
     if(data.founders) await saveWizardFounders(sb,data.id,context.userId,data.founders);
     await lock.finish();
     if (data.role) await sb.from("startup_ownership").update({ seller_relation: data.role }).eq("startup_id", data.id);
-    return { ok: true };
+    let automaticListing: Awaited<ReturnType<typeof import('./seller-listing-text.server').ensureAutomaticSellerListing>> = null;
+    if (data.prepareListing || data.done) {
+      const { data: control, error: controlError } = await context.supabase.rpc('is_control', { _user_id: context.userId });
+      if (controlError) throw new Error(controlError.message);
+      const { ensureAutomaticSellerListing } = await import('./seller-listing-text.server');
+      automaticListing = await ensureAutomaticSellerListing(context.supabase, data.id, !!control, context.userId);
+    }
+    return { ok: true, listing: automaticListing ? {
+      name: automaticListing.name, headline: automaticListing.headline, headlineTh: automaticListing.headlineTh,
+      description: automaticListing.description, descriptionTh: automaticListing.descriptionTh, translations: automaticListing.translations,
+    } : undefined };
   });
 
 /** + Add My Business for a seller account: makes the business from the wizard's answers. */
@@ -331,7 +363,12 @@ export const createMyBusiness = createServerFn({ method: "POST" })
     const { createSellerBusiness, sellerTenant } = await import("./seller-setup.server");
     const sb = await admin();
     if (!(await sellerTenant(sb, context.userId))) throw new Error("Only seller accounts can add a business here.");
-    if (!sellerListingValid({ name: data.name, web: data.web, listingName: data.listing?.name ?? '', headline: data.listing?.headline, headlineTh: data.listing?.headlineTh })) throw new Error('Complete Listing name and Headline before finishing.');
+    const listingCheck = withAutomaticSellerListingText({
+      name: data.name, web: data.web, city: data.city, year: data.year, size: data.size, rev: data.rev, sector: data.sector,
+      productTags: data.productTags, marketTags: data.marketTags, productTagsTh: data.productTagsTh, marketTagsTh: data.marketTagsTh, licences: data.licences, iso: data.iso,
+      listingName: data.listing?.name ?? '', headline: data.listing?.headline, headlineTh: data.listing?.headlineTh, description: data.listing?.description, descriptionTh: data.listing?.descriptionTh,
+    });
+    if (!sellerListingValid({ ...listingCheck, nameOk: true })) throw new Error('Complete Listing name, Headline and Description before finishing.');
     const id = await createSellerBusiness(sb, context.userId, {
       name: data.name, relation: data.role, website: data.web.trim() || null, year: /^\d{4}$/.test(data.year) ? Number(data.year) : null,
       size: data.size, regNo: data.reg || null, city: data.city || null, revenue: data.rev, sector: data.sector,
@@ -342,6 +379,10 @@ export const createMyBusiness = createServerFn({ method: "POST" })
     if(websiteError) throw new Error(websiteError.message);
     if(data.founders) await saveWizardFounders(sb,id,context.userId,data.founders);
     if (data.listing || data.highlights !== undefined || data.highlightsTh !== undefined) await saveListingAnswers(context.supabase, id, context.userId, data.listing, data);
+    const { data: control, error: controlError } = await context.supabase.rpc('is_control', { _user_id: context.userId });
+    if (controlError) throw new Error(controlError.message);
+    const { ensureAutomaticSellerListing } = await import('./seller-listing-text.server');
+    await ensureAutomaticSellerListing(context.supabase, id, !!control, context.userId);
     return { id };
   });
 

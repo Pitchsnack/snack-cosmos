@@ -1,6 +1,64 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export type SellerListingTextRepairReport = {
+  profilesChanged: number;
+  listingNamesFilled: number;
+  headlineEnFilled: number;
+  headlineThFilled: number;
+  descriptionEnFilled: number;
+  descriptionThFilled: number;
+  unresolved: string[];
+};
+
+/** One authorised Control-run repair for automatic bilingual seller listing texts. */
+export const repairSellerListingTexts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<SellerListingTextRepairReport> => {
+    const { data: control, error: controlError } = await context.supabase.rpc("is_control", { _user_id: context.userId });
+    if (controlError) throw new Error(controlError.message);
+    if (!control) throw new Error("Control access required.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const { ensureAutomaticSellerListing } = await import("./seller-listing-text.server");
+    const { data: listings, error } = await sb.from("hidden_profiles")
+      .select("startup_id,ref_no,created_by,code_name,suggested_listing_name,headline,headline_th,description,description_th")
+      .order("ref_no");
+    if (error) throw new Error(error.message);
+    const report: SellerListingTextRepairReport = {
+      profilesChanged: 0, listingNamesFilled: 0, headlineEnFilled: 0, headlineThFilled: 0,
+      descriptionEnFilled: 0, descriptionThFilled: 0, unresolved: [],
+    };
+    const controlByUser = new Map<string, boolean>();
+    for (const row of listings ?? []) {
+      const ref = row.ref_no || row.startup_id;
+      try {
+        const creator = row.created_by ?? "";
+        let creatorControl = false;
+        if (creator) {
+          if (!controlByUser.has(creator)) {
+            const { data: value, error: roleError } = await sb.rpc("is_control", { _user_id: creator });
+            if (roleError) throw new Error(roleError.message);
+            controlByUser.set(creator, !!value);
+          }
+          creatorControl = controlByUser.get(creator) ?? false;
+        }
+        const result = await ensureAutomaticSellerListing(sb, row.startup_id, creatorControl, context.userId);
+        if (!result?.filled.length) continue;
+        report.profilesChanged += 1;
+        if (result.filled.includes("code_name") || result.filled.includes("suggested_listing_name")) report.listingNamesFilled += 1;
+        if (result.filled.includes("headline")) report.headlineEnFilled += 1;
+        if (result.filled.includes("headline_th")) report.headlineThFilled += 1;
+        if (result.filled.includes("description")) report.descriptionEnFilled += 1;
+        if (result.filled.includes("description_th")) report.descriptionThFilled += 1;
+      } catch (cause) {
+        console.error("Seller listing text repair", ref, cause instanceof Error ? cause.message : "failed");
+        report.unresolved.push(ref);
+      }
+    }
+    return report;
+  });
+
 export type ProfileRepairReport = {
   highlightsFilled: number;
   highlightRowsFilled: number;

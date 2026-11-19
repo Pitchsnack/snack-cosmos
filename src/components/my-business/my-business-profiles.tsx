@@ -1,4 +1,4 @@
-import { setupText } from "@/i18n/language";
+import { setupText, useTranslation } from "@/i18n/language";
 import { tr } from "@/i18n/language";
 import { OwnerHandoverBox } from "@/components/handover/owner-check";
 import { useStartup } from "@/hooks/use-startup";
@@ -20,7 +20,7 @@ import { useHasFinancials } from "@/hooks/use-has-financials";
 import {
   hiddenStatusOf, isStartupEntry, type HiddenDraft, type HiddenProfileRow,
 } from "@/lib/hidden-profile";
-import { buildPublicListing, provinceOnly, type ListingSource } from "@/lib/public-listing";
+import { buildPublicListing, listingText, provinceOnly, type ListingSource } from "@/lib/public-listing";
 import { TagChips } from "@/components/hidden-profile/public-listing-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ApprovalFooter, ApprovedChip, APPROVAL_LABEL, APPROVAL_TONE, approvalOf } from "@/components/my-business/approval-bits";
@@ -257,6 +257,8 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
   const d = row as HiddenDraft | null;
   const industry = s.sector || "SME";
   const listing = buildPublicListing(s as ListingSource, row ? { ...row, live: status === "live" || status === "live_edited" } : null, false);
+  const { language } = useTranslation();
+  const localized = listingText(listing, language);
   const live = status === "live" || status === "live_edited";
   const adminReview = useAdminReview();
   const cover = adminReview ? adminReview.pendingCover : row?.live ? row?.cover_image_url ?? null : null;
@@ -283,8 +285,8 @@ function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow 
           {listing.revenueBand ? <>{listing.revenueBand} <span className="ml-1 rounded bg-[#EEF0FF] px-1 py-0.5 text-[9.5px] font-semibold text-[#4338CA]">{setupText("Range")}</span></> : "—"}
         </RowLine>
         <div className="space-y-1.5 border-t border-border pt-2">
-          <div><div className="mb-0.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">{setupText("Products & services")}</div><TagChips tags={listing.productTags.slice(0, 4)} /></div>
-          <div><div className="mb-0.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">{setupText("Markets")}</div><TagChips tags={listing.marketTags.slice(0, 4)} green /></div>
+          <div><div className="mb-0.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">{setupText("Products & services")}</div><TagChips tags={localized.productTags.slice(0, 4)} /></div>
+          <div><div className="mb-0.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">{setupText("Markets")}</div><TagChips tags={localized.marketTags.slice(0, 4)} green /></div>
         </div>
       </div>
     </>

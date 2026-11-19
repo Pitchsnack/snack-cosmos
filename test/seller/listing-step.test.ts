@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { emptyDraft, sellerListingValid, sellerProgress, sellerQuestionKeys, listingPayload } from '../../src/lib/seller-wizard';
 import { mergeWebsiteEnrich } from '../../src/lib/seller-website-enrich';
-const draft = () => ({ ...emptyDraft(), listingName: 'Regional Logistics Network', headline: 'Logistics business serving regional customers' });
+const draft = () => ({ ...emptyDraft(), listingName: 'Regional Logistics Network', headline: 'Logistics business serving regional customers', description: 'A logistics business serving customers across Thailand.' });
 describe('seller Listing setup rules', () => {
   it('adds Listing after Founder before review and counts nine questions after signup', () => {
     const d = { ...draft(), role: 'owner' as const, name: 'Company', reg: '0105555123450', addr: { street: '1 Road', unit: '', district: 'District', province: 'Bangkok', postal: '10110' }, year: '2014', size: '11-50', sector: 'Packaging' };
@@ -12,6 +12,7 @@ describe('seller Listing setup rules', () => {
   it('keeps completed setups on their former questions', () => expect(sellerQuestionKeys({ ...draft(), setupDoneAt: '2026-11-14T00:00:00Z' })).not.toContain('listing'));
   it('requires a listing name', () => expect(sellerListingValid({ ...draft(), listingName: ' ' })).toBe(false));
   it('requires a headline in either language', () => { expect(sellerListingValid({ ...draft(), headline: '' })).toBe(false); expect(sellerListingValid({ ...draft(), headline: '', headlineTh: 'ธุรกิจโลจิสติกส์' })).toBe(true); });
+  it('requires a Description in either language and enforces 420 characters', () => { expect(sellerListingValid({ ...draft(), description: '' })).toBe(false); expect(sellerListingValid({ ...draft(), description: '', descriptionTh: 'คำอธิบายธุรกิจ' })).toBe(true); expect(sellerListingValid({ ...draft(), description: 'a'.repeat(421) })).toBe(false); });
   it('enforces seven English words for listing names', () => { expect(sellerListingValid({ ...draft(), listingName: Array(7).fill('word').join(' ') })).toBe(true); expect(sellerListingValid({ ...draft(), listingName: Array(8).fill('word').join(' ') })).toBe(false); });
   it('enforces fifteen English words for headlines', () => { expect(sellerListingValid({ ...draft(), headline: Array(15).fill('word').join(' ') })).toBe(true); expect(sellerListingValid({ ...draft(), headline: Array(16).fill('word').join(' ') })).toBe(false); });
   it('enforces fifty Thai characters for listing names', () => { expect(sellerListingValid({ ...draft(), listingName: 'ก'.repeat(50) })).toBe(true); expect(sellerListingValid({ ...draft(), listingName: 'ก'.repeat(51) })).toBe(false); });

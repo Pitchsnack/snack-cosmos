@@ -2,7 +2,7 @@ import { AfterWizardTour } from '@/components/common/after-wizard-tour';
 import { prefillStrengthRows } from '@/lib/seller-strengths';
 import { SellerWordingCount, SellerWordingInput, SellerWordingMessage } from './seller-wording-field';
 import { sellerWordingChangedError, singleLineSellerWording } from '@/lib/seller-listing-wording';
-import { FieldRow, AutoFillTabButton } from "@/components/common/listing-editor-fields";
+import { FieldRow } from "@/components/common/listing-editor-fields";
 import { Lock } from "lucide-react";
 import { bandOf, bandInText, fmtThb, thbWords, thbWordsTh } from "@/lib/asking-price";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
@@ -25,6 +25,7 @@ import { checkListingName } from "@/lib/hidden-profiles.functions";
 import { cn } from "@/lib/utils";
 import { LangTag, missingLangHint, useTextLang } from "@/components/common/text-lang";
 import { isTranslatedHighlight, withoutHighlightTranslation } from "@/lib/highlight-translations";
+import { isTranslatedListingText, withoutListingTextTranslation } from "@/lib/listing-text-translations";
 import { usePermissions } from "@/hooks/use-session-context";
 import { founderRevenueLabel } from "@/lib/founder-story";
 import { countryLabel } from "@/i18n/th-edit-info";
@@ -75,8 +76,6 @@ export function usePublicDraft(row: HiddenProfileRow | null, facts: EntryFacts |
       const next = {
         ...p,
         code_name: p.code_name,
-        headline: skipIdentityPrefill ? p.headline : p.headline.trim() ? p.headline : headlineIdea,
-        description: p.description.trim() ? p.description : descIdea,
         highlights: prefillStrengthRows(p.highlights,p.highlights_th,highlightIdeas),
         customers_summary: p.customers_summary.trim() ? p.customers_summary : customersIdea,
       };
@@ -156,7 +155,11 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
   const tk = (f: TF) => (lang === "th" ? `${f}_th` : f) as keyof HiddenDraft;
   const otk = (f: TF) => (lang === "th" ? f : `${f}_th`) as keyof HiddenDraft;
   const tv = (f: TF) => { const own = (d[tk(f)] as string | null | undefined) ?? ""; const oth = (d[otk(f)] as string | null | undefined) ?? ""; return switchable ? own : own || oth; };
-  const tset = (f: TF, v: string | null) => setD((p) => ({ ...p, [tk(f)]: v }));
+  const tset = (f: TF, v: string | null) => setD((p) => ({
+    ...p,
+    [tk(f)]: v,
+    ...(f === "headline" || f === "description" ? { listing_text_translations: withoutListingTextTranslation(p.listing_text_translations, f, lang) } : {}),
+  }));
   const tph = (f: TF, fb?: string) => { const own = (d[tk(f)] as string | null | undefined) ?? ""; const oth = (d[otk(f)] as string | null | undefined) ?? ""; return switchable && !own && oth ? missingLangHint(lang, appTh) : fb; };
   const both = (f: TF) => !!(((d[f] as string | null) ?? "").trim() || ((d[`${f}_th` as keyof HiddenDraft] as string | null | undefined) ?? "").trim());
   const hlEn = d.highlights, hlTh = d.highlights_th ?? ["", "", "", ""];
@@ -171,11 +174,14 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
   });
 
   if (tab === "identity") {
-    const fill = <AutoFillTabButton onClick={pd.fillAll} />;
     const hlMissing = ![0, 1, 2].every((i) => hlEn[i]?.trim() || hlTh[i]?.trim());
+    const translated = (field: "headline" | "description") => isTranslatedListingText({
+      headline: d.headline, headlineTh: d.headline_th, description: d.description, descriptionTh: d.description_th,
+      translations: d.listing_text_translations,
+    }, field, lang) ? <span className="lang-tag">{tr("Translated", "แปลอัตโนมัติ")}</span> : null;
     return (
       <div>
-        <TabHead title={tr("Marketplace listing name", "ชื่อประกาศใน Marketplace")}>{fill}</TabHead>
+        <TabHead title={tr("Marketplace listing name", "ชื่อประกาศใน Marketplace")} />
         <div className="mt-4 grid grid-cols-[260px_minmax(0,1fr)] items-start gap-7 max-sm:grid-cols-1 max-sm:gap-4">
           <BuyerPreview d={d} sector={sector} pickedImage={pickedImage} source={source} refNo={refNo} />
           <div className="min-w-0 space-y-[22px]">
@@ -185,23 +191,22 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
               {pd.canName ? <ListingNameField pd={pd} refNo={refNo} /> : <SuggestedNameField pd={pd} refNo={refNo} />}
             </EditSec>
             <EditSec id="headline" tone="seller" active={section === "headline"}>
-              <FieldRow label={tr("Headline", "หัวข้อ")} after={<LangTag />} htmlFor="hp-headline" missing={!both("headline")} right={<SellerWordingCount value={tv("headline")} kind="headline" language={lang} />} suggest={ideas.headlineIdea ? () => tset("headline", ideas.headlineIdea) : undefined}>
+              <FieldRow label={tr("Headline", "หัวข้อ")} after={<><LangTag />{translated("headline")}</>} htmlFor="hp-headline" missing={!both("headline")} right={<SellerWordingCount value={tv("headline")} kind="headline" language={lang} />}>
                 <SellerWordingInput id="hp-headline" language={lang} kind="headline" value={tv("headline")} placeholder={tr("e.g. Profitable logistics firm with its own fleet and warehouses in five main cities", "เช่น บริษัทโลจิสติกส์ที่มีกำไร มีรถขนส่งและคลังสินค้าของตนเองในห้าเมืองหลัก")} onChange={v => tset("headline", v)} />
                 <SellerWordingMessage value={tv("headline")} kind="headline" language={lang} />
               </FieldRow>
             </EditSec>
             </div>
-            <p className={`seller-wording-note ${tour?.open ? 'tour-hidden' : ''}`}><Pencil size={14} aria-hidden />{tr("PitchSnack may refine your wording before publishing to make it clear and professional, while ensuring it does not reveal your company’s identity.", "PitchSnack อาจปรับถ้อยคำของท่านก่อนเผยแพร่ให้ชัดเจนและเป็นมืออาชีพ โดยจะไม่เปิดเผยว่าเป็นบริษัทของท่าน")}</p>
-            {tour?.open && <AfterWizardTour tone="seller" anchor={tourAnchor} onClose={tour.close} title={tr("Last step: Listing name and headline", "ขั้นตอนสุดท้าย: ชื่อประกาศและพาดหัว")} text={tr("Describe your business without naming it. Buyers see your listing name and headline first, and use them to decide whether to request an NDA.", "อธิบายธุรกิจของท่านโดยไม่เปิดเผยชื่อบริษัท ผู้ซื้อจะเห็นชื่อประกาศและพาดหัวของท่านเป็นอันดับแรก และใช้ข้อมูลนี้ตัดสินใจว่าจะส่งคำขอ NDA หรือไม่")} />}
+            {tour?.open && <AfterWizardTour tone="seller" anchor={tourAnchor} onClose={tour.close} title={tr("Last step: Listing name, headline and description", "ขั้นตอนสุดท้าย: ชื่อประกาศ หัวข้อ และคำอธิบาย")} text={tr("Describe your business without naming it. Buyers see your listing name and headline first, and use them to decide whether to request an NDA.", "อธิบายธุรกิจของท่านโดยไม่เปิดเผยชื่อบริษัท ผู้ซื้อจะเห็นชื่อประกาศและพาดหัวของท่านเป็นอันดับแรก และใช้ข้อมูลนี้ตัดสินใจว่าจะส่งคำขอ NDA หรือไม่")} />}
             </div>
             <EditSec id="description" tone="seller" active={section === "description"}>
-              <FieldRow label={tr("Description", "คำอธิบาย")} after={<LangTag />} htmlFor="hp-description" missing={!both("description")} right={`${tv("description").length}/420`} suggest={ideas.descIdea ? () => tset("description", ideas.descIdea) : undefined}>
+              <FieldRow label={tr("Description", "คำอธิบาย")} after={<><LangTag />{translated("description")}</>} htmlFor="hp-description" missing={!both("description")} right={`${tv("description").length}/420`}>
                 <Textarea id="hp-description" lang={lang} maxLength={420} value={tv("description")} placeholder={tph("description", ideas.descIdea)} onChange={(e) => tset("description", e.target.value)} className={cn(AREA, "h-[112px] min-h-[112px] resize-y", !both("description") && MISS_BOX)} />
               </FieldRow>
             </EditSec>
+            <p className={`seller-wording-note ${tour?.open ? 'tour-hidden' : ''}`}><Pencil size={14} aria-hidden />{tr("PitchSnack may refine your wording before publishing to make it clear and professional, while ensuring it does not reveal your company’s identity.", "PitchSnack อาจปรับถ้อยคำของท่านก่อนเผยแพร่ให้ชัดเจนและเป็นมืออาชีพ โดยจะไม่เปิดเผยว่าเป็นบริษัทของท่าน")}</p>
             <EditSec id="highlights" tone="seller" active={section === "highlights"}>
-              <FieldRow label={tr("Highlights", "จุดเด่น")} after={<LangTag />} missing={hlMissing} right={tr("3 required", "ต้องมี 3 ข้อ")}
-                suggest={ideas.highlightIdeas.length ? () => hlSet(hlOwn.map((h, i) => ideas.highlightIdeas[i] ?? h)) : undefined}>
+              <FieldRow label={tr("Highlights", "จุดเด่น")} after={<LangTag />} missing={hlMissing} right={tr("3 required", "ต้องมี 3 ข้อ")}>
                 <div role="group" aria-label="Highlights" className="overflow-hidden rounded-[10px] border border-[#D7DCE3] bg-background focus-within:border-[#2563EB] focus-within:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] dark:border-input">
                   {hlView.map((h, i) => {
                     const filled = !!h.trim();
@@ -226,7 +231,7 @@ export function PublicViewTab({ tab, pd, sector, pickedImage, section, source, r
               </FieldRow>
             </EditSec>
             <EditSec id="customers" tone="seller" active={section === "customers"}>
-              <FieldRow label={tr("Customer profile (do not mention names)", "ลักษณะลูกค้า (ห้ามระบุชื่อ)")} after={<LangTag />} htmlFor="hp-customers_summary" right={tr("Optional", "ไม่บังคับ")} suggest={ideas.customersIdea ? () => tset("customers_summary", ideas.customersIdea) : undefined}>
+              <FieldRow label={tr("Customer profile (do not mention names)", "ลักษณะลูกค้า (ห้ามระบุชื่อ)")} after={<LangTag />} htmlFor="hp-customers_summary" right={tr("Optional", "ไม่บังคับ")}>
                 <Textarea id="hp-customers_summary" lang={lang} value={tv("customers_summary")} placeholder={tph("customers_summary", ideas.customersIdea)} onChange={(e) => tset("customers_summary", e.target.value)} className={cn(AREA, "h-20 min-h-20 resize-y")} />
               </FieldRow>
             </EditSec>
@@ -441,8 +446,12 @@ export function BuyerPreview({ d, sector, pickedImage, source, refNo, wizard = f
   const name = ((d as HiddenDraft & { suggested_listing_name?: string }).suggested_listing_name || d.code_name).trim();
   const head = (lang === "th" ? d.headline_th?.trim() || d.headline.trim() : d.headline.trim() || d.headline_th?.trim() || "");
   const city = source?.city || source?.headquarters || "";
-  const products = (d.product_tags ?? source?.product_tags ?? []).slice(0, 3).join(", ");
-  const markets = (d.market_tags ?? source?.market_tags ?? []).slice(0, 3).join(", ");
+  const productEn = d.product_tags?.length ? d.product_tags : source?.product_tags ?? [];
+  const productTh = source?.product_tags_th ?? [];
+  const marketEn = d.market_tags?.length ? d.market_tags : source?.market_tags ?? [];
+  const marketTh = source?.market_tags_th ?? [];
+  const products = (lang === "th" ? (productTh.length ? productTh : productEn) : (productEn.length ? productEn : productTh)).slice(0, 3).join(", ");
+  const markets = (lang === "th" ? (marketTh.length ? marketTh : marketEn) : (marketEn.length ? marketEn : marketTh)).slice(0, 3).join(", ");
   const rev = (source?.last_year_revenue ? founderRevenueLabel(source.last_year_revenue, lang) : null) ?? revenueBand(source?.last_year_revenue) ?? "—";
   const caption = <div className="mb-2 flex items-center gap-[6px] text-[12.5px] font-semibold text-[#4338CA]"><Eye className="h-[14px] w-[14px]" strokeWidth={2} />{appTr("Buyer preview", "ตัวอย่างที่ผู้ซื้อเห็น")}{lang !== appLang && <span className={cn("lang-tag", lang === "th" ? "lang-tag-th" : "lang-tag-en")}>{lang === "th" ? "ไทย" : "English"}</span>}</div>;
   const nameEl = <div className={cn("text-[14px] font-bold text-[#151A28] dark:text-foreground", !name && "font-semibold text-[#8A90A0]")}>{name || tr("Your listing name", "ชื่อประกาศของท่าน")}</div>;

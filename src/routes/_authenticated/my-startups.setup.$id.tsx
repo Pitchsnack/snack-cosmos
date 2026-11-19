@@ -41,7 +41,7 @@ function toDraft(s: SellerSetup, open?: string): SellerDraft {
     hasLogo: !!s.media.logoPath, photos: s.media.slots.length,
     deal: s.listing.deal, stays: s.listing.stays, months: s.listing.months, price: s.listing.price,
     listingName: s.listing.name, nameOk: s.listing.name ? true : undefined,
-    headline: s.listing.headline, headlineTh: s.listing.headlineTh, registeredName: s.registeredName, setupDoneAt: s.setupDoneAt,
+    headline: s.listing.headline, headlineTh: s.listing.headlineTh, description: s.listing.description, descriptionTh: s.listing.descriptionTh, listingTextTranslations: s.listing.translations, registeredName: s.registeredName, setupDoneAt: s.setupDoneAt,
   };
   // Opens the step asked for, else the first question without an answer (skipped included), else Review.
   const key = normalizeSellerStep(open) ?? firstUnanswered(d, s.fromSignup);
@@ -95,6 +95,19 @@ function Page() {
       fromSignup={data.fromSignup}
       identity={data.identity}
       persist={persist}
+      prepareListing={async (draft) => {
+        const result = await saveFn({ data: { ...payload(draft), prepareListing: true } });
+        if (!result.listing) return {};
+        return {
+          listingName: result.listing.name,
+          nameOk: result.listing.name ? true : undefined,
+          headline: result.listing.headline,
+          headlineTh: result.listing.headlineTh,
+          description: result.listing.description,
+          descriptionTh: result.listing.descriptionTh,
+          listingTextTranslations: result.listing.translations,
+        };
+      }}
       media={{ startupId: id, tenantId: data.tenantId, initial: data.media, facts: { name: data.name, web: data.web } }}
       title="Set up your business"
       onExit={leave}
