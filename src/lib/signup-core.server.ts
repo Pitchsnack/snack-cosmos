@@ -83,15 +83,13 @@ export async function doFinish(uid: string, data: FinishInput) {
       const types: string[] = a.buyer_relation ? (a.investor_types ?? []) : [a.first_answer];
       const individual = rel === "individual";
       const agent = rel === "agent";
-      const typeVal = individual ? INDIVIDUAL_TYPE : types[0] ?? null;
-      const fromSignup = individual ? ["role", "name", ...(web ? ["web"] : [])]
-        : [...(rel ? ["role"] : []), ...(typeVal ? ["type"] : []), "name", ...(web ? ["web"] : []), ...(y ? ["year"] : []), ...(data.size ? ["size"] : [])];
-      const answered = individual ? ["role"] : [...(rel ? ["role"] : []), ...(typeVal ? ["type"] : [])];
+      const { buyerSignupWizardState } = await import("@/lib/buyer-wizard");
+      const initial = buyerSignupWizardState(rel as "individual" | "corporate" | "agent" | null, types, web, y, data.size);
       const { error } = await sb.from("investors").update({
-        investor_name: data.name, investor_type: typeVal, acts_for_types: agent ? types : [], website_url: web,
+        investor_name: data.name, investor_type: initial.typeVal, acts_for_types: agent ? types : [], website_url: web,
         year_founded: individual ? null : y,
         company_size_band: individual ? null : (data.size ? SIZE_TO_BUYER[data.size] ?? null : null),
-        wizard: { answered, from_signup: fromSignup },
+        wizard: { answered: initial.answered, from_signup: initial.from_signup },
         updated_by: uid, updated_at: new Date().toISOString(),
       }).eq("id", investorId);
       if (error) throw new Error(error.message);

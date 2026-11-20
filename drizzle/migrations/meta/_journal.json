@@ -1079,6 +1079,13 @@
       "when": 1795098430472,
       "tag": "0153_seller_description_sentence_parts",
       "breakpoints": true
+    },
+    {
+      "idx": 154,
+      "version": "7",
+      "when": 1795164982746,
+      "tag": "0154_repair_add_buyer_signup_parity",
+      "breakpoints": true
     }
   ]
 }

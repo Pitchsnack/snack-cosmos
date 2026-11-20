@@ -135,30 +135,31 @@ export const applyAddCheck = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       await sb.from("startup_ownership").update({ seller_relation: ans.answer }).eq("startup_id", data.profileId);
     } else if (data.kind === "buyer") {
-      const rel = ans.answer;
+      const rel = ans.answer as "individual" | "corporate" | "agent";
       if (!["individual", "corporate", "agent"].includes(rel)) throw new Error("Choose which best describes you.");
       if (!agn && !p.types.length) throw new Error("Pick at least one type of business, or Sector agnostic.");
-      const { INDIVIDUAL_TYPE } = await import("./investor-bands");
       const individual = rel === "individual";
-      const typeVal = individual ? INDIVIDUAL_TYPE : ans.types[0] ?? null;
       const { data: iv } = await sb.from("investors").select("wizard, tenant_id").eq("id", data.profileId).maybeSingle();
       const w = iv?.wizard ?? {};
       const logoPath = individual ? null : await uploadHeldLogo(sb, ans.logo, (ext) => `${iv?.tenant_id}/${data.profileId}/logo-${Date.now()}.${ext}`);
       const ind = agn ? ["Sector Agnostic"] : sectors;
+      const { data: bp } = await sb.from("buyer_profiles").select("investor_id").eq("user_id", context.userId).maybeSingle();
+      const extra = bp?.investor_id !== data.profileId;
+      const { buyerAddWizardState } = await import("./buyer-wizard");
+      const wizardState = buyerAddWizardState(w, { rel, types: ans.types, web, year, size: ans.company.size, sectors: ind, logoPath, extra });
+      const { typeVal, ...wizard } = wizardState;
       const { error } = await sb.from("investors").update({
         investor_name: ans.company.name, investor_type: typeVal, acts_for_types: rel === "agent" ? ans.types : [], website_url: web,
         company_size_band: individual ? null : (ans.company.size ? SZ_BUYER[ans.company.size] ?? null : null),
         preferred_industries: ind, sector_picks: agn ? null : p, ...(logoPath ? { logo_url: logoPath } : {}),
         registration_no: reg, reg_locked_at: now, country: "Thailand", address_th: co.addressTh, ...(addrEn ? { business_address: addrEn } : {}), ...parts,
         ...(individual ? {} : { year_founded: year }),
-        wizard: { ...w, answered: add(w.answered, "role", ...(typeVal ? ["type"] : []), "sectors"),
-          from_signup: add(w.from_signup, "role", ...(typeVal && !individual ? ["type"] : []), "name", ...(web ? ["web"] : []), ...(!individual && ans.company.size ? ["size"] : []), "sectors", "reg", ...(individual ? [] : ["year"]), "address", ...(logoPath ? ["logo"] : [])) },
-        updated_by: context.userId, updated_at: now,
+        wizard, updated_by: context.userId, updated_at: now,
       }).eq("id", data.profileId);
       if (error) throw new Error(error.message);
-      // The caller's own linked profile also carries who the buyer is.
-      const { data: bp } = await sb.from("buyer_profiles").select("investor_id").eq("user_id", context.userId).maybeSingle();
-      if (bp?.investor_id === data.profileId) await sb.from("buyer_profiles").update({ buyer_relation: rel, sectors: ind, ...(logoPath ? { logo_url: logoPath } : {}) }).eq("user_id", context.userId);
+      // A real buyer account keeps these answers on its one linked buyer_profiles row. Control-only
+      // extra profiles have no account, so buyerAddWizardState stores them on that investor instead.
+      if (!extra) await sb.from("buyer_profiles").update({ buyer_relation: rel, sectors: ind, ...(logoPath ? { logo_url: logoPath } : {}) }).eq("user_id", context.userId);
     } else {
       if (!agn && !p.types.length) throw new Error("Pick at least one type of business, or Sector agnostic.");
       const team = ans.company.size && /^\d{1,5}$/.test(ans.company.size) ? Number(ans.company.size) : null;

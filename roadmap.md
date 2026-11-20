@@ -1,3 +1,9 @@
+# Buyer and advisor + Add parity with sign-up
+- [ ] Make Control + Add Investor Profile save the same relation, types, company facts, sectors, logo and wizard markers as buyer sign-up through shared server code.
+- [ ] Repair existing + Add buyer profiles from their held company check or official stored record; report repaired and unresolved counts without overwriting later answers.
+- [ ] Compare and align advisor + Add Firm Profile with advisor sign-up, preserving deliberate account-step differences.
+- [ ] Add focused parity tests and verify Corporate, adviser, Individual and advisor wizard entry/Review with temporary test profiles, side-by-side screenshots and cleanup.
+
 # Seller Description set sentences
 - [ ] Replace automatic seller Description paragraphs with five bilingual editable sentence rows in wizard step 13 and Edit information › Listing Identity, reusing founder-story part styling and write-it-yourself mode.
 - [ ] Populate parts from existing answers, omit incomplete lines from buyer text, preserve the 420-character limit and protected translations, and persist the parts server-side.

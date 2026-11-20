@@ -86,6 +86,34 @@ export function shownSteps(rel: BuyerRelation | null, skip?: Set<QId>) {
   return stepsFor(rel).filter((s) => !skip?.has(s.id));
 }
 
+/** The answers and skip markers produced by sign-up's About → Company steps. */
+export function buyerSignupWizardState(rel: BuyerRelation | null, types: string[], web: string | null, year: number | null, size: string | null) {
+  const individual = rel === "individual";
+  const typeVal = individual ? "Individual Investor" : types[0] ?? null;
+  return {
+    typeVal,
+    answered: individual ? ["role"] : [...(rel ? ["role"] : []), ...(typeVal ? ["type"] : [])],
+    from_signup: individual ? ["role", "name", ...(web ? ["web"] : [])]
+      : [...(rel ? ["role"] : []), ...(typeVal ? ["type"] : []), "name", ...(web ? ["web"] : []), ...(year ? ["year"] : []), ...(size ? ["size"] : [])],
+  };
+}
+
+/** + Add finishes with the same markers as sign-up's sector and company-confirmation saves. */
+export function buyerAddWizardState(current: Record<string, any>, input: {
+  rel: BuyerRelation; types: string[]; web: string | null; year: number | null; size: string | null;
+  sectors: string[]; logoPath: string | null; extra: boolean;
+}) {
+  const base = buyerSignupWizardState(input.rel, input.types, input.web, input.year, input.size);
+  const add = (value: unknown, ...keys: string[]) => Array.from(new Set([...(Array.isArray(value) ? value : []), ...keys]));
+  return {
+    ...current,
+    typeVal: base.typeVal,
+    answered: add(current.answered, ...base.answered, "sectors"),
+    from_signup: add(current.from_signup, ...base.from_signup, "sectors", "reg", "year", "address", ...(input.logoPath ? ["logo"] : [])),
+    ...(input.extra ? { bp: { ...(current.bp ?? {}), buyer_relation: input.rel, sectors: input.sectors, ...(input.logoPath ? { logo_url: input.logoPath } : {}) } } : {}),
+  };
+}
+
 /** Progress counting only the questions that show. */
 export function buyerProgress(rel: BuyerRelation | null, answered: string[] | undefined, skip?: Set<QId>) {
   const qs = shownSteps(rel, skip).filter((s) => s.id !== "review");
