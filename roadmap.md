@@ -1,3 +1,9 @@
+# Buyer wizard Website Auto Enrich
+- [ ] Enable Website Continue for a valid URL with both descriptions empty so Auto Enrich can run; preserve required descriptions and failure behavior.
+- [ ] Start buyer website reading when Control's + Add company check is confirmed with a website, matching sign-up's welcome path.
+- [ ] Check the advisor Website step and fix only the same Continue/reader deadlock if present.
+- [ ] Add focused tests and verify signed-up and Control-added Corporate buyers with readable/unreadable websites, Review Answer, before/after screenshots, and temporary-data cleanup.
+
 # Buyer and advisor + Add parity with sign-up
 - [x] Make Control + Add Investor Profile save the same relation, types, company facts, sectors, logo and wizard markers as buyer sign-up through shared server code; Control-only extra profiles retain their confirmed per-profile storage.
 - [x] Repair existing + Add buyer profiles from their held company check or official stored record: one Corporate profile repaired with official Year founded 2024 and missing skip markers; no unresolved profiles.

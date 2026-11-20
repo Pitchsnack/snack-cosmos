@@ -30,6 +30,7 @@ import { SectionBand, SectionHeading, DashLabel, DESC_LABELS } from "@/component
 import { FilledFrom } from "@/components/setup/filled-from";
 import { Loading } from "@/components/ui/PitchSnackLoader";
 import { useWebsiteEnrichment } from "@/components/setup/use-website-enrichment";
+import { canStartWebsiteEnrich } from "@/lib/website-enrichment";
 import { AddressBox, addrErrors, type Addr } from "@/components/advisor/advisor-firm-fields";
 import type { EnrichInvestorResult } from "@/lib/auto-enrich/investor-enrich-adapter";
 import { buyerInvestorKey, BuyerInformationForm, type Data, type SourceTag } from "@/components/my-business/buyer-investor-edit";
@@ -231,6 +232,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   const reading = enrichment.state.status === "running" && isValidUrl(a.web);
   const readFailed = enrichment.state.status === "failed";
   const readDone = enrichment.state.status === "done";
+  const webReadReady = canStartWebsiteEnrich({ websiteValid: isValidUrl(a.web), status: enrichment.state.status, shortDescription: a.desc, longDescription: a.about });
   const [marks, setMarks] = useState<{ desc?: boolean; about?: boolean }>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [forced, setForced] = useState<Record<string, boolean>>({});
@@ -401,7 +403,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     }
     if (cur === "web" && !individual && !webOpen) { if (isValidUrl(a.web)) void runEnrich(); return; }
     // A website typed here (none at sign-up) is read at Continue, once, while both descriptions are empty.
-    if (cur === "web" && isValidUrl(a.web) && !readDone && !readFailed && !a.desc.trim() && !a.about.trim()) { void runEnrich(); return; }
+    if (cur === "web" && webReadReady) { void runEnrich(); return; }
     if (!qValid(cur)) { setForced(Object.fromEntries(fieldsOf[cur].map((k) => [k, true]))); return; }
     advance(cur);
   };
@@ -685,7 +687,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
   };
   const q = Q[step.id];
   const continueLabel = cur === "review" ? tr("Finish setup") : fromProfile && cur === profileStep ? "Back to your profile" : fromReview ? "Back to review" : tr("Continue");
-  const continueOk = cur === "review" ? allValid : cur === "web" && !individual && !webOpen ? isValidUrl(a.web) : !reading && qValid(cur);
+  const continueOk = cur === "review" ? allValid : cur === "web" && !individual && !webOpen ? isValidUrl(a.web) : !reading && (qValid(cur) || (cur === "web" && webReadReady));
   // Continue off: name what's missing (choice questions keep their own messages).
   const FIELD_LABEL: Record<string, [string, string]> = {
     country: ["Country", "ประเทศ"], name: [individual ? "Full name" : "Firm name", individual ? "ชื่อ-นามสกุล" : "ชื่อบริษัท"], year: ["Year founded", "ปีที่ก่อตั้ง"], reg: ["Registration number", "เลขทะเบียนนิติบุคคล"],

@@ -20,6 +20,7 @@ import { tr } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 import type { BuyerOrg, BuyerProfile } from "@/lib/buyer-profile";
 import { BuyerDirectoryItem, SetupBanner } from "@/components/my-business/buyer-my-company";
+import { startProfileEnrichment } from "@/lib/website-enrichment.functions";
 
 export const INVESTOR_IDS_KEY = ["buyer-investor", "ids"];
 
@@ -33,6 +34,7 @@ export function useMyInvestorProfileIds(enabled = true) {
 export function useAddInvestorProfile() {
   const add = useServerFn(addInvestorProfile);
   const apply = useServerFn(applyAddCheck);
+  const startEnrichment = useServerFn(startProfileEnrichment);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
@@ -45,7 +47,12 @@ export function useAddInvestorProfile() {
     try {
       await finishAddYes("buyer", {
         create: () => add(),
-        apply: (id) => apply({ data: { attemptId: y.attemptId, kind: "buyer", profileId: id, session: y.session, answers: y.answers } }),
+        apply: async (id) => {
+          const result = await apply({ data: { attemptId: y.attemptId, kind: "buyer", profileId: id, session: y.session, answers: y.answers } });
+          const website = y.answers.company.website?.trim();
+          if (website) void startEnrichment({ data: { role: "buyer", id, website } }).catch(() => {});
+          return result;
+        },
         refresh: (key) => qc.invalidateQueries({ queryKey: [...key] }),
         close: () => setOpen(false),
         go: (to, search) => navigate({ to: to as "/marketplace/my-company", search: search as never }),

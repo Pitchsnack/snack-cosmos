@@ -34,6 +34,16 @@ export function capWords(text: string, limit: number): string {
   return words.slice(0, limit).join(" ");
 }
 
+/** Continue may start the first read only while both required descriptions are still empty. */
+export function canStartWebsiteEnrich(input: {
+  websiteValid: boolean;
+  status: WebsiteEnrichmentStatus;
+  shortDescription: string;
+  longDescription: string;
+}): boolean {
+  return input.websiteValid && input.status === "idle" && !input.shortDescription.trim() && !input.longDescription.trim();
+}
+
 /** Reopening/Create reuses one read; only an explicit Auto Enrich retry may repeat it. */
 export function shouldReuseEnrichment(old: { status?: string; website_key?: string; updated_at?: string } | null, key: string, retry = false, now = Date.now()): boolean {
   if (retry || old?.website_key !== key || !["running", "done", "failed"].includes(old.status ?? "")) return false;

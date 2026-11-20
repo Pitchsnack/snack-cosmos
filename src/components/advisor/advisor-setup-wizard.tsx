@@ -20,7 +20,7 @@ import { ContactPersonFields } from "@/components/setup/contact-person-fields";
 import { useWebsiteEnrichment } from "@/components/setup/use-website-enrichment";
 import { FilledFrom } from "@/components/setup/filled-from";
 import { Loading } from "@/components/ui/PitchSnackLoader";
-import { capWords, shortDescriptionFrom } from "@/lib/website-enrichment";
+import { canStartWebsiteEnrich, capWords, shortDescriptionFrom } from "@/lib/website-enrichment";
 import { SectionBand, SectionHeading, DashLabel, DESC_LABELS } from "@/components/setup/section-band";
 import logoBlack from "@/assets/pitchsnack-black.png";
 import { FirmCard } from "@/components/advisor/advisor-firm-card";
@@ -262,6 +262,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   };
   const enrichment = useWebsiteEnrichment("advisor", firm.id, a.web, !!fromSignup?.includes("web") && isValidUrl(a.web));
   const reading = enrichment.state.status === "running" && isValidUrl(a.web);
+  const webReadReady = canStartWebsiteEnrich({ websiteValid: isValidUrl(a.web), status: enrichment.state.status, shortDescription: a.desc, longDescription: a.long });
   const [autoMarks, setAutoMarks] = useState<{ desc?: boolean; long?: boolean }>({});
   const appliedRead = useRef<string | null>(null);
   useEffect(() => {
@@ -634,7 +635,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   };
   const q = Q[cur];
   const continueLabel = cur === "review" ? tr("Finish setup") : fromProfile && cur === "services" ? tr("Back to your profile") : fromReview ? tr("Back to review") : tr("Continue");
-  const continueOk = cur === "review" ? requiredOk : !reading && qValid(cur);
+  const continueOk = cur === "review" ? requiredOk : !reading && (qValid(cur) || (cur === "web" && webReadReady));
   const optional = cur === "deal" || cur === "logo";
   // Continue off: name what's missing (choice questions keep their own messages).
   const FIELD_LABEL: Record<string, [string, string]> = {

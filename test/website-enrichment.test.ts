@@ -1,5 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { shouldReuseEnrichment } from "@/lib/website-enrichment";
+import { canStartWebsiteEnrich, shouldReuseEnrichment } from "@/lib/website-enrichment";
+
+describe("Website step first read", () => {
+  const empty = { websiteValid: true, status: "idle", shortDescription: "", longDescription: "" } as const;
+  it("allows Continue to start the reader with a valid website and both descriptions empty", () => {
+    expect(canStartWebsiteEnrich(empty)).toBe(true);
+  });
+  it("does not start without a valid website", () => {
+    expect(canStartWebsiteEnrich({ ...empty, websiteValid: false })).toBe(false);
+  });
+  it("keeps descriptions required when either one already has text", () => {
+    expect(canStartWebsiteEnrich({ ...empty, shortDescription: "Short answer" })).toBe(false);
+    expect(canStartWebsiteEnrich({ ...empty, longDescription: "Long answer" })).toBe(false);
+  });
+  it("waits while reading and never repeats a completed or failed read from Continue", () => {
+    for (const status of ["running", "done", "failed"] as const) {
+      expect(canStartWebsiteEnrich({ ...empty, status })).toBe(false);
+    }
+  });
+});
 
 describe("one background website read", () => {
   const key = "https://example.com";
