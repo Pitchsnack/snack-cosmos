@@ -9,8 +9,11 @@ import type { CardInvestor } from '@/components/marketplace/buyer-browse-card';
 import { Textarea } from '@/components/ui/textarea';
 import { useTr } from '@/components/common/edit-info-popup';
 import { buyerDescriptionError, descriptionWords, singleLineDescription } from '@/lib/buyer-description';
+import { preferredLanguageText } from '@/lib/bilingual-fields';
 
 export const WANT_BUY_MAX = 80;
+export const buyerListingPreviewText = (en: string | null | undefined, th: string | null | undefined, fallbackEn: string, fallbackTh: string, language: string) =>
+  preferredLanguageText(en, th, language) || preferredLanguageText(fallbackEn, fallbackTh, language);
 export const wantBuyLen = (v: string) => Array.from(v).length;
 
 function WantTour({ anchor, onClose }: { anchor: HTMLElement | null; onClose: (focusField: boolean) => void }) {
@@ -102,10 +105,12 @@ export function BuyerListingTextEditor({ english, thai, sources, onChange, onRef
       suggest={() => onRefresh("description", lang)} onWantSuggest={() => onRefresh("headline", lang)}
     />;
   };
-  const description = preview.description?.trim() || english.description.trim()
-    ? <>{preview.description || english.description}</>
+  const language = L("en", "th");
+  const descriptionText = buyerListingPreviewText(preview.description, preview.descriptionTh, english.description, thai.description, language);
+  const description = descriptionText
+    ? <>{descriptionText}</>
     : <span className="buyer-preview-empty">{L("Your description shows here.", "คำอธิบายของท่านจะแสดงที่นี่")}</span>;
-  const want = preview.publishedHeadline?.trim() || english.headline.trim();
+  const want = buyerListingPreviewText(preview.publishedHeadline, preview.publishedHeadlineTh, english.headline, thai.headline, language);
   return <div className="buyer-listing-bilingual">
     <div className="mb-7"><p className="buyer-preview-caption"><Eye aria-hidden />{L("What sellers see", "สิ่งที่ผู้ขายเห็น")}</p>
       <StandardInvestorCard i={preview} descriptionContent={description} className="buyer-editor-preview"

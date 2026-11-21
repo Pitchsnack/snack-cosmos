@@ -1,8 +1,8 @@
 # Buyer firm, private descriptions, Listing step and NDA cards
-- [ ] Open every buyer wizard on its existing prefilled firm/company question; add the Listing step before Review with bilingual generated card texts and protected translations.
-- [ ] Store Website Short description privately for post-NDA cards, preserve public descriptions and existing buyer texts, and update private card titles/descriptions without changing fixed card height.
-- [ ] Make website reading produce distinct short/long texts, show the green line only for actual fills, and share precise empty/invalid Continue guidance across wizards.
-- [ ] Add focused tests, report existing-profile counts, verify EN/TH sign-up and Control + Add flows and NDA card states at desktop/mobile sizes, deliver screenshots, and remove test profiles.
+- [x] Open every buyer wizard on its existing prefilled firm/company question; add the Listing step before Review with bilingual generated card texts and protected translations.
+- [x] Store Website Short description privately for post-NDA cards, preserve public descriptions and existing buyer texts, and update private card titles/descriptions without changing fixed card height.
+- [x] Make website reading produce distinct short/long texts, show the green line only for actual fills, and share precise empty/invalid Continue guidance across wizards.
+- [x] Fifty-seven focused tests pass; existing counts: 25 in setup, 0 approved with empty public Description, 4 approved with empty published Wants to buy. Real Seller Browse/approved-NDA cards and a browser-only private-text/long-name fixture pass; buyer and seller closed cards are 451.188px with/without Wants to buy at 1440/1024/390 in EN/TH with no overflow. Screenshots delivered; TEMP Buyer Wizard PE 20261121 and TEMP Buyer Wizard Individual 20261121 deleted, with no other profiles removed.
 
 # Buyer wizard Website Auto Enrich
 - [x] Enable Website Continue for a valid URL with both descriptions empty so Auto Enrich can run; preserve required descriptions and failure behavior.

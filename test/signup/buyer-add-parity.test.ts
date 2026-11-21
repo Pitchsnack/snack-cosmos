@@ -27,17 +27,17 @@ function visibleAfterAdd(rel: BuyerRelation) {
 }
 
 describe("+ Add Investor Profile finishes with sign-up's wizard state", () => {
-  it("Corporate Enterprise opens on Website, step 1 of 8", () => {
-    expect(visibleAfterAdd("corporate")).toEqual(["web", "aum", "ticket", "rev", "deals", "photos", "team", "review"]);
+  it("Corporate Enterprise opens on the prefilled Firm step, step 1 of 10", () => {
+    expect(visibleAfterAdd("corporate")).toEqual(["name", "web", "aum", "ticket", "rev", "deals", "photos", "team", "listing", "review"]);
   });
 
-  it("Authorised representative / adviser opens on Website, step 1 of 7", () => {
-    expect(visibleAfterAdd("agent")).toEqual(["web", "ticket", "rev", "deals", "photos", "team", "review"]);
+  it("Authorised representative / adviser opens on the prefilled Firm step, step 1 of 9", () => {
+    expect(visibleAfterAdd("agent")).toEqual(["name", "web", "ticket", "rev", "deals", "photos", "team", "listing", "review"]);
   });
 
-  it("Individual Investor opens on Website, step 1 of 6 without saving a founding year", () => {
+  it("Individual Investor opens on the prefilled Company step, step 1 of 8 without saving a founding year", () => {
     const wizard = addState("individual");
-    expect(visibleAfterAdd("individual")).toEqual(["web", "ticket", "rev", "deals", "team", "review"]);
+    expect(visibleAfterAdd("individual")).toEqual(["name", "web", "ticket", "rev", "deals", "team", "listing", "review"]);
     expect(buyerSignupWizardState("individual", [], baseInput.web, null, null).from_signup).not.toContain("year");
   });
 
