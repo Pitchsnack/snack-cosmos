@@ -29,6 +29,20 @@ export function shortDescriptionFrom(bio: string): string {
   return out.slice(0, 300);
 }
 
+export function buyerWebsiteDescriptions(result: { bio?: unknown; shortBio?: unknown; longBio?: unknown }): { short: string; long: string } {
+  const bio = typeof result.bio === "string" ? result.bio.trim() : "";
+  const shortBio = typeof result.shortBio === "string" ? result.shortBio.trim() : "";
+  const longBio = typeof result.longBio === "string" ? result.longBio.trim() : "";
+  const shortSource = shortBio || bio || longBio;
+  const short = shortDescriptionFrom(shortSource);
+  let long = capWords(longBio || (shortBio ? bio : bio), 80).trim();
+  const firstSentence = shortSource.split(/(?<=[.!?])\s+/u)[0]?.trim() ?? "";
+  if (firstSentence && long.startsWith(firstSentence)) long = long.slice(firstSentence.length).trim();
+  const comparable = (value: string) => value.toLowerCase().replace(/[^a-z0-9ก-๙]+/giu, " ").trim();
+  if (!long || comparable(long) === comparable(short) || long.split(/\s+/).filter(Boolean).length < 5) long = "";
+  return { short, long };
+}
+
 export function capWords(text: string, limit: number): string {
   const words = text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
   return words.slice(0, limit).join(" ");

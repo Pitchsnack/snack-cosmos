@@ -65,6 +65,7 @@ export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<
       // One-step approval: Admin's published name and headline lead the card.
       publishedListingName: (bp?.published_listing_name ?? null) as string | null,
       publishedHeadline: (bp?.published_headline ?? null) as string | null,
+      publishedHeadlineTh: (bp?.published_headline_th ?? null) as string | null,
       // Never the firm's name before an approved NDA.
       name: null,
       type,
@@ -117,7 +118,8 @@ export type SellerFavPrivate = {
   investor_name: string; investor_type: string | null; acts_for_types: string[]; country: string | null; city: string | null;
   website_url: string | null; linkedin_url: string | null; email: string | null; year_founded: number | null;
   aum: string | null; min_ticket_size: string | null; max_ticket_size: string | null; revenue_min_m: number | null; revenue_max_m: number | null;
-  short_description: string | null; short_description_th?: string | null; long_description: string | null; long_description_th?: string | null; keywords: string[]; investment_focus: string[];
+  short_description: string | null; short_description_th?: string | null; long_description: string | null; long_description_th?: string | null;
+  private_description?: string | null; private_description_th?: string | null; keywords: string[]; investment_focus: string[];
   preferred_stages: string[]; preferred_industries: string[]; logo_signed_url: string | null;
   aum_band: string | null; ticket_band: string | null; revenue_min_band: string | null;
   people: { name: string; role: string; email: string; phone: string }[];
@@ -169,7 +171,7 @@ export async function loadSellerFavourites(userId:string) {
       const invIds = approvedInv.map((i) => i.id);
       const [{ data: invs }, { data: bps }, { data: links }] = await Promise.all([
         sb.from("investors").select("*").in("id", invIds),
-        sb.from("buyer_profiles").select("investor_id, city, description, people").in("investor_id", invIds),
+        sb.from("buyer_profiles").select("investor_id, city, description, description_th, private_description, private_description_th, people").in("investor_id", invIds),
         sb.from("startup_investors").select("investor_id, startups:startup_id(id, startup_name)").in("investor_id", invIds),
       ]);
       const linksBy = new Map<string, { id: string; startup_name: string; logo_signed_url: null }[]>();
@@ -194,6 +196,8 @@ export async function loadSellerFavourites(userId:string) {
           min_ticket_size: r.min_ticket_size ?? null, max_ticket_size: r.max_ticket_size ?? null,
           revenue_min_m: r.revenue_min_m == null ? null : Number(r.revenue_min_m), revenue_max_m: r.revenue_max_m == null ? null : Number(r.revenue_max_m),
           short_description: r.short_description ?? null, short_description_th: r.short_description_th ?? null, long_description: r.long_description ?? null, long_description_th: r.long_description_th ?? null,
+          private_description: bp.private_description ?? r.wizard?.bp?.private_description ?? null,
+          private_description_th: bp.private_description_th ?? r.wizard?.bp?.private_description_th ?? null,
           keywords: r.keywords ?? [], investment_focus: r.investment_focus ?? [], preferred_stages: r.preferred_stages ?? [], preferred_industries: r.preferred_industries ?? [],
           logo_signed_url: !r.logo_url ? null : /^https?:/.test(r.logo_url) ? r.logo_url : signed[r.logo_url] ?? null,
           aum_band: r.aum_band ?? null, ticket_band: r.ticket_band ?? null, revenue_min_band: r.revenue_min_band ?? null,

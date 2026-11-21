@@ -12,6 +12,9 @@ export interface EnrichInvestorResult {
   businessAddress?: string;
   linkedinUrl?: string;
   bio?: string;
+  /** Buyer Website step: distinct private short and long descriptions. */
+  shortBio?: string;
+  longBio?: string;
   keywords?: string[];
   preferredStages?: string[];
   preferredIndustries?: string[];

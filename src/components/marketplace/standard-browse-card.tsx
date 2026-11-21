@@ -9,7 +9,7 @@ import { LAST_LOGIN_LABEL, type LastLoginStep } from '@/lib/last-login';
 import { cardValue } from '@/lib/marketplace-contacts';
 
 export type StandardFigure = { label: string; value?: string | null; second?: string | null; /** Replaces the value text (e.g. a value with a "+n" badge). */ node?: ReactNode };
-export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, beforeName, figureLabel, footerDate, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip, hideRef, subtitleContent, defaultExpanded, style }: {
+export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, beforeName, figureLabel, footerDate, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip, hideRef, subtitleContent, titleContent, defaultExpanded, style }: {
   title: string; subtitle?: string; refNo: string; place?: string | null; description?: string | null;
   cover: (children: ReactNode) => ReactNode; status?: CardNdaStatus; newDays?: number | null; managed?: boolean;
   topRight?: ReactNode; badges?: { label: string; financial?: boolean }[]; figures: StandardFigure[];
@@ -22,7 +22,7 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
   /** Owner's last-login bucket on the left of Show more (browse/watchlist only; previews omit it). */
   lastLogin?: LastLoginStep | null; lastLoginTooltip?: string;
   /** Leave "{ref} · {place}" off the cover (the advisor cover draws its own). */
-  hideRef?: boolean; subtitleContent?: ReactNode; defaultExpanded?: boolean; style?: React.CSSProperties;
+  hideRef?: boolean; subtitleContent?: ReactNode; titleContent?: ReactNode; defaultExpanded?: boolean; style?: React.CSSProperties;
 }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(!!defaultExpanded);
@@ -91,7 +91,7 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
       <div ref={textBox} className="standard-card-text" data-card-text>
       {beforeName}
       <div ref={nameRow} className={cn('standard-card-name', cut && 'standard-card-title-cut', subtitle && 'standard-card-private-name')}>
-        <h3 ref={titleRef} title={title} data-card-title>{title}</h3>
+        <h3 ref={titleRef} title={title} data-card-title>{titleContent ?? title}</h3>
         {onOpen && <Button variant="unstyled" size="unstyled" onClick={onOpen} aria-label={title} className="standard-card-title-link" />}
         {subtitle && <p className="standard-card-subtitle" title={subtitle}>{subtitleContent ?? subtitle}</p>}
       </div>

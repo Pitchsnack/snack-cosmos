@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { capWords, enrichmentDto, shortDescriptionFrom, shouldReuseEnrichment, websiteDomain, websiteKey, type WebsiteEnrichmentDTO } from "./website-enrichment";
+import { buyerWebsiteDescriptions, capWords, enrichmentDto, shortDescriptionFrom, shouldReuseEnrichment, websiteDomain, websiteKey, type WebsiteEnrichmentDTO } from "./website-enrichment";
 
 const Input = z.object({ role: z.enum(["seller", "buyer", "advisor"]), id: z.string().uuid(), website: z.string().trim().max(500).optional(), retry: z.boolean().optional() });
 type Input = z.infer<typeof Input>;
@@ -60,19 +60,18 @@ async function saveSuggestions(data: Input, o: Owned, result: Record<string, unk
     return filled;
   }
   if (data.role === "buyer") {
-    const short = bio ? shortDescriptionFrom(bio) : "";
-    const long = bio ? capWords(bio, 80) : "";
-    if (bio && !o.row.short_description?.trim()) {
+    const { short, long } = buyerWebsiteDescriptions(result);
+    if (long && !o.row.short_description?.trim()) {
       await o.sb.from("investors").update({ short_description: long, updated_at: new Date().toISOString() }).eq("id", data.id);
       filled.push("about");
     }
     const buyer = o.buyer;
-    if (bio && !String(buyer.p.description ?? "").trim()) {
+    if (short && !String(buyer.p.private_description ?? "").trim()) {
       if (buyer.extra) {
         const { data: cur } = await o.sb.from("investors").select("wizard").eq("id", data.id).single();
         const w = cur?.wizard ?? {};
-        await o.sb.from("investors").update({ wizard: { ...w, bp: { ...(w.bp ?? {}), description: short } } }).eq("id", data.id);
-      } else await o.sb.from("buyer_profiles").update({ description: short }).eq("user_id", buyer.bpUser ?? buyer.p.user_id);
+        await o.sb.from("investors").update({ wizard: { ...w, bp: { ...(w.bp ?? {}), private_description: short } } }).eq("id", data.id);
+      } else await o.sb.from("buyer_profiles").update({ private_description: short }).eq("user_id", buyer.bpUser ?? buyer.p.user_id);
       filled.push("desc");
     }
     return filled;

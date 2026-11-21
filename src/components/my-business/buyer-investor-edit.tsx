@@ -436,7 +436,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         ...(directory && !f.ticket_band && !inv.ticket_band ? {} : {ticket_band: (f.ticket_band || null) as never}),
         revenue_min_band: (f.rev_band || null) as never,
         
-        registration_no: individual ? null : t(f.registration_no),
+        registration_no: t(f.registration_no),
         ...(descriptionChanged(f.description, data.buyer.description) ? {description: f.description.trim()} : {}), deal_types: deals,
         description_th: thx.description.trim(), short_description_th: thx.short_description.trim() || null, keywords_th: keywordsTh,
         suggested_headline: t(f.suggested_headline), suggested_headline_th: thx.suggested_headline.trim() || null,

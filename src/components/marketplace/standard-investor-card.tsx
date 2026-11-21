@@ -29,6 +29,7 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
   const p = privateData;
   const name = p?.investor_name;
   const type = p?.investor_type ?? i.type;
+  const typeText = cardValue(typeName(type, p?.acts_for_types ?? i.actsFor), language) || 'Investor';
   const sectors = p?.preferred_industries ?? i.sectors;
   const stages = p?.preferred_stages ?? i.stages;
   const geography = (p ? p.investment_focus.join(' · ') : i.geography)?.split(/\s*[,·]\s*/).filter(Boolean).join(' · ');
@@ -39,9 +40,7 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
   const figures = [band('Ticket size', p?.ticket_band ?? i.ticketBand)];
   if (!individual) figures.push(band(secondLabel, p?.aum_band ?? i.aumBand));
   const description = p
-    ? language === 'th'
-      ? p.short_description_th || p.short_description || p.long_description_th || p.long_description
-      : p.short_description || p.short_description_th || p.long_description || p.long_description_th
+    ? preferredLanguageText(p.private_description, p.private_description_th, language) || preferredLanguageText(i.description, i.descriptionTh, language)
     : preferredLanguageText(i.description, i.descriptionTh, language);
   const photo = p?.media.find((m) => m.image_signed_url)?.image_signed_url;
   const initials = name?.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
@@ -59,13 +58,18 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
       <div className="standard-card-plain-row">{cell(baht('Min. target revenue (฿)', p?.revenue_min_band ?? i.revBand))}</div>
     </>}
   </div>;
-  return <StandardBrowseCard title={name || cardValue(typeName(type, i.actsFor), language) || ''} subtitle={name ? cardValue(typeName(type, p?.acts_for_types ?? i.actsFor), language) || undefined : undefined}
+  const publishedWant = preferredLanguageText(i.publishedHeadline, i.publishedHeadlineTh, language).trim();
+  const wantLine = wantBuy !== undefined ? wantBuy : publishedWant
+    ? <p className="standard-card-want" title={`${language === 'th' ? 'ต้องการซื้อ:' : 'Wants to buy:'} ${publishedWant}`}><b>{language === 'th' ? 'ต้องการซื้อ:' : 'Wants to buy:'}</b> {publishedWant}</p>
+    : undefined;
+  return <StandardBrowseCard title={name ? `${name} (${typeText})` : typeText}
+    titleContent={name ? <span className="standard-investor-private-title"><span className="standard-investor-private-name">{name}</span><span className="standard-investor-private-type">({typeText})</span></span> : undefined}
     refNo={i.refNo} place={contactPlace(p?.city || i.city || p?.country || i.country, language)} description={description}
     status={cardNdaStatus(i.status)} hideStatus={hideStatus} newDays={i.newDays} managed={i.managed} topRight={topRight} selected={selected} onOpen={onClick} className={cn('standard-investor-card', className)} sourceType={i.type ?? i.codeName} tag={tag}
     lastLogin={lastLoginStep ?? i.lastLoginStep} lastLoginTooltip={t('When the buyer last logged in to PitchSnack')}
     cover={(children) => p ? <div className="standard-card-private-cover">{photo ? <img src={photo} alt="" /> : <div className="standard-card-logo">{p.logo_signed_url ? <img src={p.logo_signed_url} alt="" /> : initials}</div>}{children}</div> : <BuyerCover type={i.type} src={i.coverUrl}>{children}</BuyerCover>}
     badges={[...(i.verified ? [{ label: 'Verified investor' }] : []), ...(i.proofOfFunds ? [{ label: 'Proof of funds' }] : [])]}
-    descriptionContent={descriptionContent} afterName={wantBuy} figures={exactFigures?.figures ?? figures} fit={exactFigures?.fit ?? band('Min. target revenue', p?.revenue_min_band ?? i.revBand)}
+    descriptionContent={descriptionContent} afterName={wantLine} figures={exactFigures?.figures ?? figures} fit={exactFigures?.fit ?? band('Min. target revenue', p?.revenue_min_band ?? i.revBand)}
     textRow={{ label: 'Investment focus', value: cardValue(i.dealTypes.join(' · '), language) }}
     more={<>{moreFigures}{(p?.city ?? i.city) && <StandardCardSection label="Based in">{contactPlace(p?.city ?? i.city, language)}</StandardCardSection>}{!!(sectors.length || stages.length || i.dealTypes.length) && <StandardCardSection label="Focus"><StandardCardChips values={[...sectors, ...stages, ...i.dealTypes]} /></StandardCardSection>}</>} />;
 }

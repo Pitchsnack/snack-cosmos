@@ -1,11 +1,17 @@
 /** Setup wizards: one line under the buttons naming what Continue still needs. */
-export function continueBlockedLine(missing: string[], lang: "en" | "th", upload = false): string | null {
+export function continueBlockedLine(missing: string[], lang: "en" | "th", upload = false, invalid: string[] = []): string | null {
   if (upload) return lang === "th" ? "เพิ่มรูปภาพอย่างน้อย 1 รูปเพื่อดำเนินการต่อ" : "To continue, add at least 1 photo.";
-  const m = [...new Set(missing.filter(Boolean))];
-  if (!m.length) return null;
   const and = lang === "th" ? " และ " : " and ";
-  const list = m.length === 1 ? m[0] : `${m.slice(0, -1).join(", ")}${and}${m[m.length - 1]}`;
-  return lang === "th" ? `กรอก ${list} เพื่อดำเนินการต่อ` : `To continue, fill in ${list}.`;
+  const list = (values: string[]) => {
+    const unique = [...new Set(values.filter(Boolean))];
+    return unique.length < 2 ? (unique[0] ?? "") : `${unique.slice(0, -1).join(", ")}${and}${unique[unique.length - 1]}`;
+  };
+  const m = list(missing);
+  const bad = list(invalid.filter((field) => !m.includes(field)));
+  if (m && bad) return lang === "th" ? `กรอก ${m} และตรวจสอบ ${bad} เพื่อดำเนินการต่อ` : `To continue, fill in ${m} and check ${bad}.`;
+  if (bad) return lang === "th" ? `ตรวจสอบ ${bad} เพื่อดำเนินการต่อ` : `To continue, check ${bad}.`;
+  if (m) return lang === "th" ? `กรอก ${m} เพื่อดำเนินการต่อ` : `To continue, fill in ${m}.`;
+  return null;
 }
 
 export function ContinueBlockedLine({ text }: { text: string | null | undefined }) {

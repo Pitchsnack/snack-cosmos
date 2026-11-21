@@ -35,6 +35,20 @@ export function cleanListingTextTranslations(value: unknown): ListingTextTransla
   return out;
 }
 
+export function seedGeneratedListingTranslations(base: ListingTextInput, marks: unknown): ListingTextTranslation[] {
+  const out = cleanListingTextTranslations(marks);
+  for (const field of ["headline", "description"] as const) {
+    const enKey = field;
+    const thKey = field === "headline" ? "headlineTh" : "descriptionTh";
+    const en = clean(base[enKey]);
+    const th = clean(base[thKey]);
+    if (!en || !th) continue;
+    if (!out.some((item) => item.field === field && item.target === "th")) out.push({ field, target: "th", source: en });
+    if (!out.some((item) => item.field === field && item.target === "en")) out.push({ field, target: "en", source: th });
+  }
+  return out;
+}
+
 export function withoutListingTextTranslation(marks: unknown, field: ListingTextField, target: ListingTextLanguage) {
   return cleanListingTextTranslations(marks).filter((item) => item.field !== field || item.target !== target);
 }

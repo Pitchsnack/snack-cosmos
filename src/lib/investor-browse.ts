@@ -21,6 +21,7 @@ export type PublicInvestor = {
   /** One-step approval: Admin's published listing name and headline lead the card once live. */
   publishedListingName?: string | null;
   publishedHeadline?: string | null;
+  publishedHeadlineTh?: string | null;
   /** Always null before an approved NDA. */
   name: string | null;
   type: string | null;

@@ -179,7 +179,7 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
         company_type_source: (inv.company_type_source ?? "account") as string,
         setup_done_at: inv.setup_done_at as string | null,
         setup_reached: inv.setup_reached as string | null,
-        wizard: (inv.wizard ?? {}) as { answered?: string[]; pe_ticked?: boolean; from_signup?: string[] },
+        wizard: (inv.wizard ?? {}) as { answered?: string[]; pe_ticked?: boolean; from_signup?: string[]; listing_base?: { headline?: string; headlineTh?: string; description?: string; descriptionTh?: string }; listing_translations?: import("./listing-text-translations").ListingTextTranslation[] },
         investment_focus_raw: (inv.investment_focus ?? []) as string[],
         sector_picks: (inv.sector_picks ?? null) as { types: string[]; kinds: Record<string, string[]>; other: string[] } | null,
       },
@@ -188,6 +188,8 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
         status: p.status as string,
         description: (p.description ?? "") as string,
         description_th: (p.description_th ?? "") as string,
+        private_description: (p.private_description ?? "") as string,
+        private_description_th: (p.private_description_th ?? "") as string,
         suggested_headline: (p.suggested_headline ?? "") as string,
         suggested_headline_th: (p.suggested_headline_th ?? "") as string,
         deal_types: (p.deal_types ?? []) as string[],
@@ -334,11 +336,13 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       (relation !== "individual" && yearError(data.year_founded?.toString() ?? "")) ||
       (!/^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(data.website_url ?? "") && "Enter a valid website address, e.g. www.yourfirm.com");
     if (!r.directory && problem) throw new Error(problem);
-    if (!r.directory && data.complete_setup && !buyerSetupDescriptionsComplete(data.description ?? r.p.description, storedAboutEn) && !buyerSetupDescriptionsComplete(data.description ?? r.p.description, storedAboutTh)) throw new Error("Add both a short description and a long description before finishing.");
+    if (!r.directory && data.complete_setup) {
+      if (!buyerSetupDescriptionsComplete(r.p.private_description, storedAboutEn) && !buyerSetupDescriptionsComplete(r.p.private_description_th, storedAboutTh)) throw new Error("Add both a short description and a long description before finishing.");
+      if (!String(data.description ?? r.p.description ?? "").trim() && !String(data.description_th ?? r.p.description_th ?? "").trim()) throw new Error("Add the public Description on the Listing step before finishing.");
+    }
     const own = (x?: string | null) => !x || /^https?:/.test(x) || x.includes(`/${investorId}/`);
     if (!own(data.logo_path) || (data.media ?? []).some((m) => !own(m.image_path))) throw new Error("Invalid file.");
     const n = (v?: string | null) => (v === undefined ? undefined : v || null);
-    let setupAboutEn: string | null | undefined;
     const inv: Record<string, unknown> = {
       investor_name: data.investor_name, investor_type: n(data.investor_type), year_founded: data.year_founded ?? null,
       ...(data.company_size_band !== undefined ? { company_size_band: data.company_size_band } : {}),
@@ -358,7 +362,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
         {en:stored?.short_description ?? null,th:stored?.short_description_th ?? null},
         {en:data.short_description?.trim() || null,th:data.short_description_th?.trim() || null},
       );
-      if (about.en !== undefined) { inv.short_description=about.en; setupAboutEn=about.en; }
+      if (about.en !== undefined) inv.short_description=about.en;
       if (about.th !== undefined) inv.short_description_th=about.th;
     } else if (data.short_description_th !== undefined) inv.short_description_th = data.short_description_th || null;
     if (data.investment_focus) inv.investment_focus = data.investment_focus;
@@ -393,9 +397,8 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
       ...(data.firm_name === undefined ? {} : { legal_name: n(data.firm_name) }), city: n(data.city), country: n(data.country), address: n(data.business_address),
       aum_exact: n(data.aum), aum_value: num(data.aum), ticket_min: num(data.min_ticket_size), ticket_max: num(data.max_ticket_size),
       ticket_exact: [data.min_ticket_size, data.max_ticket_size].filter(Boolean).join(" – ") || null,
-      ...(data.complete_setup ? {} : { private_description: n(data.short_description) }), updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
-    if (setupAboutEn !== undefined) bp.private_description=setupAboutEn;
     if (data.preferred_stages) bp.stages = data.preferred_stages;
     if (data.preferred_industries) bp.sectors = data.preferred_industries;
     if (data.portfolio_extra) { const {preservePortfolioEntries} = await import("./profile-edit-rules"); bp.portfolio = preservePortfolioEntries(data.portfolio_extra, r.p.portfolio); }
@@ -469,12 +472,19 @@ const Wizard = z.object({
   deal_types: arr(12), preferred_stages: arr(12), geography: arr(12), preferred_industries: arr(40),
   sector_picks: z.object({ types: z.array(z.string().max(30)).max(5), kinds: z.record(z.string().max(20), z.array(z.string().max(30)).max(20)), other: z.array(z.string().max(80)).max(40) }).nullable().optional(),
   description: z.string().trim().optional(),
+  description_th: z.string().trim().max(2000).optional(),
+  private_description: z.string().max(2000).optional(),
+  private_description_th: z.string().max(2000).optional(),
+  suggested_headline: z.string().trim().max(300).nullable().optional(),
+  suggested_headline_th: z.string().trim().max(300).nullable().optional(),
   short_description: z.string().max(4000).optional(),
   short_description_th: z.string().max(4000).optional(),
+  listing_base: z.object({ headline: z.string().max(300), headlineTh: z.string().max(300), description: z.string().max(2000), descriptionTh: z.string().max(2000) }).optional(),
+  listing_finalize: z.boolean().optional(),
   people: z.array(z.object({ name: z.string().max(120), role: z.string().max(120).default(""), role_th: z.string().max(120).optional(), email: z.string().max(200).default(""), phone: z.string().max(60).default("") })).max(20).optional(),
   answered: z.array(z.string().max(20)).max(20).optional(),
   pe_ticked: z.boolean().optional(),
-  setup_reached: z.enum(["role", "type", "name", "web", "aum", "ticket", "rev", "deals", "sectors", "photos", "desc", "team", "review"]).optional(),
+  setup_reached: z.enum(["role", "type", "name", "web", "aum", "ticket", "rev", "deals", "sectors", "photos", "desc", "team", "listing", "review"]).optional(),
   acts_for_types: arr(7),
 });
 
@@ -485,9 +495,13 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     const r = await resolveBuyer(context.userId, data.investor_id);
     const { sb, p, investorId } = r;
     const { data: cur } = await sb.from("investors").select("investor_name, website_url, wizard, short_description, short_description_th").eq("id", investorId).single();
-    if (descriptionChanged(data.description, p.description) && data.description && p.status === "live") {
-      const bad = descriptionError(data.description);
+    if (p.status === "live") {
+      const bad = (descriptionChanged(data.description, p.description) && data.description && descriptionError(data.description))
+        || (descriptionChanged(data.description_th, p.description_th) && data.description_th && descriptionError(data.description_th));
       if (bad) throw new Error("Description not saved: it needs a fix.");
+    }
+    for (const value of [data.suggested_headline, data.suggested_headline_th]) {
+      if (value != null && Array.from(value).length > 80) throw new Error("Keep it to 80 characters.");
     }
     const inv: Record<string, unknown> = { updated_by: context.userId, updated_at: new Date().toISOString() };
     const bp: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -524,6 +538,18 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     if (data.preferred_industries) { inv.preferred_industries = data.preferred_industries; bp.sectors = data.preferred_industries; }
     if (has("sector_picks")) inv.sector_picks = data.sector_picks;
     if (has("description")) { bp.description = data.description || null; bp.headline = data.description || null; }
+    if (has("description_th")) bp.description_th = data.description_th || null;
+    if (has("suggested_headline")) bp.suggested_headline = data.suggested_headline || null;
+    if (has("suggested_headline_th")) bp.suggested_headline_th = data.suggested_headline_th || null;
+    // Website Short is private and separate from both the public Description and About Company.
+    if (has("private_description") || has("private_description_th")) {
+      const short = routeWizardText(
+        { en: p.private_description ?? null, th: p.private_description_th ?? null },
+        { en: has("private_description") ? data.private_description?.trim() || null : undefined, th: has("private_description_th") ? data.private_description_th?.trim() || null : undefined },
+      );
+      if (short.en !== undefined) bp.private_description = short.en;
+      if (short.th !== undefined) bp.private_description_th = short.th;
+    }
     // About Company follows the typed letters in setup; Edit information keeps its own tab rule.
     if (has("short_description") || has("short_description_th")) {
       if (buyerAboutError(data.short_description, cur?.short_description) || buyerAboutError(data.short_description_th, cur?.short_description_th)) throw new Error("Keep it to 80 words.");
@@ -531,13 +557,43 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
         {en:cur?.short_description ?? null,th:cur?.short_description_th ?? null},
         {en:has("short_description") ? data.short_description?.trim() || null : undefined,th:has("short_description_th") ? data.short_description_th?.trim() || null : undefined},
       );
-      if (about.en !== undefined) { inv.short_description=about.en; bp.private_description=about.en; }
+      if (about.en !== undefined) inv.short_description=about.en;
       if (about.th !== undefined) inv.short_description_th=about.th;
+    }
+    if (data.listing_base) inv.wizard = { ...(cur.wizard ?? {}), listing_base: data.listing_base };
+    let listing: import("./listing-text-translations").ListingTextValues | undefined;
+    if (data.listing_finalize) {
+      const descriptions = [p.description ?? "", p.description_th ?? ""];
+      if (!descriptions.some((value) => value.trim())) throw new Error("Add a short description.");
+      const badDescription = descriptions.find((value) => value.trim() && descriptionError(value));
+      if (badDescription) throw new Error(descriptionError(badDescription) ?? "Check the description.");
+      const base = (cur.wizard as any)?.listing_base ?? {
+        headline: p.suggested_headline ?? "", headlineTh: p.suggested_headline_th ?? "",
+        description: p.description ?? "", descriptionTh: p.description_th ?? "",
+      };
+      const { planListingTextSave, seedGeneratedListingTranslations } = await import("./listing-text-translations");
+      const { resolveListingTextPlan } = await import("./listing-text-translations.server");
+      const storedMarks = (cur.wizard as any)?.listing_translations ?? [];
+      const translations = (cur.wizard as any)?.listing_base ? seedGeneratedListingTranslations(base, storedMarks) : storedMarks;
+      const resolved = await resolveListingTextPlan(planListingTextSave(
+        { ...base, translations },
+        { headline: p.suggested_headline ?? "", headlineTh: p.suggested_headline_th ?? "", description: p.description ?? "", descriptionTh: p.description_th ?? "" },
+      ));
+      Object.assign(bp, {
+        suggested_headline: resolved.headline || null, suggested_headline_th: resolved.headlineTh || null,
+        description: resolved.description || null, description_th: resolved.descriptionTh || null, headline: resolved.description || null,
+      });
+      inv.wizard = {
+        ...((inv.wizard as Record<string, unknown> | undefined) ?? cur.wizard ?? {}),
+        listing_base: { headline: resolved.headline, headlineTh: resolved.headlineTh, description: resolved.description, descriptionTh: resolved.descriptionTh },
+        listing_translations: resolved.translations,
+      };
+      listing = resolved;
     }
     // Team members: the same list as Edit information › Team.
     if (data.people) bp.people = data.people.filter((m) => m.name.trim());
     if (data.answered || data.pe_ticked !== undefined) {
-      inv.wizard = { ...(cur.wizard ?? {}), ...(data.answered ? { answered: data.answered } : {}), ...(data.pe_ticked !== undefined ? { pe_ticked: data.pe_ticked } : {}) };
+      inv.wizard = { ...((inv.wizard as Record<string, unknown> | undefined) ?? cur.wizard ?? {}), ...(data.answered ? { answered: data.answered } : {}), ...(data.pe_ticked !== undefined ? { pe_ticked: data.pe_ticked } : {}) };
     }
     const lock = await (await import("./identity-lock.server")).guardLockedIdentity(sb, "investors", investorId, inv, context.userId);
     const { error } = await sb.from("investors").update(inv).eq("id", investorId);
@@ -545,7 +601,7 @@ export const saveBuyerWizard = createServerFn({ method: "POST" })
     const { error: e2 } = await writeBp(r, context.userId, bp);
     if (e2) throw new Error(e2.message);
     await lock.finish();
-    return { ok: true };
+    return { ok: true, listing };
   });
 
 /** Wizard Logo and photos: saves the investor record's Logo and Media as each upload finishes. */

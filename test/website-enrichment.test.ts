@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canStartWebsiteEnrich, shouldReuseEnrichment } from "@/lib/website-enrichment";
+import { buyerWebsiteDescriptions, canStartWebsiteEnrich, shouldReuseEnrichment } from "@/lib/website-enrichment";
 
 describe("Website step first read", () => {
   const empty = { websiteValid: true, status: "idle", shortDescription: "", longDescription: "" } as const;
@@ -17,6 +17,39 @@ describe("Website step first read", () => {
     for (const status of ["running", "done", "failed"] as const) {
       expect(canStartWebsiteEnrich({ ...empty, status })).toBe(false);
     }
+  });
+});
+
+describe("buyer website descriptions", () => {
+  it("keeps the reader's short and long texts different", () => {
+    const result = buyerWebsiteDescriptions({
+      shortBio: "Example Capital backs Thai healthcare companies.",
+      longBio: "Its twelve-person team takes majority stakes and supports governance and regional growth.",
+    });
+    expect(result.short).toBe("Example Capital backs Thai healthcare companies.");
+    expect(result.long).toContain("twelve-person team");
+    expect(result.long).not.toBe(result.short);
+  });
+
+  it("removes a repeated opening sentence from the long text", () => {
+    const result = buyerWebsiteDescriptions({
+      shortBio: "Example Capital backs Thai healthcare companies.",
+      longBio: "Example Capital backs Thai healthcare companies. Its team supports founders with governance and regional expansion plans.",
+    });
+    expect(result.long).toBe("Its team supports founders with governance and regional expansion plans.");
+  });
+
+  it("fills only short when the website has enough for one text", () => {
+    expect(buyerWebsiteDescriptions({ bio: "Example Capital backs Thai healthcare companies." })).toEqual({
+      short: "Example Capital backs Thai healthcare companies.",
+      long: "",
+    });
+  });
+
+  it("uses the remainder of a legacy biography instead of duplicating it", () => {
+    const result = buyerWebsiteDescriptions({ bio: "Example Capital backs Thai healthcare companies. Its team supports founders with governance and regional expansion plans." });
+    expect(result.short).toContain("Example Capital");
+    expect(result.long).toBe("Its team supports founders with governance and regional expansion plans.");
   });
 });
 

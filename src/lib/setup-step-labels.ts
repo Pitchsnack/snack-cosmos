@@ -12,6 +12,7 @@ export const BUYER_STEP_NAMES: Record<string, Names> = {
   photos: { short: ["Photos", "รูปภาพ"], full: ["Logo and photos", "โลโก้และรูปภาพ"] },
   desc: { short: ["Description", "คำอธิบาย"], full: ["Description for sellers", "คำอธิบายสำหรับผู้ขาย"] },
   team: { short: ["Team", "ทีมงาน"], full: ["Your team", "ทีมงานของท่าน"] },
+  listing: { short: ["Listing", "ประกาศ"], full: ["Wants to buy and description", "สิ่งที่ต้องการซื้อและคำอธิบาย"] },
   review: { short: ["Review", "ตรวจสอบ"], full: ["Review your answers", "ตรวจสอบข้อมูล"] },
 };
 export const ADVISOR_STEP_NAMES: Record<string, Names> = {

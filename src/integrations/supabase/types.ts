@@ -1460,6 +1460,7 @@ export type Database = {
           pof_verified_at: string | null
           portfolio: Json
           private_description: string | null
+          private_description_th: string | null
           profile_views_month: number
           published_headline: string | null
           published_headline_th: string | null
@@ -1515,6 +1516,7 @@ export type Database = {
           pof_verified_at?: string | null
           portfolio?: Json
           private_description?: string | null
+          private_description_th?: string | null
           profile_views_month?: number
           published_headline?: string | null
           published_headline_th?: string | null
@@ -1570,6 +1572,7 @@ export type Database = {
           pof_verified_at?: string | null
           portfolio?: Json
           private_description?: string | null
+          private_description_th?: string | null
           profile_views_month?: number
           published_headline?: string | null
           published_headline_th?: string | null

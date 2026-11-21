@@ -584,6 +584,10 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 /* Buyer editor: shared investor preview and description with the existing form below. */
 :root { --buyer-preview-ring:#2563EB; --buyer-description-invalid:#FCA5A5; --buyer-description-mark:#FDE68A; }
 .buyer-description-layout { display:grid; grid-template-columns:300px minmax(0,1fr); gap:28px; align-items:start; }
+.buyer-description-layout-stacked { grid-template-columns:minmax(0,1fr); gap:22px; }
+.buyer-description-layout-stacked .buyer-preview-col { position:static; }
+.buyer-description-layout-stacked .buyer-editor-preview { width:min(100%,340px); margin-inline:auto; }
+.buyer-description-layout-stacked .buyer-preview-caption { justify-content:center; }
 .buyer-preview-col { min-width:0; }
 .buyer-preview-col { position:sticky; top:64px; }
 .buyer-preview-sticky { position:static; }

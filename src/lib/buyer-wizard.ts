@@ -4,7 +4,7 @@ import { buyerAboutError } from "./buyer-description";
 import { descriptionError, regError, yearError, showsStages } from "./investor-bands";
 /** Buyer investor-profile setup wizard: question order, visibility by role, progress. */
 export type BuyerRelation = "individual" | "corporate" | "agent";
-export type QId = "role" | "type" | "name" | "web" | "aum" | "ticket" | "rev" | "deals" | "sectors" | "photos" | "desc" | "team" | "review";
+export type QId = "role" | "type" | "name" | "web" | "aum" | "ticket" | "rev" | "deals" | "sectors" | "photos" | "desc" | "team" | "listing" | "review";
 
 export const ALL_STEPS: { id: QId; sec: string }[] = [
   { id: "role", sec: "About you" },
@@ -19,6 +19,7 @@ export const ALL_STEPS: { id: QId; sec: string }[] = [
   { id: "photos", sec: "Firm images" },
   { id: "desc", sec: "Public profile" },
   { id: "team", sec: "Your team" },
+  { id: "listing", sec: "Your listing" },
   { id: "review", sec: "Review" },
 ];
 
@@ -26,7 +27,8 @@ export const ALL_STEPS: { id: QId; sec: string }[] = [
 export function stepsFor(rel: BuyerRelation | null) {
   // Question 2 (type) asks a Corporate Enterprise one type and a representative one or more; AUM is corporate only.
   // Logo and photos: firm buyers only (never an Individual Investor). Every buyer answers the descriptions on the Website page.
-  return ALL_STEPS.filter((s) => (s.id === "type" ? rel !== "individual" : s.id === "aum" ? rel === "corporate" || rel == null : s.id === "photos" ? rel !== "individual" : s.id === "desc" ? false : true));
+  return ALL_STEPS.filter((s) => (s.id === "type" ? rel !== "individual" : s.id === "aum" ? rel === "corporate" || rel == null : s.id === "photos" ? rel !== "individual" : s.id === "desc" ? false : true))
+    .map((s) => s.id === "name" && rel === "individual" ? { ...s, sec: "About you" } : s);
 }
 
 /** Old furthest-step keys mapped onto the new order: Industries -> Deal type, Description -> Photos (firm buyers). */
@@ -41,7 +43,7 @@ export function normalizeBuyerReached(rel: BuyerRelation | null, reached: string
 export function buyerWebValid(web: string, desc: string, about: string, name: string, firm: boolean): boolean {
   // Individual Investors may leave the website blank; a typed one must still be valid.
   if (firm ? !isValidUrl(web) : !!web.trim() && !isValidUrl(web)) return false;
-  return !(desc.trim() && descriptionError(desc)) && !buyerAboutError(about, null);
+  return !!desc.trim() && !!about.trim() && !(desc.trim() && descriptionError(desc)) && !buyerAboutError(about, null);
 }
 
 export const teamHasName = (people: { name: string }[] | undefined) => (people ?? []).some((p) => p.name.trim().length > 0);
@@ -70,7 +72,7 @@ export function buyerSkips(fromSignup: string[] | undefined, v: BuyerSkipVals): 
   if (f.has("type") && (v.role === "agent" ? (v.actsFor ?? []).length > 0 : !!v.type && v.type !== "Individual Investor")) s.add("type");
   // Website always shows: it holds the two descriptions.
   if (f.has("sectors") && (v.sectors ?? []).length > 0) s.add("sectors");
-  if (f.has("address") && v.nameDone) s.add("name");
+  // The confirmed firm/company question always opens first for the buyer to check.
   return s;
 }
 
@@ -130,19 +132,22 @@ export function buyerProgressFor(rel: BuyerRelation | null, iv: {
   short_description?: string | null; aum_band?: string | null; ticket_band?: string | null; revenue_min_band?: string | null; preferred_stages?: string[]; logo_path?: string | null; media?: unknown[]; setup_reached?: string | null;
   sector_picks?: { types: string[]; other: string[] } | null;
   wizard?: { answered?: string[]; from_signup?: string[] } | null;
-} | null | undefined, buyer?: { deal_types: string[]; description: string }, people?: { name: string }[]) {
+} | null | undefined, buyer?: { deal_types: string[]; description: string; description_th?: string; private_description?: string; private_description_th?: string; suggested_headline?: string; suggested_headline_th?: string }, people?: { name: string }[]) {
   const type = iv?.investor_type ?? "", acts = iv?.acts_for_types ?? [];
   const country = iv?.country ?? "Thailand", thai = country === "Thailand";
   const desc = buyer?.description ?? "";
   const valid: Record<QId, boolean> = {
     role: !!rel, type: rel === "agent" ? acts.length > 0 : !!type && type !== "Individual Investor",
     name: !!iv?.country && (iv?.investor_name?.trim().length ?? 0) >= 2 && (rel === "individual" || (!yearError(String(iv?.year_founded ?? "")) && !regError(iv?.registration_no ?? "", country))) && !!iv?.address_line1?.trim() && !!iv?.address_city_district?.trim() && (!thai || (!!iv?.address_province_state && /^\d{5}$/.test(iv?.postal_code ?? ""))),
-    web: buyerWebValid(iv?.website_url ?? "", desc, iv?.short_description ?? "", iv?.investor_name ?? "", rel !== "individual"), aum: !!iv?.aum_band, ticket: !!iv?.ticket_band, rev: !!iv?.revenue_min_band,
+    web: buyerWebValid(iv?.website_url ?? "", buyer?.private_description ?? buyer?.private_description_th ?? "", iv?.short_description ?? "", iv?.investor_name ?? "", rel !== "individual"), aum: !!iv?.aum_band, ticket: !!iv?.ticket_band, rev: !!iv?.revenue_min_band,
     deals: !!buyer?.deal_types.length && (!showsStages(type, rel === "agent" ? acts : null) || !!iv?.preferred_stages?.length),
     sectors: (iv?.preferred_industries ?? []).includes("Sector Agnostic") || (!!iv?.sector_picks?.types.length && (!iv.sector_picks.types.includes("other") || !!iv.sector_picks.other.length)),
     photos: !!iv?.logo_path && !!iv?.media?.length,
     desc: !!desc.trim() && !descriptionError(desc),
     team: teamHasName(people),
+    listing: [buyer?.description ?? "", buyer?.description_th ?? ""].some((value) => value.trim() && !descriptionError(value))
+      && [buyer?.description ?? "", buyer?.description_th ?? ""].every((value) => !value.trim() || !descriptionError(value))
+      && [buyer?.suggested_headline ?? "", buyer?.suggested_headline_th ?? ""].every((value) => Array.from(value).length <= 80),
     review: false,
   };
   const skip = buyerSkips(iv?.wizard?.from_signup, {role: rel, type, web: iv?.website_url ?? "", year: iv?.year_founded ? String(iv.year_founded) : "", name: iv?.investor_name ?? "", actsFor: acts, sectors: iv?.preferred_industries ?? [], nameDone: valid.name});

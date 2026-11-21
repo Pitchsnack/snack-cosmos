@@ -57,11 +57,14 @@ Field rules:
 - investmentFocus: geographies (countries or regions) the investor invests in, max 10.
 - keywords: up to 5 short product/service tags describing what the firm does.
 - aum / ticket sizes: only pick a bucket when the site states figures that clearly fall in it.
+- shortBio: a one-line investor summary in 1–2 sentences and at most 25 words. It may name the firm.
+- longBio: a fuller overview of at most 80 words covering what the firm invests in and how, plus its funds or team when the website says so. Never copy shortBio and do not start with the same sentence. If the website only has enough material for one text, return shortBio and omit longBio.
+- bio: retain the legacy fuller website biography for other profile editors.
 
 Text:
 ${corpus}
 
-Return JSON with keys: investorName, firmName, investorType, yearFounded (number), email, headquarters (country), city, businessAddress, linkedinUrl, bio (<=1500 chars), keywords (string[] <=5), preferredStages (string[]), preferredIndustries (string[] <=5), investmentFocus (string[] <=10), aum, minTicketSize, maxTicketSize.`;
+Return JSON with keys: investorName, firmName, investorType, yearFounded (number), email, headquarters (country), city, businessAddress, linkedinUrl, bio (<=1500 chars), shortBio (<=300 chars), longBio (<=1000 chars), keywords (string[] <=5), preferredStages (string[]), preferredIndustries (string[] <=5), investmentFocus (string[] <=10), aum, minTicketSize, maxTicketSize.`;
   return { system, user };
 }
 
@@ -125,6 +128,8 @@ export function normalizeInvestorResult(raw: unknown): EnrichInvestorResult {
     businessAddress: str(r.businessAddress, 500),
     linkedinUrl: url(r.linkedinUrl),
     bio: str(r.bio, 2000),
+    shortBio: str(r.shortBio, 300),
+    longBio: str(r.longBio, 1000),
     keywords: listOf(r.keywords, null, 5),
     preferredStages: listOf(r.preferredStages, STAGES, STAGES.length),
     preferredIndustries: listOf(r.preferredIndustries, INDUSTRIES, 5),

@@ -644,8 +644,32 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
     web: ["Website", "เว็บไซต์"], long: ["Long description", "คำอธิบายแบบยาว"], cname: ["Full name", "ชื่อ-นามสกุล"], team: ["Team size", "จำนวนทีมงาน"], langs: ["Languages", "ภาษา"], email: ["Email address", "อีเมล"], phone: ["Phone", "เบอร์โทรศัพท์"],
     desc: a.desc.trim() ? ["Short description (at least 30 characters)", "คำอธิบายสั้น (อย่างน้อย 30 ตัวอักษร)"] : ["Short description", "คำอธิบายสั้น"],
   };
+  const fieldHasText = (key: string) => {
+    const value = key.startsWith("a-") ? a.addr[key.slice(2) as keyof Addr]
+      : key === "long" ? a.long
+      : key === "desc" ? a.desc
+      : key === "web" ? a.web
+      : key === "cname" ? a.cname
+      : key === "email" ? a.email
+      : key === "phone" ? a.phone
+      : key === "name" ? a.name
+      : key === "year" ? a.year
+      : key === "reg" ? a.reg
+      : key === "city" ? a.city
+      : key === "country" ? a.country
+      : key === "team" ? a.team
+      : key === "langs" ? a.langs.join(" ")
+      : "";
+    return typeof value === "string" ? !!value.trim() : value != null;
+  };
+  const blockedFields = fieldsOf[cur].filter((k) => errors[k] && FIELD_LABEL[k]);
   const blockedText = continueOk || optional || cur === "review" ? null
-    : continueBlockedLine(fieldsOf[cur].filter((k) => errors[k] && FIELD_LABEL[k]).map((k) => L(...FIELD_LABEL[k]!)), L("en", "th") as "en" | "th");
+    : continueBlockedLine(
+      blockedFields.filter((k) => !fieldHasText(k)).map((k) => L(...FIELD_LABEL[k]!)),
+      L("en", "th") as "en" | "th",
+      false,
+      blockedFields.filter(fieldHasText).map((k) => L(...FIELD_LABEL[k]!)),
+    );
 
   // ---------------- layout ----------------
   const topBar = (

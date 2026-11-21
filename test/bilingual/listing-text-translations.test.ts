@@ -3,6 +3,7 @@ import {
   capGeneratedListingText,
   isTranslatedListingText,
   planListingTextSave,
+  seedGeneratedListingTranslations,
   withoutListingTextTranslation,
 } from "@/lib/listing-text-translations";
 
@@ -20,6 +21,28 @@ describe("seller listing text translations", () => {
     );
     expect(plan.jobs).toEqual([{ field: "headline", sourceLang: "en", target: "th", source: "Seller's new headline" }]);
     expect(plan.translations).toEqual([]);
+  });
+
+  it("treats untouched generated buyer text as automatic in both languages", () => {
+    const base = { headline: "Majority stakes in healthcare", headlineTh: "การถือหุ้นส่วนใหญ่ในการแพทย์" };
+    const translations = seedGeneratedListingTranslations(base, []);
+    const plan = planListingTextSave(
+      { headline: base.headline, headline_th: base.headlineTh, translations },
+      { headline: "Growth capital in healthcare" },
+    );
+    expect(plan.jobs).toEqual([{ field: "headline", sourceLang: "en", target: "th", source: "Growth capital in healthcare" }]);
+  });
+
+  it("keeps both buyer edits and schedules no translation", () => {
+    const base = { description: "A private equity firm in Thailand.", descriptionTh: "บริษัทไพรเวทอิควิตี้ในประเทศไทย" };
+    const translations = seedGeneratedListingTranslations(base, []);
+    const plan = planListingTextSave(
+      { description: base.description, description_th: base.descriptionTh, translations },
+      { description: "Our own English description.", descriptionTh: "คำอธิบายภาษาไทยของเรา" },
+    );
+    expect(plan.description).toBe("Our own English description.");
+    expect(plan.descriptionTh).toBe("คำอธิบายภาษาไทยของเรา");
+    expect(plan.jobs).toEqual([]);
   });
 
   it("never replaces the other language after the seller edits it", () => {

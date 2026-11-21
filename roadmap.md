@@ -1,3 +1,9 @@
+# Buyer firm, private descriptions, Listing step and NDA cards
+- [ ] Open every buyer wizard on its existing prefilled firm/company question; add the Listing step before Review with bilingual generated card texts and protected translations.
+- [ ] Store Website Short description privately for post-NDA cards, preserve public descriptions and existing buyer texts, and update private card titles/descriptions without changing fixed card height.
+- [ ] Make website reading produce distinct short/long texts, show the green line only for actual fills, and share precise empty/invalid Continue guidance across wizards.
+- [ ] Add focused tests, report existing-profile counts, verify EN/TH sign-up and Control + Add flows and NDA card states at desktop/mobile sizes, deliver screenshots, and remove test profiles.
+
 # Buyer wizard Website Auto Enrich
 - [x] Enable Website Continue for a valid URL with both descriptions empty so Auto Enrich can run; preserve required descriptions and failure behavior.
 - [x] Start buyer website reading when Control's + Add company check is confirmed with a website, matching sign-up's welcome path.

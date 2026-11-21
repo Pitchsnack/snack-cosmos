@@ -3,6 +3,7 @@ import { FromDbdTag, IdentityLockNote, LOCKED_INPUT, LockWrap } from "@/componen
 import { isIdentityLocked } from "@/lib/identity-lock";
 import { tr, useTranslation } from "@/i18n/language";
 import { checked } from "@/components/setup/verified-tags";
+import { sellerWordingCount } from "@/lib/seller-listing-wording";
 import { useEffect, useRef, useState } from "react";
 import { Lock, Check as CheckIcon, Sparkles, Loader2, Calendar, Users } from "lucide-react";
 import { firstBlockingStep, stepLocked } from "@/lib/setup-step-state";
@@ -428,9 +429,20 @@ export function SellerWizard({
     : cur.id === "founded" ? [!validFoundedYear(d.year) && L("Year founded", "ปีที่ก่อตั้ง"), !d.size && L("Company size", "ขนาดบริษัท")].filter((x): x is string => !!x)
     : cur.id === "price" ? [L("Asking price", "ราคาที่ต้องการขาย")]
     : cur.id === "listing" ? [!d.listingName?.trim() && L("Listing name", "ชื่อประกาศ"), !(d.headline?.trim() || d.headlineTh?.trim()) && L("Headline", "หัวข้อ"), !(d.description?.trim() || d.descriptionTh?.trim()) && L("Description", "คำอธิบาย")].filter((x): x is string => !!x) : [];
+  const invalidNow: string[] = cur.id === "name" ? [
+      d.reg.trim() && !/^\d{13}$/.test(d.reg) && L("Registration number", "เลขทะเบียนนิติบุคคล"),
+      d.addr.postal.trim() && !/^\d{5}$/.test(d.addr.postal) && L("Postal code", "รหัสไปรษณีย์"),
+    ].filter((x): x is string => !!x)
+    : cur.id === "founded" ? [d.year.trim() && !validFoundedYear(d.year) && L("Year founded", "ปีที่ก่อตั้ง")].filter((x): x is string => !!x)
+    : cur.id === "price" && (d.price ?? 0) < 0 ? [L("Asking price", "ราคาที่ต้องการขาย")]
+    : cur.id === "listing" ? [
+      d.listingName?.trim() && (sellerWordingCount(d.listingName, "name").over || d.nameOk === false) && L("Listing name", "ชื่อประกาศ"),
+      (d.headline?.trim() || d.headlineTh?.trim()) && (sellerWordingCount(d.headline, "headline").over || sellerWordingCount(d.headlineTh, "headline").over) && L("Headline", "หัวข้อ"),
+      (d.description?.trim() || d.descriptionTh?.trim()) && ((d.description?.length ?? 0) > 420 || (d.descriptionTh?.length ?? 0) > 420) && L("Description", "คำอธิบาย"),
+    ].filter((x): x is string => !!x) : [];
   const blockedText = reading || valid[cur.id] || cur.id === "review" ? null
     : cur.id === "photos" ? (d.hasLogo ? continueBlockedLine([], lang, true) : null)
-    : continueBlockedLine(missingNow, lang);
+    : continueBlockedLine(missingNow.filter((field) => !invalidNow.includes(field)), lang, false, invalidNow);
 
   return (
     <div className="wiz seller-setup -m-4 min-h-[calc(100vh-54px)] text-[15px] md:-m-6" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>

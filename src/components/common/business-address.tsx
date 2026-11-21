@@ -22,7 +22,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
   a: Addr; thai: boolean; city: string; onCity?: (v: string) => void; onChange: (p: Partial<Addr>) => void;
   show: (k: keyof Addr) => string | null; onBlur: (k: keyof Addr) => void; compact?: boolean; note: string;
   /** Setup wizards: mark fields still needed light blue (see common/need-fill). */
-  need?: boolean; title?: string | null; stars?: boolean;
+  need?: boolean; title?: React.ReactNode; stars?: boolean;
   /** Buyers and advisors: Country is the box's first field (sellers have none: Thailand, fixed). */
   country?: string; onCountry?: (c: string) => void; countryErr?: string | null; noteOutside?: boolean;
   /** Edit information: explain the tab's missing count directly under each empty required field. */
