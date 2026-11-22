@@ -20,6 +20,7 @@ import { ManyTypeQuestion, buyerWords, manyError, useL } from "@/components/comm
 import { normPicks, picksToSectors, type SectorPicks } from "@/lib/business-types";
 import { TypeIcon } from "@/components/marketplace/buyer-browse-card";
 import { BuyerListingTextEditor } from "@/components/my-business/buyer-description-editor";
+import { TextLangProvider } from "@/components/common/text-lang";
 import { typeTone } from "@/lib/buyer-profile";
 import { normalizeUrl, isValidUrl } from "@/lib/seller-wizard";
 import { createMyBuyerUploadUrl, getBuyerInvestorById, saveBuyerMedia, saveBuyerWizard } from "@/lib/buyer-investor.functions";
@@ -42,7 +43,7 @@ import {
   type Band,
 } from "@/lib/investor-bands";
 import { isCorporateBuyer } from "@/lib/investor-browse";
-import { stepsFor, buyerSkips, normalizeBuyerReached, teamHasName, type BuyerRelation, type QId } from "@/lib/buyer-wizard";
+import { stepsFor, buyerSkips, buyerListingValid, normalizeBuyerReached, teamHasName, type BuyerRelation, type QId } from "@/lib/buyer-wizard";
 
 type A = {
   role: BuyerRelation | null; type: string; country: string; city: string; name: string; year: string; reg: string; web: string;
@@ -295,7 +296,9 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
     role: ["role"], type: ["type"], name: ["country", "name", "year", "reg", "a-street", "a-district", "a-province", "a-postal"], web: ["web", "desc", "about"], aum: ["aum"], ticket: ["ticket"],
     rev: ["rev"], deals: ["deals", "stages"], sectors: ["sectors"], photos: ["photos"], desc: ["desc"], team: ["team"], listing: ["listingDesc", "want"], review: [],
   };
-  const qValid = (id: QId) => fieldsOf[id].every((k) => !errors[k]);
+  const qValid = (id: QId) => id === "listing"
+    ? buyerListingValid({ description: a.listingDesc, description_th: a.listingDescTh, suggested_headline: a.want, suggested_headline_th: a.wantTh })
+    : fieldsOf[id].every((k) => !errors[k]);
   const show = (k: string) => (touched[k] || forced[k]) && errors[k] && errors[k] !== "leak" ? errors[k] : null;
 
   const idx = steps.findIndex((s) => s.id === cur);
@@ -723,7 +726,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             queue({ [lang === "th" ? "suggested_headline_th" : "suggested_headline"]: value });
           }
         };
-        return <BuyerListingTextEditor
+        return <TextLangProvider><BuyerListingTextEditor
           english={{ description: a.listingDesc, headline: a.want }} thai={{ description: a.listingDescTh, headline: a.wantTh }}
           sources={{
             description: a.listingDesc === generated.description || isTranslatedListingText({ headline: a.want, headlineTh: a.wantTh, description: a.listingDesc, descriptionTh: a.listingDescTh, translations: listingTranslations }, "description", "en") ? "auto" : "user",
@@ -748,7 +751,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
             verified: false, proofOfFunds: false, ticketLabel: null, aumLabel: null, revLabel: null,
             aumBand: a.aum || null, ticketBand: a.ticket || null, revBand: a.rev || null, relation: a.role, actsFor: agent ? a.acts : [],
           }}
-        />;
+        /></TextLangProvider>;
       })() },
     team: { req: true, t: L("Who is on your team?", "ทีมงานของท่านมีใครบ้าง"), h: L("Add the people who decide on deals. Sellers see them after they approve your NDA, and PitchSnack uses them to verify your firm.", "เพิ่มผู้ที่มีอำนาจตัดสินใจเรื่องดีล ผู้ขายจะเห็นหลังจากอนุมัติ NDA ของท่าน และ PitchSnack ใช้ข้อมูลนี้เพื่อยืนยันตัวตนบริษัทของท่าน"), body: teamBody },
     review: { req: false, t: tr("Review your answers"), h: tr("Check them, then we'll fill in the rest of your profile."),
@@ -827,7 +830,7 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
               <h1 className="text-[21px] font-bold leading-snug sm:text-[24px]" style={{ fontFamily: '"Space Grotesk", "DM Sans", sans-serif' }}>
                 {typeof q.t === "string" ? setupText(q.t) : q.t}{q.req && <>{"\u00a0"}<span className="text-[#B42318]" aria-hidden>*</span><span className="sr-only">{setupText(", required")}</span></>}
               </h1>
-              <p className="mb-6 mt-1.5 text-[15px] text-[#6B7280]">{typeof q.h === "string" ? setupText(q.h) : q.h}</p>
+              <p className={`${cur === "listing" ? "mb-4" : "mb-6"} mt-1.5 text-[15px] text-[#6B7280]`}>{typeof q.h === "string" ? setupText(q.h) : q.h}</p>
               {q.body}
             </div>
             <div className="mt-8 flex flex-wrap items-center gap-2.5">

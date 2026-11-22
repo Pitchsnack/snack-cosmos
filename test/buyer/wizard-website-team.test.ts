@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stepsFor, normalizeBuyerReached, buyerWebValid, teamHasName, buyerSkips, buyerProgressFor } from "@/lib/buyer-wizard";
+import { stepsFor, normalizeBuyerReached, buyerWebValid, buyerListingValid, teamHasName, buyerSkips, buyerProgressFor } from "@/lib/buyer-wizard";
 import { buyerSetupDescriptionsComplete } from "@/lib/buyer-description";
 
 describe("buyer wizard: Industries first, Website with descriptions, Team", () => {
@@ -31,6 +31,13 @@ describe("buyer wizard: Industries first, Website with descriptions, Team", () =
     expect(buyerSetupDescriptionsComplete("Short description", "")).toBe(false);
     expect(buyerSetupDescriptionsComplete("", "Long description")).toBe(false);
     expect(buyerSetupDescriptionsComplete("Short description", "Long description")).toBe(true);
+  });
+  it("Listing Continue checks both languages, including the hidden one", () => {
+    const valid = { description: "A long enough English description.", description_th: "คำอธิบายภาษาไทยที่มีความยาวเพียงพอ", suggested_headline: "Thai logistics firms", suggested_headline_th: "บริษัทโลจิสติกส์ไทย" };
+    expect(buyerListingValid(valid)).toBe(true);
+    expect(buyerListingValid({ ...valid, description_th: "สั้น" })).toBe(false);
+    expect(buyerListingValid({ ...valid, suggested_headline_th: "ก".repeat(81) })).toBe(false);
+    expect(buyerListingValid({ ...valid, description_th: "", suggested_headline_th: "" })).toBe(true);
   });
   it("Team needs at least one full name", () => {
     expect(teamHasName([{ name: " " }])).toBe(false);

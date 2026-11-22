@@ -22,7 +22,7 @@ export function TextLangProvider({ children }: { children: ReactNode }) {
 function OwnTextLang({ children }: { children: ReactNode }) {
   const { language } = useTranslation();
   const { data: session } = useSessionContext();
-  const switchable = session?.user?.accountRole === "admin";
+  const switchable = session?.user?.accountRole === "admin" || (session?.roles ?? []).includes("CONTROL");
   const [picked, setPicked] = useState<TextLang | null>(null);
   const lang: TextLang = switchable ? picked ?? (language === "th" ? "th" : "en") : language === "th" ? "th" : "en";
   const value = useMemo(() => ({ lang, setLang: setPicked, switchable }), [lang, switchable]);

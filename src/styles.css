@@ -582,17 +582,22 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 @media (max-width: 639px) { .edit-folder-row { padding: 8px 10px 0; } .edit-folder-tab { padding: 0 12px; } }
 
 /* Buyer editor: shared investor preview and description with the existing form below. */
-:root { --buyer-preview-ring:#2563EB; --buyer-description-invalid:#FCA5A5; --buyer-description-mark:#FDE68A; }
-.buyer-description-layout { display:grid; grid-template-columns:300px minmax(0,1fr); gap:28px; align-items:start; }
+:root { --buyer-preview-ring:#2563EB; --buyer-description-invalid:#FCA5A5; --buyer-description-mark:#FDE68A; --buyer-preview-frame-bg:#EFF6FF; --buyer-preview-frame-border:#BFDBFE; --buyer-preview-caption-ink:#1D4ED8; }
+.buyer-description-layout { display:grid; grid-template-columns:300px minmax(0,1fr); gap:28px; align-items:stretch; }
 .buyer-description-layout-stacked { grid-template-columns:minmax(0,1fr); gap:22px; }
 .buyer-description-layout-stacked .buyer-preview-col { position:static; }
+.buyer-description-layout-stacked .buyer-description-fields,.buyer-description-layout-stacked .buyer-description-children { grid-column:1; grid-row:auto; }
 .buyer-description-layout-stacked .buyer-editor-preview { width:min(100%,340px); margin-inline:auto; }
 .buyer-description-layout-stacked .buyer-preview-caption { justify-content:center; }
-.buyer-preview-col { min-width:0; }
-.buyer-preview-col { position:sticky; top:64px; }
+.buyer-preview-col { min-width:0; grid-column:1; grid-row:1; position:sticky; top:64px; }
 .buyer-preview-sticky { position:static; }
-.buyer-preview-caption { display:flex; align-items:center; gap:6px; margin:0 0 10px; color:var(--hub-warning); font-size:14px; font-weight:600; }
+.buyer-preview-frame { min-width:0; padding:12px 14px 16px; border:1px solid var(--buyer-preview-frame-border); border-radius:14px; background:var(--buyer-preview-frame-bg); }
+.buyer-preview-caption { display:flex; align-items:center; gap:6px; margin:0 0 10px; color:var(--buyer-preview-caption-ink); font-size:14px; font-weight:600; }
 .buyer-preview-caption svg { width:16px; height:16px; }
+.buyer-listing-preview { margin-bottom:16px; }
+.buyer-listing-preview .buyer-preview-caption { justify-content:center; }
+.buyer-listing-preview .buyer-editor-preview { width:min(100%,340px); margin-inline:auto; }
+.buyer-listing-language { margin-bottom:16px; }
 .buyer-description-field { display:flex; flex-direction:column; min-width:0; }
 .buyer-description-field h3 { font-size:17px; font-weight:600; margin:0 0 12px; }
 
@@ -656,6 +661,7 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 @media (max-width:639px) {
  .buyer-description-layout { grid-template-columns:minmax(0,1fr); gap:16px; }
  .buyer-preview-sticky, .buyer-preview-col { position:static; }
+ .buyer-preview-col,.buyer-description-fields,.buyer-description-children { grid-column:1; grid-row:auto; }
  .buyer-editor-preview { display:grid; grid-template-columns:88px minmax(0,1fr); }
  .buyer-editor-preview .standard-card-cover { height:100%; min-height:88px; }
  .buyer-editor-preview .standard-card-body { padding:10px 12px; gap:4px; }
@@ -681,7 +687,11 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .listing-suggest:hover { text-decoration:underline; }
 .listing-suggest svg, .listing-autofill svg { width:15px; height:15px; color:var(--profile); }
 .listing-autofill { height:40px; border-radius:10px; background:var(--card); border-color:var(--seller-action-border); font-size:14px; font-weight:500; }
-.buyer-description-fields { min-width:0; }
+.buyer-description-fields { display:flex; flex-direction:column; grid-column:2; grid-row:1; min-width:0; height:100%; }
+.buyer-description-main-field { flex:1; min-height:0; }
+.buyer-description-main-field .listing-editor-field { display:flex; flex:1; flex-direction:column; }
+.buyer-description-main-field .buyer-description-textarea { flex:1; height:auto; min-height:150px; }
+.buyer-description-children { grid-column:2; grid-row:2; min-width:0; }
 .buyer-editor-preview { border:1px solid var(--profile-line); box-shadow:0 0 0 1px var(--hub-buyer-soft); }
 .buyer-about-textarea[aria-invalid=true] { border-color:var(--buyer-description-invalid); }
 html[lang=th] #buyer-edit-form [class*="tracking-"], html[lang=th] [data-mkt-view=buyer] [class*="tracking-"] { letter-spacing:0; }

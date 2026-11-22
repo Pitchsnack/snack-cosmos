@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buyerListingPreviewText, WANT_BUY_MAX, wantBuyLen } from "@/components/my-business/buyer-description-editor";
+import { buyerListingEditorValues, buyerListingPreviewText, WANT_BUY_MAX, wantBuyLen } from "@/components/my-business/buyer-description-editor";
 import { singleLineDescription } from "@/lib/buyer-description";
 
 // What you want to buy: 80 characters per language, one saved line, the pop-up only right after the wizard.
@@ -20,6 +20,20 @@ describe("What you want to buy", () => {
     expect(buyerListingPreviewText("English description", "คำอธิบายไทย", "", "", "en")).toBe("English description");
     expect(buyerListingPreviewText("", "", "English fallback", "คำอธิบายสำรอง", "th")).toBe("คำอธิบายสำรอง");
     expect(buyerListingPreviewText("", "", "English fallback", "", "th")).toBe("English fallback");
+  });
+
+  it("shows only the selected Listing language and keeps the other-language fallback for buyers", () => {
+    const english = { description: "English description", headline: "English target" };
+    const thai = { description: "คำอธิบายไทย", headline: "เป้าหมายไทย" };
+    expect(buyerListingEditorValues(english, thai, "en", false)).toEqual(english);
+    expect(buyerListingEditorValues(english, thai, "th", false)).toEqual(thai);
+    expect(buyerListingEditorValues(english, { description: "", headline: "" }, "th", false)).toEqual(english);
+  });
+
+  it("lets Control and Admin inspect an empty selected language without overwriting it with the other", () => {
+    const english = { description: "English description", headline: "English target" };
+    const emptyThai = { description: "", headline: "" };
+    expect(buyerListingEditorValues(english, emptyThai, "th", true)).toEqual(emptyThai);
   });
 
   it("the after-wizard pop-up needs both languages empty", () => {

@@ -125,6 +125,15 @@ export function buyerProgress(rel: BuyerRelation | null, answered: string[] | un
   return { n, N: qs.length, first };
 }
 
+export type BuyerListingValidityInput = { description?: string; description_th?: string; suggested_headline?: string; suggested_headline_th?: string };
+
+/** Listing Continue and saved progress validate both languages, including the hidden one. */
+export function buyerListingValid(buyer?: BuyerListingValidityInput) {
+  return [buyer?.description ?? "", buyer?.description_th ?? ""].some((value) => value.trim() && !descriptionError(value))
+    && [buyer?.description ?? "", buyer?.description_th ?? ""].every((value) => !value.trim() || !descriptionError(value))
+    && [buyer?.suggested_headline ?? "", buyer?.suggested_headline_th ?? ""].every((value) => Array.from(value).length <= 80);
+}
+
 /** Saved checks shared by wizard resume and My Company progress. */
 export function buyerProgressFor(rel: BuyerRelation | null, iv: {
   investor_type?: string | null; acts_for_types?: string[] | null; website_url?: string | null; year_founded?: number | null; investor_name?: string | null; preferred_industries?: string[] | null;
@@ -145,9 +154,7 @@ export function buyerProgressFor(rel: BuyerRelation | null, iv: {
     photos: !!iv?.logo_path && !!iv?.media?.length,
     desc: !!desc.trim() && !descriptionError(desc),
     team: teamHasName(people),
-    listing: [buyer?.description ?? "", buyer?.description_th ?? ""].some((value) => value.trim() && !descriptionError(value))
-      && [buyer?.description ?? "", buyer?.description_th ?? ""].every((value) => !value.trim() || !descriptionError(value))
-      && [buyer?.suggested_headline ?? "", buyer?.suggested_headline_th ?? ""].every((value) => Array.from(value).length <= 80),
+    listing: buyerListingValid(buyer),
     review: false,
   };
   const skip = buyerSkips(iv?.wizard?.from_signup, {role: rel, type, web: iv?.website_url ?? "", year: iv?.year_founded ? String(iv.year_founded) : "", name: iv?.investor_name ?? "", actsFor: acts, sectors: iv?.preferred_industries ?? [], nameDone: valid.name});

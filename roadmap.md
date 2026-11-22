@@ -1,3 +1,8 @@
+# Buyer Listing preview frame and one-language editing
+- [ ] Put the existing What sellers see caption and unchanged card in the specified light-blue frame on the Listing step and every Buyer Description & Mandate editor, with desktop alignment and the compact phone card inside.
+- [ ] Show one Listing language at a time: buyers follow the app language; Control/Admin reuse Texts in with EN/TH tags; the preview follows the selected language and both saved languages retain validation/translation.
+- [ ] Add focused tests and verify Listing/Edit information at 1440 and 390px in English and Thai, including Control switching, unchanged card dimensions, Continue validation and cleanup of any temporary profiles; deliver screenshots and a complete change inventory.
+
 # Buyer firm, private descriptions, Listing step and NDA cards
 - [x] Open every buyer wizard on its existing prefilled firm/company question; add the Listing step before Review with bilingual generated card texts and protected translations.
 - [x] Store Website Short description privately for post-NDA cards, preserve public descriptions and existing buyer texts, and update private card titles/descriptions without changing fixed card height.
