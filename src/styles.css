@@ -692,6 +692,17 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .buyer-description-main-field .listing-editor-field { display:flex; flex:1; flex-direction:column; }
 .buyer-description-main-field .buyer-description-textarea { flex:1; height:auto; min-height:150px; }
 .buyer-description-children { grid-column:2; grid-row:2; min-width:0; }
+@media (max-width:639px) {
+ .buyer-description-layout:not(.buyer-description-layout-stacked) { grid-template-columns:minmax(0,1fr); }
+ .buyer-description-layout:not(.buyer-description-layout-stacked) .buyer-preview-col,
+ .buyer-description-layout:not(.buyer-description-layout-stacked) .buyer-description-fields,
+ .buyer-description-layout:not(.buyer-description-layout-stacked) .buyer-description-children { grid-column:1; grid-row:auto; }
+ .buyer-description-layout:not(.buyer-description-layout-stacked) .buyer-description-fields { height:auto; }
+ .buyer-description-layout:not(.buyer-description-layout-stacked) .buyer-description-main-field,
+ .buyer-description-layout:not(.buyer-description-layout-stacked) .buyer-description-main-field .listing-editor-field { flex:none; }
+ .buyer-description-layout:not(.buyer-description-layout-stacked) .buyer-description-main-field .buyer-description-textarea { flex:none; height:150px; }
+ .buyer-description-layout:not(.buyer-description-layout-stacked) .buyer-editor-preview { width:100%; }
+}
 .buyer-editor-preview { border:1px solid var(--profile-line); box-shadow:0 0 0 1px var(--hub-buyer-soft); }
 .buyer-about-textarea[aria-invalid=true] { border-color:var(--buyer-description-invalid); }
 html[lang=th] #buyer-edit-form [class*="tracking-"], html[lang=th] [data-mkt-view=buyer] [class*="tracking-"] { letter-spacing:0; }
