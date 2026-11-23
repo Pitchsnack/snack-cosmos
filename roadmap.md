@@ -1,3 +1,8 @@
+# Buyer wizard Firm step
+- [x] Remove only the first green company-record notice from the Buyer Firm step; preserve the DBD lock note and all field behavior.
+- [x] Rename only this step's Firm name label to Company name / ชื่อบริษัท, widen Year founded to 200px, and keep both 22px label rows on one line with ellipsis protection.
+- [ ] Verify the specified DBD-confirmed test Buyer read-only at 1440/1024px in English and Thai, confirm the phone stack, and deliver cropped screenshots and measured input tops.
+
 # Buyer Listing preview frame and one-language editing
 - [x] Put the existing What sellers see caption and unchanged card in the specified light-blue frame on the Listing step and every Buyer Description & Mandate editor, with desktop alignment and the compact phone card inside.
 - [x] Show one Listing language at a time: buyers follow the app language; Control/Admin reuse Texts in with EN/TH tags; the preview follows the selected language and both saved languages retain validation/translation.

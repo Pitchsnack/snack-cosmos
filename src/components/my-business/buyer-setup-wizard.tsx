@@ -28,7 +28,7 @@ import { LogoPhotosStep } from "@/components/common/logo-photos-step";
 import { ContinueBlockedLine, continueBlockedLine } from "@/components/setup/continue-blocked";
 import { ContactPersonFields } from "@/components/setup/contact-person-fields";
 import { SectionBand, SectionHeading, DashLabel, DESC_LABELS } from "@/components/setup/section-band";
-import { FilledFrom, FilledMessage } from "@/components/setup/filled-from";
+import { FilledFrom } from "@/components/setup/filled-from";
 import { Loading } from "@/components/ui/PitchSnackLoader";
 import { useWebsiteEnrichment } from "@/components/setup/use-website-enrichment";
 import { buyerWebsiteDescriptions, canStartWebsiteEnrich } from "@/lib/website-enrichment";
@@ -69,6 +69,7 @@ const ROLES: { value: BuyerRelation; label: string; hint: string }[] = [
 const inp = "h-[50px] w-full rounded-[12px] border border-[#DCDFE5] bg-white px-4 text-[16px] text-[#151A28] outline-none focus:border-[#1E2A4A] focus:shadow-[0_0_0_3px_rgba(30,42,74,.12)] dark:border-border dark:bg-background dark:text-foreground";
 const errCls = "!border-[#B42318]";
 const lbl = "mb-[7px] block text-[13.5px] font-semibold text-[#434A5C] dark:text-muted-foreground";
+const firmIdentityLbl = "mb-[7px] flex h-[22px] min-w-0 items-center whitespace-nowrap text-[13.5px] font-semibold text-[#434A5C] dark:text-muted-foreground";
 const Req = () => <span aria-hidden className="relative -top-0.5 ml-[3px] text-[12px] font-semibold text-[#B42318]">*</span>;
 const Opt = () => <span className="ml-1.5 font-normal text-[#9CA3AF]">{setupText("optional")}</span>;
 const Err = ({ m }: { m: string | null | false | undefined }) => (m ? <p className="mt-1.5 text-[13px] text-[#B42318]">{setupText(m)}</p> : null);
@@ -602,19 +603,18 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
       h: individual ? L("Sellers don't see these before an NDA.", "ผู้ขายจะไม่เห็นข้อมูลเหล่านี้ก่อน NDA") : tr("Check that the name matches your firm's registration. Sellers don't see your name or number before an NDA."),
       body: (
         <div className="space-y-4">
-          {lockAt && (fromSignup?.includes("name") || fromSignup?.includes("address")) && <FilledMessage>{L("We filled these in from the official company record when you confirmed your company. Check them.", "เราได้กรอกข้อมูลเหล่านี้จากข้อมูลทางการของบริษัทเมื่อท่านยืนยันบริษัทของท่าน โปรดตรวจสอบ")}</FilledMessage>}
           <IdentityLockNote lockedAt={lockAt} />
           {!addrOnly && (<div>
             <div className="flex flex-col gap-[14px] sm:flex-row">
-              <div className="flex-1">
-                <label className={lbl} htmlFor="w-name">{individual ? tr("Name of the company you invest through") : tr("Firm name")}<Req /><FromDbdTag show={nameLocked} /></label>
+              <div className="min-w-0 flex-1">
+                <label className={firmIdentityLbl} htmlFor="w-name"><span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{individual ? tr("Name of the company you invest through") : L("Company name", "ชื่อบริษัท")}</span><span className="flex flex-none items-center"><Req /><FromDbdTag show={nameLocked} /></span></label>
                 <LockWrap locked={nameLocked}><input id="w-name" readOnly={nameLocked} aria-readonly={nameLocked || undefined} aria-required autoFocus {...(errors.name ? { "data-need": "1" } : {})} className={`${inp} ${nameLocked ? LOCKED_INPUT : ""} ${errors.name ? "need-fill" : ""} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder={L("e.g. Example Co., Ltd.", "เช่น บริษัท ตัวอย่าง จำกัด")}
                   onBlur={() => setTouched((t) => ({ ...t, name: true }))}
                   onChange={(e) => { if (nameLocked) return; ((e: React.ChangeEvent<HTMLInputElement>) =>  set({ name: e.target.value }, e.target.value.trim() ? { investor_name: e.target.value } : {}))(e); }} /></LockWrap>
               </div>
               {!individual && (
-                <div className="sm:w-[150px]">
-                  <label className={lbl} htmlFor="w-year">{tr("Year founded")}<Req />{lockAt && fromSignup?.includes("year") && <VerifiedTag />}</label>
+                <div className="min-w-0 sm:w-[200px] sm:flex-none">
+                  <label className={firmIdentityLbl} htmlFor="w-year"><span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{tr("Year founded")}</span><span className="flex flex-none items-center"><Req />{lockAt && fromSignup?.includes("year") && <VerifiedTag />}</span></label>
                   <LockWrap locked={yearLocked}><input id="w-year" readOnly={yearLocked} aria-readonly={yearLocked || undefined} aria-required inputMode="numeric" maxLength={4} className={`${inp} ${yearLocked ? LOCKED_INPUT : ""} ${show("year") ? errCls : ""}`} value={a.year} placeholder={setupText("e.g. 2014")}
                     onBlur={() => setTouched((t) => ({ ...t, year: true }))}
                     onChange={(e) => { if (yearLocked) return; ((e: React.ChangeEvent<HTMLInputElement>) =>  { const v = e.target.value.replace(/\D/g, "").slice(0, 4); set({ year: v }, !yearError(v) ? { year_founded: Number(v) } : {}); })(e); }} /></LockWrap>
