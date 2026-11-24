@@ -1,3 +1,4 @@
+import { AlignedRow } from "@/components/common/edit-info-popup";
 import { setupText } from "@/i18n/language";
 import { tr } from "@/i18n/language";
 import { LangTag, useTextLang } from "@/components/common/text-lang";
@@ -37,7 +38,7 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
   const ownWords = tl === "th" ? (value.wordsTh ?? "") || (tlSw ? "" : value.words) : value.words || (tlSw ? "" : value.wordsTh ?? "");
   const amountField = (label: string, ph: string) => (
     <div className="min-w-0">
-      <span className={sub}>{tr(label)}</span>
+      <span data-row-label className={sub}>{tr(label)}</span>
       <div className="relative">
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[14px] text-[#6B7280]">฿</span>
         <input inputMode="numeric" aria-required aria-label={`${service} ${label}`} placeholder={ph} onBlur={onBlurAll}
@@ -48,7 +49,7 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
   );
   const pctField = (label: string) => (
     <div className="min-w-0">
-      <span className={sub}>{tr(label)}</span>
+      <span data-row-label className={sub}>{tr(label)}</span>
       <div className="relative">
         <input inputMode="decimal" aria-required aria-label={`${service} ${label}`} placeholder={ex.pct} onBlur={onBlurAll}
           className={cn(small, "pr-8", err?.pct && bad)} value={value.pct}
@@ -71,7 +72,7 @@ export function FeeControl({ service, value, onChange, showErr, autoFocus, onBlu
       {value.type === "retainer" && amountField("Per month", "120,000")}
       {value.type === "success" && pctField("Of the deal")}
       {value.type === "retainer_success" && (
-        <div className="grid grid-cols-[1.3fr_1fr] gap-2.5">{amountField("Retainer per month", "120,000")}{pctField("Success fee")}</div>
+        <AlignedRow className="grid items-start gap-2.5 sm:grid-cols-[1.3fr_1fr]">{amountField("Retainer per month", "120,000")}{pctField("Success fee")}</AlignedRow>
       )}
       {value.type === "other" && (
         <div>

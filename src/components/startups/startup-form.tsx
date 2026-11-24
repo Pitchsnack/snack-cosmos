@@ -1,3 +1,4 @@
+import { AlignedRow } from "@/components/common/edit-info-popup";
 import { missingCreationFields } from "@/lib/profile-edit-rules";
 import { companyNameHelp } from "@/lib/company-name";
 import { CompanyNameFields } from "@/components/common/company-name-fields";
@@ -989,7 +990,7 @@ export function StartupForm({
         <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card">
           <h2 className="text-sm font-semibold">Company Details</h2>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <AlignedRow className="grid gap-4 md:grid-cols-3">
             <div className="space-y-1.5">
               <Label>Company Name <span className="text-destructive">*</span></Label>
               <Input value={startupName} onChange={(e) => setStartupName(e.target.value)}
@@ -1142,7 +1143,7 @@ export function StartupForm({
                 />
               )}
             </div>
-          </div>
+          </AlignedRow>
         </div>
 
 
@@ -1222,7 +1223,7 @@ export function StartupForm({
       {/* Row 1: Year Founded | Company Name | Registered Name | Company Type */}
       {startup?.id && <div className="mb-4"><IdentityLockNote lockedAt={regLockedAt} adminEdit={ctAdmin} /></div>}
       <div className="@container">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <AlignedRow className="grid gap-4 sm:grid-cols-3">
         <EditSec id="facts" tone="seller" active={secOn("facts")}>
           <div className="space-y-1.5">
             <Label className={miss(isStrEmpty(yearFounded)) ? MISSING_LABEL : undefined}>{tr("Year Founded", "ปีที่ก่อตั้ง")}<FromDbdTag show={lockYear} /></Label>
@@ -1250,10 +1251,10 @@ export function StartupForm({
             maxLength={64}
           />
         </div>
-      </div>
+      </AlignedRow>
       </div>
 <CompactFields>        <div className="space-y-1.5">
-          <div className="flex h-6 items-center"><Label>{tr("Company Type", "ประเภทบริษัท")}</Label></div>
+          <div className="flex min-h-6 items-center"><Label>{tr("Company Type", "ประเภทบริษัท")}</Label></div>
           {(() => {
             const fromAdmin = companyTypeSource === "admin" && !companyTypeReset;
             const label = (v: string) => (th && v === "Individual" ? "บุคคลธรรมดา" : v);
@@ -1277,7 +1278,7 @@ export function StartupForm({
           })()}
         </div>
         <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="size">{secOn("size") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
-          <div className="flex h-6 items-center"><Label>{tr("Company Size", "ขนาดบริษัท")}</Label></div>
+          <div className="flex min-h-6 items-center"><Label>{tr("Company Size", "ขนาดบริษัท")}</Label></div>
           <Select value={companySize || "none"} onValueChange={(v) => setCompanySize(v === "none" ? "" : v)}>
             <SelectTrigger><SelectValue placeholder={tr("Select company size", "เลือกขนาดบริษัท")} /></SelectTrigger>
             <SelectContent>
@@ -1290,7 +1291,7 @@ export function StartupForm({
         </div>
 
         <div className="space-y-1.5">
-          <div className="flex h-6 items-center gap-1.5">
+          <div className="flex min-h-6 items-center gap-1.5">
             <Label>{tr("Region", "ภูมิภาค")}</Label>
             <TooltipProvider delayDuration={150}>
               <Tooltip>
@@ -1353,7 +1354,7 @@ export function StartupForm({
         </div>
 </CompactFields>
       {/* Row 2: Investment Stage (1 col) | Last Year's Revenue (2 cols) */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <AlignedRow className="grid gap-4 sm:grid-cols-3">
         <div className="relative space-y-1.5 [&>*:not(.edit-sec-box)]:relative" data-edit-sec="stage">{secOn("stage") && <div aria-hidden="true" className="edit-sec-box is-seller" />}
           <Label className="text-[#9CA3AF]">{th ? "ระยะการลงทุน" : "Investment Stage"}</Label>
           <TooltipProvider><Tooltip><TooltipTrigger asChild>
@@ -1375,12 +1376,12 @@ export function StartupForm({
             </SelectContent>
           </Select>
         </div>
-      </div>
+      </AlignedRow>
 
       {/* Row 3: Headquarters (1 col) | City (2 cols) */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <AlignedRow className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <div className="flex h-6 items-center">
+          <div className="flex min-h-6 items-center">
             <Label className={miss(isStrEmpty(headquarters)) ? MISSING_LABEL : undefined}>{tr("Headquarters", "สำนักงานใหญ่")}</Label>
           </div>
           <CountryCombobox
@@ -1401,17 +1402,17 @@ export function StartupForm({
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <div className="flex h-6 items-center">
+          <div className="flex min-h-6 items-center">
             <Label className={miss(isStrEmpty(city)) ? MISSING_LABEL : undefined}>{tr("City", "เมือง")}</Label>
           </div>
           <Input value={city} onChange={(e) => setCity(e.target.value)}
             placeholder={miss(isStrEmpty(city)) ? missingPh("City") : tr("City", "เมือง")}
             className={miss(isStrEmpty(city)) ? MISSING_INPUT : undefined} />
         </div>
-      </div>
+      </AlignedRow>
 
       {/* Row 3: Email | Website | LinkedIn URL */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <AlignedRow className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label className={miss(isStrEmpty(email)) ? MISSING_LABEL : undefined}>{tr("Email", "อีเมล")}</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255}
@@ -1433,7 +1434,7 @@ export function StartupForm({
           placeholder={tr("https://www.linkedin.com/company/… (optional)", "https://www.linkedin.com/company/... (ไม่บังคับ)")}
         />
 
-      </div>
+      </AlignedRow>
 
 
       {/* Descriptions */}
@@ -1603,7 +1604,7 @@ export function StartupForm({
 
       {/* Status / visibility (create only) */}
       {(!isEdit || ctAdmin) && (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <AlignedRow className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Status</Label>
             <Select value={status} onValueChange={setStatus}>
@@ -1618,7 +1619,7 @@ export function StartupForm({
               <SelectContent>{VISIBILITIES.map((s) => <SelectItem key={s} value={s}>{tr(s, s === "Below ฿50M" ? "ต่ำกว่า ฿50M" : s)}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-        </div>
+        </AlignedRow>
       )}
 
       {/* Ownership (create only, admin surfaces only — hidden in My Business) */}
@@ -1637,7 +1638,7 @@ export function StartupForm({
           <p className="mb-3 text-xs text-muted-foreground">
             Every startup must have one human Owning Agent and one Owning AI Agent.
           </p>
-          <div className="grid gap-4 md:grid-cols-2">
+          <AlignedRow className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Owning Agent <span className="text-destructive">*</span></Label>
               <Select value={owningAgentUserId} onValueChange={setOwningAgent} disabled={isMyStartupsCreate || !tenantId || (!isEdit && WORKSPACE_ENFORCEMENT_ENABLED && !tenantMatchesActive)}>
@@ -1678,7 +1679,7 @@ export function StartupForm({
                 </p>
               )}
             </div>
-          </div>
+          </AlignedRow>
         </div>
       )}
 

@@ -1,3 +1,4 @@
+import { AlignedRow } from "@/components/common/edit-info-popup";
 import { AdvisorLicenceField } from "./advisor-licence-field";
 import { licenceError } from "@/lib/advisor-licences";
 import { setupText } from "@/i18n/language";
@@ -393,14 +394,14 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {!setup && <ServiceTiles picked={f.services} onToggle={toggleService} />}
         {f.services.length === 0 && <p className="text-[13px] font-semibold text-[#B42318]">{setupText("Pick at least one service.")}</p>}
         {f.services.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <AlignedRow className="grid gap-4 sm:grid-cols-2">
             {f.services.map((s) => (
               <F key={s} label={`${tr(s)} · ${tr("Fee")}`} tag={src.fees && feeWords(f.fees[s] ?? newFee()) ? src.fees : undefined}>
                 <FeeControl service={s} value={f.fees[s] ?? newFee()} showErr={!!touched[`fee-${s}`]} onBlurAll={blur(`fee-${s}`)}
                   onChange={(v) => set("fees", { ...f.fees, [s]: v })} />
               </F>
             ))}
-          </div>
+          </AlignedRow>
         )}
       </Section>
 
@@ -408,12 +409,12 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {visible("team") && <div className="space-y-4"><TabHead title={tr("Team")} />      <Section id="team" active={!setup && section === "team"} title={setupText("Team")} setup={!!setup} noTitle>
         <p className="text-[12.5px] text-muted-foreground">{tr("Your name is checked against your firm's list of directors.")}</p>
         {f.team.map((t, i) => (
-          <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
+          <AlignedRow key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
             <F label={setupText("Name")} req><Input className={inp} value={t.name} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></F>
             <F label={setupText("Role")}><Input className={inp} placeholder={setupText("Role, e.g. Partner · M&A")} lang={tl} value={pick(t.role, t.roleTh)} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, [tl === "th" ? "roleTh" : "role"]: e.target.value } : x)))} /></F>
             <F label={setupText("Work email")}><Input className={inp} value={t.email} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, email: e.target.value } : x)))} /></F>
             <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove person")} onClick={() => set("team", f.team.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
-          </div>
+          </AlignedRow>
         ))}
         <Button type="button" variant="outline" size="sm" onClick={() => set("team", [...f.team, { name: "", role: "", email: "" }])}><Plus className="mr-1.5 h-4 w-4" />{setupText("Add person")}</Button>
         {setup && <p className="text-[12px] text-muted-foreground">{setupText("You're added from your account. Add the people sellers and buyers will work with.")}</p>}
@@ -423,14 +424,14 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {visible("documents") && <div className="space-y-4"><TabHead title={tr("Licences & Documents")} />      <Section id="credentials" active={!setup && section === "credentials"} title={setupText("Licences and credentials")} setup={!!setup} noTitle>
         {f.credentials.length === 0 && <p className="text-[13px] text-muted-foreground">{setupText("No licences or credentials yet. Add the ones your firm holds; Admin checks each one before it shows as Verified.")}</p>}
         {f.credentials.map((c, i) => (
-          <div key={i} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto]">
+          <AlignedRow key={i} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto]">
             <AdvisorLicenceField row={c} rows={f.credentials} index={i} error={licenceErrors[i]} onChange={patch => { set("credentials", f.credentials.map((x, j) => j === i ? { ...x, ...patch } : x)); setLicenceErrors(e => { const next = { ...e }; delete next[i]; return next; }); }} />
             <F label={setupText("Note")}><Input className={inp} placeholder={setupText("Note, e.g. 2 licensed advisers on the team")} lang={tl} value={pick(c.note, c.noteTh)} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "noteTh" : "note"]: e.target.value, status: "pending" } : x)))} /></F>
             <span className={cn("mb-2 w-fit self-start rounded-full border px-2 py-0.5 text-[11.5px] font-semibold sm:mt-7", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
               {setupText(c.status === "verified" ? "✓ Verified" : c.status === "rejected" ? "Can't verify" : "Pending check")}
             </span>
             <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove credential")} onClick={() => set("credentials", f.credentials.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
-          </div>
+          </AlignedRow>
         ))}
         <Button type="button" variant="outline" size="sm" onClick={() => set("credentials", [...f.credentials, { licenceKey: "", name: "", note: "", status: "pending" }])}><Plus className="mr-1.5 h-4 w-4" />{setupText("Add licence or credential")}</Button>
       </Section>
@@ -438,11 +439,11 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       <Section id="documents" active={!setup && section === "documents"} title={setupText("Documents (Optional)")} setup={!!setup}>
         {f.documents.length === 0 && <p className="text-[13px] text-muted-foreground">{setupText("No documents yet. Upload your company certificate and licences: PDF, DOCX or an image.")}</p>}
         {f.documents.map((d, i) => (
-          <div key={d.id ?? d.path} className="grid items-end gap-3 sm:grid-cols-[1.4fr_auto_auto]">
+          <AlignedRow key={d.id ?? d.path} className="grid items-end gap-3 sm:grid-cols-[1.4fr_auto_auto]">
             <F label={`Name · ${d.type || "File"}`}><Input className={inp} value={d.name} onChange={(e) => set("documents", f.documents.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></F>
             <span className={cn("mb-2 rounded-full border px-2 py-0.5 text-[11.5px] font-semibold", d.checked ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-border bg-muted text-muted-foreground")}>{d.checked ? "✓ Checked" : "Not checked yet"}</span>
             <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove document")} onClick={() => set("documents", f.documents.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
-          </div>
+          </AlignedRow>
         ))}
         <input ref={docInput} type="file" accept=".pdf,.docx,.doc,image/*" className="hidden" onChange={(e) => { onDoc(e.target.files?.[0]); e.target.value = ""; }} />
         <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => docInput.current?.click()}><Upload className="mr-1.5 h-4 w-4" />{setupText("Upload a document")}</Button>
@@ -460,7 +461,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <AttachmentCard value={f.media} onChange={(m) => set("media", m)} name={f.name || tr("Your firm")} sectorLine={[f.firmType, [f.city || f.addr.province, f.country].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
             intro={tr("Your firm's logo and up to 3 photos of your office, your team or your work.")} showGuidance={false} />
         </F>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <AlignedRow className="grid gap-4 sm:grid-cols-2">
           <F label={<>{setupText("Firm name")}<FromDbdTag show={lockName} /></>} req tag={src.name} err={show("name")} htmlFor="fe-name"><LockableInput locked={lockName} id="fe-name" aria-required className={cn(inp, show("name") && errB)} maxLength={80} value={f.name} onBlur={blur("name")} onChange={(e) => set("name", e.target.value)} /></F>
           <F label={setupText("Firm type")} req tag={src.firmType}>
             <select aria-required className={sel} value={f.firmType} onChange={(e) => set("firmType", e.target.value)}>
@@ -471,7 +472,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <F label={<>{setupText("Year founded")}<FromDbdTag show={lockYear} /></>} req tag={src.yearFounded} err={show("year")} htmlFor="fe-year">
             <LockableInput locked={lockYear} id="fe-year" aria-required className={cn(inp, show("year") && errB)} inputMode="numeric" maxLength={4} placeholder={setupText("e.g. 2014")} value={f.yearFounded} onBlur={blur("year")} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
           </F>
-        </div>
+        </AlignedRow>
         <F label={<>{setupText("Description")}<LangTag /></>} req tag={f.description.trim() ? src.description : undefined} err={show("desc")} hint={setupText(`${descV.length} / 300 · your card shows 3 lines`)} htmlFor="fe-desc">
           <Textarea id="fe-desc" aria-required className={cn("text-[14px]", show("desc") && errB)} maxLength={300} rows={4} lang={tl} value={descV} onBlur={blur("desc")} onChange={(e) => setDesc(e.target.value)} />
         </F>
@@ -481,19 +482,19 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
         {!setup && <ServiceTiles picked={f.services} onToggle={toggleService} />}
         {f.services.length === 0 && <p className="text-[13px] font-semibold text-[#B42318]">{setupText("Pick at least one service.")}</p>}
         {f.services.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <AlignedRow className="grid gap-4 sm:grid-cols-2">
             {f.services.map((s) => (
               <F key={s} label={`${tr(s)} · ${tr("Fee")}`} tag={src.fees && feeWords(f.fees[s] ?? newFee()) ? src.fees : undefined}>
                 <FeeControl service={s} value={f.fees[s] ?? newFee()} showErr={!!touched[`fee-${s}`]} onBlurAll={blur(`fee-${s}`)}
                   onChange={(v) => set("fees", { ...f.fees, [s]: v })} />
               </F>
             ))}
-          </div>
+          </AlignedRow>
         )}
       </Section>
 
       <Section id="work" active={!setup && section === "work"} title={setupText("Work")} setup={!!setup}>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <AlignedRow className="grid gap-4 sm:grid-cols-2">
           <F label={setupText("Typical deal size")} opt tag={f.dealBand ? src.dealBand : undefined} hint={deal ? <>{setupText("Your card shows")} <b>{deal.usd}</b> ({deal.thb}).</> : undefined}>
             <select className={sel} value={f.dealBand} onChange={(e) => set("dealBand", e.target.value)}>
               <option value="">{setupText("Choose a range")}</option>
@@ -503,7 +504,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <F label={setupText("Team size")} req tag={src.teamSize} err={show("teamSize")} htmlFor="fe-teamSize">
             <Input id="fe-teamSize" aria-required className={cn(inp, show("teamSize") && errB)} inputMode="numeric" maxLength={5} placeholder={setupText("e.g. 8")} value={f.teamSize} onBlur={blur("teamSize")} onChange={(e) => set("teamSize", e.target.value.replace(/\D/g, "").slice(0, 5))} />
           </F>
-        </div>
+        </AlignedRow>
         <F label={setupText("Languages")} tag={f.languages.length ? src.languages : undefined}>
           <div className="flex flex-wrap gap-1.5">
             {LANGUAGES.map((l) => {
@@ -524,7 +525,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       </Section>
 
       <Section id="company" active={!setup && section === "company"} title={setupText("Company")} setup={!!setup}>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <AlignedRow className="grid gap-4 sm:grid-cols-2">
           <F label={setupText("Legal name")} opt tag={f.legalName ? src.legalName : undefined} err={show("legalName")} htmlFor="fe-legalName"
             hint={firm?.verifiedAt ? "Changing this sends your firm back to Admin for a check." : undefined}>
             <Input id="fe-legalName" aria-required className={cn(inp, show("legalName") && errB)} maxLength={200} placeholder={f.name || setupText("e.g. Acme Advisory Co., Ltd.")} value={f.legalName} onBlur={blur("legalName")} onChange={(e) => set("legalName", e.target.value)} />
@@ -538,7 +539,7 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
           <F label={setupText("Website")} req tag={src.website} err={show("web")} htmlFor="fe-web"><Input id="fe-web" aria-required className={cn(inp, show("web") && errB)} maxLength={200} placeholder="https://www.yourfirm.com" value={f.website} onBlur={blur("web")} onChange={(e) => set("website", e.target.value)} /></F>
           <F label={setupText("Email")} req tag={src.email} err={show("email")} htmlFor="fe-email"><Input id="fe-email" aria-required type="email" className={cn(inp, show("email") && errB)} maxLength={120} placeholder="hello@yourfirm.com" value={f.email} onBlur={blur("email")} onChange={(e) => set("email", e.target.value)} /></F>
           <F label={setupText("Phone")} req tag={src.phone} err={show("phone")} htmlFor="fe-phone"><Input id="fe-phone" aria-required className={cn(inp, show("phone") && errB)} maxLength={30} placeholder="+66 2 123 4567" value={f.phone} onBlur={blur("phone")} onChange={(e) => set("phone", e.target.value)} /></F>
-        </div>
+        </AlignedRow>
         <div>
           <AddressBox compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("Sellers and buyers see it as a link that opens a map. PitchSnack checks it against your registered address.")}
             country={f.country} onCountry={changeCountry}
@@ -550,12 +551,12 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       <Section id="team" active={!setup && section === "team"} title={setupText("Team")} setup={!!setup}>
         <p className="text-[12.5px] text-muted-foreground">{tr("Your name is checked against your firm's list of directors.")}</p>
         {f.team.map((t, i) => (
-          <div key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
+          <AlignedRow key={i} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
             <F label={setupText("Name")} req><Input className={inp} value={t.name} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></F>
             <F label={setupText("Role")}><Input className={inp} placeholder={setupText("Role, e.g. Partner · M&A")} lang={tl} value={pick(t.role, t.roleTh)} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, [tl === "th" ? "roleTh" : "role"]: e.target.value } : x)))} /></F>
             <F label={setupText("Work email")}><Input className={inp} value={t.email} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, email: e.target.value } : x)))} /></F>
             <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove person")} onClick={() => set("team", f.team.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
-          </div>
+          </AlignedRow>
         ))}
         <Button type="button" variant="outline" size="sm" onClick={() => set("team", [...f.team, { name: "", role: "", email: "" }])}><Plus className="mr-1.5 h-4 w-4" />{setupText("Add person")}</Button>
         {setup && <p className="text-[12px] text-muted-foreground">{setupText("You're added from your account. Add the people sellers and buyers will work with.")}</p>}
@@ -564,14 +565,14 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       <Section id="credentials" active={!setup && section === "credentials"} title={setupText("Licences and credentials")} setup={!!setup}>
         {f.credentials.length === 0 && <p className="text-[13px] text-muted-foreground">{setupText("No licences or credentials yet. Add the ones your firm holds; Admin checks each one before it shows as Verified.")}</p>}
         {f.credentials.map((c, i) => (
-          <div key={i} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto]">
+          <AlignedRow key={i} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto]">
             <AdvisorLicenceField row={c} rows={f.credentials} index={i} error={licenceErrors[i]} onChange={patch => { set("credentials", f.credentials.map((x, j) => j === i ? { ...x, ...patch } : x)); setLicenceErrors(e => { const next = { ...e }; delete next[i]; return next; }); }} />
             <F label={setupText("Note")}><Input className={inp} placeholder={setupText("Note, e.g. 2 licensed advisers on the team")} lang={tl} value={pick(c.note, c.noteTh)} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "noteTh" : "note"]: e.target.value, status: "pending" } : x)))} /></F>
             <span className={cn("mb-2 w-fit self-start rounded-full border px-2 py-0.5 text-[11.5px] font-semibold sm:mt-7", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
               {setupText(c.status === "verified" ? "✓ Verified" : c.status === "rejected" ? "Can't verify" : "Pending check")}
             </span>
             <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove credential")} onClick={() => set("credentials", f.credentials.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
-          </div>
+          </AlignedRow>
         ))}
         <Button type="button" variant="outline" size="sm" onClick={() => set("credentials", [...f.credentials, { licenceKey: "", name: "", note: "", status: "pending" }])}><Plus className="mr-1.5 h-4 w-4" />{setupText("Add licence or credential")}</Button>
       </Section>
@@ -579,11 +580,11 @@ export function FirmEditForm({ firm, section, setup, initial, onDone, adminCreat
       <Section id="documents" active={!setup && section === "documents"} title={setupText("Documents (Optional)")} setup={!!setup}>
         {f.documents.length === 0 && <p className="text-[13px] text-muted-foreground">{setupText("No documents yet. Upload your company certificate and licences: PDF, DOCX or an image.")}</p>}
         {f.documents.map((d, i) => (
-          <div key={d.id ?? d.path} className="grid items-end gap-3 sm:grid-cols-[1.4fr_auto_auto]">
+          <AlignedRow key={d.id ?? d.path} className="grid items-end gap-3 sm:grid-cols-[1.4fr_auto_auto]">
             <F label={`Name · ${d.type || "File"}`}><Input className={inp} value={d.name} onChange={(e) => set("documents", f.documents.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></F>
             <span className={cn("mb-2 rounded-full border px-2 py-0.5 text-[11.5px] font-semibold", d.checked ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-border bg-muted text-muted-foreground")}>{d.checked ? "✓ Checked" : "Not checked yet"}</span>
             <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove document")} onClick={() => set("documents", f.documents.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>
-          </div>
+          </AlignedRow>
         ))}
         <input ref={docInput} type="file" accept=".pdf,.docx,.doc,image/*" className="hidden" onChange={(e) => { onDoc(e.target.files?.[0]); e.target.value = ""; }} />
         <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => docInput.current?.click()}><Upload className="mr-1.5 h-4 w-4" />{setupText("Upload a document")}</Button>

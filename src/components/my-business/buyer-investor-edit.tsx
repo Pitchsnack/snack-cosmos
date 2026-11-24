@@ -1,3 +1,4 @@
+import { AlignedRow } from "@/components/common/edit-info-popup";
 import { setupText } from "@/i18n/language";
 import { companyNameHelp } from "@/lib/company-name";
 import { CompanyNameFields } from "@/components/common/company-name-fields";
@@ -155,8 +156,8 @@ function Tag({ s }: { s?: SourceTag }) {
   return <span data-source-tag className={`ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>{setupText(s)}</span>;
 }
 
-const identityRowLabel = "flex h-[22px] min-w-0 items-center gap-1.5 whitespace-nowrap [&_[data-from-dbd]]:shrink-0 [&_[data-from-dbd]]:whitespace-nowrap [&_[data-source-tag]]:shrink-0 [&_[data-source-tag]]:whitespace-nowrap";
-const identityRowText = "min-w-0 overflow-hidden text-ellipsis whitespace-nowrap";
+const identityRowLabel = "flex min-h-[22px] min-w-0 flex-wrap items-center gap-1.5 [&_[data-from-dbd]]:shrink-0 [&_[data-from-dbd]]:whitespace-nowrap [&_[data-source-tag]]:shrink-0 [&_[data-source-tag]]:whitespace-nowrap";
+const identityRowText = "min-w-0";
 
 export type Data = Awaited<ReturnType<typeof getMyBuyerInvestor>>;
 
@@ -498,7 +499,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         </div></S>
 
 </div>}
-          {tab === "about" && <div className="space-y-4"><TabHead title={tr("Company Info")}>{autoEnrich}</TabHead>{!onCreated && <IdentityLockNote lockedAt={regLockedAt} adminEdit={adminEdit} />}        {/* Row 1: Year Founded | Company Name | Investor Classification */}
+          {tab === "about" && <AlignedRow className="space-y-4"><TabHead title={tr("Company Info")}>{autoEnrich}</TabHead>{!onCreated && <IdentityLockNote lockedAt={regLockedAt} adminEdit={adminEdit} />}        {/* Row 1: Year Founded | Company Name | Investor Classification */}
         <div className={individual ? "grid items-start gap-4 sm:grid-cols-2" : "grid items-start gap-4 sm:grid-cols-[200px_minmax(0,1fr)_calc((100%_-_2rem)/3)]"}>
           <div className="min-w-0 space-y-1.5">
             <Label className={identityRowLabel}><span className={identityRowText}>{setupText("Year Founded")}</span><span className="flex flex-none items-center">{!individual && req}<Tag s={src.year_founded} /><FromDbdTag show={lockYear} /></span></Label>
@@ -552,7 +553,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
 
           <div data-edit-sec="region" className="relative space-y-1.5">
             {sec === "region" && <div aria-hidden className="edit-sec-box is-buyer" />}
-            <div className="flex h-6 items-center gap-1.5">
+            <div className="flex min-h-6 items-center gap-1.5">
               <Label>{setupText("Region")}</Label>
               <TooltipProvider delayDuration={150}>
                 <Tooltip>
@@ -592,7 +593,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             </Select>
           </div>
 </CompactFields>        {/* Row 3: Email | Company URL | LinkedIn URL */}
-        <div className="grid sm:grid-cols-3 gap-4">
+        <AlignedRow className="grid sm:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <Label>{setupText("Email Address")}</Label>
             <Input type="email" value={f.email} onChange={set("email")} placeholder={setupText("investor@example.com")} maxLength={255} />
@@ -614,15 +615,15 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             onChange={(v) => setF((o) => ({ ...o, linkedin_url: v }))}
             placeholder="https://www.linkedin.com/company/…"
           />
-        </div>
+        </AlignedRow>
 
         {/* Row 4: Contact number (second slot left empty) */}
-        <div className="grid sm:grid-cols-2 gap-4">
+        <AlignedRow className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label>{tr("Contact number")} <span className="text-[10px] text-link border border-dashed border-link rounded px-1">{tr("New")}</span></Label>
             <Input value={f.contact_number} onChange={set("contact_number")} placeholder="+66 …" maxLength={40} />
           </div>
-        </div>
+        </AlignedRow>
 
         {/* About */}
         <div className="space-y-1.5">
@@ -631,7 +632,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           </FieldRow><p className="buyer-description-help">{tr("Up to 80 words.")}</p>{descriptionWords(bv("short_description")) > 80 && <p className="buyer-description-error">{tr("Keep it to 80 words.")}</p>}
         </div>
 
-{directory && <div className="space-y-1.5"><Label>{setupText("Bio")}</Label><Textarea value={bio} onChange={e=>setBio(e.target.value)} maxLength={2000} /></div>}{directory && <div className="space-y-1.5"><Label>{setupText("Long Description")}</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</div>}
+{directory && <div className="space-y-1.5"><Label>{setupText("Bio")}</Label><Textarea value={bio} onChange={e=>setBio(e.target.value)} maxLength={2000} /></div>}{directory && <div className="space-y-1.5"><Label>{setupText("Long Description")}</Label><Textarea value={longDescription} onChange={e=>setLongDescription(e.target.value)} maxLength={5000} /></div>}</AlignedRow>}
           {tab === "address" && <div className="space-y-4"><TabHead title={tr("Company Address")}>{autoEnrich}</TabHead>        {/* Company name is edited only in About Company. */}
         {!setup ? <CompanyNameFields lockedAt={regLockedAt} adminEdit={adminEdit} name={f.investor_name} nameLabel="Company Name" thaiName={f.thai_name} englishName={f.english_name} onThaiName={v => setF(o => ({...o, thai_name:v}))} onEnglishName={v => setF(o => ({...o, english_name:v}))} onChangeCompany={() => { setView("private"); setTab("about"); setNameFocus(true); setTimeout(() => document.getElementById("f-investor_name")?.focus(), 100); }} /> : <div className="grid gap-4">
           <div className="space-y-1.5">

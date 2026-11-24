@@ -1,3 +1,4 @@
+import { AlignedRow } from "./edit-info-popup";
 import { setupText } from "@/i18n/language";
 import { tr, useTranslation } from "@/i18n/language";
 import { COUNTRIES as COUNTRY_LIST, THAI_PROVINCES_77 } from "@/lib/investor-bands";
@@ -106,7 +107,7 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
       {title && <div className="mb-3 text-[16px] font-bold">{title}</div>}
       {withCountry ? (
         <div className="space-y-3.5">
-          <div className="grid items-start gap-3.5 sm:grid-cols-2 sm:gap-4">
+          <AlignedRow className="grid items-start gap-3.5 sm:grid-cols-2 sm:gap-4">
             <div>
               <label className={lbl} htmlFor="addr-country">{tr("Country")}{stars && <Req />}</label>
               <select id="addr-country" aria-required className={cn(inp, "pr-8", countryErr && bad)} value={country}
@@ -117,16 +118,16 @@ export function AddressBox({ a, thai, city, onCity, onChange, show, onBlur, comp
               <Err m={countryErr ?? null} />
             </div>
             {province}
-          </div>
+          </AlignedRow>
           {street}
           {unit}
-          <div className="grid items-start gap-3.5 sm:grid-cols-2 sm:gap-4">{district}{postal}</div>
+          <AlignedRow className="grid items-start gap-3.5 sm:grid-cols-2 sm:gap-4">{district}{postal}</AlignedRow>
         </div>
       ) : (
         <div className="space-y-3.5">
           {street}
           {unit}
-          <div className="grid items-start gap-3.5 sm:grid-cols-2">{district}{province}</div>
+          <AlignedRow className="grid items-start gap-3.5 sm:grid-cols-2">{district}{province}</AlignedRow>
           <div className="sm:w-1/2 sm:pr-[7px]">{postal}</div>
         </div>
       )}

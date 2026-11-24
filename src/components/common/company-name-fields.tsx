@@ -1,3 +1,4 @@
+import { AlignedRow } from "./edit-info-popup";
 import { useId } from "react";
 import { Lock } from "lucide-react";
 import { useTranslation } from "@/i18n/language";
@@ -20,7 +21,7 @@ export function CompanyNameFields({ name, nameLabel, thaiName, englishName, onTh
   const thai = language === "th";
   const english = lang === "th";
   const twinLocked = isIdentityLocked(lockedAt, english ? englishName : thaiName, adminEdit);
-  return <div className="company-name-fields grid min-w-0 grid-cols-1 gap-4 min-[641px]:grid-cols-2">
+  return <AlignedRow className="company-name-fields grid min-w-0 grid-cols-1 gap-4 min-[641px]:grid-cols-2">
     <div className="min-w-0 space-y-1.5">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <Label htmlFor={`${id}-legal`}>{thai ? "ชื่อนิติบุคคล" : "Legal name"}<span className="ml-1 text-destructive">*</span></Label>
@@ -39,5 +40,5 @@ export function CompanyNameFields({ name, nameLabel, thaiName, englishName, onTh
       <LockableInput locked={twinLocked} id={`${id}-other`} lang={english ? "en" : "th"} maxLength={200} value={english ? englishName : thaiName} onChange={(e) => (english ? onEnglishName : onThaiName)(e.target.value)} placeholder={english ? (thai ? "เช่น ABC Trading Co., Ltd." : "e.g. ABC Trading Co., Ltd.") : "บริษัท ... จำกัด"} />
       {!twinLocked && <p className="text-xs text-muted-foreground">{english ? (thai ? "ชื่อบริษัทเป็นภาษาอังกฤษ หากต้องการเพิ่ม" : "Your company name in English, if you'd like to add it.") : (thai ? "ชื่อตามที่จดทะเบียนเป็นภาษาไทย หากต้องการเพิ่ม" : "As registered in Thai, if you'd like to add it.")}</p>}
     </div>
-  </div>;
+  </AlignedRow>;
 }

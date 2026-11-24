@@ -1,3 +1,4 @@
+import { AlignedRow } from "@/components/common/edit-info-popup";
 import { AdvisorLicenceField } from "./advisor-licence-field";
 import { licenceName } from "@/lib/advisor-licences";
 import { setupText, tr, useTranslation } from "@/i18n/language";
@@ -250,7 +251,7 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
           <Row label={tr("Sectors")} value={f.sectorAgnostic ? tr("Sector agnostic") : f.sectors.length ? f.sectors.join(", ") : notSet} />
         </>}>
         <div className="space-y-3">
-          <div className={grid}>
+          <AlignedRow className={grid}>
             <CF label={tr("Company name")} req need={isMiss("fe-name")} htmlFor="fe-name">
               <Input id="fe-name" aria-required aria-invalid={isMiss("fe-name")} className={cn(inpC, isMiss("fe-name") && needCls)} maxLength={80} value={f.name} onChange={(e) => set("name", e.target.value)} />
             </CF>
@@ -263,8 +264,8 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
                 {FIRM_TYPES.map((t) => <option key={t} value={t}>{setupText(t)}</option>)}
               </select>
             </CF>
-          </div>
-          <div className={grid}>
+          </AlignedRow>
+          <AlignedRow className={grid}>
             <CF label={tr("Year founded")} req need={isMiss("fe-year")} htmlFor="fe-year">
               <Input id="fe-year" aria-required aria-invalid={isMiss("fe-year")} className={cn(inpC, isMiss("fe-year") && needCls)} inputMode="numeric" maxLength={4} placeholder={setupText("e.g. 2014")} value={f.yearFounded} onChange={(e) => set("yearFounded", e.target.value.replace(/\D/g, "").slice(0, 4))} />
             </CF>
@@ -277,7 +278,7 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
                 {DEAL_BANDS.map((b) => <option key={b.key} value={b.key}>{dealBandLabels(b.key)?.full ?? b.key}</option>)}
               </select>
             </CF>
-          </div>
+          </AlignedRow>
           <CF label={tr("Languages you work in")} req need={!f.languages.length}>
             <div id="fe-langs" className="flex flex-wrap gap-1.5">
               {LANGUAGES.map((l) => {
@@ -365,11 +366,11 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
             const bad = !!feeError(s, f.fees[s] ?? newFee());
             return (
               <div key={s} id={`fee-box-${s}`} className="rounded-[10px] border border-[#E6E8EC] bg-white px-2.5 py-2 dark:border-border dark:bg-card">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.15fr_2.85fr]">
+                <AlignedRow className="grid grid-cols-1 gap-3 sm:grid-cols-[1.15fr_2.85fr]">
                   <div className="flex items-center gap-2 text-[14px] font-semibold">{tr(s)}</div>
                   <FeeControl service={s} value={f.fees[s] ?? newFee()} showErr={bad} onBlurAll={() => {}}
                     onChange={(v) => set("fees", { ...f.fees, [s]: v })} />
-                </div>
+                </AlignedRow>
                 {bad && <p className="mt-1 text-[12.5px] font-medium text-[#B42318] dark:text-[#FDA29B]">{tr("Fill in the fee for {service}.").replace("{service}", tr(s))}</p>}
               </div>
             );
@@ -398,11 +399,11 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
             onAdd={() => open("contact", addrMiss[0]?.fieldId ?? "addr-street")} addName={tr("Business address")} />
         </>}>
         <div className="space-y-3">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <AlignedRow className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <CF label={tr("Full name")} req need={isMiss("fe-contact-name")} htmlFor="fe-contact-name"><Input id="fe-contact-name" aria-required className={cn(inpC, isMiss("fe-contact-name") && needCls)} maxLength={120} value={f.contactName} onChange={(e) => set("contactName", e.target.value)} /></CF>
             <CF label={tr("Current Position")} opt htmlFor="fe-contact-position"><Input id="fe-contact-position" className={inpC} maxLength={120} value={f.contactPosition} onChange={(e) => set("contactPosition", e.target.value)} /></CF>
-          </div>
-          <div className={grid}>
+          </AlignedRow>
+          <AlignedRow className={grid}>
             <CF label={tr("Website")} req need={isMiss("fe-web")} htmlFor="fe-web">
               <Input id="fe-web" aria-required aria-invalid={isMiss("fe-web")} className={cn(inpC, isMiss("fe-web") && needCls)} maxLength={200} placeholder="https://www.yourfirm.com" value={f.website} onChange={(e) => set("website", e.target.value)} />
             </CF>
@@ -417,8 +418,8 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
             <CF label={tr("Phone")} req need={isMiss("fe-phone")} htmlFor="fe-phone">
               <Input id="fe-phone" aria-required aria-invalid={isMiss("fe-phone")} className={cn(inpC, isMiss("fe-phone") && needCls)} maxLength={30} placeholder="+66 2 123 4567" value={f.phone} onChange={(e) => set("phone", e.target.value)} />
             </CF>
-          </div>
-          <div className={grid}>
+          </AlignedRow>
+          <AlignedRow className={grid}>
             <CF label={tr("Country")} req need={isMiss("fe-country")} htmlFor="fe-country">
               <select id="fe-country" aria-required aria-invalid={isMiss("fe-country")} className={cn(selC, isMiss("fe-country") && needCls)} value={f.country} onChange={(e) => changeCountry(e.target.value)}>
                 <option value="">{tr("Choose a country")}</option>
@@ -440,7 +441,7 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
                 className={cn(inpC, thai && "border-[#93C5FD] bg-[#EFF6FF] dark:border-[#1E40AF] dark:bg-[#172554]", isMiss("fe-reg") && needCls)}
                 value={f.registrationNo} onChange={(e) => set("registrationNo", thai ? e.target.value.replace(/\D/g, "").slice(0, 13) : e.target.value.slice(0, 50))} />
             </CF>
-          </div>
+          </AlignedRow>
           <AddressBox compact a={f.addr} thai={thai} city={f.city} onCity={(v) => set("city", v)} note={tr("The business address: sellers and buyers see it as a link that opens a map.")}
             onChange={(p) => set("addr", { ...f.addr, ...p })} show={(k) => addrErr[k] ?? null} onBlur={() => {}} />
         </div>
@@ -457,12 +458,12 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
             <span>{tr("Name")}</span><span>{tr("Role")}</span><span>{tr("Work email")}</span>
           </div>
           {f.team.map((t, i) => (
-            <div key={i} className="grid items-end gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]">
+            <AlignedRow key={i} className="grid items-end gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]">
               <CF label={<span className="sm:hidden">{tr("Name")}</span>}><Input className={inpC} aria-label={tr("Name")} value={t.name} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></CF>
               <CF label={<span className="sm:hidden">{tr("Role")}</span>}><Input className={inpC} aria-label={tr("Role")} lang={tl} value={pick(t.role, t.roleTh)} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, [tl === "th" ? "roleTh" : "role"]: e.target.value } : x)))} /></CF>
               <CF label={<span className="sm:hidden">{tr("Work email")}</span>}><Input className={inpC} aria-label={tr("Work email")} value={t.email} onChange={(e) => set("team", f.team.map((x, j) => (j === i ? { ...x, email: e.target.value } : x)))} /></CF>
               <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove person")} onClick={() => set("team", f.team.filter((_, j) => j !== i))}><X className="h-4 w-4" /></Button>
-            </div>
+            </AlignedRow>
           ))}
           <button type="button" onClick={() => set("team", [...f.team, { name: "", role: "", email: "" }])}
             className="inline-flex cursor-pointer items-center gap-1 text-[13.5px] font-semibold text-[#2563EB]">
@@ -488,14 +489,14 @@ export function SetupReview({ f, set, setF, thai, openSec, setOpenSec, onChangeS
         </>}>
         <div className="space-y-2">
           {f.credentials.map((c, i) => (
-            <div key={i} className="grid items-start gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto]">
+            <AlignedRow key={i} className="grid items-start gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto_auto]">
               <AdvisorLicenceField compact row={c} rows={f.credentials} index={i} error={licenceErrors[i]} onChange={patch => { set("credentials", f.credentials.map((x, j) => j === i ? { ...x, ...patch } : x)); clearLicenceError(i); }} />
               <CF label={tr("Note")}><Input className={inpC} lang={tl} value={pick(c.note, c.noteTh)} onChange={(e) => set("credentials", f.credentials.map((x, j) => (j === i ? { ...x, [tl === "th" ? "noteTh" : "note"]: e.target.value, status: "pending" } : x)))} /></CF>
               <span className={cn("mb-2 rounded-full border px-2 py-0.5 text-[11.5px] font-semibold", c.status === "verified" ? "border-[#BBF7D0] bg-[#ECFDF3] text-[#15803D]" : "border-[#F3D9A6] bg-[#FFF4E0] text-[#8A5A06]")}>
                 {c.status === "verified" ? "✓ Verified" : tr("Pending check")}
               </span>
               <Button type="button" variant="ghost" size="icon" aria-label={setupText("Remove credential")} onClick={() => set("credentials", f.credentials.filter((_, j) => j !== i))}><X className="h-4 w-4" /></Button>
-            </div>
+            </AlignedRow>
           ))}
           <button type="button" onClick={() => set("credentials", [...f.credentials, { licenceKey: "", name: "", note: "", status: "pending" }])}
             className="inline-flex cursor-pointer items-center gap-1 text-[13.5px] font-semibold text-[#2563EB]">
