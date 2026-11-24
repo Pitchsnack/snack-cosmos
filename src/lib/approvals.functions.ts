@@ -250,7 +250,9 @@ export const pendingApprovalsCount = createServerFn({ method: "GET" })
     const { count: a } = await sb.from("hidden_profiles").select("id", { count: "exact", head: true }).eq("approval_status", "in_review");
     const { count: d } = await sb.from("buyer_profiles").select("user_id", { count: "exact", head: true }).eq("approval_status", "in_review");
     const { count: e } = await sb.from("advisor_firms").select("id", { count: "exact", head: true }).eq("advisor_verification", "pending");
-    return (a ?? 0) + (d ?? 0) + (e ?? 0);
+    const { listAdminExtraBuyerApprovals } = await import("./buyer-approval-profile.server");
+    const extraBuyers = await listAdminExtraBuyerApprovals(sb, ["in_review"]);
+    return (a ?? 0) + (d ?? 0) + extraBuyers.length + (e ?? 0);
   });
 
 export const getListingReview = createServerFn({ method: "GET" })

@@ -108,16 +108,25 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
     for (const f of founders ?? []) { if (!founderBy.has(f.startup_id)) founderBy.set(f.startup_id, f); foundersBy.set(f.startup_id, [...(foundersBy.get(f.startup_id) ?? []), f]); }
 
     // ---- buyers: buyer_profiles waiting or sent back
-    const { data: bps, error: bpError } = await sb.from("buyer_profiles")
+    const { data: bpRows, error: bpError } = await sb.from("buyer_profiles")
       .select("user_id, ref_no, investor_id, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline, description, geography, suggested_headline_th, published_headline_th, description_th, review_draft, review_saved_at, sectors, city, country, people, buyer_relation, contact_number, address, legal_name, portfolio, aum_exact")
       .in("approval_status", ["in_review", "changes_requested"]).order("submitted_at", { ascending: true });
     if (bpError) throw new Error(bpError.message);
+    const { listAdminExtraBuyerApprovals } = await import("./buyer-approval-profile.server");
+    const extraBuyers = await listAdminExtraBuyerApprovals(sb);
+    const bps = [
+      ...(bpRows ?? []),
+      ...extraBuyers.filter((r: any) => ["in_review", "changes_requested"].includes(r.p.approval_status)).map((r: any) => ({ ...r.p, __key: r.key })),
+    ];
     const invIds = [...new Set((bps ?? []).map((b: any) => b.investor_id).filter(Boolean))];
     const { data: invs } = invIds.length
       ? await sb.from("investors").select("id, investor_name, investor_type, country, website_url, registration_no, year_founded, email, aum_band, ticket_band, revenue_min_band, investment_focus, preferred_industries, preferred_stages, address_line1, address_line2, address_city_district, address_province_state, postal_code, investor_name_th, address_th, short_description, short_description_th, keywords, keywords_th, team_size").in("id", invIds)
       : { data: [] };
     const invBy = new Map<string, any>((invs ?? []).map((i: any) => [i.id, i]));
-    const verByUser = await (await import("./profile-verification.server")).verificationsByUsers(sb, (bps ?? []).map((b: any) => b.user_id), "id, status, review_checks");
+    const { data: verificationRows } = invIds.length
+      ? await sb.from("investor_profile_verifications").select("investor_id, status, review_checks").in("investor_id", invIds)
+      : { data: [] };
+    const verByInvestor = new Map<string, any>((verificationRows ?? []).map((v: any) => [v.investor_id, v]));
 
     // ---- advisors: firms waiting or sent back
     const { data: firms } = await sb.from("advisor_firms")
@@ -169,10 +178,10 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
     const buyers: OneStepItem[] = [];
     for (const p of bps ?? []) {
       const inv = p.investor_id ? invBy.get(p.investor_id) : null;
-      const ver = verByUser.get(p.user_id);
+      const ver = verByInvestor.get(p.investor_id);
       const review = await buyerReview(sb, p, inv, uBy.get(p.user_id), (ver?.review_checks ?? []) as string[]);
       buyers.push({
-        kind: "buyer", id: p.user_id, ref: p.ref_no ?? "—", name: inv?.investor_name ?? "Investor profile",
+        kind: "buyer", id: p.__key ?? p.user_id, ref: p.ref_no ?? "—", name: inv?.investor_name ?? "Investor profile",
         type: inv?.investor_type ?? null, place: [p.city, inv?.country ?? p.country].filter(Boolean).join(" · ") || null,
         person: fullName(uBy.get(p.user_id)), submittedAt: p.submitted_at,
         decisionNote: p.decision_note,
@@ -229,6 +238,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
     const subject = new Map<string, string>();
     for (const x of allListings.data ?? []) { const st = Array.isArray(x.startups) ? x.startups[0] : x.startups; subject.set(`listing:${x.id}`, `${st?.startup_name ?? x.ref_no} (${x.ref_no})`); }
     for (const x of allBuyers.data ?? []) { const inv = Array.isArray(x.investors) ? x.investors[0] : x.investors; subject.set(`buyer_profile:${x.user_id}`, `${inv?.investor_name ?? x.ref_no} (${x.ref_no})`); }
+    for (const r of extraBuyers) subject.set(`buyer_profile:${r.key}`, `${r.investor?.investor_name ?? r.p.ref_no} (${r.p.ref_no})`);
     for (const x of allAdvisors.data ?? []) subject.set(`advisor:${x.id}`, `${x.name} (${x.ref_no})`);
     return { sellers, buyers, advisors, history: (history ?? []).map((h: any) => ({ ...h, actor_name: actorNames[h.actor_id], subject_name: subject.get(`${h.item_type}:${h.item_id}`) ?? h.item_id })), me: context.userId };
   });
@@ -262,72 +272,69 @@ export const decideOneStep = createServerFn({ method: "POST" })
     }
 
     if (data.kind === "buyer") {
-      const { data: p } = await sb.from("buyer_profiles").select("*").eq("user_id", data.id).maybeSingle();
-      if (!p) throw new Error("Profile not found");
-      const { data: u } = await sb.from("users").select("first_name, last_name, email").eq("id", p.user_id).maybeSingle();
+      const { findBuyerApprovalProfile, updateBuyerApprovalProfile } = await import("./buyer-approval-profile.server");
+      const record = await findBuyerApprovalProfile(sb, data.id);
+      if (!record) throw new Error("Profile not found");
+      const { p, subjectUserId, key } = record;
+      const { data: u } = await sb.from("users").select("first_name, last_name, email").eq("id", subjectUserId).maybeSingle();
       const first = firstName(u);
       if (data.action !== "approve" && data.reasons?.includes("Another reason") && !data.note?.trim())
         throw new Error(`Say what the other reason is, so ${first} knows what to fix.`);
-      const ver = p.investor_id
-        ? await (await import("./profile-verification.server")).verificationByInvestor(sb, p.investor_id, "id")
-        : null;
 
       if (data.action === "approve") {
-        const { data: inv } = p.investor_id ? await sb.from("investors").select("ticket_band, investor_type").eq("id", p.investor_id).maybeSingle() : { data: null };
+        const { data: inv } = record.investorId ? await sb.from("investors").select("ticket_band, investor_type").eq("id", record.investorId).maybeSingle() : { data: null };
         const publishedName = buyerListingName(inv?.investor_type, p.ref_no, data.publishedName || p.published_listing_name);
         const publishedHeadline = data.publishedHeadline?.trim() || p.published_headline || null;
-        const { error } = await sb.from("buyer_profiles").update({
+        await updateBuyerApprovalProfile(sb, record, {
           approval_status: "approved", status: "live", live_since: p.live_since ?? now,
           decided_at: now, decided_by: context.userId, decision_note: null, decision_reasons: [],
           published_listing_name: publishedName, published_headline: publishedHeadline,
           published_headline_th: data.publishedHeadlineTh?.trim() || p.published_headline_th || null, review_draft: null, review_saved_at: null, updated_at: now,
-        }).eq("user_id", p.user_id);
-        if (error) throw new Error(error.message);
+        });
         // The verification moves with the profile, in the same decision.
-        if (p.investor_id) {
+        if (record.investorId) {
           await sb.from("investor_profile_verifications").upsert({
-            investor_id: p.investor_id, user_id: p.user_id, status: "verified",
+            investor_id: record.investorId, user_id: subjectUserId, status: "verified",
             decided_at: now, decision_note: null, decision_reasons: [], updated_at: now,
           }, { onConflict: "investor_id" });
         }
-        await sb.from("user_verifications").upsert({ user_id: p.user_id, verified_at: now, verified_by: context.userId });
-        await resetApprovalNotice(sb, p.user_id, "buyer_profile", p.user_id, now);
-        await logEvent({ item_type: "buyer_profile", item_id: p.user_id, subject_user_id: p.user_id, action: "approve", actor_id: context.userId, note: null, reasons: [],
-          ...(await dbdStamp(p.investor_id ? (await sb.from("investors").select("registration_no").eq("id", p.investor_id).maybeSingle()).data?.registration_no : null)) });
-        await notify(p.user_id, "Your profile is approved", `Sellers can now find your firm as ${publishedName} in Browse investors, and you can request NDAs.`, "/marketplace/my-company");
+        if (!record.extra) await sb.from("user_verifications").upsert({ user_id: subjectUserId, verified_at: now, verified_by: context.userId });
+        await resetApprovalNotice(sb, subjectUserId, "buyer_profile", key, now);
+        await logEvent({ item_type: "buyer_profile", item_id: key, subject_user_id: subjectUserId, action: "approve", actor_id: context.userId, note: null, reasons: [],
+          ...(await dbdStamp(record.investorId ? (await sb.from("investors").select("registration_no").eq("id", record.investorId).maybeSingle()).data?.registration_no : null)) });
+        await notify(subjectUserId, "Your profile is approved", `Sellers can now find your firm as ${publishedName} in Browse investors, and you can request NDAs.`, "/marketplace/my-company");
         const { sendAlert } = await import("./email-alerts.server");
         const { bandText } = await import("@/lib/investor-bands");
         const rewrote = !!p.suggested_listing_name?.trim() && p.suggested_listing_name.trim() !== publishedName || !!p.suggested_headline?.trim() && p.suggested_headline.trim() !== publishedHeadline;
         await sendAlert({
-          alert: "approved", role: "buyer", userIds: [p.user_id],
+          alert: "approved", role: "buyer", userIds: [subjectUserId],
           vars: { "listing name": publishedName, ref: p.ref_no ?? "", rewrote: rewrote ? " PitchSnack rewrote your listing name and headline." : "" },
           details: [["Listing name", publishedName], ...(publishedHeadline ? [["Headline", publishedHeadline] as [string, string]] : []), ["Verified", new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Bangkok" })], ["Ticket size", bandText(inv?.ticket_band) ?? "—"]],
-          refKey: `buyer_profile:${p.user_id}:approved:${now}`,
+          refKey: `buyer_profile:${key}:approved:${now}`,
         });
         return { ok: true };
       }
 
       const status = data.action === "request_changes" ? "changes_requested" : "declined";
-      const { error } = await sb.from("buyer_profiles").update({
+      await updateBuyerApprovalProfile(sb, record, {
         approval_status: status, decided_at: now, decided_by: context.userId,
         decision_note: data.note?.trim() || null, decision_reasons: data.reasons ?? [], updated_at: now,
-      }).eq("user_id", p.user_id);
-      if (error) throw new Error(error.message);
-      if (p.investor_id) {
+      });
+      if (record.investorId) {
         await sb.from("investor_profile_verifications").upsert({
-          investor_id: p.investor_id, user_id: p.user_id,
+          investor_id: record.investorId, user_id: subjectUserId,
           status: data.action === "request_changes" ? "more_info" : "declined",
           decided_at: now, decision_note: data.note?.trim() || null, decision_reasons: data.reasons ?? [], updated_at: now,
         }, { onConflict: "investor_id" });
       }
-      await resetApprovalNotice(sb, p.user_id, "buyer_profile", p.user_id, now);
-      await logEvent({ item_type: "buyer_profile", item_id: p.user_id, subject_user_id: p.user_id, action: data.action, actor_id: context.userId, note: data.note ?? null, reasons: data.reasons ?? [] });
-      await notify(p.user_id, data.action === "request_changes" ? "PitchSnack needs a change to your profile" : "Your PitchSnack profile was not approved", data.note ?? (data.reasons ?? []).join(" · "), "/marketplace/my-company");
+      await resetApprovalNotice(sb, subjectUserId, "buyer_profile", key, now);
+      await logEvent({ item_type: "buyer_profile", item_id: key, subject_user_id: subjectUserId, action: data.action, actor_id: context.userId, note: data.note ?? null, reasons: data.reasons ?? [] });
+      await notify(subjectUserId, data.action === "request_changes" ? "PitchSnack needs a change to your profile" : "Your PitchSnack profile was not approved", data.note ?? (data.reasons ?? []).join(" · "), "/marketplace/my-company");
       const { sendAlert } = await import("./email-alerts.server");
       await sendAlert({
-        alert: data.action === "request_changes" ? "changes_requested" : "declined", role: "buyer", userIds: [p.user_id],
-        details: [["Reason", (data.reasons ?? []).map((r) => (r === "Another reason" ? "Another reason (see the note)" : r)).join(" · ")]],
-        quote: data.note ?? null, refKey: `buyer_profile:${p.user_id}:${data.action}:${now}`,
+        alert: data.action === "request_changes" ? "changes_requested" : "declined", role: "buyer", userIds: [subjectUserId],
+        details: [["Reason", (data.reasons ?? []).map((r) => r === "Another reason" ? "Another reason (see the note)" : r).join(" · ")]],
+        quote: data.note ?? null, refKey: "buyer_profile:" + key + ":" + data.action + ":" + now,
       });
       return { ok: true };
     }
@@ -513,19 +520,25 @@ export const saveOneStepReview = createServerFn({ method: "POST" })
       const { error } = await sb.from("hidden_profiles").update({ review_draft: draft, review_saved_at: now }).eq("id", hp.id);
       if (error) throw new Error(error.message);
     } else if (data.kind === "buyer") {
-      const { data: p } = await sb.from("buyer_profiles").select("user_id, investor_id").eq("user_id", data.id).maybeSingle();
-      if (!p) throw new Error("Profile not found");
-      userId = p.user_id;
+      const { findBuyerApprovalProfile, updateBuyerApprovalProfile } = await import("./buyer-approval-profile.server");
+      const record = await findBuyerApprovalProfile(sb, data.id);
+      if (!record) throw new Error("Profile not found");
+      const { p } = record;
+      userId = record.extra ? null : record.subjectUserId;
+      const extraPatch: Record<string, unknown> = {};
+      const putExtra = (col: string, colTh: string, t: { en?: string; th: string }) => {
+        extraPatch[colTh] = clean(t.th);
+        if (t.en !== undefined && t.en.trim() && !String(p[col] ?? "").trim()) extraPatch[col] = t.en.trim();
+      };
       for (const t of data.texts) {
-        if (t.key === "company_name" && p.investor_id) await put("investors", ["id", p.investor_id], "investor_name", "investor_name_th", t);
-        if (t.key === "address" && p.investor_id) await put("investors", ["id", p.investor_id], "address_line1", "address_th", t);
-        if (t.key === "suggested_headline") await put("buyer_profiles", ["user_id", p.user_id], "suggested_headline", "suggested_headline_th", t);
-        if (t.key === "description") await put("buyer_profiles", ["user_id", p.user_id], "description", "description_th", t);
-        if (t.key === "short_description" && p.investor_id) await put("investors", ["id", p.investor_id], "short_description", "short_description_th", t);
-        if (t.key === "keywords" && p.investor_id) await put("investors", ["id", p.investor_id], "keywords", "keywords_th", t, true);
+        if (t.key === "company_name" && record.investorId) await put("investors", ["id", record.investorId], "investor_name", "investor_name_th", t);
+        if (t.key === "address" && record.investorId) await put("investors", ["id", record.investorId], "address_line1", "address_th", t);
+        if (t.key === "suggested_headline") record.extra ? putExtra("suggested_headline", "suggested_headline_th", t) : await put("buyer_profiles", ["user_id", p.user_id], "suggested_headline", "suggested_headline_th", t);
+        if (t.key === "description") record.extra ? putExtra("description", "description_th", t) : await put("buyer_profiles", ["user_id", p.user_id], "description", "description_th", t);
+        if (t.key === "short_description" && record.investorId) await put("investors", ["id", record.investorId], "short_description", "short_description_th", t);
+        if (t.key === "keywords" && record.investorId) await put("investors", ["id", record.investorId], "keywords", "keywords_th", t, true);
       }
-      const { error } = await sb.from("buyer_profiles").update({ review_draft: draft, review_saved_at: now }).eq("user_id", p.user_id);
-      if (error) throw new Error(error.message);
+      await updateBuyerApprovalProfile(sb, record, { ...extraPatch, review_draft: draft, review_saved_at: now });
     } else {
       const { data: f } = await sb.from("advisor_firms").select("id, owner_user_id").eq("id", data.id).maybeSingle();
       if (!f) throw new Error("Firm not found");
@@ -560,9 +573,10 @@ export const markReviewCheck = createServerFn({ method: "POST" })
       const next = [...new Set([...((hp?.review_checks ?? []) as string[]), data.row])];
       await sb.from("hidden_profiles").update({ review_checks: next }).eq("id", data.id);
     } else if (data.kind === "buyer") {
-      const { data: p } = await sb.from("buyer_profiles").select("investor_id").eq("user_id", data.id).maybeSingle();
-      if (!p?.investor_id) throw new Error("Profile not found");
-      const ver = await (await import("./profile-verification.server")).verificationByInvestor(sb, p.investor_id, "id, review_checks");
+      const { findBuyerApprovalProfile } = await import("./buyer-approval-profile.server");
+      const record = await findBuyerApprovalProfile(sb, data.id);
+      if (!record?.investorId) throw new Error("Profile not found");
+      const ver = await (await import("./profile-verification.server")).verificationByInvestor(sb, record.investorId, "id, review_checks");
       if (!ver) throw new Error("No verification row");
       const next = [...new Set([...((ver.review_checks ?? []) as string[]), data.row])];
       await sb.from("investor_profile_verifications").update({ review_checks: next, updated_at: new Date().toISOString() }).eq("id", ver.id);
@@ -589,31 +603,37 @@ export const paidReportsCount = createServerFn({ method: "GET" })
 /** Register your company — buyer: profile + verification move together. */
 export const registerBuyerCompany = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d) => z.object({ id: z.string().uuid().optional() }).parse(d))
+  .handler(async ({ data, context }) => {
     const sb = await admin();
     const uid = context.userId;
-    const { data: p } = await sb.from("buyer_profiles").select("*").eq("user_id", uid).maybeSingle();
+    // No id means the caller's own profile. An id is authorized by resolveBuyer;
+    // Control can register only its own extra or another manageable Directory profile.
+    const { resolveBuyer } = await import("./buyer-investor.functions");
+    const r = await resolveBuyer(uid, data.id);
+    if (r.directory && r.extra) throw new Error("This profile isn't yours.");
+    const p = r.p;
     if (!p) throw new Error("Set up your investor profile first");
     if (p.approval_status === "in_review") return { ok: true, already: true };
 
-    const { data: inv } = p.investor_id
-      ? await sb.from("investors").select("investor_name, investor_type, ticket_band, preferred_stages, preferred_industries, setup_done_at, website_url, registration_no, linkedin_url, email").eq("id", p.investor_id).maybeSingle()
-      : { data: null };
+    const { data: inv } = await sb.from("investors").select("investor_name, investor_type, ticket_band, preferred_stages, preferred_industries, setup_done_at, website_url, registration_no, linkedin_url, email").eq("id", r.investorId).maybeSingle();
 
     // Identity wording never blocks registration; Admin reviews it after submission.
     const missing = buyerRegistrationMissing(inv, p);
     if (missing.length) throw new Error(`Add ${missing.join(", ")} before registering.`);
 
     const now = new Date().toISOString();
-    const { error } = await sb.from("buyer_profiles").update({
+    const { updateBuyerApprovalProfile } = await import("./buyer-approval-profile.server");
+    await updateBuyerApprovalProfile(sb, r, {
       approval_status: "in_review", submitted_at: now, decision_note: null, decision_reasons: [], updated_at: now,
-    }).eq("user_id", uid);
-    if (error) throw new Error(error.message);
+    });
+    const key = r.extra ? r.investorId : r.bpUser ?? uid;
+    const subjectUserId = r.bpUser ?? uid;
     const { captureIdentityBaseline } = await import("./identity-review.server");
-    await captureIdentityBaseline(sb, "buyer", uid);
+    await captureIdentityBaseline(sb, "buyer", key);
 
     // The verification row goes with the profile, filled from it — no separate form.
-    const { data: u } = await sb.from("users").select("email").eq("id", uid).maybeSingle();
+    const { data: u } = await sb.from("users").select("email").eq("id", subjectUserId).maybeSingle();
     const domainOf = (v?: string | null) => {
       if (!v) return "";
       const s = v.includes("@") ? v.split("@")[1] : v.replace(/^https?:\/\//, "").split("/")[0];
@@ -621,7 +641,7 @@ export const registerBuyerCompany = createServerFn({ method: "POST" })
     };
     const workEmail = inv?.email || u?.email || "";
     await sb.from("investor_profile_verifications").upsert({
-      investor_id: p.investor_id, user_id: uid,
+      investor_id: r.investorId, user_id: subjectUserId,
       company_name: inv?.investor_name ?? "", buyer_type: inv?.investor_type ?? null,
       registration_no: inv?.registration_no ?? null, website: inv?.website_url ?? null,
       linkedin: inv?.linkedin_url ?? null, work_email: workEmail,
@@ -629,8 +649,8 @@ export const registerBuyerCompany = createServerFn({ method: "POST" })
       status: "pending", submitted_at: now, decided_at: null, decision_note: null, decision_reasons: [], updated_at: now,
     }, { onConflict: "investor_id" });
 
-    await logEvent({ item_type: "buyer_profile", item_id: uid, subject_user_id: uid, action: p.approval_status === "draft" || !p.approval_status ? "submit" : "resubmit", actor_id: uid });
-    await notify(uid, "Sent for approval", "PitchSnack checks your firm and publishes your profile together, usually within 1 business day.", "/marketplace/my-company");
+    await logEvent({ item_type: "buyer_profile", item_id: key, subject_user_id: subjectUserId, action: p.approval_status === "draft" || !p.approval_status ? "submit" : "resubmit", actor_id: uid });
+    await notify(subjectUserId, "Sent for approval", "PitchSnack checks your firm and publishes your profile together, usually within 1 business day.", "/marketplace/my-company");
     return { ok: true };
   });
 

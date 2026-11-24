@@ -19,7 +19,9 @@ import { bandText, typeName } from "@/lib/investor-bands";
 import { tr } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 import type { BuyerOrg, BuyerProfile } from "@/lib/buyer-profile";
-import { BuyerDirectoryItem, SetupBanner } from "@/components/my-business/buyer-my-company";
+import { BuyerDirectoryItem, BuyerFolderCard, BuyerPill, PublicPanel, SetupBanner } from "@/components/my-business/buyer-my-company";
+import { BuyerPrivateCardBody, BuyerPrivatePanel } from "@/components/my-business/buyer-private-view";
+import type { BuyerItemKey } from "@/lib/buyer-profile";
 import { startProfileEnrichment } from "@/lib/website-enrichment.functions";
 
 export const INVESTOR_IDS_KEY = ["buyer-investor", "ids"];
@@ -77,6 +79,7 @@ function directoryCardData(d: Data, id: string): { p: BuyerProfile; org: BuyerOr
   const status = d.buyer.status === "live" || d.buyer.status === "paused" ? d.buyer.status : "draft";
   return {
     p: {
+      ...(d.buyer as any),
       user_id: id,
       ref_no: d.buyer.ref_no ?? "",
       code_name: "",
@@ -123,25 +126,28 @@ function directoryCardData(d: Data, id: string): { p: BuyerProfile; org: BuyerOr
 }
 
 /** Admin's extra investor profiles on Buyer › My Company, each opening its own panel, wizard and Edit profile. */
-export function AdminInvestorProfiles({ ids, openId, part, mode = "grid", onSelect }: { ids: string[]; openId?: string; part?: "list" | "panel" | "directory"; mode?: "grid" | "list"; onSelect?: (id: string) => void }) {
+export function AdminInvestorProfiles({ ids, openId, part, mode = "grid", view, onView, onSelect }: { ids: string[]; openId?: string; part?: "list" | "panel" | "directory"; mode?: "grid" | "list"; view?: "public" | "private"; onView?: (view: "public" | "private") => void; onSelect?: (id: string) => void }) {
   if (!ids.length) return null;
-  const profiles = ids.filter(id => part !== "panel" || id === openId).map((id) => <ExtraProfile key={id} id={id} open={openId === id} part={part} mode={mode} onSelect={onSelect} />);
+  const profiles = ids.filter(id => part !== "panel" || id === openId).map((id) => <ExtraProfile key={id} id={id} open={openId === id} part={part} mode={mode} view={view} onView={onView} onSelect={onSelect} />);
   return part === "directory" ? <>{profiles}</> : <div className="space-y-5">{profiles}</div>;
 }
 
-function ExtraProfile({ id, open, part, mode = "grid", onSelect }: { id: string; open: boolean; part?: "list" | "panel" | "directory"; mode?: "grid" | "list"; onSelect?: (id: string) => void }) {
+function ExtraProfile({ id, open, part, mode = "grid", view: controlledView, onView, onSelect }: { id: string; open: boolean; part?: "list" | "panel" | "directory"; mode?: "grid" | "list"; view?: "public" | "private"; onView?: (view: "public" | "private") => void; onSelect?: (id: string) => void }) {
   const fetchById = useServerFn(getBuyerInvestorById);
   const navigate = useNavigate();
   const ref = useRef<HTMLDivElement | null>(null);
-  const [editing, setEditing] = useState(false);
+  const [localView, setLocalView] = useState<"public" | "private">("public");
+  const view = controlledView ?? localView;
+  const setView = onView ?? setLocalView;
+  const [editing, setEditing] = useState<{ section?: string; from?: "public" | "private"; add?: boolean } | null>(null);
   const { data: r } = useQuery({ queryKey: buyerInvestorKey(id), queryFn: async () => { const x = await fetchById({ data: { id } }); return x.ok ? { ok: true as const, data: x.data as Data } : { ok: false as const, data: null }; } });
   useEffect(() => { if (!part && open && r?.ok) ref.current?.scrollIntoView({ block: "center" }); }, [open, r?.ok, part]);
   if (!r) return <Skeleton className="h-[220px]" />;
   if (!r.ok || !r.data) return null;
   const d = r.data;
   const iv = d.investor;
+  const { p, org } = directoryCardData(d, id);
   if (part === "directory") {
-    const { p, org } = directoryCardData(d, id);
     return <BuyerDirectoryItem p={p} org={org} mode={mode} selected={false} ticketLabel={bandText(iv.ticket_band)} onClick={() => onSelect?.(id)} />;
   }
   const rel = (d.buyer.relation ?? null) as BuyerRelation | null;
@@ -149,26 +155,36 @@ function ExtraProfile({ id, open, part, mode = "grid", onSelect }: { id: string;
   const individual = rel === "individual";
   const nm = iv.investor_name || (iv.investor_type ? typeName(iv.investor_type) : tr("New investor profile"));
   const openWizard = () => void navigate({ to: "/buyer/company/$id/setup", params: { id }, search: {} });
+  const onItem = (key: BuyerItemKey) => {
+    const next = key === "headline"
+      ? { view: "public" as const, section: "description" }
+      : key === "mandate"
+        ? { view: "private" as const, section: "mandate" }
+        : { view: "private" as const, section: key };
+    setView(next.view);
+    setEditing({ section: next.section, from: next.view });
+  };
+  const pill = <BuyerPill p={p} org={org} onItem={onItem} />;
   return (
     <div ref={ref} data-company-selected={open} className={cn(!part && "grid gap-5 rounded-[14px] lg:grid-cols-[320px_minmax(0,1fr)]", open && !part && "ring-2 ring-accent/40 ring-offset-4 ring-offset-background")} style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       {part !== "panel" && <div role={part ? "button" : undefined} tabIndex={part ? 0 : undefined} onClick={() => onSelect?.(id)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect?.(id); } }}>
-      <DraftCompanyCard role="buyer" name={nm} typeLine={iv.investor_type ? typeName(iv.investor_type) : null}
-        selected={part ? open : true} founded={individual ? null : iv.year_founded} size={individual ? null : iv.company_size_band} website={iv.website_url} />
+        {!iv.setup_done_at
+          ? <DraftCompanyCard role="buyer" name={nm} typeLine={iv.investor_type ? typeName(iv.investor_type) : null}
+              selected={part ? open : true} founded={individual ? null : iv.year_founded} size={individual ? null : iv.company_size_band} website={iv.website_url} />
+          : <BuyerFolderCard p={p} org={org} d={d} view={view} onView={setView} privateBody={<BuyerPrivateCardBody d={d} status={p.status} selected={open} />} />}
       </div>}
       {part !== "list" && (!iv.setup_done_at ? (
         <DraftCompanyPanel role="buyer" name={nm} banner={<SetupBanner n={prog.n} N={prog.N} onOpen={openWizard} />}
-          onEdit={() => setEditing(true)} onFinish={openWizard}
+          onEdit={() => setEditing({})} onFinish={openWizard}
           deleteDraft={{ kind: "investor", id, invalidate: [INVESTOR_IDS_KEY, buyerInvestorKey(id)] }} />
       ) : (
         <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-sm">
-          <p className="text-[15px] font-semibold">{nm}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{d.buyer.ref_no} · {tr("Setup done")}</p>
-          <div className="mt-4 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>{tr("Edit information")}</Button>
-          </div>
+          {view === "public"
+            ? <PublicPanel p={p} org={org} d={d} investorId={id} pill={pill} onEdit={(section) => setEditing({ section })} onOpenEdit={setEditing} />
+            : <BuyerPrivatePanel d={d} view={view} onView={setView} investorId={id} onOpenEdit={setEditing} />}
         </div>
       ))}
-      {editing && <EditInfoPopup open subtitle={nm} companyName={nm} onClosed={()=>setEditing(false)}><BuyerInvestorEdit id={id} /></EditInfoPopup>}
+      {editing && <EditInfoPopup open subtitle={nm} companyName={nm} onClosed={() => setEditing(null)} phoneTabs><BuyerInvestorEdit id={id} section={editing.section} add={editing.add} initialView={editing.from} /></EditInfoPopup>}
     </div>
   );
 }

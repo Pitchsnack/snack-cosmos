@@ -9,7 +9,7 @@ import { SignupWelcome } from "@/components/my-business/signup-welcome";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { EditInfoPopup } from "@/components/common/edit-info-popup";
-import { BuyerInvestorEdit } from "@/components/my-business/buyer-investor-edit";
+import { BuyerInvestorEdit, type Data } from "@/components/my-business/buyer-investor-edit";
 import { useOpenProfileEdit } from "@/components/my-business/profile-edit-popup";
 import { useNavigate } from "@tanstack/react-router";
 import { BadgeCheck, Check, ChevronDown, Clock, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Send, Star, X } from "lucide-react";
@@ -94,7 +94,7 @@ const HELP: Record<BuyerItemKey, { cta: string; link: string; help: string; sect
   portfolio: { cta: "Add portfolio", link: "Add →", help: "Optional list of current holdings.", section: "portfolio", view: "private" },
 };
 
-function BuyerPill({ p, org, onItem, setup }: { p: BuyerProfile; org: BuyerOrg; onItem: (k: BuyerItemKey) => void; setup?: { label: string; onClick: () => void } | null }) {
+export function BuyerPill({ p, org, onItem, setup }: { p: BuyerProfile; org: BuyerOrg; onItem: (k: BuyerItemKey) => void; setup?: { label: string; onClick: () => void } | null }) {
   const { items, pct, missingRequired } = buyerCompleteness(p, org);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -184,11 +184,11 @@ export function BuyerMyCompany() {
   const addProfile = useAddInvestorProfile();
   const openId = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("open") ?? undefined : undefined;
   const extraIds = (idsQ.data?.ids ?? []).filter((x) => x !== inv.data?.investor.id);
-  const extras = isAdmin ? <AdminInvestorProfiles ids={extraIds} openId={openId} /> : null;
+  const extras = isAdmin ? <AdminInvestorProfiles ids={extraIds} openId={openId} view={view} onView={setView} /> : null;
   const total = 1 + extraIds.length;
   useEffect(() => { if (openId && extraIds.includes(openId)) setSelectedExtra(openId); }, [openId, extraIds.join(",")]);
-  const extraList = isAdmin ? <AdminInvestorProfiles ids={extraIds} openId={selectedExtra ?? undefined} part="list" onSelect={setSelectedExtra} /> : null;
-  const extraPanel = selectedExtra ? <AdminInvestorProfiles ids={extraIds} openId={selectedExtra} part="panel" /> : null;
+  const extraList = isAdmin ? <AdminInvestorProfiles ids={extraIds} openId={selectedExtra ?? undefined} part="list" view={view} onView={setView} onSelect={setSelectedExtra} /> : null;
+  const extraPanel = selectedExtra ? <AdminInvestorProfiles ids={extraIds} openId={selectedExtra} part="panel" view={view} onView={setView} /> : null;
 
   if (isLoading) return <div className="space-y-6"><Skeleton className="h-20" /><Skeleton className="h-12" /><div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[420px]" /><Skeleton className="h-[520px]" /></div></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">{setupText("Couldn't load your investor profile. Please refresh.")}</p>;
@@ -360,24 +360,25 @@ export function BuyerMyCompany() {
 }
 
 /** Card props for the buyer's own public card (same component sellers see). */
-function useOwnCard(p: BuyerProfile, org: BuyerOrg) {
-  const inv = useBuyerInvestor();
-  const iv = inv.data?.investor;
+function useOwnCard(p: BuyerProfile, org: BuyerOrg, supplied?: Data) {
+  const own = useBuyerInvestor();
+  const data = supplied ?? own.data;
+  const iv = data?.investor;
   const pub = { ...toPublicLocal(p, org), geography: p.geography ?? (iv?.investment_focus_raw ?? []).join(", ") };
   return {
-    iv, inv,
+    iv, inv: data ? { data } : own,
     props: {
       b: pub as PublicBuyer, empty: setupText("Not added"), status: p.status as "live" | "draft" | "paused",
-      relation: (inv.data?.buyer.relation ?? null) as BuyerRelation | null,
+      relation: (data?.buyer.relation ?? null) as BuyerRelation | null,
       bands: { aum: iv?.aum_band, ticket: iv?.ticket_band, rev: iv?.revenue_min_band },
     },
   };
 }
 
 /** Seller-style folder-tab card (Listing view / Exclusive view) for the investor profile. */
-function BuyerFolderCard({ p, org, view, onView, privateBody }: { p: BuyerProfile; org: BuyerOrg; view: View; onView: (v: View) => void; privateBody: React.ReactNode }) {
+export function BuyerFolderCard({ p, org, d, view, onView, privateBody }: { p: BuyerProfile; org: BuyerOrg; d?: Data; view: View; onView: (v: View) => void; privateBody: React.ReactNode }) {
   const shell = "overflow-hidden rounded-b-[14px] rounded-t-none border border-accent bg-card";
-  const { iv, props } = useOwnCard(p, org);
+  const { iv, props } = useOwnCard(p, org, d);
   const managedIds = useManagedIds("investor", [iv?.id]);
   return (
     <div>
@@ -478,22 +479,31 @@ function Box({ title, rows }: { title: string; rows: [string, React.ReactNode][]
   );
 }
 
-function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg; pill: React.ReactNode; onEdit: (s: Section) => void }) {
+export function PublicPanel({ p, org, d, investorId, pill, onEdit, onOpenEdit }: {
+  p: BuyerProfile;
+  org: BuyerOrg;
+  d?: Data;
+  investorId?: string;
+  pill: React.ReactNode;
+  onEdit: (s: Section) => void;
+  onOpenEdit?: (o: { section?: string; from?: "public" | "private"; add?: boolean }) => void;
+}) {
   const qc = useQueryClient();
   const list = useServerFn(setBuyerListing);
   const listing = useMutation({
-    mutationFn: (status: "live" | "paused") => list({ data: { status } }),
-    onSuccess: (d: any, s) => { toast.success(d?.submitted ? "Sent to Admin for review. You'll be notified when it's approved." : s === "live" ? "Live again in Browse investors." : "Paused. Sellers can't find you in Browse investors."); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
+    mutationFn: (status: "live" | "paused") => list({ data: { status, ...(investorId ? { id: investorId } : {}) } }),
+    onSuccess: (d: any, s) => { toast.success(d?.submitted ? "Sent to Admin for review. You'll be notified when it's approved." : s === "live" ? "Live again in Browse investors." : "Paused. Sellers can't find you in Browse investors."); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["buyer-investor"] }); void qc.invalidateQueries({ queryKey: ["public-buyers"] }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const { t, language } = useTranslation();
   const appr = (p as any).approval_status as string | undefined;
   const tone = typeTone(org.type);
-  const { iv, inv, props } = useOwnCard(p, org);
+  const { iv, inv, props } = useOwnCard(p, org, d);
   const managedIds = useManagedIds("investor", [iv?.id]);
   const title = typeName(org.type);
   const navigate = useNavigate();
-  const openProfileEdit = useOpenProfileEdit();
+  const ownOpenProfileEdit = useOpenProfileEdit();
+  const openProfileEdit = onOpenEdit ?? ownOpenProfileEdit;
   const rel = (inv.data?.buyer.relation ?? null) as BuyerRelation | null;
   const prog = buyerProgressFor(rel, iv, inv.data?.buyer, inv.data?.people);
   const setupDone = !!iv?.setup_done_at;
@@ -511,8 +521,8 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [failures, setFailures] = useState<string[]>([]);
   const reg = useMutation({
-    mutationFn: () => registerFn(),
-    onSuccess: () => { setReviewOpen(false); setFailures([]); setSentOpen(true); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
+    mutationFn: () => registerFn({ data: investorId ? { id: investorId } : {} }),
+    onSuccess: () => { setReviewOpen(false); setFailures([]); setSentOpen(true); void qc.invalidateQueries({ queryKey: KEY }); void qc.invalidateQueries({ queryKey: ["buyer-investor"] }); void qc.invalidateQueries({ queryKey: ["one-step-approvals"] }); void qc.invalidateQueries({ queryKey: ["approval-notice"] }); },
     onError: (e: Error) => setFailures([e.message]),
   });
   const state = appr === "in_review" ? "pending" : appr === "changes_requested" ? "changes" : appr === "declined" ? "declined" : p.status === "live" ? "live" : p.status === "paused" ? "paused" : "draft";

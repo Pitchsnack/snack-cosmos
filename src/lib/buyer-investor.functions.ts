@@ -192,6 +192,17 @@ async function loadBuyerData(context: { userId: string }, r: Resolved) {
         private_description_th: (p.private_description_th ?? "") as string,
         suggested_headline: (p.suggested_headline ?? "") as string,
         suggested_headline_th: (p.suggested_headline_th ?? "") as string,
+        suggested_listing_name: (p.suggested_listing_name ?? null) as string | null,
+        published_listing_name: (p.published_listing_name ?? null) as string | null,
+        published_headline: (p.published_headline ?? null) as string | null,
+        published_headline_th: (p.published_headline_th ?? null) as string | null,
+        approval_status: (p.approval_status ?? "draft") as string,
+        submitted_at: (p.submitted_at ?? null) as string | null,
+        decided_at: (p.decided_at ?? null) as string | null,
+        decision_note: (p.decision_note ?? null) as string | null,
+        live_since: (p.live_since ?? null) as string | null,
+        contact_number: (p.contact_number ?? null) as string | null,
+        geography: (p.geography ?? null) as string | null,
         deal_types: (p.deal_types ?? []) as string[],
         ref_no: p.ref_no as string,
       },
@@ -434,8 +445,11 @@ export const createMyBuyerUploadUrl = createServerFn({ method: "POST" })
 /** Required before "Submit for verification": ticket size, About, Fund's AUM. */
 export const submitMyBuyerForVerification = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { sb, investorId } = await ensureLinked(context.userId);
+  .inputValidator((d) => z.object({ id: z.string().uuid().optional() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const r = await resolveBuyer(context.userId, data.id);
+    if (r.directory && r.extra) throw new Error("This profile isn't yours.");
+    const { sb, investorId } = r;
     const { data: inv } = await sb.from("investors").select("*").eq("id", investorId).single();
     const missing = [
       !inv.ticket_band && !inv.min_ticket_size && !inv.max_ticket_size && "Average investment",
@@ -447,7 +461,7 @@ export const submitMyBuyerForVerification = createServerFn({ method: "POST" })
     const domain = email.split("@")[1]?.toLowerCase();
     const site = (inv.website_url ?? "").replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0].toLowerCase();
     const row = {
-      user_id: context.userId, company_name: inv.investor_name, buyer_type: inv.investor_type, website: inv.website_url, registration_no: inv.registration_no,
+      user_id: r.bpUser ?? context.userId, company_name: inv.investor_name, buyer_type: inv.investor_type, website: inv.website_url, registration_no: inv.registration_no,
       linkedin: inv.linkedin_url, work_email: email, status: "pending", email_domain_match: !!domain && !!site && domain === site,
       submitted_at: new Date().toISOString(), updated_at: new Date().toISOString(), decision_note: null,
     };

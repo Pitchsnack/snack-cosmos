@@ -80,13 +80,16 @@ export const saveMyBuyerProfile = createServerFn({ method: "POST" })
 
 export const setBuyerListing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ status: z.enum(["live", "paused"]) }).parse(d))
+  .inputValidator((d) => z.object({ status: z.enum(["live", "paused"]), id: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data, context }) => {
-    const p = await ensure(context.userId);
+    const { resolveBuyer } = await import("./buyer-investor.functions");
+    const r = await resolveBuyer(context.userId, data.id);
+    if (r.directory && r.extra) throw new Error("This profile isn't yours.");
+    const p = r.p;
     if (data.status === "live") {
       const sb0 = await admin();
-      const { data: inv } = (p as any).investor_id
-        ? await sb0.from("investors").select("investor_name, investor_type, ticket_band, preferred_stages, preferred_industries, setup_done_at").eq("id", (p as any).investor_id).maybeSingle()
+      const { data: inv } = r.investorId
+        ? await sb0.from("investors").select("investor_name, investor_type, ticket_band, preferred_stages, preferred_industries, setup_done_at").eq("id", r.investorId).maybeSingle()
         : { data: null };
       const { showsStages } = await import("@/lib/investor-bands");
       const missing = [
@@ -101,20 +104,21 @@ export const setBuyerListing = createServerFn({ method: "POST" })
     }
     const sb = await admin();
     const now = new Date().toISOString();
+    const { updateBuyerApprovalProfile } = await import("./buyer-approval-profile.server");
+    const target = { p, investorId: r.investorId, extra: r.extra };
+    const key = r.extra ? r.investorId : r.bpUser ?? context.userId;
     // Going live needs Admin approval: unapproved profiles are sent to Approvals instead.
     if (data.status === "live" && (p as any).approval_status !== "approved") {
       if ((p as any).approval_status === "in_review") return { ok: true, submitted: true };
-      const { error } = await sb.from("buyer_profiles").update({ approval_status: "in_review", submitted_at: now, decision_note: null, updated_at: now }).eq("user_id", context.userId);
-      if (error) throw new Error(error.message);
+      await updateBuyerApprovalProfile(sb, target, { approval_status: "in_review", submitted_at: now, decision_note: null, updated_at: now });
       const { captureIdentityBaseline } = await import("./identity-review.server");
-      await captureIdentityBaseline(sb, "buyer", context.userId);
-      await sb.from("approval_events").insert({ item_type: "buyer_profile", item_id: context.userId, subject_user_id: context.userId, action: (p as any).approval_status === "draft" ? "submit" : "resubmit", actor_id: context.userId });
+      await captureIdentityBaseline(sb, "buyer", key);
+      await sb.from("approval_events").insert({ item_type: "buyer_profile", item_id: key, subject_user_id: r.bpUser ?? context.userId, action: (p as any).approval_status === "draft" ? "submit" : "resubmit", actor_id: context.userId });
       return { ok: true, submitted: true };
     }
     const patch: Record<string, unknown> = { status: data.status, updated_at: now };
     if (data.status === "live" && !p.live_since) patch.live_since = now;
-    const { error } = await sb.from("buyer_profiles").update(patch).eq("user_id", context.userId);
-    if (error) throw new Error(error.message);
+    await updateBuyerApprovalProfile(sb, target, patch);
     return { ok: true, submitted: false };
   });
 

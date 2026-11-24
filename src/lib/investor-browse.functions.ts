@@ -23,11 +23,16 @@ function hash(s: string) {
 export async function loadPublicInvestors(sb: any, onlyIds?: string[]): Promise<Array<PublicInvestor & { userId: string; liveSince: string | null }>> {
   let bq = sb.from("buyer_profiles").select("*").eq("status", "live").not("investor_id", "is", null);
   if (onlyIds) { if (!onlyIds.length) return []; bq = bq.in("investor_id", onlyIds); }
-  const { data: buyers } = await bq.limit(500);
-  const userIds = (buyers ?? []).map((b: any) => b.user_id as string);
-  if (!userIds.length) return [];
+  const { data: ordinaryBuyers } = await bq.limit(500);
+  const { listAdminExtraBuyerApprovals } = await import("./buyer-approval-profile.server");
+  const extras = (await listAdminExtraBuyerApprovals(sb, ["approved"]))
+    .filter((r: { p: any; investorId: string }) => r.p.status === "live" && (!onlyIds || onlyIds.includes(r.investorId)))
+    .map((r: { p: any }) => r.p);
+  const buyers = [...(ordinaryBuyers ?? []), ...extras];
+  const userIds = buyers.map((b: any) => b.user_id as string);
+  if (!buyers.length) return [];
   // Admin approval (status "live") is what publishes; verification only adds the badge.
-  const buyerByInv = new Map<string, any>((buyers ?? []).map((b: any) => [b.investor_id, b]));
+  const buyerByInv = new Map<string, any>(buyers.map((b: any) => [b.investor_id, b]));
   const ids = [...buyerByInv.keys()];
   if (!ids.length) return [];
 

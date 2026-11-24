@@ -1,3 +1,9 @@
+# Control-added buyer profiles after setup
+- [x] Replace the completed extra-profile placeholder with the buyer's shared folder-tab card, PublicPanel/BuyerPrivatePanel, section editing and state footer; keep unfinished profiles on DraftCompanyPanel.
+- [x] Pass the authorized investor id through registration, verification, pause/resume, review, decision and identity-check handlers; keep extra approval state in the existing investors.wizard.bp record without creating accounts or changing saved records.
+- [x] Include submitted extras in Admin Approvals and approved live extras in Browse investors; share Listing/Exclusive selection between Profiles/Split cards and panels.
+- [x] Code-only verification per Dan: focused storage/rule tests, related approval tests and TypeScript. No sign-in, browser checks, screenshots or database-record changes.
+
 # Profile field-row alignment sweep
 - [ ] Enumerate every seller, buyer and advisor side-by-side labelled field row in Edit information, Review & complete and Control/Admin hosts, including custom grids outside `CompactFields`.
 - [ ] Measure custom rows at desktop widths in EN/TH, fix only rows that remain out of line, and preserve settled data, permissions and phone stacking.

@@ -49,13 +49,10 @@ export async function loadIdentityReview(sb: any, kind: IdentityReviewKind, item
     const findings = scanIdentityReview(fields, facts), originalFindings = scanIdentityReview(originalFields, facts);
     return { kind, itemId, version: hp.version ?? 1, fields, originalFields, findings, originalFindings, fixed: fixedIdentityFindings(originalFindings, findings), source: hp, startup };
   }
-  const { data: profile, error } = await sb.from("buyer_profiles").select("*").eq("user_id", itemId).maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!profile) throw new Error("Profile not found");
-  const { data: investor, error: investorError } = profile.investor_id
-    ? await sb.from("investors").select("*").eq("id", profile.investor_id).maybeSingle()
-    : { data: null, error: null };
-  if (investorError) throw new Error(investorError.message);
+  const { findBuyerApprovalProfile } = await import("./buyer-approval-profile.server");
+  const record = await findBuyerApprovalProfile(sb, itemId);
+  if (!record) throw new Error("Profile not found");
+  const { p: profile, investor } = record;
   const fields = buyerIdentityValues(profile);
   const originalFields = labelled((profile.identity_review_original as IdentityReviewValues | null) ?? fields, fields);
   const facts = buyerIdentityFacts(profile, investor ?? {});
@@ -70,10 +67,15 @@ export function withoutIdentitySource(review: IdentityReviewResult & { source?: 
 export async function captureIdentityBaseline(sb: any, kind: IdentityReviewKind, itemId: string) {
   const review = await loadIdentityReview(sb, kind, itemId);
   const value = publicIdentityValues(review.fields);
-  const table = kind === "seller" ? "hidden_profiles" : "buyer_profiles";
-  const match = kind === "seller" ? ["id", itemId] : ["user_id", itemId];
-  const { error } = await sb.from(table).update({ identity_review_original: value }).eq(match[0], match[1]);
-  if (error) throw new Error(error.message);
+  if (kind === "seller") {
+    const { error } = await sb.from("hidden_profiles").update({ identity_review_original: value }).eq("id", itemId);
+    if (error) throw new Error(error.message);
+    return;
+  }
+  const { findBuyerApprovalProfile, updateBuyerApprovalProfile } = await import("./buyer-approval-profile.server");
+  const record = await findBuyerApprovalProfile(sb, itemId);
+  if (!record) throw new Error("Profile not found");
+  await updateBuyerApprovalProfile(sb, record, { identity_review_original: value });
 }
 
 function arrayPatch(source: any, base: string, index: number, value: string) {
@@ -111,8 +113,10 @@ export async function writeIdentityField(sb: any, review: IdentityReviewResult &
     if (error) throw new Error(error.message);
   } else {
     if (base !== "description" && base !== "description_th") throw new Error("This buyer field is not editable in Identity check.");
-    const { error } = await sb.from("buyer_profiles").update({ [base]: newValue || null, updated_at: now }).eq("user_id", review.source.user_id);
-    if (error) throw new Error(error.message);
+    const { findBuyerApprovalProfile, updateBuyerApprovalProfile } = await import("./buyer-approval-profile.server");
+    const record = await findBuyerApprovalProfile(sb, review.itemId);
+    if (!record) throw new Error("Profile not found");
+    await updateBuyerApprovalProfile(sb, record, { [base]: newValue || null, updated_at: now });
   }
   return { oldValue, newValue };
 }

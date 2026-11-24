@@ -127,21 +127,28 @@ const V_CHIP = {
 } as const;
 
 /** Right panel — the Investors Directory detail panel with the buyer options on. */
-export function BuyerPrivatePanel({ d, view = "private", onView }: { d: BuyerInvestorData; view?: "public" | "private"; onView?: (v: "public" | "private") => void }) {
+export function BuyerPrivatePanel({ d, view = "private", onView, onOpenEdit, investorId }: {
+  d: BuyerInvestorData;
+  view?: "public" | "private";
+  onView?: (v: "public" | "private") => void;
+  onOpenEdit?: (o: { section?: string; from: "private"; add?: boolean }) => void;
+  investorId?: string;
+}) {
   const i = d.investor;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const submitFn = useServerFn(submitMyBuyerForVerification);
   const openEdit = useOpenProfileEdit();
-  const edit = () => openEdit({ from: "private" });
-  const editAt = (section: string, add?: boolean) => openEdit({ section, add, from: "private" });
+  const editProfile = onOpenEdit ?? openEdit;
+  const edit = () => editProfile({ from: "private" });
+  const editAt = (section: string, add?: boolean) => editProfile({ section, add, from: "private" });
   const ITEM_SEC: Record<string, string | undefined> = { ticket: "mandate", aum: "fund", logo: "media", focus: "industries", people: "people" };
   const editItem = (k: string) => { const sec = ITEM_SEC[k]; if (!sec) return edit(); editAt(sec, k === "people" && d.people.length === 0); };
   const v = (V_CHIP as Record<string, { label: string; cls: string }>)[d.verification.status] ?? V_CHIP.none;
   const req = privateChecklist(d).filter((x) => x.required && !x.done);
   const submit = useMutation({
-    mutationFn: () => submitFn(),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY }); qc.invalidateQueries({ queryKey: ["my-verification"] }); toast.success("Submitted for verification"); },
+    mutationFn: () => submitFn({ data: investorId ? { id: investorId } : {} }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: BUYER_INVESTOR_KEY }); qc.invalidateQueries({ queryKey: ["buyer-investor"] }); qc.invalidateQueries({ queryKey: ["my-verification"] }); toast.success("Submitted for verification"); },
     onError: (e) => toast.error((e as Error).message),
   });
   const web = i.website_url ? (i.website_url.startsWith("http") ? i.website_url : `https://${i.website_url}`) : null;
