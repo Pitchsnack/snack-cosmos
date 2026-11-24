@@ -1,3 +1,8 @@
+# Profile field-row alignment sweep
+- [ ] Enumerate every seller, buyer and advisor side-by-side labelled field row in Edit information, Review & complete and Control/Admin hosts, including custom grids outside `CompactFields`.
+- [ ] Measure custom rows at desktop widths in EN/TH, fix only rows that remain out of line, and preserve settled data, permissions and phone stacking.
+- [ ] Re-run focused tests and live read-only checks; report every checked surface and any surface that could not be exercised.
+
 # Buyer shared field-row alignment
 - [x] Equalize label areas through the shared `CompactFields` grid while preserving each label's wording, wrapping, gaps, tags and required markers; exclude later hints/errors and retain the phone stack.
 - [x] Route the Buyer Investment Mandate money row through the same grid and keep Region's existing 20px refresh button, 14px icon and re-detection handler unchanged.
