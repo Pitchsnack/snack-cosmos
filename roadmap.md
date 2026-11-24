@@ -1,3 +1,8 @@
+# Buyer Review & complete About Company alignment
+- [x] Remove Review-only “Your answer” tags from the About Company identity fields and Investor Classification while preserving Auto Enrich and DBD indicators.
+- [x] In the shared Buyer form, set the corporate first row to 200px / flexible / one-third with 22px non-wrapping labels, ellipsis protection and the existing gaps and phone stacking.
+- [x] Read-only `test Coroporate` checks pass at 1440/1024px in EN/TH: every first-row input top is 546.75px, Year Founded is 200px, Registered Number and Region are 255.328px, every label is 22px and every DBD tag has one client rect. The 390px EN/TH rows stack without overflow; 31 focused tests, TypeScript and preview builds pass with no browser errors or saved profile changes. English/Thai screenshots delivered using pitchsnack+corporate@gmail.co.th.
+
 # Buyer wizard Firm step
 - [x] Remove only the first green company-record notice from the Buyer Firm step; preserve the DBD lock note and all field behavior.
 - [x] Rename only this step's Firm name label to Company name / ชื่อบริษัท, widen Year founded to 200px, and keep both 22px label rows on one line with ellipsis protection.
