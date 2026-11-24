@@ -212,6 +212,18 @@ export function revenueRow(bandKey: string | null, bandYear: string, storySales:
   };
 }
 
+/** Buyers: DBD revenue shown beside the ticket size for Admin to judge; never counted. */
+export function ticketRevenueRow(ticket: string | null, dbd: DbdFacts | null): ReviewRow {
+  const has = dbd?.revenueM != null;
+  return {
+    key: "revenue", label: "Revenue vs ticket size",
+    from: ticket ? `Ticket size ${ticket}` : null,
+    found: has ? `${fmtM(dbd!.revenueM!)} in the ${dbd!.revenueYear ?? ""} accounts ${dbd!.manual ? "entered by hand" : "filed with DBD"}`.replace("the  accounts", "the accounts") : "No filed accounts",
+    source: has ? (dbd!.manual ? "Entered by hand" : "DBD financial statements") : null,
+    result: "not_needed", resultLabel: "Shown, not compared", link: null, checked: false,
+  };
+}
+
 export function websiteRow(url: string | null, status: "works" | "dead" | "none" | "unchecked"): ReviewRow {
   return {
     key: "website", label: "Website", from: url,
@@ -323,7 +335,7 @@ export async function buyerReview(sb: any, p: any, inv: any, user: any, checked:
         addressRow(address, dbd, has("address")),
         yearRow(inv?.year_founded ? String(inv.year_founded) : null, null, dbd, has("year")),
         directorRow("Director vs user", person, "who submitted the profile", dbd, has("director")),
-        revenueRow(p.revenue_band ?? null, year, null, dbd, has("revenue")),
+        ticketRevenueRow(bandText(inv?.ticket_band) ?? null, dbd),
         { ...websiteRow(inv?.website_url ?? null, web), checked: has("website") },
       ];
   return {
@@ -355,7 +367,6 @@ export async function buyerReview(sb: any, p: any, inv: any, user: any, checked:
           { label: "Registration number", value: inv?.registration_no ?? "", note: null },
           { label: "Address", value: address ?? "", note: "PitchSnack checks your registered address." },
           { label: "Year founded", value: inv?.year_founded ? String(inv.year_founded) : "", note: null },
-          { label: `Revenue in ${year}`, value: revenueBandLabel(p.revenue_band) ?? "", note: "Checked against the accounts your company filed." },
           { label: "Your name", value: [person, user?.title ?? null].filter(Boolean).join(" · "), note: "Checked against your company's list of directors." },
           { label: "Website", value: inv?.website_url ?? "", note: "PitchSnack checks that the link opens." },
           { label: "Email address", value: inv?.email ?? user?.email ?? "", note: "PitchSnack checks for corporate email." },

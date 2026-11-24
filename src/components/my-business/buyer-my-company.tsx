@@ -1,7 +1,6 @@
 import { CompanyScrollLayout } from "./company-scroll-layout";
 import { setupText, tr } from "@/i18n/language";
 import { buyerListingName } from "@/lib/buyer-listing-identity";
-import { revenueBandLabel } from "@/lib/revenue-bands";
 import { useTranslation } from "@/i18n/language";
 import { useManagedIds } from "@/hooks/use-managed-ids";
 import { OwnerHandoverBox } from "@/components/handover/owner-check";
@@ -537,7 +536,6 @@ function PublicPanel({ p, org, pill, onEdit }: { p: BuyerProfile; org: BuyerOrg;
       { label: "Address", value: invRow?.business_address || [invRow?.address_line1,invRow?.address_line2,invRow?.address_city_district,invRow?.address_province_state,invRow?.postal_code].filter(Boolean).join(", "), note: rel === "individual" ? null : "PitchSnack checks your registered address." },
       ...(rel === "individual" ? [] : [
         { label: "Year founded", value: invRow?.year_founded ? String(invRow.year_founded) : "", note: null },
-        { label: `Revenue in ${new Date().getFullYear()-1}`, value: revenueBandLabel((p as any).revenue_band) ?? "", note: "Checked against the accounts your company filed." },
         { label: "Your name", value: [inv.data?.account.name, inv.data?.account.title].filter(Boolean).join(" · "), note: "Checked against your company's list of directors." },
       ]),
       ...(rel !== "individual" || org.website ? [{ label: "Website", value: org.website ?? "", note: "PitchSnack checks that the link opens." }] : []),

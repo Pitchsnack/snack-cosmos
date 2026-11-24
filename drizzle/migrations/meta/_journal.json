@@ -1093,6 +1093,13 @@
       "when": 1795222767100,
       "tag": "0155_buyer_private_short_description",
       "breakpoints": true
+    },
+    {
+      "idx": 156,
+      "version": "7",
+      "when": 1795509055594,
+      "tag": "0156_deprecate_buyer_revenue_band",
+      "breakpoints": true
     }
   ]
 }

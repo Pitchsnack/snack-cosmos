@@ -306,7 +306,6 @@ const Patch = z.object({
   suggested_listing_name: z.string().trim().max(200).nullable().optional(),
   suggested_headline: z.string().trim().max(300).nullable().optional(),
   suggested_headline_th: z.string().trim().max(300).nullable().optional(),
-  revenue_band: z.enum(["rv_lt100", "rv_100_300", "rv_300_800", "rv_800_1500", "rv_1500"]).nullable().optional(),
   contact_number: z.string().trim().max(60).nullable().optional(),
   complete_setup: z.boolean().optional(),
 });
@@ -409,7 +408,7 @@ export const saveMyBuyerInvestor = createServerFn({ method: "POST" })
     if (data.investment_focus) bp.geography = data.investment_focus.join(", ") || null;
     if (data.ticket_band !== undefined) { const b = bandOf(data.ticket_band); bp.ticket_min = b ? b.lo * 1e6 : null; bp.ticket_max = b?.hi != null ? b.hi * 1e6 : null; }
     if (data.logo_path !== undefined && !r.extra) bp.logo_url = data.logo_path || null;
-    for (const key of ["suggested_listing_name", "suggested_headline", "suggested_headline_th", "revenue_band", "contact_number"] as const) {
+    for (const key of ["suggested_listing_name", "suggested_headline", "suggested_headline_th", "contact_number"] as const) {
       if (data[key] !== undefined) bp[key] = data[key] || null;
     }
     const { error: e2 } = await writeBp(r, context.userId, bp);

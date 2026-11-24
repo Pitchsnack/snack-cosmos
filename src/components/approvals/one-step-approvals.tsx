@@ -328,6 +328,7 @@ function reviewText(value: string | null, t: (s: string) => string, language: "e
   if (value.startsWith("Registered on ")) return t("Registered on {date}").replace("{date}", approvalFullDate(value.slice(14), language));
   let result = t(value);
   if (result !== value) return result;
+  if (value.startsWith("Ticket size ")) return t("Ticket size {band}").replace("{band}", t(value.slice(12)));
   if (value.startsWith("Directors: ")) return t("Directors: {names}").replace("{names}", value.slice(11));
   const director = value.match(/^(.*), (who submitted the profile|the owner in About Owner)$/);
   if (director) return t(`{name}, ${director[2]}`).replace("{name}", director[1]);

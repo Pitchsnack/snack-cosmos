@@ -109,7 +109,7 @@ export const listOneStepApprovals = createServerFn({ method: "GET" })
 
     // ---- buyers: buyer_profiles waiting or sent back
     const { data: bps, error: bpError } = await sb.from("buyer_profiles")
-      .select("user_id, ref_no, investor_id, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline, description, geography, suggested_headline_th, published_headline_th, description_th, review_draft, review_saved_at, sectors, city, country, people, buyer_relation, revenue_band, contact_number, address, legal_name, portfolio, aum_exact")
+      .select("user_id, ref_no, investor_id, approval_status, status, submitted_at, decided_at, decision_note, decision_reasons, suggested_listing_name, suggested_headline, published_listing_name, published_headline, description, geography, suggested_headline_th, published_headline_th, description_th, review_draft, review_saved_at, sectors, city, country, people, buyer_relation, contact_number, address, legal_name, portfolio, aum_exact")
       .in("approval_status", ["in_review", "changes_requested"]).order("submitted_at", { ascending: true });
     if (bpError) throw new Error(bpError.message);
     const invIds = [...new Set((bps ?? []).map((b: any) => b.investor_id).filter(Boolean))];

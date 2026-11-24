@@ -10,7 +10,6 @@ import { buyerAboutError, descriptionWords, suggestBuyerDescription, description
 import { missingCreationFields } from "@/lib/profile-edit-rules";
 import { RelationshipLinksEditor, type RelationshipRow } from "@/components/relationships/relationship-links-editor";
 import { tr, useTranslation } from "@/i18n/language";
-import { REVENUE_BANDS } from "@/lib/revenue-bands";
 import { companyTypeForRelation } from "@/components/common/company-type-field";
 import { ActsForField } from "@/components/investors/acts-for-field";
 import { SetSectorPicker } from "@/components/common/set-sector-picker";
@@ -227,7 +226,6 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
     registration_no: inv.registration_no ?? "", description: data.buyer.description ?? "",
     suggested_headline: (data.buyer as any).suggested_headline ?? "",
     // One-step approval verification details; legacy suggestions remain untouched.
-    revenue_band: (data.buyer as any).revenue_band ?? "",
     contact_number: (data.buyer as any).contact_number ?? "",
   });
   const [addr, setAddrS] = useState<Addr>({ street: inv.address_line1 ?? "", unit: inv.address_line2 ?? "", district: inv.address_city_district ?? "", province: inv.address_province_state ?? "", postal: inv.postal_code ?? "" });
@@ -446,7 +444,6 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
         keywords, investment_focus: focus, preferred_stages: stages, preferred_industries: industries, ...(portfolioDirty ? {portfolio_extra: portfolio} : {}),
         logo_path: logoPath, media: resolvedMedia,
         people: people.filter((p) => p.name.trim()),
-        revenue_band: (f.revenue_band || null) as never,
         contact_number: t(f.contact_number) || null,
         investor_id: inv.id,
         complete_setup: !!setup,
@@ -620,21 +617,11 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           />
         </div>
 
-        {/* Row 4: Contact number | Revenue — what PitchSnack checks */}
+        {/* Row 4: Contact number (second slot left empty) */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label>{tr("Contact number")} <span className="text-[10px] text-link border border-dashed border-link rounded px-1">{tr("New")}</span></Label>
             <Input value={f.contact_number} onChange={set("contact_number")} placeholder="+66 …" maxLength={40} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{tr("Revenue in {year} (THB)").replace("{year}", String(new Date().getFullYear()-1+(language === "th" ? 543 : 0)))} <span className="text-[10px] text-link border border-dashed border-link rounded px-1">{tr("New")}</span></Label>
-            <Select value={f.revenue_band || ""} onValueChange={(v) => setF((o) => ({ ...o, revenue_band: v === "__clear__" ? "" : v }))}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={tr("Select a range")} /></SelectTrigger>
-              <SelectContent>
-                {f.revenue_band && <SelectItem value="__clear__" className="text-muted-foreground">{tr("Clear selection")}</SelectItem>}
-                {REVENUE_BANDS.map(([k, label]) => <SelectItem key={k} value={k}>{tr(label)}</SelectItem>)}
-              </SelectContent>
-            </Select>
           </div>
         </div>
 

@@ -1,0 +1,1 @@
+COMMENT ON COLUMN public.buyer_profiles.revenue_band IS 'DEPRECATED: buyer Revenue in year field removed; Admin review uses DBD revenue vs ticket size. Drop once the live app is republished.';
