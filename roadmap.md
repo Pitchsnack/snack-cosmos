@@ -1,3 +1,7 @@
+# Remove every “Your answer” field tag
+- [x] Suppress “Your answer” centrally in the shared Buyer and Advisor source-tag renderers, including Review & complete, Edit information and Admin/Control hosts, while preserving Auto Enrich, Company registry, DBD, language, optional and required labels.
+- [ ] Verify English/Thai read-only views and field-row alignment with the supplied buyer, seller and advisor test logins plus Admin; capture buyer Description & Mandate, seller and advisor screenshots at 1440px. Control has no test login and must be skipped. Confirm no saved values change.
+
 # Buyer Review & complete About Company alignment
 - [x] Remove Review-only “Your answer” tags from the About Company identity fields and Investor Classification while preserving Auto Enrich and DBD indicators.
 - [x] In the shared Buyer form, set the corporate first row to 200px / flexible / one-third with 22px non-wrapping labels, ellipsis protection and the existing gaps and phone stacking.

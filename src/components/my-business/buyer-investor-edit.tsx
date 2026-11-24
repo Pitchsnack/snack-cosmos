@@ -150,7 +150,7 @@ export function BuyerInformationForm({ data, setup, onCreated }: { data: Data; s
 }
 
 function Tag({ s }: { s?: SourceTag }) {
-  if (!s) return null;
+  if (!s || s === "Your answer") return null;
   const cls = s === "Auto Enrich" ? "bg-secondary text-success" : "bg-muted text-muted-foreground";
   return <span data-source-tag className={`ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>{setupText(s)}</span>;
 }
@@ -464,7 +464,6 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
   };
   const Err = ({ k }: { k: string }) => errs[k] && errs[k] !== "leak" ? <p className="text-[12.5px] text-[#B42318]">{setupText(errs[k])}</p> : null;
   const req = <span className="ml-[3px] text-[12px] font-semibold text-[#B42318] relative -top-0.5">*</span>;
-  const reviewTag = (s?: SourceTag) => setup && s === "Your answer" ? undefined : s;
   const corp = isCorporateBuyer(typeOf);
   const allStages = Array.from(new Set([...STAGE_OPTIONS, ...stages]));
   const allGeo = Array.from(new Set([...GEOGRAPHY, ...focus]));
@@ -502,14 +501,14 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           {tab === "about" && <div className="space-y-4"><TabHead title={tr("Company Info")}>{autoEnrich}</TabHead>{!onCreated && <IdentityLockNote lockedAt={regLockedAt} adminEdit={adminEdit} />}        {/* Row 1: Year Founded | Company Name | Investor Classification */}
         <div className={individual ? "grid items-start gap-4 sm:grid-cols-2" : "grid items-start gap-4 sm:grid-cols-[200px_minmax(0,1fr)_calc((100%_-_2rem)/3)]"}>
           <div className="min-w-0 space-y-1.5">
-            <Label className={identityRowLabel}><span className={identityRowText}>{setupText("Year Founded")}</span><span className="flex flex-none items-center">{!individual && req}<Tag s={reviewTag(src.year_founded)} /><FromDbdTag show={lockYear} /></span></Label>
+            <Label className={identityRowLabel}><span className={identityRowText}>{setupText("Year Founded")}</span><span className="flex flex-none items-center">{!individual && req}<Tag s={src.year_founded} /><FromDbdTag show={lockYear} /></span></Label>
             <LockableInput locked={lockYear} id="f-year_founded" inputMode="numeric" maxLength={4} aria-required={!individual} value={f.year_founded}
               onChange={(e) => setF((o) => ({ ...o, year_founded: e.target.value.replace(/\D/g, "").slice(0, 4) }))} placeholder={setupText("e.g. 2014")}
               className={errs.year_founded ? "border-[#B42318]" : ""} />
             <Err k="year_founded" />
           </div>
           <EditSec id="company-name" tone="buyer" active={nameFocus} className="min-w-0 [&>div]:space-y-1.5">
-            <Label className={identityRowLabel}><span className={identityRowText}>{setupText("Company Name")}</span><span className="flex flex-none items-center">{req}<Tag s={reviewTag(src.investor_name)} /><FromDbdTag show={lockName} /></span></Label>
+            <Label className={identityRowLabel}><span className={identityRowText}>{setupText("Company Name")}</span><span className="flex flex-none items-center">{req}<Tag s={src.investor_name} /><FromDbdTag show={lockName} /></span></Label>
             <LockableInput locked={lockName} id="f-investor_name" aria-required value={f.investor_name} onChange={set("investor_name")} placeholder={setupText("e.g. Acme Ventures")} maxLength={120}
               className={errs.investor_name && !f.investor_name.trim() ? "creation-invalid" : ""} />
             {!f.investor_name.trim() && <Err k="investor_name" />}
@@ -517,7 +516,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           </EditSec>
           {!individual && (
             <div className="min-w-0 space-y-1.5">
-              <Label className={identityRowLabel}><span className={identityRowText}>{tr("Registered Number")}</span><span className="flex flex-none items-center">{f.country === "Thailand" && req}<Tag s={reviewTag(src.registration_no)} /><FromDbdTag show={lockReg} /></span></Label>
+              <Label className={identityRowLabel}><span className={identityRowText}>{tr("Registered Number")}</span><span className="flex flex-none items-center">{f.country === "Thailand" && req}<Tag s={src.registration_no} /><FromDbdTag show={lockReg} /></span></Label>
               <LockableInput locked={lockReg} id="f-registration_no" value={f.registration_no} aria-required={f.country === "Thailand"}
                 maxLength={f.country === "Thailand" ? 13 : 50} placeholder={f.country === "Thailand" ? setupText("13 digits") : ""}
                 inputMode={f.country === "Thailand" ? "numeric" : undefined}
@@ -528,7 +527,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           )}
         </div>
 <CompactFields two={individual}>          {!agent && <S cur={setup ? undefined : sec} id="classification" className="space-y-1.5">
-            <Label>{setupText("Investor Classification")}{req}<Tag s={reviewTag(src.investor_type)} /></Label>
+            <Label>{setupText("Investor Classification")}{req}<Tag s={src.investor_type} /></Label>
             <Select value={f.investor_type || "none"} onValueChange={(v) => setF((o) => ({ ...o, investor_type: v === "none" ? "" : v }))}>
               <SelectTrigger><SelectValue placeholder={setupText("Select classification")} /></SelectTrigger>
               <SelectContent>
@@ -540,7 +539,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
             </Select>
           </S>}
         {agent && <S cur={setup ? undefined : sec} id="classification">
-          <ActsForField value={actsFor} onChange={(v) => { setActsFor(v); setErrs((e) => ({ ...e, acts_for: "" })); }} error={errs.acts_for || null} label={<>{setupText("Acts for")}<Tag s={reviewTag(src.investor_type)} /></>} />
+          <ActsForField value={actsFor} onChange={(v) => { setActsFor(v); setErrs((e) => ({ ...e, acts_for: "" })); }} error={errs.acts_for || null} label={<>{setupText("Acts for")}<Tag s={src.investor_type} /></>} />
         </S>}
 
         {!individual && (

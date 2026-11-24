@@ -102,10 +102,9 @@ function Section({ id, title, action, setup, active, children, noTitle }: { id: 
   );
 }
 function Tag({ t }: { t?: SourceTag }) {
-  if (!t) return null;
+  if (!t || t === "Your answer") return null;
   return (
-    <span className={cn("ml-1.5 inline-flex h-[18px] items-center rounded-[5px] border px-1.5 align-[1px] text-[10.5px] font-semibold",
-      t === "Your answer" ? "border-[#D5DAE6] bg-[#F4F6FA] text-[#1E2A4A]" : "border-[#BBE8CA] bg-[#E9F6EE] text-[#15803D]")}>{setupText(t)}</span>
+    <span className="ml-1.5 inline-flex h-[18px] items-center rounded-[5px] border border-[#BBE8CA] bg-[#E9F6EE] px-1.5 align-[1px] text-[10.5px] font-semibold text-[#15803D]">{setupText(t)}</span>
   );
 }
 function F({ label, req, opt, hint, err, tag, children, className, htmlFor }: {
