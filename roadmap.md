@@ -1,3 +1,9 @@
+# Seller Website-step button placement
+- [x] Move only “No company website” from the website field row to immediately before Continue, retaining its wording, behavior and bordered 50px style with a 12px gap.
+- [x] Let the website field use the vacated space while Check website remains beside it; preserve existing narrow-screen wrapping and all buyer/advisor/other-step behavior.
+- [x] Four focused test files (30 tests), TypeScript and preview build pass. Sign-up and + Add My Business verified in EN/TH at 1440/390px with eight screenshots, 50px buttons, a 12px No-website/Continue gap, no horizontal overflow and working No-company-website behavior.
+- [x] Used only a temporary seller account and synthetic drafts; no real company was confirmed. Deleted every draft named TEMP Seller Website Signup 20261124 and TEMP Seller Website Add 20261124, plus the temporary sign-up answers/app account records; verified zero remaining rows.
+
 # Control-added buyer profiles after setup
 - [x] Replace the completed extra-profile placeholder with the buyer's shared folder-tab card, PublicPanel/BuyerPrivatePanel, section editing and state footer; keep unfinished profiles on DraftCompanyPanel.
 - [x] Pass the authorized investor id through registration, verification, pause/resume, review, decision and identity-check handlers; keep extra approval state in the existing investors.wizard.bp record without creating accounts or changing saved records.

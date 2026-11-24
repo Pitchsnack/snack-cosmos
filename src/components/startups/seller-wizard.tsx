@@ -297,7 +297,7 @@ export function SellerWizard({
         <label htmlFor="sw-web" className={fieldLbl}>{L("Company website","เว็บไซต์บริษัท")}</label>
         <div className={`seller-web-field ${webExpanded ? "is-expanded" : "is-initial"}`}>
           <input id="sw-web" ref={webRef} className={inp} value={d.web} readOnly={reading} maxLength={2048} onChange={e => set({web:e.target.value})} onKeyDown={e => {if(e.key === "Enter") e.preventDefault();}} placeholder="www.yourcompany.com"/>
-          {webExpanded ? null : <><WebsiteCheckLink valid={isValidUrl(d.web)} url={normalizeUrl(d.web)} label={L("Check website","ตรวจสอบเว็บไซต์")} hint={L("Checks whether the website link you entered opens correctly.","ใช้เพื่อตรวจสอบว่าลิงก์เว็บไซต์ที่กรอกถูกต้องและเปิดใช้งานได้")}/><Button variant="unstyled" size="unstyled" className="seller-no-website-inline" onClick={() => {set({web:""}); setWebExpanded(true);}}>{L("No company website", "ไม่มีเว็บไซต์บริษัท")}</Button></>}
+          {webExpanded ? null : <WebsiteCheckLink valid={isValidUrl(d.web)} url={normalizeUrl(d.web)} label={L("Check website","ตรวจสอบเว็บไซต์")} hint={L("Checks whether the website link you entered opens correctly.","ใช้เพื่อตรวจสอบว่าลิงก์เว็บไซต์ที่กรอกถูกต้องและเปิดใช้งานได้")}/>}
         </div>
         {webExpanded ? <>
                     <div className="seller-website-more"><SectionBand bleed="-mx-6 sm:-mx-9" /><SectionHeading>{L("Company description", "คำอธิบายบริษัท")}</SectionHeading><SellerWebsiteFields d={d} set={set} marks={marks} edit={editWebsiteField} reading={reading} readingStates={readingStates} openSector={() => openStep("sector")}/></div>
@@ -483,6 +483,9 @@ export function SellerWizard({
               {pos > 0 && (
                 <Button variant="unstyled" size="unstyled" type="button" onClick={() => setConfirmExit(true)}
                   className={cur.id === "web" ? "seller-action" : "rounded-[10px] border border-border bg-card px-[18px] py-[11px] font-semibold text-foreground"}>{tr("Save & exit")}</Button>
+              )}
+              {cur.id === "web" && !webExpanded && (
+                <Button variant="unstyled" size="unstyled" type="button" className="seller-action seller-action-no-website" onClick={() => {set({web:""}); setWebExpanded(true);}}>{L("No company website", "ไม่มีเว็บไซต์บริษัท")}</Button>
               )}
               <Button variant="unstyled" size="unstyled" type="button" ref={fwdRef} disabled={reading || listingPreparing || (cur.id === "web" && !webExpanded ? !isValidUrl(d.web) : !valid[cur.id])}
                 onClick={async () => {

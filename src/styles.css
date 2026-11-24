@@ -471,6 +471,7 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 .seller-website-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 32px; }
 .seller-website-actions .seller-actions-spacer { flex: 1; }
 .seller-website-actions .seller-action { height: 50px; padding: 0 22px; border: 1px solid var(--seller-action-border); border-radius: 12px; background: var(--card); color: var(--seller-action-ink); font-size: 16px; font-weight: 600; white-space: nowrap; }
+.seller-website-actions .seller-action-no-website { padding: 0 16px; font-size: 14px; }
 .seller-website-actions .seller-action-primary { background: var(--seller-action-ink); color: var(--seller-tooltip-foreground); border-color: var(--seller-action-ink); }
 .dark { --seller-action-border: var(--border); --seller-action-ink: var(--foreground); --seller-action-hover: #13243F; --seller-action-hover-border: #3B6BB0; --seller-action-hover-ink: #93C5FD; }
 @media (hover: hover) { .seller-website-actions .seller-action:not(.seller-action-primary):not(:disabled):hover, .seller-check-button:not(:disabled):hover { background: var(--seller-action-hover); border-color: var(--seller-action-hover-border); color: var(--seller-action-hover-ink); } }
