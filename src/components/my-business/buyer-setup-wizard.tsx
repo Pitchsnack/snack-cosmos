@@ -607,14 +607,14 @@ export function BuyerSetupWizard({ data, startAt }: { data: Data; startAt?: stri
           {!addrOnly && (<div>
             <div className="flex flex-col gap-[14px] sm:flex-row">
               <div className="min-w-0 flex-1">
-                <label className={firmIdentityLbl} htmlFor="w-name"><span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{individual ? tr("Name of the company you invest through") : L("Company name", "ชื่อบริษัท")}</span><span className="flex flex-none items-center"><Req /><FromDbdTag show={nameLocked} /></span></label>
+                <label className={firmIdentityLbl} htmlFor="w-name"><span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{individual ? tr("Name of the company you invest through") : L("Company name", "ชื่อบริษัท")}</span><span className="flex flex-none items-center"><Req /><FromDbdTag show={nameLocked} /></span></label>
                 <LockWrap locked={nameLocked}><input id="w-name" readOnly={nameLocked} aria-readonly={nameLocked || undefined} aria-required autoFocus {...(errors.name ? { "data-need": "1" } : {})} className={`${inp} ${nameLocked ? LOCKED_INPUT : ""} ${errors.name ? "need-fill" : ""} ${show("name") ? errCls : ""}`} value={a.name} maxLength={120} placeholder={L("e.g. Example Co., Ltd.", "เช่น บริษัท ตัวอย่าง จำกัด")}
                   onBlur={() => setTouched((t) => ({ ...t, name: true }))}
                   onChange={(e) => { if (nameLocked) return; ((e: React.ChangeEvent<HTMLInputElement>) =>  set({ name: e.target.value }, e.target.value.trim() ? { investor_name: e.target.value } : {}))(e); }} /></LockWrap>
               </div>
               {!individual && (
                 <div className="min-w-0 sm:w-[200px] sm:flex-none">
-                  <label className={firmIdentityLbl} htmlFor="w-year"><span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{tr("Year founded")}</span><span className="flex flex-none items-center"><Req />{lockAt && fromSignup?.includes("year") && <VerifiedTag />}</span></label>
+                  <label className={firmIdentityLbl} htmlFor="w-year"><span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{tr("Year founded")}</span><span className="flex flex-none items-center"><Req />{lockAt && fromSignup?.includes("year") && <VerifiedTag />}</span></label>
                   <LockWrap locked={yearLocked}><input id="w-year" readOnly={yearLocked} aria-readonly={yearLocked || undefined} aria-required inputMode="numeric" maxLength={4} className={`${inp} ${yearLocked ? LOCKED_INPUT : ""} ${show("year") ? errCls : ""}`} value={a.year} placeholder={setupText("e.g. 2014")}
                     onBlur={() => setTouched((t) => ({ ...t, year: true }))}
                     onChange={(e) => { if (yearLocked) return; ((e: React.ChangeEvent<HTMLInputElement>) =>  { const v = e.target.value.replace(/\D/g, "").slice(0, 4); set({ year: v }, !yearError(v) ? { year_founded: Number(v) } : {}); })(e); }} /></LockWrap>
