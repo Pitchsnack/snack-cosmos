@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
+import { CARD_COLUMN_GRID } from "@/components/my-business/card-column";
 import { cn } from "@/lib/utils";
 
 /** Shared presentation boundary; profile hosts retain all selection and access decisions. */
@@ -61,7 +62,7 @@ export function CompanyScrollLayout({ list, panel, listLabel, panelLabel, select
     }
   }, [selectedKey, resetKey, mode]);
 
-  return <div ref={root} className={cn("company-scroll-layout grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]", className)}>
+  return <div ref={root} className={cn("company-scroll-layout grid", CARD_COLUMN_GRID, className)}>
     <div ref={left} tabIndex={0} role="region" aria-label={listLabel} className={cn("company-scroll-list min-w-0", listClassName)} onKeyDown={(event) => {
       if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
       requestAnimationFrame(() => {

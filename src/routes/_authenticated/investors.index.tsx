@@ -1,4 +1,5 @@
 import { useTranslation } from "@/i18n/language";
+import { CARD_COLUMN_GRID } from "@/components/my-business/card-column";
 import {CreatedDirectoryRow} from "@/components/common/created-directory-row";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -371,10 +372,10 @@ function InvestorsPageInner() {
       ) : (
         <div
           className={cn(
-            "grid gap-4",
+            "grid",
             favOnly
-              ? "lg:grid-cols-[minmax(260px,20rem)_1fr]"
-              : "lg:grid-cols-[minmax(320px,26rem)_1fr]",
+              ? "gap-4 lg:grid-cols-[minmax(260px,20rem)_1fr]"
+              : CARD_COLUMN_GRID,
           )}
         >
           <div className="h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1">

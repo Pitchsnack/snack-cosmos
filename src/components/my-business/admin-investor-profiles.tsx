@@ -1,4 +1,5 @@
 import { setupText } from "@/i18n/language";
+import { CARD_COLUMN_GRID } from "@/components/my-business/card-column";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { finishAddYes } from "@/lib/add-company-finish";
@@ -166,7 +167,7 @@ function ExtraProfile({ id, open, part, mode = "grid", view: controlledView, onV
   };
   const pill = <BuyerPill p={p} org={org} onItem={onItem} />;
   return (
-    <div ref={ref} data-company-selected={open} className={cn(!part && "grid gap-5 rounded-[14px] lg:grid-cols-[320px_minmax(0,1fr)]", open && !part && "ring-2 ring-accent/40 ring-offset-4 ring-offset-background")} style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+    <div ref={ref} data-company-selected={open} className={cn(!part && `grid rounded-[14px] ${CARD_COLUMN_GRID}`, open && !part && "ring-2 ring-accent/40 ring-offset-4 ring-offset-background")} style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       {part !== "panel" && <div role={part ? "button" : undefined} tabIndex={part ? 0 : undefined} onClick={() => onSelect?.(id)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect?.(id); } }}>
         {!iv.setup_done_at
           ? <DraftCompanyCard role="buyer" name={nm} typeLine={iv.investor_type ? typeName(iv.investor_type) : null}

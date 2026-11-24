@@ -1,4 +1,5 @@
 import { setupText } from "@/i18n/language";
+import { CARD_COLUMN_GRID } from "@/components/my-business/card-column";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/i18n/language";
 import { SignupWelcome } from "@/components/my-business/signup-welcome";
@@ -170,7 +171,7 @@ function MyStartupsPageInner() {
       <div className="space-y-6">
         <h1 className="text-3xl font-semibold tracking-tight">{t("My Company")}</h1>
         {isLoading && items.length === 0 ? (
-          <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[320px]" /><Skeleton className="h-[420px]" /></div>
+          <div className={`grid ${CARD_COLUMN_GRID}`}><Skeleton className="h-[320px]" /><Skeleton className="h-[420px]" /></div>
         ) : items.length === 0 ? (
           <AddBusinessButton />
         ) : (
@@ -341,7 +342,7 @@ function MyStartupsPageInner() {
         )
       ) : (
         <CompanyScrollLayout mode="split" resetKey={scrollReset} selectedKey={selected}
-          className={favOnly ? "gap-4 lg:grid-cols-[minmax(260px,20rem)_1fr]" : "gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]"}
+          className={favOnly ? "gap-4 lg:grid-cols-[minmax(260px,20rem)_1fr]" : undefined}
           listLabel={t("Your businesses")} panelLabel={items.find(i => i.id === selected)?.startup_name || t("My Company")}
           listClassName="space-y-1.5"
           list={items.map(it => <div key={it.id} data-company-selected={selected === it.id}>

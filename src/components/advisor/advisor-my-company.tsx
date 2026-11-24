@@ -1,4 +1,5 @@
 import { CompanyScrollLayout } from "@/components/my-business/company-scroll-layout";
+import { CARD_COLUMN_GRID } from "@/components/my-business/card-column";
 import { licenceName } from "@/lib/advisor-licences";
 import { setupText, useTranslation } from "@/i18n/language";
 import { FirmServices } from "@/components/advisor/firm-services";
@@ -144,7 +145,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
         {addDialog}
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">{setupText("My Company")}</h1>
         {isLoading ? (
-          <div className="grid gap-5 lg:grid-cols-[320px_1fr]"><Skeleton className="h-[420px]" /><Skeleton className="h-[620px]" /></div>
+          <div className={`grid ${CARD_COLUMN_GRID}`}><Skeleton className="h-[420px]" /><Skeleton className="h-[620px]" /></div>
         ) : firms.length === 0 ? (
           <Button onClick={add} disabled={adding} className="bg-accent text-accent-foreground hover:bg-accent/90">
             {adding ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Plus className="mr-1.5 h-4 w-4" />}{setupText("Add Firm Profile")}
@@ -209,7 +210,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
       </div>
 
       {isLoading ? (
-        <div className="grid gap-5 lg:grid-cols-[320px_1fr]"><Skeleton className="h-[420px]" /><Skeleton className="h-[620px]" /></div>
+        <div className={`grid ${CARD_COLUMN_GRID}`}><Skeleton className="h-[420px]" /><Skeleton className="h-[620px]" /></div>
       ) : firms.length === 0 ? (
         <div className="rounded-[14px] border-2 border-dashed border-border p-10 text-center">
           <Building2 className="mx-auto h-8 w-8 text-muted-foreground" />
@@ -221,7 +222,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
         <p className="py-10 text-center text-sm text-muted-foreground">{setupText("No firm profiles match these filters.")}</p>
       ) : mode === "profiles" || mode === "split" ? (
         <CompanyScrollLayout mode={mode} resetKey={resetKey} selectedKey={open?.id} listLabel={tr("Your firm profiles")} panelLabel={open?.name || tr("My Company")}
-          className={mode === "profiles" ? "lg:grid-cols-[320px_1fr]" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]"} listClassName="space-y-4"
+          listClassName="space-y-4"
           list={list.map(f => <div key={f.id} data-company-selected={open?.id === f.id}><FirmCard f={f} selected={open?.id === f.id} onClick={() => setOpenId(f.id)} /></div>)}
           panel={open && <FirmPanel f={open} views={views?.[open.id] ?? 0} onDeletedDraft={() => setOpenId(null)} />} />
       ) : mode === "grid" ? (

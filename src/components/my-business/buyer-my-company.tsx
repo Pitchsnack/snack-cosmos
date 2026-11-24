@@ -1,4 +1,5 @@
 import { CompanyScrollLayout } from "./company-scroll-layout";
+import { CARD_COLUMN_GRID } from "@/components/my-business/card-column";
 import { setupText, tr } from "@/i18n/language";
 import { buyerListingName } from "@/lib/buyer-listing-identity";
 import { useTranslation } from "@/i18n/language";
@@ -190,7 +191,7 @@ export function BuyerMyCompany() {
   const extraList = isAdmin ? <AdminInvestorProfiles ids={extraIds} openId={selectedExtra ?? undefined} part="list" view={view} onView={setView} onSelect={setSelectedExtra} /> : null;
   const extraPanel = selectedExtra ? <AdminInvestorProfiles ids={extraIds} openId={selectedExtra} part="panel" view={view} onView={setView} /> : null;
 
-  if (isLoading) return <div className="space-y-6"><Skeleton className="h-20" /><Skeleton className="h-12" /><div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]"><Skeleton className="h-[420px]" /><Skeleton className="h-[520px]" /></div></div>;
+  if (isLoading) return <div className="space-y-6"><Skeleton className="h-20" /><Skeleton className="h-12" /><div className={`grid ${CARD_COLUMN_GRID}`}><Skeleton className="h-[420px]" /><Skeleton className="h-[520px]" /></div></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground">{setupText("Couldn't load your investor profile. Please refresh.")}</p>;
   const { profile: p, org } = data as { profile: BuyerProfile; org: BuyerOrg };
   const onItem = (k: BuyerItemKey) => { setView(HELP[k].view); setEdit(HELP[k].section); };
@@ -244,7 +245,7 @@ export function BuyerMyCompany() {
           {addProfile.dialog}{isAdmin && <AddInvestorProfileButton onClick={() => void addProfile.run()} busy={addProfile.busy} />}
         </div>
         {extras}
-        <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]" style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+        <div className={`grid ${CARD_COLUMN_GRID}`} style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
           <DraftCompanyCard role="buyer" name={nm} typeLine={org.type ? typeName(org.type) : null} typeClass={tone.fg}
             founded={individual ? null : (iv as any).year_founded} size={individual ? null : (iv as any).company_size_band} website={iv.website_url} />
           <DraftCompanyPanel role="buyer" name={nm} banner={<SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
@@ -327,7 +328,7 @@ export function BuyerMyCompany() {
         <CompanyScrollLayout listLabel={tr("Your investor profiles")} panelLabel={org.name || tr("My Company")} selectedKey={`${selectedExtra ?? p.user_id}:${view}`} resetKey={buyerScrollReset}
           list={<div className="space-y-5">{extraList}<div data-company-selected={!selectedExtra} onClick={() => setSelectedExtra(null)}><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected /> : <Skeleton className="h-[260px]" />} /></div></div>} panel={extraPanel ?? rightPanel} />
       ) : layout === "split" ? (
-        <CompanyScrollLayout mode="split" className="gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]"
+        <CompanyScrollLayout mode="split"
           listLabel={tr("Your investor profiles")} panelLabel={org.name || tr("My Company")} selectedKey={`${selectedExtra ?? p.user_id}:${view}`} resetKey={buyerScrollReset}
           list={<div className="space-y-5">{extraList}<div data-company-selected={!selectedExtra} onClick={() => setSelectedExtra(null)}>{inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected onSelect={() => setView("private")} /> : <Skeleton className="h-[220px]" />}</div></div>}
           panel={extraPanel ?? <div className="min-w-0 rounded-lg border border-border bg-card p-5 shadow-sm">

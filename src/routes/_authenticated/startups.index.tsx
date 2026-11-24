@@ -1,4 +1,5 @@
 import { useTranslation } from "@/i18n/language";
+import { CARD_COLUMN_GRID } from "@/components/my-business/card-column";
 import {CreatedDirectoryRow} from "@/components/common/created-directory-row";
 import {REPORT_KEYS} from '@/lib/reports-hub';
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -375,7 +376,7 @@ function StartupsPageInner() {
       ) : view === "grid" ? (
         <div
           className={cn(
-            "grid gap-4",
+            "grid",
             favOnly
               ? "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
               : "sm:grid-cols-2 lg:grid-cols-3",
@@ -432,10 +433,10 @@ function StartupsPageInner() {
       ) : (
         <div
           className={cn(
-            "grid gap-4",
+            "grid",
             favOnly
-              ? "lg:grid-cols-[minmax(260px,20rem)_1fr]"
-              : "lg:grid-cols-[minmax(320px,26rem)_1fr]",
+              ? "gap-4 lg:grid-cols-[minmax(260px,20rem)_1fr]"
+              : CARD_COLUMN_GRID,
           )}
         >
           <div className="h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1">

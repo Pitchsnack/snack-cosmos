@@ -1,2 +1,2 @@
 # My Company layout
-- Desktop Profiles/Split share CompanyScrollLayout for measured viewport height, independent scroll regions and selection resets; hosts keep cards, access, selection and mobile behavior, and explicit panel-header markers scope sticky styling.
+- Desktop Profiles/Split share CompanyScrollLayout for measured viewport height, independent scroll regions and selection resets; hosts keep cards, access, selection and mobile behavior, and explicit panel-header markers scope sticky styling.- Card lists beside a panel (My Company Profiles/Split, user My Company, Admin directory Split) take width and gaps from CARD_COLUMN_GRID in card-column.ts so every page stays aligned.

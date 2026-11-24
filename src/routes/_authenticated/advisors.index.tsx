@@ -1,4 +1,5 @@
 import { licenceName } from "@/lib/advisor-licences";
+import { CARD_COLUMN_GRID } from "@/components/my-business/card-column";
 import { FirmCard, FirmCover } from "@/components/advisor/advisor-firm-card";
 import type { AdvisorFirm } from "@/lib/advisor-firm";
 import { useOwnershipDir } from "@/components/handover/ownership";
@@ -202,7 +203,7 @@ function AdvisorsDirectory() {
           </table>
         </div>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[minmax(320px,26rem)_1fr]">
+        <div className={`grid ${CARD_COLUMN_GRID}`}>
           <div className="h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1">
             {items.map((f) => <CreatedDirectoryRow key={f.id} active={createdId === f.id} onEdit={()=>setEditing(f.id)}><SplitCard f={f} selected={selected?.id === f.id} fav={favs.has(f.id)} onFav={() => toggleFav(f.id)} onSelect={() => set({ selected: f.id })} /><div className="px-2 pt-1"><Under f={f} /></div></CreatedDirectoryRow>)}
           </div>
