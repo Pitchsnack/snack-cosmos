@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ticketRevenueRow } from "./one-step.server";
+import { ticketRevenueRow } from "../../src/lib/one-step.server";
 
 describe("buyer Revenue vs ticket size", () => {
   it("shows the DBD figure and is never compared", () => {
