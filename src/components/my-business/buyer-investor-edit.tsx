@@ -694,7 +694,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           <ListingEditorTitle title={tr("Your card in Browse investors")}><AutoFillTabButton onClick={fillTab} disabled={busy} /></ListingEditorTitle>
           <BuyerDescriptionEditor lang={tl} source={setup ? <Tag s={src.description} /> : undefined} suggest={suggest} value={bv("description")} onChange={bset("description")} forced={!!errs.description || !!errs.description_th} want={bv("suggested_headline")} onWant={bset("suggested_headline")} tour={tourOpen ? { open: true, close: closeTour } : undefined} i={{refNo:data.buyer.ref_no || "",codeName:typeOf,name:null,type:typeOf,city:null,country:f.country,description:bv("description"),sectors:industries,stages,dealTypes:deals,geography:focus.join(" · "),verified:false,proofOfFunds:false,ticketLabel:null,aumLabel:null,revLabel:null,ticketBand:f.ticket_band,aumBand:f.aum_band,revBand:f.rev_band,relation:rel,actsFor:agent ? actsFor : []}} >          <section data-edit-sec="investment-mandate" className="buyer-investment-mandate space-y-4"><TabHead title={tr("Investment Mandate")} />        {/* Fund & ticket — US$ bands */}
         {directory && <CompactFields><div className="space-y-1.5"><Label>{setupText("AUM")}</Label><Input value={f.aum} onChange={set("aum")} /></div><div className="space-y-1.5"><Label>{setupText("Min Ticket Size")}</Label><Input value={f.min_ticket_size} onChange={set("min_ticket_size")} /></div><div className="space-y-1.5"><Label>{setupText("Max Ticket Size")}</Label><Input value={f.max_ticket_size} onChange={set("max_ticket_size")} /></div></CompactFields>}
-<div className="buyer-mandate-money">        {showsFund && (
+<CompactFields two className="buyer-mandate-money">        {showsFund && (
           <S cur={setup ? undefined : sec} id="fund">
             <div className="space-y-1.5">
               <div className="listing-editor-label-row"><Label>{corp ? tr("Group revenue band") : <>{tr("Fund's AUM")} <span className="buyer-label-explanation">{tr("(Assets under management)")}</span></>}<Tag s={src.aum_band} /></Label></div>
@@ -720,7 +720,7 @@ function Form({ data, setup, section, add, directory, initialView, onCreated, di
           </Select>
 
         </S>
-</div>        {/* Buying Requirement */}
+</CompactFields>        {/* Buying Requirement */}
         <div className="space-y-1.5 border-t border-[#F0F1F4] pt-4 dark:border-border">
           <div className="text-xs font-bold uppercase text-muted-foreground">{tr("Buying Requirement")}</div>
           <S cur={setup ? undefined : sec} id="revenue" className="space-y-1.5">

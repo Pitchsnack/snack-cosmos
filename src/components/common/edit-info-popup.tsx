@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 import { TextLangProvider, TextLangSwitch } from "./text-lang";
+import { alignedLabelAreaHeights } from "@/lib/field-row-alignment";
 
 /**
  * My Company › Edit information pop-up. One shell for the seller, buyer and
@@ -320,6 +321,62 @@ export function TabHead({ title, children, line }: { title: string; children?: R
 }
 
 /** Equal-width fields shared by all profile editors; stack without empty tracks on phones. */
-export function CompactFields({ children, two = false }: { children: ReactNode; two?: boolean }) {
-  return <div className={cn("grid min-w-0 items-start gap-4 [&>*]:min-w-0", two ? "sm:grid-cols-2" : "sm:grid-cols-3")}>{children}</div>;
+export function CompactFields({ children, two = false, className }: { children: ReactNode; two?: boolean; className?: string }) {
+  const root = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const desktop = window.matchMedia("(min-width: 640px)");
+    let frame = 0;
+    const align = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const fields = Array.from(el.children).filter((field): field is HTMLElement => field instanceof HTMLElement);
+        const rows: { area: HTMLElement; field: HTMLElement; control: HTMLElement }[] = [];
+        for (const field of fields) {
+          const label = field.querySelector<HTMLElement>("label");
+          const control = field.querySelector<HTMLElement>("input:not([type=hidden]), select, textarea, [role=combobox]");
+          if (!label || !control) continue;
+          const parent = label.parentElement;
+          const area = parent && !parent.contains(control) ? parent : label;
+          if (area === label && getComputedStyle(area).display === "inline") area.style.display = "block";
+          area.dataset.compactLabelArea = "true";
+          area.style.minBlockSize = "";
+          rows.push({ area, field, control });
+        }
+        if (!desktop.matches) return;
+        const measured = rows.map(({ area, field, control }) => ({
+          controlOffset: control.getBoundingClientRect().top - field.getBoundingClientRect().top,
+          labelAreaOffset: area.getBoundingClientRect().top - field.getBoundingClientRect().top,
+          labelAreaHeight: area.getBoundingClientRect().height,
+        }));
+        const heights = alignedLabelAreaHeights(measured);
+        rows.forEach(({ area }, index) => {
+          const height = heights[index];
+          if (height != null) area.style.minBlockSize = `${height}px`;
+        });
+      });
+    };
+    const observer = new ResizeObserver(align);
+    observer.observe(el);
+    Array.from(el.children).forEach((field) => observer.observe(field));
+    const mutations = new MutationObserver(align);
+    mutations.observe(el, { subtree: true, childList: true, characterData: true });
+    desktop.addEventListener("change", align);
+    void document.fonts?.ready.then(align);
+    align();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      mutations.disconnect();
+      desktop.removeEventListener("change", align);
+      el.querySelectorAll<HTMLElement>("[data-compact-label-area]").forEach((area) => {
+        area.style.minBlockSize = "";
+        delete area.dataset.compactLabelArea;
+      });
+    };
+  }, []);
+
+  return <div ref={root} data-compact-fields className={cn("grid min-w-0 items-start gap-4 [&>*]:min-w-0", two ? "sm:grid-cols-2" : "sm:grid-cols-3", className)}>{children}</div>;
 }
