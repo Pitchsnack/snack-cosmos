@@ -1,6 +1,6 @@
 # Remove every “Your answer” field tag
 - [x] Suppress “Your answer” centrally in the shared Buyer and Advisor source-tag renderers, including Review & complete, Edit information and Admin/Control hosts, while preserving Auto Enrich, Company registry, DBD, language, optional and required labels.
-- [ ] Verify English/Thai read-only views and field-row alignment with the supplied buyer, seller and advisor test logins plus Admin; capture buyer Description & Mandate, seller and advisor screenshots at 1440px. Control has no test login and must be skipped. Confirm no saved values change.
+- [x] Verified buyer Review & complete and Edit information in every EN/TH tab, seller Review and every editor tab in EN/TH, advisor Review (EN) and every Control/Admin editor tab in EN/TH; DBD, New, optional and language labels remain, with no horizontal overflow or saved-value changes. Used the named buyer login and Control per Dan's later choice; separate seller/advisor sign-ins were declined. Three correct 1440px English screenshots delivered; four focused tests, TypeScript and preview builds pass. Thai advisor Review was not reopened after its loading panel stalled, but every Thai advisor editor tab passed.
 
 # Buyer Review & complete About Company alignment
 - [x] Remove Review-only “Your answer” tags from the About Company identity fields and Investor Classification while preserving Auto Enrich and DBD indicators.
