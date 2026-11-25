@@ -25,7 +25,8 @@ import { TH } from "@/i18n/th";
 import { SectorArt } from "@/components/hidden-profile/bits";
 import { StandardBrowseCard, StandardCardSection } from "@/components/marketplace/standard-browse-card";
 import { BuyerCover } from "@/components/marketplace/buyer-browse-card";
-import { FirmCard } from "@/components/advisor/advisor-firm-card";
+import { FirmCover } from "@/components/advisor/advisor-firm-card";
+import { dealBandLabels } from "@/lib/advisor-firm";
 import { DbdStorePanel } from "./dbd-store-panel";
 import { IdentityReviewPanel, useIdentityReview } from "./identity-review-panel";
 
@@ -324,29 +325,27 @@ function Preview({ item, name, card, lang, exclusive }: { item: OneStepItem; nam
     if (s === "Owner leaves at completion") return "เจ้าของออกเมื่อการขายเสร็จสิ้น";
     return s;
   };
-  if (item.kind === "advisor") {
-    const firm = item.review.firm;
-    if (!firm) throw new Error("Advisor firm preview data is missing");
-    return <div lang={lang}><h4>{appT("Listing view")}{lang === "th" && <span className="os-lang-tag is-th os-cap-tag">ไทย</span>}</h4>
-      <FirmCard f={{ ...firm, name: card.realName ?? name, description: card.description, descriptionTh: card.description, verifiedAt: firm.verifiedAt ?? item.submittedAt }} />
-    </div>;
-  }
   const fig = (label: string) => t(c.figs.find(([key]) => key === label)?.[1] ?? "Not stated");
   const want = card.headline ? <p className="standard-card-want" title={`${lang === "th" ? "ต้องการซื้อ:" : "Wants to buy:"} ${card.headline}`}><b>{lang === "th" ? "ต้องการซื้อ:" : "Wants to buy:"}</b> {card.headline}</p> : undefined;
+  const deal = item.kind === "advisor" ? dealBandLabels(c.figs.find(([key]) => key === "Typical deal size")?.[1]) : null;
   const figures = item.kind === "seller"
     ? [{ label: c.figs[0]?.[0] ?? "Revenue", value: t(c.figs[0]?.[1] ?? "Not stated") }, { label: "Deal type", value: fig("Deal type") }]
-    : [{ label: "Ticket size", value: fig("Ticket size") }, ...(item.review.individual ? [] : [{ label: "AUM", value: fig("AUM") }])];
-  const fit = item.kind === "seller" ? { label: "Asking price", value: fig("Asking price") } : { label: "Min. target revenue", value: fig("Min. target revenue") };
-  const textRow = item.kind === "seller" ? { label: "Sector", value: t(c.sector ?? "Not stated") } : { label: "Investment focus", value: fig("Investment Focus") };
-  const more = item.kind === "seller" ? <StandardCardSection label="Owner handover">{fig("Owner handover")}</StandardCardSection> : undefined;
+    : item.kind === "buyer"
+      ? [{ label: "Ticket size", value: fig("Ticket size") }, ...(item.review.individual ? [] : [{ label: "AUM", value: fig("AUM") }])]
+      : [{ label: "Typical deal size", value: deal?.usd ?? fig("Typical deal size") }, { label: "Team size", value: c.figs.find(([key]) => key === "Team size")?.[1] === "Not stated" ? t("Not stated") : `${fig("Team size")} ${t("people")}` }];
+  const fit = item.kind === "seller" ? { label: "Asking price", value: fig("Asking price") } : item.kind === "buyer" ? { label: "Min. target revenue", value: fig("Min. target revenue") } : { label: "Services", value: fig("Services") };
+  const textRow = item.kind === "seller" ? { label: "Sector", value: t(c.sector ?? "Not stated") } : item.kind === "buyer" ? { label: "Investment focus", value: fig("Investment Focus") } : { label: "Languages", value: fig("Languages") };
+  const more = item.kind === "seller"
+    ? <StandardCardSection label="Owner handover">{fig("Owner handover")}</StandardCardSection>
+    : item.kind === "advisor" ? <>{deal && <StandardCardSection label="Typical deal size">{t(deal.full)}</StandardCardSection>}{c.type && <StandardCardSection label="Firm type">{t(c.type)}</StandardCardSection>}</> : undefined;
   return <div lang={lang}><h4>{appT(exclusive ? "Exclusive view" : "Listing view")}{lang === "th" && <span className="os-lang-tag is-th os-cap-tag">ไทย</span>}</h4>
     <StandardBrowseCard
-      title={exclusive ? card.realName ?? name : item.kind === "buyer" ? t(c.type ?? "Investor") : card.headline || name || t("Your listing name")}
+      title={item.kind === "advisor" || exclusive ? card.realName ?? name : item.kind === "buyer" ? t(c.type ?? "Investor") : card.headline || name || t("Your listing name")}
       subtitle={exclusive ? item.kind === "seller" ? card.headline : c.type ?? undefined : undefined}
       refNo={c.ref} place={t(c.place ?? "")} description={card.description} afterName={item.kind === "buyer" ? want : undefined}
-      status={exclusive ? "approved" : "hidden"}
-      cover={(children) => item.kind === "seller" ? <SectorArt sector={c.sector ?? c.type}>{children}</SectorArt> : <BuyerCover type={c.type}>{children}</BuyerCover>}
-      badges={[{ label: item.kind === "seller" ? "Certified" : "Verified investor" }]}
+      status={exclusive ? "approved" : "hidden"} hideStatus={item.kind === "advisor"}
+      cover={(children) => item.kind === "seller" ? <SectorArt sector={c.sector ?? c.type}>{children}</SectorArt> : item.kind === "buyer" ? <BuyerCover type={c.type}>{children}</BuyerCover> : <div className="standard-advisor-cover"><FirmCover f={{ name: card.realName ?? name, logoUrl: null, refNo: c.ref, city: c.city, verifiedAt: item.submittedAt, managed: false, status: "draft" }} noStatus />{children}</div>}
+      badges={item.kind === "advisor" ? [] : [{ label: item.kind === "seller" ? "Certified" : "Verified investor" }]}
       figures={figures} fit={fit} textRow={textRow} more={more}
     />
     {exclusive && <div className="os-exclusive">{[["Website", c.website], ["Address", card.address], ["Founded", c.founded], [item.kind === "seller" ? "Owner" : "Contact", card.contact]].filter(([, v]) => !!v).map(([label, value]) => <div key={label}><span>{t(label ?? "")}</span><strong>{value}</strong></div>)}</div>}

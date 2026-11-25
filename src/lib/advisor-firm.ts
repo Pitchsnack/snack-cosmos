@@ -185,18 +185,6 @@ export function reviewStats(reviews: FirmReview[]) {
   return { n, avg, counts };
 }
 
-/** The closed card always reserves this 20px line; an empty rating adds nothing. */
-export function firmCardByline(f: Pick<AdvisorFirm, "firmType" | "yearFounded" | "reviews">, translate: (text: string) => string = (text) => text): string {
-  const identity = [translate(f.firmType ?? ""), f.yearFounded ? `${translate("since")} ${f.yearFounded}` : ""].filter(Boolean).join(" · ");
-  const { n, avg } = reviewStats(f.reviews);
-  return [identity, n > 0 ? `★ ${avg.toFixed(1)} (${n})` : ""].filter(Boolean).join(" · ");
-}
-
-/** 150px text block: name + 20px byline + two 3px gaps + whole 20px description lines. */
-export function firmDescriptionLines(titleLines: 1 | 2): 4 | 5 {
-  return titleLines === 1 ? 5 : 4;
-}
-
 export type ChecklistKey = "description" | "services" | "fees" | "team-size" | "address" | "website" | "email" | "phone" | "team" | "credentials" | "documents";
 export type EditSection = "firm" | "logo" | "services" | "work" | "company" | "team" | "credentials" | "documents";
 export function firmChecklist(f: AdvisorFirm): { key: ChecklistKey; label: string; done: boolean; section: EditSection }[] {

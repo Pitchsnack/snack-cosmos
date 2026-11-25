@@ -26,6 +26,7 @@ type Side = "seller" | "buyer";
 type Sort = "rated" | "reviews" | "newest" | "name";
 const SORTS: { v: Sort; l: string }[] = [{ v: "rated", l: "Best rated" }, { v: "reviews", l: "Most reviews" }, { v: "newest", l: "Newest on PitchSnack" }, { v: "name", l: "Name A–Z" }];
 const TIP = "advisors_tip";
+const ACCENT: Record<Side, string> = { seller: "#F0A93B", buyer: "#4F46E5" };
 
 /* ───────────────────────── Multi-choice filter pill ───────────────────────── */
 
@@ -416,14 +417,14 @@ export function BrowseAdvisorsPage({ side, firmParam, enquire }: { side: Side; f
           <div className="standard-card-grid">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[380px] rounded-[14px]" />)}</div>
         ) : shown.length === 0 ? empty : view === "grid" ? (
           <div className="standard-card-grid">
-            {shown.map((f) => <FirmCard key={f.id} f={f} onClick={() => openSplit(f.id)} action={cardAction(f)} lastLogin={f.lastLoginStep} />)}
+            {shown.map((f) => <FirmCard key={f.id} f={f} noStatus accent={ACCENT[side]} onClick={() => openSplit(f.id)} action={cardAction(f)} lastLogin={f.lastLoginStep} />)}
           </div>
         ) : view === "split" ? (
           <div className={splitFixed ? "grid min-h-0 flex-1 grid-cols-[372px_minmax(0,1fr)] gap-5" : "grid items-start gap-5 min-[1100px]:grid-cols-[372px_minmax(0,1fr)]"}>
             <div ref={listRef} tabIndex={-1} onKeyDown={onListKey} className={cn("space-y-[18px] outline-none", splitFixed && "min-h-0 overflow-y-auto pr-2 [scrollbar-gutter:stable]")}>
               {shown.map((f) => (
                 <div key={f.id} data-key={f.id} tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) setSel(f.id); }} className="rounded-[14px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--r-acc)]">
-                  <FirmCard f={f} selected={wide && current?.id === f.id} onClick={() => (wide ? setSel(f.id) : setSel(sel === f.id ? null : f.id))} action={cardAction(f)} lastLogin={f.lastLoginStep} />
+                  <FirmCard f={f} noStatus accent={ACCENT[side]} selected={wide && current?.id === f.id} onClick={() => (wide ? setSel(f.id) : setSel(sel === f.id ? null : f.id))} action={cardAction(f)} lastLogin={f.lastLoginStep} />
                   {!wide && sel === f.id && <div className="mt-3 flex flex-col">{panel(f)}</div>}
                 </div>
               ))}

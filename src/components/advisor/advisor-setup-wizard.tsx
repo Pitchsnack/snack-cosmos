@@ -376,7 +376,7 @@ export function AdvisorSetupWizard({ firm }: { firm: AdvisorFirm }) {
   const previewBox = (
     <div className="mt-[18px] rounded-[12px] border border-[#E9EBF0] bg-[#EEF0F4] p-4 dark:border-border dark:bg-muted/40">
       <div className="mb-2.5 text-[11px] font-bold uppercase tracking-[.07em] text-[#6B7280]">{tr("Your card in Browse advisors")}</div>
-      <div className="mx-auto max-w-[340px]"><FirmCard f={preview} /></div>
+      <div className="mx-auto max-w-[340px]"><FirmCard f={preview} preview /></div>
     </div>
   );
 

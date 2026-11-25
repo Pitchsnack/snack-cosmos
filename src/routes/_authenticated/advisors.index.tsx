@@ -1,6 +1,6 @@
 import { licenceName } from "@/lib/advisor-licences";
 import { CARD_COLUMN_GRID } from "@/components/my-business/card-column";
-import { FirmCard } from "@/components/advisor/advisor-firm-card";
+import { FirmCard, FirmCover } from "@/components/advisor/advisor-firm-card";
 import type { AdvisorFirm } from "@/lib/advisor-firm";
 import { useOwnershipDir } from "@/components/handover/ownership";
 import { useTranslation } from "@/i18n/language";
@@ -179,7 +179,7 @@ function AdvisorsDirectory() {
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card"><Briefcase className="mx-auto mb-2 h-8 w-8 opacity-50" /><p>No firms match your filters.</p></div>
       ) : view === "grid" ? (
         <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((f) => <div key={f.id} className="space-y-1.5"><GridCard f={f} onOpen={() => set({ view: "split", selected: f.id })} /><Under f={f} fav={favs.has(f.id)} onFav={() => toggleFav(f.id)} /></div>)}
+          {items.map((f) => <div key={f.id} className="space-y-1.5"><GridCard f={f} fav={favs.has(f.id)} onFav={() => toggleFav(f.id)} onOpen={() => set({ view: "split", selected: f.id })} /><Under f={f} /></div>)}
         </div>
       ) : view === "list" ? (
         <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-card">
@@ -205,7 +205,7 @@ function AdvisorsDirectory() {
       ) : (
         <div className={`grid ${CARD_COLUMN_GRID}`}>
           <div className="h-[calc(100vh-18rem)] space-y-1.5 overflow-y-auto pr-1">
-            {items.map((f) => <CreatedDirectoryRow key={f.id} active={createdId === f.id} onEdit={()=>setEditing(f.id)}><SplitCard f={f} selected={selected?.id === f.id} onSelect={() => set({ selected: f.id })} /><div className="px-2 pt-1"><Under f={f} fav={favs.has(f.id)} onFav={() => toggleFav(f.id)} /></div></CreatedDirectoryRow>)}
+            {items.map((f) => <CreatedDirectoryRow key={f.id} active={createdId === f.id} onEdit={()=>setEditing(f.id)}><SplitCard f={f} selected={selected?.id === f.id} fav={favs.has(f.id)} onFav={() => toggleFav(f.id)} onSelect={() => set({ selected: f.id })} /><div className="px-2 pt-1"><Under f={f} /></div></CreatedDirectoryRow>)}
           </div>
           <div className="min-w-0 self-start rounded-lg border border-border bg-card p-6 shadow-sm lg:sticky lg:top-4">
             {selected ? <Panel f={selected} fav={favs.has(selected.id)} onFav={() => toggleFav(selected.id)} onEdit={(section) => { setEditSection(section); setEditing(selected.id); }} /> : <p className="text-sm text-muted-foreground">Pick a firm to see its profile.</p>}
@@ -237,27 +237,39 @@ function Bookmark({ on, onClick }: { on: boolean; onClick: () => void }) {
   return <button type="button" aria-label={on ? "Remove from favourites" : "Add to favourites"} onClick={(e) => { e.stopPropagation(); onClick(); }} className="grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted"><Star className={cn("h-4 w-4", on && "fill-accent text-accent")} /></button>;
 }
 
-function useDirectoryFirm(f: AdminFirm): AdvisorFirm {
+function AdminFirmCover({ f, fav, onFav }: { f: AdminFirm; fav: boolean; onFav: () => void }) {
   const ownership = useOwnershipDir();
-  return {
-    ...f, refNo: f.ref, verifiedAt: f.v.verifiedAt, sectorPicks: null,
-    managed: ownership?.map.get(f.id)?.runBy === "pitchsnack",
-    status: f.status === "live" ? "live" : f.status === "paused" ? "paused" : "draft",
-  } as unknown as AdvisorFirm;
+  return <div className="relative">
+    <FirmCover noStatus f={{ name:f.name, logoUrl:f.logoUrl, refNo:f.ref, city:f.city, verifiedAt:f.v.verifiedAt, managed:ownership?.map.get(f.id)?.runBy === "pitchsnack", status:f.status === "live" ? "live" : f.status === "paused" ? "paused" : "draft" }} />
+    <div className="absolute bottom-2 right-2"><Bookmark on={fav} onClick={onFav} /></div>
+  </div>;
 }
 
-function GridCard({ f, onOpen }: { f: AdminFirm; onOpen: () => void }) {
-  const firm = useDirectoryFirm(f);
-  return <FirmCard f={firm} onClick={onOpen} />;
+function GridCard({ f, fav, onFav, onOpen }: { f: AdminFirm; fav: boolean; onFav: () => void; onOpen: () => void }) {
+  const firm = { ...f, refNo: f.ref, verifiedAt: f.v.verifiedAt, sectorPicks: null } as unknown as AdvisorFirm;
+  return <FirmCard f={firm} noStatus onClick={onOpen} cover={<AdminFirmCover f={f} fav={fav} onFav={onFav} />} />;
 }
 
-function SplitCard({ f, selected, onSelect }: { f: AdminFirm; selected: boolean; onSelect: () => void }) {
-  const firm = useDirectoryFirm(f);
-  return <FirmCard f={firm} selected={selected} onClick={onSelect} />;
+function SplitCard({ f, selected, fav, onFav, onSelect }: { f: AdminFirm; selected: boolean; fav: boolean; onFav: () => void; onSelect: () => void }) {
+  const { language } = useTranslation();
+  const description = preferredLanguageText(f.description, f.descriptionTh, language);
+  return (
+    <div role="button" tabIndex={0} onClick={onSelect} onKeyDown={(e) => e.key === "Enter" && onSelect()}
+      className={cn("cursor-pointer overflow-hidden rounded-lg border bg-card transition", selected ? "border-accent ring-2 ring-accent/30" : "border-border hover:border-muted-foreground/40")}>
+      <AdminFirmCover f={f} fav={fav} onFav={onFav} />
+      <div className="p-3">
+      <div className="min-w-0"><div className="line-clamp-2 font-semibold">{f.name}</div><div className="truncate text-xs text-muted-foreground">{f.firmType || "—"}</div></div>
+      {description && <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{description}</p>}
+      <div className="mt-2 flex flex-wrap items-center gap-1">{f.services.slice(0, 3).map((x) => <span key={x} className="rounded-full bg-[#E0F5F2] px-2 py-0.5 text-[11px] font-medium text-[#0F766E]">{x}</span>)}</div>
+      <div className="mt-1.5 truncate text-xs text-muted-foreground">Sectors: {f.sectorAgnostic ? "Sector agnostic" : f.sectors.join(", ") || "—"}</div>
+      <div className="mt-1 text-right text-xs font-medium text-[#2563EB]">View details</div>
+      </div>
+    </div>
+  );
 }
 
-function Under({ f, fav, onFav }: { f: AdminFirm; fav: boolean; onFav: () => void }) {
-  return <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground"><span>Verification:</span><VerificationChip v={f.v} /><span className="ml-auto"><FirmStatusPill status={f.status} /></span><Bookmark on={fav} onClick={onFav} /></div>;
+function Under({ f }: { f: AdminFirm }) {
+  return <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground"><span>Verification:</span><VerificationChip v={f.v} /><span className="ml-auto"><FirmStatusPill status={f.status} /></span></div>;
 }
 
 function Sec({ icon: I, title, children, boxed = false, action }: { icon: typeof Tag; title: string; children: React.ReactNode; boxed?: boolean; action?: React.ReactNode }) {

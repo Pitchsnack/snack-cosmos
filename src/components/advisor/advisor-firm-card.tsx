@@ -4,7 +4,8 @@ import { sectorChips } from "@/lib/business-types";
 import type React from "react";
 import { BadgeCheck, Building2 } from "lucide-react";
 import { StandardBrowseCard } from "@/components/marketplace/standard-browse-card";
-import { dealBandLabels, firmCardByline, firmDescriptionLines, initials, serviceOf, type AdvisorFirm } from "@/lib/advisor-firm";
+import { StatusPill } from "@/components/marketplace/buyer-browse-card";
+import { dealBandLabels, initials, reviewStats, serviceOf, type AdvisorFirm } from "@/lib/advisor-firm";
 import { cn } from "@/lib/utils";
 import { LAST_LOGIN_LABEL, type LastLoginStep } from "@/lib/last-login";
 import { tr, useTranslation } from "@/i18n/language";
@@ -67,7 +68,7 @@ export function ServiceChip({ name }: { name: string }) {
 }
 
 /** 116px cover: the logo whole (up to 96 × 240px), its bottom on the cover line; the badges sit on top where they meet. */
-export function FirmCover({ f }: { f: Pick<AdvisorFirm, "name" | "logoUrl" | "refNo" | "city" | "verifiedAt" | "managed" | "status"> }) {
+export function FirmCover({ f, noStatus }: { f: Pick<AdvisorFirm, "name" | "logoUrl" | "refNo" | "city" | "verifiedAt" | "managed" | "status">; noStatus?: boolean }) {
   const pills = (
     <div className="advisor-cover-top">
       <div className="shrink-0">{f.verifiedAt && <VerifiedAdvisorChip />}</div>
@@ -78,6 +79,7 @@ export function FirmCover({ f }: { f: Pick<AdvisorFirm, "name" | "logoUrl" | "re
           {f.city && <><span className="shrink-0"> · </span><span className="min-w-0 truncate">{f.city}</span></>}
         </span>
       </div>
+      {!noStatus && <div className="absolute right-0 top-8"><StatusPill status={f.status} /></div>}
     </div>
   );
   if (f.logoUrl) {
@@ -121,26 +123,30 @@ function TwoPlus({ items }: { items: string[] }) {
 const empty = (text: string) => <span className="standard-card-value standard-card-empty">{text}</span>;
 
 /** The advisor firm card, built on the shared seller/buyer card: 116px cover, fixed text block, figures box and footer. */
-export function FirmCard({ f, wide, selected, onClick, className, action, lastLogin }: {
-  f: AdvisorFirm; wide?: boolean; selected?: boolean; onClick?: () => void; className?: string;
+export function FirmCard({ f, wide, preview, selected, onClick, className, action, accent = "#F6A823", noStatus, lastLogin, cover }: {
+  f: AdvisorFirm; wide?: boolean; preview?: boolean; selected?: boolean; onClick?: () => void; className?: string;
   /** Send enquiry (or the status chip), shown full width inside Show more after Sectors. */
-  action?: React.ReactNode;
+  action?: React.ReactNode; accent?: string; noStatus?: boolean;
   /** Owner's last-login bucket on the left of Show more (Browse advisors only; previews/Admin omit it). */
   lastLogin?: LastLoginStep | null;
+  /** Replaces the cover (Admin's directory cover with its bookmark). */
+  cover?: React.ReactNode;
 }) {
   const { language } = useTranslation();
   const deal = dealBandLabels(f.dealBand);
+  const { n, avg } = reviewStats(f.reviews);
   const services = f.services.map(tr).filter(Boolean);
   const langs = f.languages.map(tr).filter(Boolean);
-  const byline = firmCardByline(f, tr);
+  const line = [tr(f.firmType ?? ""), f.yearFounded ? `${tr("since")} ${f.yearFounded}` : ""].filter(Boolean).join(" · ");
+  const stars = n > 0 ? `★ ${avg.toFixed(1)} (${n})` : "☆ 0 (0)";
   const sectors = f.sectorAgnostic ? [tr("Sector agnostic")] : sectorChips(f.sectors, f.sectorPicks);
   const more = (
     <div className="space-y-2.5">
-      <MoreRow label={tr("Firm type")} value={byline} />
+      <MoreRow label={tr("Firm type")} value={<>{line}{line && " · "}{stars}</>} />
       {services.length > 0 && <div className="flex flex-wrap gap-1.5">{f.services.map((s) => <ServiceChip key={s} name={s} />)}</div>}
       <MoreRow label={tr("Typical deal size")} value={deal ? `${deal.usd} (${deal.thb})` : <span className="text-[#9CA3AF]">{tr("Not added")}</span>} />
       {sectors.length > 0 && <MoreRow label={tr("Sectors")} value={<span className="flex flex-wrap gap-1">{sectors.map((s) => <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[12px]">{s}</span>)}</span>} />}
-      {action && <div className="flex justify-center pt-0.5 [&_button]:w-full [&_button]:justify-center">{action}</div>}
+      {action && !preview && <div className="flex justify-center pt-0.5 [&_button]:w-full [&_button]:justify-center">{action}</div>}
     </div>
   );
   const name = f.name.trim() || tr("New firm profile");
@@ -148,9 +154,7 @@ export function FirmCard({ f, wide, selected, onClick, className, action, lastLo
     <StandardBrowseCard
       title={name} refNo={f.refNo} place={f.city} hideRef hideStatus
       description={preferredLanguageText(f.description, f.descriptionTh, language) || tr("No description yet.")}
-      afterName={<p className="standard-advisor-byline" title={byline}>{byline}</p>}
-      descriptionLines={firmDescriptionLines}
-      cover={(children) => <div className="standard-advisor-cover"><FirmCover f={f} />{children}</div>}
+      cover={(children) => <div className="standard-advisor-cover">{cover ?? <FirmCover f={f} noStatus={noStatus} />}{children}</div>}
       figures={[
         { label: tr("Typical deal size"), value: deal?.usd ?? null, node: deal ? <span className="standard-card-value" title={deal.full}>{deal.usd}</span> : empty(tr("Not added")) },
         { label: tr("Team size"), value: f.teamSize ? `${f.teamSize} ${tr("people")}` : null, node: f.teamSize ? undefined : empty(tr("Not added")) },
@@ -161,7 +165,8 @@ export function FirmCard({ f, wide, selected, onClick, className, action, lastLo
       lastLoginTooltip={lastLogin ? `${tr(LAST_LOGIN_LABEL[lastLogin])} — ${tr("When the advisor last logged in to PitchSnack")}` : undefined}
       more={more} defaultExpanded={wide} selected={selected} onOpen={onClick}
       sourceType="advisor"
-      className={cn("standard-advisor-card", className)}
+      style={selected ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}` } : undefined}
+      className={cn("standard-advisor-card", noStatus && "advisor-browse-card", className)}
     />
   );
 }
