@@ -138,7 +138,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
   const services = f.services.map(tr).filter(Boolean);
   const langs = f.languages.map(tr).filter(Boolean);
   const line = [tr(f.firmType ?? ""), f.yearFounded ? `${tr("since")} ${f.yearFounded}` : ""].filter(Boolean).join(" · ");
-  const stars = n > 0 ? `★ ${avg.toFixed(1)} (${n})` : "☆ 0 (0)";
+  const stars = n > 0 ? `★ ${avg.toFixed(1)} (${n})` : "☆";
   const sectors = f.sectorAgnostic ? [tr("Sector agnostic")] : sectorChips(f.sectors, f.sectorPicks);
   const more = (
     <div className="space-y-2.5">
@@ -155,11 +155,11 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
       subtitle={[line, stars].filter(Boolean).join(" · ")}
       subtitleContent={<>{line}{line && " · "}{n > 0
         ? <><span className="standard-card-star">★ {avg.toFixed(1)}</span> ({n})</>
-        : <><span className="standard-card-star">☆</span> <span className="standard-card-star-zero">0 (0)</span></>}</>}
+        : <span className="standard-card-star">☆</span>}</>}
       description={preferredLanguageText(f.description, f.descriptionTh, language) || tr("No description yet.")}
       cover={(children) => <div className="standard-advisor-cover">{cover ?? <FirmCover f={f} noStatus={noStatus} />}{children}</div>}
       figures={[
-        { label: tr("Typical deal size"), value: deal?.usd ?? null, node: deal ? undefined : empty(tr("Not added")) },
+        { label: tr("Typical deal size"), value: deal?.usd ?? null, second: deal?.thb ?? null, node: deal ? undefined : empty(tr("Not added")) },
         { label: tr("Team size"), value: f.teamSize ? `${f.teamSize} ${tr("people")}` : null, node: f.teamSize ? undefined : empty(tr("Not added")) },
       ]}
       fit={{ label: tr("Services"), value: services.length ? services.join(" · ") : null, node: services.length ? <TwoPlus items={services} /> : empty("0") }}

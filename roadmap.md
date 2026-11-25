@@ -1,3 +1,8 @@
+# Tighter shared Browse cards
+- [x] Reduced the shared figures box to 115px at a 294px top offset, expanded the name/description space to 156px with measured whole-line descriptions, and centred the existing bottom row while keeping every closed card 451px.
+- [x] Preserved all adapters, cover content, actions and viewer-independent behavior; replaced Admin one-step custom previews with shared seller/buyer/advisor cards using existing authorised profile reads for exact figures and media without changing authorization.
+- [x] Passed 29 focused tests, TypeScript/preview builds and geometry assertions for all 12 public seller cards at 1440/1024/390px in EN/TH; verified Show more/less and no horizontal overflow without signing in. Protected Browse, My Company, Contacts and Admin screens were not opened under Dan's no-sign-in rule.
+
 # Seller Website-step button placement
 - [x] Move only “No company website” from the website field row to immediately before Continue, retaining its wording, behavior and bordered 50px style with a 12px gap.
 - [x] Let the website field use the vacated space while Check website remains beside it; preserve existing narrow-screen wrapping and all buyer/advisor/other-step behavior.

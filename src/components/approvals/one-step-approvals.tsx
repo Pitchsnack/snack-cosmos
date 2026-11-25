@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "rea
 import { useBlocker } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ClipboardCheck, Clock, ExternalLink, Languages, Lock, Pencil, ShieldCheck, TriangleAlert, User } from "lucide-react";
+import { Check, ClipboardCheck, Clock, ExternalLink, Languages, Pencil, ShieldCheck, TriangleAlert, User } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,8 +21,21 @@ import { CredMark } from "@/components/advisor/advisor-verification";
 import type { OneStepItem, OneStepKind, ReviewRow } from "@/lib/one-step.server";
 import { approvalDate, approvalFullDate, approvalWaitingDays } from "@/lib/approval-date";
 import { useTranslation } from "@/i18n/language";
-import { TH } from "@/i18n/th";
-import { SectorArt } from "@/components/hidden-profile/bits";
+import { StandardListingCard } from "@/components/marketplace/standard-listing-card";
+import { StandardInvestorCard } from "@/components/marketplace/standard-investor-card";
+import type { CardInvestor } from "@/components/marketplace/buyer-browse-card";
+import { isCorporateBuyer } from "@/lib/investor-browse";
+import { FirmCard } from "@/components/advisor/advisor-firm-card";
+import type { PublicListing } from "@/lib/public-listing";
+import type { FavPrivate } from "@/lib/favourites.functions";
+import type { SellerFavPrivate } from "@/lib/investor-browse.functions";
+import { bandText } from "@/lib/investor-bands";
+import { bandOf as priceBandOf } from "@/lib/asking-price";
+import type { AdvisorFirm } from "@/lib/advisor-firm";
+import { getSellerSetup } from "@/lib/seller-setup.functions";
+import { getStartupFinancials, type StartupFinancials } from "@/lib/financials.functions";
+import { getBuyerInvestorById } from "@/lib/buyer-investor.functions";
+import { getAdvisorFirmForAdmin } from "@/lib/advisor-firm.functions";
 import { DbdStorePanel } from "./dbd-store-panel";
 import { IdentityReviewPanel, useIdentityReview } from "./identity-review-panel";
 
@@ -80,7 +93,7 @@ function savedOf(item: OneStepItem): Saved {
 const bkkTime = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" });
 
 function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () => void; guard: MutableRefObject<((go: () => void) => void) | null> }) {
-  const { t, language } = useTranslation();
+  const { t, language, setLanguage } = useTranslation();
   const qc = useQueryClient();
   const decide = useServerFn(decideOneStep), mark = useServerFn(markReviewCheck), saveFn = useServerFn(saveOneStepReview);
   const identityKind = item.kind === "buyer" ? "buyer" as const : "seller" as const;
@@ -249,7 +262,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
     <div role="tabpanel" id={`os-${item.id}-panel`} aria-labelledby={`os-${item.id}-tab-${tab}`}>
     {tab === "review" ? <div className="os-body">
       {item.kind !== "advisor" && <section><div className="os-section-head"><div><h3>{t("Listing name and headline")}</h3><p className="os-muted">{t(description)}</p></div><div className="os-summary">
-        <div role="group" aria-label={t("Texts in")} className="text-lang-switch" title={t("The language of the headline and the cards. The listing name is the same in both.")}><span className="text-lang-lab">{t("Texts in")}</span>{(["en", "th"] as const).map(k => <button key={k} type="button" lang={k} aria-pressed={lang === k} onClick={() => setLang(k)} className={`text-lang-opt ${lang === k ? "is-on" : ""}`}>{k === "en" ? "English" : "ไทย"}</button>)}</div>
+        <div role="group" aria-label={t("Texts in")} className="text-lang-switch" title={t("The language of the headline and the cards. The listing name is the same in both.")}><span className="text-lang-lab">{t("Texts in")}</span>{(["en", "th"] as const).map(k => <button key={k} type="button" lang={k} aria-pressed={lang === k} onClick={() => { setLang(k); setLanguage(k); }} className={`text-lang-opt ${lang === k ? "is-on" : ""}`}>{k === "en" ? "English" : "ไทย"}</button>)}</div>
         <span className={`os-chip ${rewritten ? "os-blue" : "os-grey"}`}>{t(rewritten ? "Rewritten" : `Same as the ${item.kind}'s`)}</span></div></div>
         <table className="os-table os-name-table"><thead><tr><th>{t("Detail")}</th><th>{t(`The ${item.kind} suggested`)}</th><th>{t("Published as")}</th></tr></thead><tbody>
           <tr><td>{t("Listing name")}</td><td data-label={t(`The ${item.kind} suggested`)}>{item.suggestedName || t("Not given")}</td><td data-label={t("Published as")}><Input aria-label={t("Published listing name")} maxLength={120} value={name} onChange={e => setName(e.target.value)} aria-invalid={invalid && !name.trim()} />{invalid && !name.trim() && <p className="text-destructive">{t("Write a listing name.")}</p>}</td></tr>
@@ -265,7 +278,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
       </section>
       {item.kind !== "advisor" && <IdentityReviewPanel kind={identityKind} itemId={item.id} beforeAction={async () => { if (dirtyRef.current) await doSave(true); }} onChanged={() => void qc.invalidateQueries({ queryKey: KEY })} />}
       {item.kind === "advisor" && !!r.credentials?.length && <section><h3>{t("Licences and credentials")}</h3><ul className="divide-y divide-border">{r.credentials.map(c => <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 py-2 text-sm"><span className="min-w-0 break-words">{licenceName(c, language === "th")}{c.note && <span className="block text-xs text-muted-foreground">{c.note}</span>}</span><CredMark status={c.status} /></li>)}</ul></section>}
-      <section><h3>{t(item.kind === "seller" ? "What buyers will see" : item.kind === "buyer" ? "What sellers will see" : "What sellers and buyers will see")}</h3><div className="os-previews"><Preview item={item} name={name} card={card} lang={lang} exclusive={false} />{item.kind !== "advisor" && <Preview item={item} name={name} card={card} lang={lang} exclusive />}</div></section>
+      <section><h3>{t(item.kind === "seller" ? "What buyers will see" : item.kind === "buyer" ? "What sellers will see" : "What sellers and buyers will see")}</h3><div className="os-previews"><Preview item={item} name={name} card={card} rows={rows} lang={lang} exclusive={false} />{item.kind !== "advisor" && <Preview item={item} name={name} card={card} rows={rows} lang={lang} exclusive />}</div></section>
     </div> : <div className="os-body">
       <section><div className="os-section-head"><div><h3 className="os-tr-title">{t("Translation")}</h3><p className="os-tr-intro">{fill(item.kind === "advisor" ? "The company and contact details and every text {first name} wrote, in English and in Thai." : "The company and contact details, the published headline and every text {first name} wrote, in English and in Thai.")} {fill(setupTh ? "{first name} set up their account in Thai, so the Thai is in their own words." : "{first name} set up their account in English, so the English is in their own words.")} {t(readers)}</p></div>
         <div className="os-summary">{!!counts.both && <span className="os-chip os-green"><Check size={13} />{fill("{n} in both", { n: String(counts.both) })}</span>}{!!counts.noTh && <span className="os-chip os-warn">{fill("{n} without Thai", { n: String(counts.noTh) })}</span>}{!!counts.noEn && <span className="os-chip os-warn">{fill("{n} without English", { n: String(counts.noEn) })}</span>}</div></div>
@@ -310,18 +323,138 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
   </article>;
 }
 type CardText = { headline: string; description: string | null; realName: string | null; address: string | null; contact: string | null };
-function Preview({ item, name, card, lang, exclusive }: { item: OneStepItem; name: string; card: CardText; lang: TextLang; exclusive: boolean }) {
-  const { t: appT } = useTranslation(), c = item.review.card;
-  // The cards follow the review's Texts in switch, as a reader with the app in that language sees them.
-  const t = (s: string) => {
-    if (lang !== "th") return s;
-    if (TH[s]) return TH[s];
-    const m = /^Owner stays (\d+) months? after the sale$/.exec(s);
-    if (m) return `เจ้าของอยู่ช่วยต่อ ${m[1]} เดือนหลังการขาย`;
-    if (s === "Owner leaves at completion") return "เจ้าของออกเมื่อการขายเสร็จสิ้น";
-    return s;
+type PreviewProps = { item: OneStepItem; name: string; card: CardText; rows: TrRow[]; lang: TextLang; exclusive: boolean };
+const selectedText = (rows: TrRow[], key: string, lang: TextLang) => {
+  const row = rows.find(r => r.key === key);
+  return row ? (lang === "th" ? row.th.trim() || row.en.trim() : row.en.trim() || row.th.trim()) : "";
+};
+const selectedList = (rows: TrRow[], key: string, lang: TextLang) => selectedText(rows, key, lang).split("\n").map(value => value.trim()).filter(Boolean);
+const editedList = (rows: TrRow[], key: string, lang: TextLang, fallback: string[]) => rows.some(row => row.key === key) ? selectedList(rows, key, lang) : fallback;
+function PreviewMessage({ error }: { error?: unknown }) {
+  const { t } = useTranslation();
+  return <p className="os-muted" role={error ? "alert" : undefined}>{error ? error instanceof Error ? error.message : String(error) : t("Loading…")}</p>;
+}
+function latestRevenue(fin: StartupFinancials | null) {
+  if (!fin) return { fy: null, revenue: null, growthPct: null };
+  const fy = fin.years.length ? Math.max(...fin.years) : null;
+  const rows = fin.income.filter(row => row.fiscal_year === fy);
+  const revenue = rows.find(row => row.item_code === "total_revenue") ?? rows.find(row => row.item_code === "revenue_sales_services") ?? null;
+  return { fy, revenue: revenue?.amount == null ? null : Number(revenue.amount), growthPct: revenue?.percent_change ?? null };
+}
+const shortUsd = (value: unknown) => {
+  const n = Number(value);
+  if (value == null || value === "" || !Number.isFinite(n)) return null;
+  const f = (x: number) => String(Math.round(x * 10) / 10);
+  return n >= 1e9 ? `${f(n / 1e9)}B` : n >= 1e6 ? `${f(n / 1e6)}M` : n.toLocaleString("en-US");
+};
+const usdRange = (lo: unknown, hi?: unknown) => {
+  const a = shortUsd(lo), b = shortUsd(hi);
+  return a && b ? `US$${a} – ${b}` : a || b ? `US$${a || b}` : null;
+};
+const usdMoney = (value: string | null) => value == null || value === "" ? null : Number.isFinite(Number(value)) ? `US$ ${Number(value).toLocaleString("en-US")}` : value;
+
+function SellerPreview({ item, name, card, rows, lang, exclusive }: PreviewProps) {
+  const id = item.review.directoryId ?? undefined;
+  const setupFn = useServerFn(getSellerSetup), financialsFn = useServerFn(getStartupFinancials);
+  const setupQuery = useQuery({ queryKey: ["one-step-seller-card", id], queryFn: () => setupFn({ data: { id: id! } }), enabled: !!id, staleTime: 30_000 });
+  const financialsQuery = useQuery({ queryKey: ["one-step-seller-financials", id], queryFn: () => financialsFn({ data: { startupId: id! } }), enabled: !!id, staleTime: 30_000 });
+  if (!id || setupQuery.isPending || financialsQuery.isPending) return <PreviewMessage />;
+  if (setupQuery.error || !setupQuery.data) return <PreviewMessage error={setupQuery.error ?? new Error("Business unavailable")} />;
+  const setup = setupQuery.data, fin = latestRevenue(financialsQuery.data ?? null), thai = lang === "th";
+  const firstPhoto = setup.media.slots.find(slot => !!slot.url)?.url ?? null;
+  const productTags = editedList(rows, "product_tags", lang, thai ? setup.productTagsTh : setup.productTags);
+  const marketTags = editedList(rows, "market_tags", lang, thai ? setup.marketTagsTh : setup.marketTags);
+  const highlights = editedList(rows, "highlights", lang, thai ? setup.highlightsTh : setup.highlights);
+  const customerProfile = selectedText(rows, "customers", lang);
+  const listing: PublicListing = {
+    headline: card.headline || name, description: card.description ?? "", productTags, marketTags,
+    revenueBand: setup.rev, location: setup.city || null, typeFounded: null, employees: setup.size,
+    certifications: setup.iso, sector: setup.sector, subSector: null, verified: false, certified: false,
+    hasFinancials: (financialsQuery.data?.statements.length ?? 0) > 0,
+    codeName: setup.listing.name || name, refNo: setup.listing.refNo || item.review.card.ref,
+    coverUrl: firstPhoto, coverArt: setup.listing.cover, coverImage: null, publicImageId: null,
+    live: false, publishedAt: null, newDays: null, highlights, customerProfile,
+    th: {
+      headline: thai ? card.headline : setup.listing.headlineTh,
+      description: thai ? card.description ?? "" : setup.listing.descriptionTh,
+      highlights: thai ? highlights : setup.highlightsTh,
+      customerProfile: thai ? customerProfile : "",
+      productTags: thai ? productTags : setup.productTagsTh,
+      marketTags: thai ? marketTags : setup.marketTagsTh,
+    },
   };
-  return <div lang={lang}><h4>{appT(exclusive ? "Exclusive view" : "Listing view")}{lang === "th" && <span className="os-lang-tag is-th os-cap-tag">ไทย</span>}</h4><div className="os-preview-card"><div className="os-cover"><SectorArt sector={c.sector ?? c.type} /><span className={`os-chip ${exclusive ? "os-green" : "os-grey"}`}>{exclusive && <Lock size={12} />}{t(exclusive ? "Exclusive view" : item.kind === "advisor" ? "Open to sellers and buyers" : item.kind === "seller" ? "Identity hidden" : "Name hidden")}</span></div><div className="os-preview-content"><h3>{exclusive || item.kind === "advisor" ? card.realName : name || t("Your listing name")}</h3><p className="os-muted">{[exclusive ? name : null, c.ref, t(c.type ?? ""), t(c.place ?? "")].filter(Boolean).join(" · ")}</p><strong>{card.headline}</strong><p>{card.description}</p><dl>{c.figs.map(([label, value]) => <div key={label}><dt>{t(label)}</dt><dd>{t(value)}</dd></div>)}</dl>{exclusive && <div className="os-exclusive">{[["Website", c.website], ["Address", card.address], ["Founded", c.founded], [item.kind === "seller" ? "Owner" : "Contact", card.contact]].filter(([, v]) => !!v).map(([label, value]) => <div key={label}><span>{t(label ?? "")}</span><strong>{value}</strong></div>)}</div>}</div></div></div>;
+  const privateData: Omit<FavPrivate, "ndaApprovedAt" | "ndaValidUntil"> = {
+    companyName: card.realName || setup.name, description: (thai ? setup.longDescriptionTh || setup.shortDescriptionTh : setup.longDescription || setup.shortDescription) || null,
+    employees: setup.size, legalNameEn: null, legalNameTh: setup.registeredName || null, regNo: setup.reg || null,
+    website: setup.web || null, location: setup.city || null, founded: setup.year || null,
+    fy: fin.fy, revenue: fin.revenue, netProfit: null, growthPct: fin.growthPct,
+    logoPath: setup.media.logoUrl, photoUrl: firstPhoto, email: setup.contact.email || null,
+  };
+  return <StandardListingCard l={listing} deal={{ dealType: setup.listing.deal, askingPrice: setup.listing.price, priceBand: priceBandOf(setup.listing.price) }} privateData={exclusive ? privateData : null} publicOnly={!exclusive} status={exclusive ? "approved" : "hidden"} />;
+}
+
+function BuyerPreview({ item, name, card, lang, exclusive }: PreviewProps) {
+  const id = item.review.directoryId ?? undefined;
+  const read = useServerFn(getBuyerInvestorById);
+  const query = useQuery({ queryKey: ["one-step-buyer-card", id], queryFn: () => read({ data: { id: id! } }), enabled: !!id, staleTime: 30_000 });
+  if (!id || query.isPending) return <PreviewMessage />;
+  if (query.error || !query.data) return <PreviewMessage error={query.error} />;
+  if (!query.data.ok) return <PreviewMessage error={new Error("Investor unavailable")} />;
+  const d = query.data.data, i = d.investor, b = d.buyer, thai = lang === "th";
+  const investor: CardInvestor & { managed?: boolean; coverUrl?: string | null; status?: string; newDays?: number | null } = {
+    refNo: b.ref_no || item.review.card.ref, codeName: b.published_listing_name || name, name: null,
+    type: i.investor_type, publishedListingName: b.published_listing_name,
+    publishedHeadline: card.headline, publishedHeadlineTh: thai ? card.headline : b.published_headline_th,
+    city: i.city, country: i.country, description: card.description, descriptionTh: thai ? card.description : b.description_th,
+    sectors: i.preferred_industries, stages: i.preferred_stages, dealTypes: b.deal_types, geography: b.geography,
+    verified: d.verification.status === "verified", proofOfFunds: false,
+    ticketLabel: bandText(i.ticket_band), aumLabel: bandText(i.aum_band), revLabel: bandText(i.revenue_min_band),
+    ticketBand: i.ticket_band, aumBand: i.aum_band, revBand: i.revenue_min_band,
+    relation: b.relation, actsFor: i.acts_for_types, coverUrl: null,
+    status: exclusive ? "approved" : "hidden", newDays: null,
+  };
+  const privateData: Omit<SellerFavPrivate, "ndaApprovedAt" | "ndaValidUntil"> = {
+    investor_name: card.realName || i.investor_name, investor_type: i.investor_type, acts_for_types: i.acts_for_types,
+    country: i.country, city: i.city, website_url: i.website_url, linkedin_url: i.linkedin_url, email: i.email,
+    year_founded: i.year_founded, aum: i.aum, min_ticket_size: i.min_ticket_size, max_ticket_size: i.max_ticket_size,
+    revenue_min_m: i.revenue_min_m, revenue_max_m: i.revenue_max_m,
+    short_description: i.short_description, short_description_th: i.short_description_th,
+    long_description: null, long_description_th: null,
+    private_description: b.private_description || null, private_description_th: b.private_description_th || null,
+    keywords: i.keywords, investment_focus: i.investment_focus,
+    preferred_stages: i.preferred_stages, preferred_industries: i.preferred_industries,
+    logo_signed_url: i.logo_signed_url, aum_band: i.aum_band, ticket_band: i.ticket_band, revenue_min_band: i.revenue_min_band,
+    people: d.people, media: i.media.map(m => ({ slot: m.slot, image_signed_url: m.url })),
+    linked_startups: i.portfolio_links.map(x => ({ id: x.id, startup_name: x.name, logo_signed_url: null })),
+  };
+  const ticketExact = usdRange(i.min_ticket_size, i.max_ticket_size) ?? ([i.min_ticket_size, i.max_ticket_size].filter(Boolean).join(" – ") || null);
+  const aumExact = i.aum_exact_usd == null ? usdRange(i.aum) ?? usdMoney(i.aum) : usdRange(i.aum_exact_usd);
+  const exactFigures = {
+    figures: [
+      { label: "Ticket size", value: ticketExact ?? bandText(i.ticket_band) },
+      ...(b.relation === "individual" || b.relation === "agent" ? [] : [{ label: isCorporateBuyer(i.investor_type) ? "Group revenue" : "AUM", value: aumExact ?? bandText(i.aum_band) }]),
+    ],
+    fit: { label: "Min. target revenue", value: i.revenue_min_m == null ? bandText(i.revenue_min_band) : `฿ ${Math.round(Number(i.revenue_min_m) * 1e6).toLocaleString("en-US")}` },
+  };
+  return exclusive ? <StandardInvestorCard i={investor} privateData={privateData} exactFigures={exactFigures} /> : <StandardInvestorCard i={investor} />;
+}
+
+function AdvisorPreview({ card, item, lang }: PreviewProps) {
+  const id = item.review.directoryId ?? undefined;
+  const read = useServerFn(getAdvisorFirmForAdmin);
+  const query = useQuery({ queryKey: ["one-step-advisor-card", id], queryFn: () => read({ data: { id: id! } }), enabled: !!id, staleTime: 30_000 });
+  if (!id || query.isPending) return <PreviewMessage />;
+  if (query.error || !query.data) return <PreviewMessage error={query.error} />;
+  const firm: AdvisorFirm = {
+    ...query.data, name: card.realName || query.data.name,
+    description: card.description, descriptionTh: lang === "th" ? card.description : query.data.descriptionTh,
+  };
+  return <FirmCard f={firm} preview noStatus />;
+}
+
+function Preview(props: PreviewProps) {
+  const { t } = useTranslation(), { item, lang, exclusive } = props;
+  return <div lang={lang}><h4>{t(exclusive ? "Exclusive view" : "Listing view")}{lang === "th" && <span className="os-lang-tag is-th os-cap-tag">ไทย</span>}</h4>{item.kind === "seller" ? <SellerPreview {...props} /> : item.kind === "buyer" ? <BuyerPreview {...props} /> : <AdvisorPreview {...props} />}</div>;
 }
 function reviewText(value: string | null, t: (s: string) => string, language: "en" | "th"): string | null {
   if (!value) return value;

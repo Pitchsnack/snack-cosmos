@@ -24,42 +24,37 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
   /** Leave "{ref} · {place}" off the cover (the advisor cover draws its own). */
   hideRef?: boolean; subtitleContent?: ReactNode; titleContent?: ReactNode; defaultExpanded?: boolean; style?: React.CSSProperties;
 }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [expanded, setExpanded] = useState(!!defaultExpanded);
-  const [cut, setCut] = useState(false);
-  const [twoLines, setTwoLines] = useState(!!subtitle);
   const article = useRef<HTMLElement>(null);
   const id = useId();
   const nameRow = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const coverFit = useCoverFit(!!managed, 1);
-  useEffect(() => {
-    const row = nameRow.current;
-    const heading = titleRef.current;
-    if (!row || !heading) return;
-    const check = () => { setTwoLines(!!subtitle || heading.getBoundingClientRect().height > 30); setCut(!subtitle && !expanded && heading.getBoundingClientRect().bottom - row.getBoundingClientRect().top > 43.3); };
-    const observer = new ResizeObserver(check);
-    observer.observe(row); observer.observe(heading); check();
-    return () => observer.disconnect();
-  }, [title, subtitle, expanded]);
   const textBox = useRef<HTMLDivElement>(null);
   const descRef = useRef<HTMLParagraphElement>(null);
   const [lines, setLines] = useState<number | null>(null);
-  // The closed text block has a fixed height; the description shows the whole lines left under the name.
+  // Measure the drawn rows inside the fixed 156px block, so every description uses only whole 20px lines.
   useEffect(() => {
     const box = textBox.current, d = descRef.current;
     if (!box || !d || expanded) { setLines(null); return; }
-    const fit = () => setLines(Math.max(0, Math.floor((box.getBoundingClientRect().bottom - d.getBoundingClientRect().top + 0.5) / 21)));
+    const fit = () => {
+      const caption = box.querySelector(':scope > .standard-card-caption');
+      const bottom = caption ? caption.getBoundingClientRect().top - 8 : box.getBoundingClientRect().bottom;
+      setLines(Math.max(0, Math.floor((bottom - d.getBoundingClientRect().top + 0.5) / 20)));
+    };
     const observer = new ResizeObserver(fit);
-    observer.observe(box); if (nameRow.current) observer.observe(nameRow.current); fit();
+    observer.observe(box);
+    for (const child of Array.from(box.children)) observer.observe(child);
+    fit();
     document.fonts?.ready.then(fit);
     return () => observer.disconnect();
-  }, [expanded, title, subtitle, description]);
+  }, [expanded, title, subtitle, description, language]);
   const statusLabel = status === 'approved' ? 'NDA approved' : status === 'requested' ? 'NDA requested' : 'Name hidden';
   const StatusIcon = status === 'approved' ? LockOpen : status === 'requested' ? Clock : EyeOff;
   const statusTip = newDays != null ? `${t(statusLabel)} · ${t('New, listed')} ${newDays} ${t(newDays === 1 ? 'day ago' : 'days ago')}` : t(statusLabel);
   const figure = (f: StandardFigure, highlight = false) => <dl className={cn('standard-card-cell', highlight && !!f.value && 'standard-card-fit')}>
-    <dt title={t(f.label)}>{t(f.label)}</dt><dd>{f.node ?? <span className={cn('standard-card-value', !f.value && 'standard-card-empty')} title={f.value ?? undefined}>{f.value || t('Not stated')}</span>}{f.second && <span className="standard-card-second" title={f.second}>{f.second}</span>}</dd>
+    <dt title={t(f.label)}>{t(f.label)}</dt><dd>{f.node ?? <span className={cn('standard-card-value', !f.value && 'standard-card-empty')} title={[f.value, f.second].filter(Boolean).join(' · ') || undefined}>{f.value || t('Not stated')}</span>}{f.second && <span className="standard-card-second" title={f.second}>{f.second}</span>}</dd>
   </dl>;
   const openFromCard = (e: React.MouseEvent<HTMLElement>) => {
     if (!onOpen) return;
@@ -88,17 +83,17 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
       </>)}
     </div>
     <div className="standard-card-body" id={id}>
-      <div ref={textBox} className="standard-card-text" data-card-text>
+      <div ref={textBox} className={cn('standard-card-text', afterName && 'standard-card-text-with-after')} data-card-text>
       {beforeName}
-      <div ref={nameRow} className={cn('standard-card-name', cut && 'standard-card-title-cut', subtitle && 'standard-card-private-name')}>
+      <div ref={nameRow} className={cn('standard-card-name', subtitle && 'standard-card-private-name')}>
         <h3 ref={titleRef} title={title} data-card-title>{titleContent ?? title}</h3>
         {onOpen && <Button variant="unstyled" size="unstyled" onClick={onOpen} aria-label={title} className="standard-card-title-link" />}
         {subtitle && <p className="standard-card-subtitle" title={subtitle}>{subtitleContent ?? subtitle}</p>}
       </div>
-      {afterName}
-      <p ref={descRef} className={cn('standard-card-description', lines == null && (twoLines ? 'standard-card-desc-3' : 'standard-card-desc-4'))} style={lines != null && !expanded ? (lines ? { WebkitLineClamp: lines } : { display: 'none' }) : undefined} title={description ?? undefined}>{descriptionContent ?? description}</p>
-      </div>
+      {afterName && <div className="standard-card-after-name">{afterName}</div>}
+      <p ref={descRef} className="standard-card-description" style={lines != null && !expanded ? (lines ? { WebkitLineClamp: lines } : { display: 'none' }) : undefined} title={description ?? undefined}>{descriptionContent ?? description}</p>
       {figureLabel && <div className="standard-card-caption">{figureLabel}</div>}
+      </div>
       <div className="standard-card-figures">
         <div className={cn('standard-card-figure-row', figures.length === 1 && 'standard-card-one')}>{figures.map((f) => <div key={f.label}>{figure(f)}</div>)}</div>
         <div className="standard-card-fit-row">{figure(fit, true)}</div>
@@ -106,14 +101,10 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
         <dl className="standard-card-text-row"><dt>{t(textRow.label)}</dt><dd title={textRow.value ?? undefined}>{textRow.node ?? (textRow.value || t('Not stated'))}</dd></dl>
       </div>
       {expanded && <div className="standard-card-more">{tag}{more}</div>}
-      {lastLogin || footerDate ? (
-        <div className="standard-card-foot">
-          <span className="standard-card-last-login" title={lastLoginTooltip}>{lastLogin ? <><LogIn aria-hidden />{t(LAST_LOGIN_LABEL[lastLogin])}</> : footerDate}</span>
-          <Button variant="unstyled" size="unstyled" className="standard-card-toggle" aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded((v) => !v)}>{t(expanded ? 'Show less' : 'Show more')}<ChevronDown aria-hidden /></Button>
-        </div>
-      ) : (
+      <div className="standard-card-foot">
+        {(lastLogin || footerDate) && <span className="standard-card-last-login" title={lastLoginTooltip}>{lastLogin ? <><LogIn aria-hidden />{t(LAST_LOGIN_LABEL[lastLogin])}</> : footerDate}</span>}
         <Button variant="unstyled" size="unstyled" className="standard-card-toggle" aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded((v) => !v)}>{t(expanded ? 'Show less' : 'Show more')}<ChevronDown aria-hidden /></Button>
-      )}
+      </div>
     </div>
   </article>;
 }
