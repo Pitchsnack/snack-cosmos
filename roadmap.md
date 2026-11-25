@@ -1,3 +1,9 @@
+# Browse card figures, description space and shared Admin preview
+- [x] Keep every closed shared seller/buyer/firm card at 451px, with a 150px text block, a 115px figures box beginning at 288px, 43/43/27px figure rows and a vertically centred 47px bottom area.
+- [x] Recalculate whole 20px description lines from rendered title/Wants to buy space in both languages and at every width; preserve full text in Show more/tooltips and move firm type/rating into Show more.
+- [x] Put firm Team size and Typical deal size on one line, with the baht range in Show more and its tooltip; remove Admin/Contacts/owner-preview layout overrides and render Admin one-step previews through StandardBrowseCard with private review facts outside.
+- [x] TypeScript and preview build pass. Without signing in, 36 real-CSS fixture cases pass at 1440/1024/390px in English and Thai: exact geometry and buyer 4/3, seller 6/5 and firm 6/5 description lines for one/two-line titles. Authenticated Browse/Admin screenshots remain unverified per the no-sign-in rule; the public Discovery page exposed no cards to measure.
+
 # Seller Website-step button placement
 - [x] Move only “No company website” from the website field row to immediately before Continue, retaining its wording, behavior and bordered 50px style with a 12px gap.
 - [x] Let the website field use the vacated space while Check website remains beside it; preserve existing narrow-screen wrapping and all buyer/advisor/other-step behavior.

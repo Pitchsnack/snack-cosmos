@@ -44,9 +44,6 @@
 .contact-note-save {height:38px;padding:0 16px;font-size:14px}
 .contact-note-body {font-size:14.5px;line-height:1.5} .contact-note-meta {font-size:12.5px}
 
-.contact-company-cards .standard-card-name {height:auto;min-height:43.2px}
-.contact-company-cards .standard-card-private-name h3,.contact-company-cards .standard-card-subtitle {white-space:normal;overflow-wrap:anywhere}
-.contact-company-cards .standard-card-value,.contact-company-cards .standard-card-text-row dd {white-space:normal;overflow-wrap:anywhere}
 .contact-company-cards .standard-card-logo {width:60px;height:60px}
 .contact-company-cards h3 {color:var(--foreground)}
 .contact-company-cards h3:hover {color:var(--foreground)}

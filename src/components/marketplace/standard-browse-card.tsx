@@ -49,9 +49,11 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
   useEffect(() => {
     const box = textBox.current, d = descRef.current;
     if (!box || !d || expanded) { setLines(null); return; }
-    const fit = () => setLines(Math.max(0, Math.floor((box.getBoundingClientRect().bottom - d.getBoundingClientRect().top + 0.5) / 21)));
+    const fit = () => setLines(Math.max(0, Math.floor((box.getBoundingClientRect().bottom - d.getBoundingClientRect().top + 0.5) / 20)));
     const observer = new ResizeObserver(fit);
-    observer.observe(box); if (nameRow.current) observer.observe(nameRow.current); fit();
+    observer.observe(box); if (nameRow.current) observer.observe(nameRow.current);
+    const want = box.querySelector<HTMLElement>('.standard-card-want'); if (want) observer.observe(want);
+    fit();
     document.fonts?.ready.then(fit);
     return () => observer.disconnect();
   }, [expanded, title, subtitle, description]);
