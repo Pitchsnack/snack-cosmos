@@ -14,7 +14,6 @@
 @media (min-width:701px) { .standard-card-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (min-width:1240px) { .standard-card-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
 .standard-card { display:flex; flex-direction:column; min-width:0; overflow:hidden; border:1px solid var(--standard-edge); border-radius:14px; background:var(--card); color:var(--standard-ink); box-shadow:var(--standard-shadow); text-align:left; }
-.standard-card:not(.standard-card-open) { height:451px; }
 .standard-card-selected { border-color:var(--accent); }
 .standard-card-cover { height:116px; flex:none; position:relative; }
 .standard-card-cover > div { height:100%; }
@@ -33,9 +32,9 @@
 .standard-card-badges { position:absolute; left:10px; bottom:10px; display:flex; gap:6px; max-width:calc(100% - 20px); overflow:hidden; }
 .standard-card-badge { display:inline-flex; align-items:center; gap:5px; flex:none; height:24px; padding:0 9px; border-width:1px; border-style:solid; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; box-shadow:var(--standard-pill-shadow); }
 .standard-card-badge svg { width:13px; height:13px; }
-.standard-card-body { display:flex; flex:1; flex-direction:column; gap:10px; padding:11px 16px 0; min-width:0; min-height:0; }
-.standard-card-text { display:flex; flex-direction:column; gap:3px; min-width:0; }
-.standard-card:not(.standard-card-open) .standard-card-text { height:150px; flex:none; overflow:hidden; }
+.standard-card-body { display:flex; flex-direction:column; gap:10px; padding:14px 16px 8px; min-width:0; }
+.standard-card-text { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.standard-card:not(.standard-card-open) .standard-card-text { height:112.2px; flex:none; overflow:hidden; }
 .standard-card-text > * { flex:none; }
 .standard-card-name { display:flow-root; position:relative; max-height:43.2px; overflow:hidden; }
 .standard-card-name h3 { margin:0; font-size:16px; line-height:21.6px; font-weight:700; }
@@ -46,31 +45,29 @@
 .standard-card-ref-no { flex:none; }
 .standard-card-ref-place { min-width:0; overflow:hidden; text-overflow:ellipsis; }
 .standard-card-title-cut::after { content:'…'; position:absolute; right:0; bottom:0; padding-left:12px; font-size:16px; font-weight:700; line-height:21.6px; background:var(--card); }
-.standard-card-private-name h3 { white-space:normal; overflow:hidden; }
-.standard-card-subtitle { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.standard-investor-private-title { display:inline; white-space:normal; }
-.standard-investor-private-name { min-width:0; }
+.standard-card-private-name h3,.standard-card-subtitle { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.standard-investor-private-title { display:flex; align-items:baseline; gap:5px; white-space:nowrap; }
+.standard-investor-private-name { min-width:0; overflow:hidden; text-overflow:ellipsis; }
 .standard-investor-private-type { flex:none; font-size:11.5px; line-height:21.6px; font-weight:400; color:var(--standard-muted); }
 .standard-card-subtitle { margin:0; font-size:13px; line-height:21.6px; color:var(--standard-muted); }
-.standard-card-description { margin:0; font-size:14px; line-height:20px; color:var(--standard-copy); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
-.standard-card:not(.standard-card-open) .standard-card-figures { height:115px; flex:none; }
+.standard-card-description { margin:0; font-size:14px; line-height:21px; color:var(--standard-copy); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
 .standard-card-figures { border:1px solid var(--standard-line); border-radius:12px; overflow:hidden; background:var(--standard-box); }
-.standard-card-figure-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); height:43px; }
+.standard-card-figure-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
 .standard-card-one { grid-template-columns:minmax(0,1fr); }
 .standard-card-figure-row > div + div { border-left:1px solid var(--standard-line); }
-.standard-card-cell { display:flex; flex-direction:column; justify-content:center; height:43px; margin:0; padding:0 16px; min-width:0; }
-.standard-card-cell dt { font-size:13px; line-height:16px; color:var(--standard-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.standard-card-cell dd { margin:0; }
-.standard-card-value { display:block; font-size:13.5px; line-height:20px; font-weight:700; font-variant-numeric:tabular-nums; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.standard-card-cell { margin:0; padding:10px 12px 9px; min-width:0; }
+.standard-card-cell dt { font-size:11.5px; line-height:16px; color:var(--standard-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.standard-card-cell dd { margin:2px 0 0; }
+.standard-card-value { display:block; font-size:13.5px; line-height:19px; font-weight:700; font-variant-numeric:tabular-nums; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .standard-card-second { display:block; height:16px; font-size:11.5px; line-height:16px; color:var(--standard-muted); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .standard-card-empty { font-weight:500; color:var(--standard-faint); }
-.standard-card-fit-row { height:43px; border-top:1px solid var(--standard-line); }
+.standard-card-fit-row { border-top:1px solid var(--standard-line); }
 .standard-card-fit { background:var(--standard-fit); }
 .standard-card-fit dt,.standard-card-fit .standard-card-second { color:var(--standard-fit-ink); }
 .standard-investor-card .standard-card-fit,.investor-revenue-highlight { background:var(--hub-buyer-soft); }
 .standard-investor-card .standard-card-fit dt,.investor-revenue-highlight-label { color:var(--hub-buyer); }
-.standard-card-text-row { display:flex; align-items:center; gap:10px; margin:0; padding:0 16px; height:27px; border-top:1px solid var(--standard-line); }
-.standard-card-text-row dt { flex:none; font-size:13px; line-height:16px; color:var(--standard-muted); }
+.standard-card-text-row { display:flex; align-items:baseline; gap:10px; margin:0; padding:9px 12px 10px; height:38px; border-top:1px solid var(--standard-line); }
+.standard-card-text-row dt { flex:none; font-size:11.5px; color:var(--standard-muted); }
 .standard-card-focus-row,.investor-focus-row { margin:0; padding:9px 11px 10px; border-top:1px solid var(--standard-line); background:var(--card); min-height:71px; }
 .standard-card-focus-row { height:89px; }
 .standard-card-focus-row dt,.investor-focus-row dt { display:flex; font-size:11.5px; line-height:16px; color:var(--standard-muted); }
@@ -81,10 +78,8 @@
 .standard-card-text-row dd { margin:0; min-width:0; font-size:12.5px; font-weight:600; line-height:18px; color:var(--standard-copy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .standard-card-desc-4 { -webkit-line-clamp:4; }
 .standard-card-description:empty { display:none; }
-.standard-card-toggle { height:28px; width:100%; flex:none; margin:0; display:flex; align-items:center; justify-content:center; gap:5px; border-radius:8px; font-size:12.5px; font-weight:600; color:var(--standard-hidden-ink); background:transparent; }
-.standard-card:not(.standard-card-open) > .standard-card-body > .standard-card-toggle { flex:1; min-height:28px; height:auto; margin-top:-10px; }
-.standard-card-foot { display:flex; flex:1; align-items:center; justify-content:space-between; gap:10px; min-height:28px; margin:0; }
-.standard-card:not(.standard-card-open) .standard-card-foot { margin-top:-10px; }
+.standard-card-toggle { height:28px; width:100%; flex:none; margin:-2px 0 0; display:flex; align-items:center; justify-content:center; gap:5px; border-radius:8px; font-size:12.5px; font-weight:600; color:var(--standard-hidden-ink); background:transparent; }
+.standard-card-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; flex:none; margin:-2px 0 0; }
 .standard-card-foot .standard-card-toggle { width:auto; margin:0; padding:0 8px; white-space:nowrap; flex:none; }
 .standard-card-last-login { display:block; min-width:0; font-size:12px; line-height:16px; color:var(--standard-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .standard-card-last-login svg { display:inline-block; vertical-align:-2px; margin-right:6px; }
@@ -122,6 +117,7 @@
 .dark { --standard-advisor-fit: color-mix(in srgb, var(--success) 14%, var(--card)); --standard-advisor-ink: var(--success); --standard-advisor-edge: var(--border); }
 .standard-advisor-card .standard-card-fit-row .standard-card-cell { background:var(--standard-advisor-fit); }
 .standard-advisor-card .standard-card-fit-row dt { color:var(--standard-advisor-ink); }
+.standard-advisor-card .standard-card-name h3 { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .standard-card-plus { display:inline-flex; flex:none; align-items:center; height:18px; margin-left:6px; padding:0 6px; border:1px solid var(--standard-advisor-edge); border-radius:999px; background:var(--standard-white); color:var(--standard-advisor-ink); font-size:11px; font-weight:600; }
 .dark .standard-card-plus { background:var(--card); }
 .standard-card-value-row { display:flex; align-items:center; min-width:0; }

@@ -638,7 +638,7 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
 @media (max-width:640px) { .buyer-want-input { min-height:64px; } }
 
 /* The card's "Wants to buy:" preview line, under the investor type. */
-.standard-card-want { margin:0; font-size:13px; line-height:20px; color:var(--standard-muted, #4B5563); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.standard-card-want { margin:4px 0 0; font-size:13px; line-height:20px; color:var(--standard-muted, #4B5563); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .standard-card-want b { font-weight:600; color:var(--standard-ink, #374151); }
 .standard-card-want-empty, .standard-card-want-empty b { color:var(--standard-faint); }
 
@@ -663,6 +663,13 @@ html:not(.dark) [data-mkt-view] [data-mkt-lock] { background: #fef3de; color: #b
  .buyer-description-layout { grid-template-columns:minmax(0,1fr); gap:16px; }
  .buyer-preview-sticky, .buyer-preview-col { position:static; }
  .buyer-preview-col,.buyer-description-fields,.buyer-description-children { grid-column:1; grid-row:auto; }
+ .buyer-editor-preview { display:grid; grid-template-columns:88px minmax(0,1fr); }
+ .buyer-editor-preview .standard-card-cover { height:100%; min-height:88px; }
+ .buyer-editor-preview .standard-card-body { padding:10px 12px; gap:4px; }
+ .buyer-editor-preview .standard-card-name { max-height:none; display:flex; flex-direction:column-reverse; }
+ .buyer-editor-preview .standard-card .standard-card-text { height:auto; }
+ .buyer-editor-preview .standard-card-description { -webkit-line-clamp:2; }
+ .buyer-editor-preview .standard-card-status,.buyer-editor-preview .standard-card-figures,.buyer-editor-preview .standard-card-toggle { display:none; }
  .buyer-description-textarea { flex:none; height:150px; }
  .buyer-investment-mandate { padding:22px 0 0; }
  .buyer-mandate-money { grid-template-columns:minmax(0,1fr); }

@@ -142,7 +142,6 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
   const sectors = f.sectorAgnostic ? [tr("Sector agnostic")] : sectorChips(f.sectors, f.sectorPicks);
   const more = (
     <div className="space-y-2.5">
-      <MoreRow label={tr("Firm type")} value={<>{line}{line && " · "}{stars}</>} />
       {services.length > 0 && <div className="flex flex-wrap gap-1.5">{f.services.map((s) => <ServiceChip key={s} name={s} />)}</div>}
       <MoreRow label={tr("Typical deal size")} value={deal ? `${deal.usd} (${deal.thb})` : <span className="text-[#9CA3AF]">{tr("Not added")}</span>} />
       {sectors.length > 0 && <MoreRow label={tr("Sectors")} value={<span className="flex flex-wrap gap-1">{sectors.map((s) => <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[12px]">{s}</span>)}</span>} />}
@@ -153,10 +152,14 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
   return (
     <StandardBrowseCard
       title={name} refNo={f.refNo} place={f.city} hideRef hideStatus
+      subtitle={[line, stars].filter(Boolean).join(" · ")}
+      subtitleContent={<>{line}{line && " · "}{n > 0
+        ? <><span className="standard-card-star">★ {avg.toFixed(1)}</span> ({n})</>
+        : <><span className="standard-card-star">☆</span> <span className="standard-card-star-zero">0 (0)</span></>}</>}
       description={preferredLanguageText(f.description, f.descriptionTh, language) || tr("No description yet.")}
       cover={(children) => <div className="standard-advisor-cover">{cover ?? <FirmCover f={f} noStatus={noStatus} />}{children}</div>}
       figures={[
-        { label: tr("Typical deal size"), value: deal?.usd ?? null, node: deal ? <span className="standard-card-value" title={deal.full}>{deal.usd}</span> : empty(tr("Not added")) },
+        { label: tr("Typical deal size"), value: deal?.usd ?? null, node: deal ? undefined : empty(tr("Not added")) },
         { label: tr("Team size"), value: f.teamSize ? `${f.teamSize} ${tr("people")}` : null, node: f.teamSize ? undefined : empty(tr("Not added")) },
       ]}
       fit={{ label: tr("Services"), value: services.length ? services.join(" · ") : null, node: services.length ? <TwoPlus items={services} /> : empty("0") }}
