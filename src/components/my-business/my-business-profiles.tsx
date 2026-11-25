@@ -1,4 +1,4 @@
-import { setupText, useTranslation } from "@/i18n/language";
+import { setupText } from "@/i18n/language";
 import { tr } from "@/i18n/language";
 import { OwnerHandoverBox } from "@/components/handover/owner-check";
 import { useStartup } from "@/hooks/use-startup";
@@ -17,22 +17,17 @@ import { HiddenProfileTab } from "@/components/hidden-profile/hidden-profile-tab
 import { SellerEditPopup, useOpenSellerEdit } from "@/components/my-business/seller-edit-popup";
 import { useEntryFacts, useHiddenProfile, useHiddenProfileActions } from "@/hooks/use-hidden-profiles";
 import { useHasFinancials } from "@/hooks/use-has-financials";
-import {
-  hiddenStatusOf, isStartupEntry, type HiddenDraft, type HiddenProfileRow,
-} from "@/lib/hidden-profile";
-import { buildPublicListing, listingText, provinceOnly, type ListingSource } from "@/lib/public-listing";
-import { TagChips } from "@/components/hidden-profile/public-listing-card";
+import type { HiddenProfileRow } from "@/lib/hidden-profile";
+import { provinceOnly, type ListingSource } from "@/lib/public-listing";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ApprovalFooter, ApprovedChip, APPROVAL_LABEL, APPROVAL_TONE, approvalOf } from "@/components/my-business/approval-bits";
+import { ApprovalFooter, ApprovedChip } from "@/components/my-business/approval-bits";
 import { cn } from "@/lib/utils";
 import { SectionEditLink } from "@/components/common/edit-section";
 import { useAdminReview } from "@/components/my-business/admin-review-context";
-import { SectorArt } from "@/components/hidden-profile/bits";
+import { SellerOwnerCardData } from "@/components/my-business/seller-owner-card";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { CompanyMenu, DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company-menu";
+import { CompanyMenu, DraftCompanyPanel } from "@/components/common/company-menu";
 import { DeleteDraftDialog, DeleteDraftMenuItem, useDraftDeleteState } from "@/components/common/delete-draft";
-import { ManagedBadge } from "@/components/common/managed-badge";
-import { useManagedIds } from "@/hooks/use-managed-ids";
 import { SellerSetupBanner, useSellerSetup } from "@/components/my-business/signup-welcome";
 import { ReportOffers, ReportHeaderAction } from "@/components/my-business/report-offers";
 import {useReportPrices} from '@/hooks/use-report-prices';
@@ -252,47 +247,6 @@ export function RowLine({ label, children }: { label: string; children: React.Re
   );
 }
 
-function PublicCardBody({ s, row }: { s: StartupListItem; row: HiddenProfileRow | null }) {
-  const status = hiddenStatusOf(row, s.company_type);
-  const d = row as HiddenDraft | null;
-  const industry = s.sector || "SME";
-  const listing = buildPublicListing(s as ListingSource, row ? { ...row, live: status === "live" || status === "live_edited" } : null, false);
-  const { language } = useTranslation();
-  const localized = listingText(listing, language);
-  const live = status === "live" || status === "live_edited";
-  const adminReview = useAdminReview();
-  const cover = adminReview ? adminReview.pendingCover : row?.live ? row?.cover_image_url ?? null : null;
-  const ap = approvalOf(row);
-  const managed = useManagedIds("startup", [s.id]);
-  const badge = (
-    <span className={cn("absolute left-2.5 top-2.5 z-10 rounded-full bg-background/90 px-2 py-0.5 text-[10.5px] font-bold", row ? APPROVAL_TONE[ap] : "bg-amber-500/15 text-amber-700 dark:text-amber-400")}>
-      {setupText(row ? (ap === "live_edits_pending" ? "Live · edits pending" : APPROVAL_LABEL[ap]) : "Preview")}
-    </span>
-  );
-  return (
-    <>
-      <SectorArt art={d?.cover_art ?? s.sector} sector={s.sector} imageId={(row as { public_image_id?: string | null } | null)?.public_image_id ?? null} className="h-[120px] w-full rounded-none">
-        {badge}
-        {managed.has(s.id) && <div className="absolute right-2.5 top-2.5 z-10"><ManagedBadge size="card" border={false} shadow /></div>}
-      </SectorArt>
-      <div className="px-3 pb-3">
-        <div className="pt-2.5">
-          <div className="truncate text-[14px] font-bold">{d?.code_name || row?.ref_no || listing.headline || "Listing view"}</div>
-        </div>
-        <div className="mt-1 truncate text-[11.5px] text-muted-foreground">{[row?.ref_no, industry, provinceOnly(s.city, s.headquarters)].filter(Boolean).join(" · ")}</div>
-        <p className="mb-2 mt-1.5 line-clamp-2 text-[12.5px] text-muted-foreground">{listing.headline || listing.description || <em>{setupText("No description yet")}</em>}</p>
-        <RowLine label={setupText("Revenue")}>
-          {listing.revenueBand ? <>{listing.revenueBand} <span className="ml-1 rounded bg-[#EEF0FF] px-1 py-0.5 text-[9.5px] font-semibold text-[#4338CA]">{setupText("Range")}</span></> : "—"}
-        </RowLine>
-        <div className="space-y-1.5 border-t border-border pt-2">
-          <div><div className="mb-0.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">{setupText("Products & services")}</div><TagChips tags={localized.productTags.slice(0, 4)} /></div>
-          <div><div className="mb-0.5 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">{setupText("Markets")}</div><TagChips tags={localized.marketTags.slice(0, 4)} green /></div>
-        </div>
-      </div>
-    </>
-  );
-}
-
 function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | null; onView: (v: View) => void }) {
   const { row } = useHiddenProfile(s.id);
   const [local, setLocal] = useState<View>("public");
@@ -306,9 +260,7 @@ function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | nu
         <FolderTab side="right" active={v === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title={tr("Exclusive view")} sub={tr("Shared after NDA")} open={selected} tone="green" onClick={() => pick("private")} />
       </div>
       {v === "public" ? (
-        <div role="button" tabIndex={0} onClick={() => pick("public")} onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) { e.preventDefault(); pick("public"); } }} className={cn("cursor-pointer overflow-hidden rounded-b-[14px] rounded-t-none border bg-card transition-shadow hover:shadow-md [&_.rounded-t-xl]:rounded-t-none", selected ? "border-accent" : "border-border")}>
-          <PublicCardBody s={s} row={row} />
-        </div>
+        <SellerOwnerCardData s={s} row={row} selected={selected} onSelect={() => pick("public")} className="rounded-b-[14px] rounded-t-none" />
       ) : (
         <div className={cn("overflow-hidden rounded-b-[14px] rounded-t-none border bg-card [&_.rounded-t-xl]:rounded-t-none [&>button]:rounded-none [&>button]:border-0 [&>button]:shadow-none", selected ? "border-accent" : "border-border")}>
           <StartupCard s={s} onClick={() => pick("private")} />
@@ -577,12 +529,9 @@ function PrivateKindPill({ id }: { id: string }) {
 
 function SellerCardSlot({ s, view, onView, skipDraft }: { s: StartupListItem; view: View | null; onView: (v: View) => void; skipDraft: boolean }) {
   const { data } = useSellerSetup(skipDraft ? null : s.id);
+  const { row } = useHiddenProfile(s.id);
   if (data && !data.setupDoneAt) {
-    return (
-      <div role="button" tabIndex={0} onClick={() => onView("public")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onView("public"); } }} className="cursor-pointer">
-        <DraftCompanyCard role="seller" name={s.startup_name || tr("New business")} founded={data.year || null} size={data.size} website={data.web || null} selected={view != null} />
-      </div>
-    );
+    return <SellerOwnerCardData s={s} row={row} selected={view != null} onSelect={() => onView("public")} />;
   }
   return <BusinessCard s={s} view={view} onView={onView} />;
 }

@@ -1,5 +1,5 @@
 import { StandardInvestorCard } from "@/components/marketplace/standard-investor-card";
-import { ManagedBadge } from "@/components/common/managed-badge";
+import { InvestorBrowseListRow } from "@/components/marketplace/browse-list-rows";
 import { ConnectButton } from "@/components/marketplace/connect-invite";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { usePersistentView } from "@/hooks/use-persistent-view";
-import { NameAfterNdaPill, PublicInvestorCard, TypeIcon } from "@/components/marketplace/buyer-browse-card";
+import { NameAfterNdaPill, PublicInvestorCard } from "@/components/marketplace/buyer-browse-card";
 import { INDIVIDUAL_TYPE, actsForText, bandOf } from "@/lib/investor-bands";
 import { listBrowseInvestors, listSellerFavourites, mySavedInvestorIds, toggleSavedInvestor } from "@/lib/investor-browse.functions";
 import {
@@ -322,24 +322,8 @@ export function InvestorBrowse() {
         </div>
       ) : items.length === 0 ? empty : (
         <div className="space-y-2">
-          {items.map((i) => (
-            <div key={i.id} data-connect-source={i.refNo} data-connect-type={i.type ?? i.codeName} role="button" tabIndex={0} onClick={() => setModalId(i.id)} onKeyDown={(e) => { if (e.key === "Enter") setModalId(i.id); }} className="flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card transition-colors hover:border-accent">
-              <div data-connect-cover={i.refNo} data-connect-type={i.type ?? i.codeName} className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-muted"><TypeIcon type={i.type} className="h-5 w-5 text-muted-foreground" /></div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-foreground">{i.name || i.codeName} <span className="font-normal text-muted-foreground">· {i.refNo}</span></div>
-                <div className="truncate text-[12px] text-muted-foreground">
-                  {[i.country, i.ticketLabel && `Ticket ${i.ticketLabel}`, i.aumLabel && `${isCorporateBuyer(i.type) ? "Group revenue" : "AUM"} ${i.aumLabel}`,
-                    i.revLabel && `Revenue min. ${i.revLabel}`].filter(Boolean).join(" · ")}
-                </div>
-              </div>
-              {tagOf(i.id)}
-              <div className="flex shrink-0 items-center gap-1.5 max-[639px]:basis-full max-[639px]:justify-end">
-                {!i.name && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"><Lock className="h-3 w-3" />Name after NDA</span>}
-                {i.managed && <ManagedBadge size="sm" />}
-                <StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />
-              </div>
-            </div>
-          ))}
+          {items.map((i) => <InvestorBrowseListRow key={i.id} i={cardInvestor(i)} tag={tagOf(i.id)}
+            star={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} onOpen={() => setModalId(i.id)} />)}
         </div>
       )}
       <Dialog open={!!modal} onOpenChange={(o) => !o && setModalId(null)}>

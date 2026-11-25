@@ -1,4 +1,4 @@
-import { ManagedBadge } from "@/components/common/managed-badge";
+import { FirmBrowseList } from "@/components/marketplace/browse-list-rows";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ViewToggle, type ViewMode } from "@/components/shared/view-toggle";
 import { pillCls, useDismissedHints } from "@/components/marketplace/browse-header";
-import { FirmCard, FirmLogo, ServiceChip, Stars } from "@/components/advisor/advisor-firm-card";
+import { FirmCard, Stars } from "@/components/advisor/advisor-firm-card";
 import { FirmPanel } from "@/components/advisor/advisor-my-company";
 import { ADVISOR_SERVICES, DEAL_BANDS, FIRM_TYPES, LANGUAGES, dealBandLabels, reviewStats, type AdvisorFirm } from "@/lib/advisor-firm";
 import { fmtShort, reasonText, type EnquiryState, type Me } from "@/lib/advisor-enquiry";
@@ -432,30 +432,7 @@ export function BrowseAdvisorsPage({ side, firmParam, enquire }: { side: Side; f
             {wide && <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">{current ? panel(current) : null}</div>}
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-[14px] border border-[#E9EBF0] bg-card dark:border-border">
-            <div className="min-w-[860px]">
-              <div className="grid grid-cols-[2fr_1.6fr_92px_136px_168px] gap-4 bg-[#FAFAFB] px-[18px] py-2.5 text-[11px] font-bold uppercase text-muted-foreground dark:bg-muted/40">
-                <span>{tr("Firm")}</span><span>{tr("Services")}</span><span>{tr("Rating")}</span><span>{tr("Deal size · team")}</span><span />
-              </div>
-              {shown.map((f) => {
-                const st = stat[f.id]; const band = dealBandLabels(f.dealBand);
-                return (
-                  <div key={f.id} role="button" tabIndex={0} onClick={() => openSplit(f.id)} onKeyDown={(e) => { if (e.key === "Enter") openSplit(f.id); }}
-                    className="grid cursor-pointer grid-cols-[2fr_1.6fr_92px_136px_168px] items-center gap-4 border-t border-[#F0F1F4] px-[18px] py-3 hover:bg-muted/40 dark:border-border">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="grid h-10 w-[60px] shrink-0 place-items-center overflow-hidden rounded-md border border-border bg-white">{f.logoUrl ? <img src={f.logoUrl} alt="" className="max-h-8 max-w-[52px] object-contain" /> : <FirmLogo f={f} size={40} radius={6} ring={false} />}</span>
-                      <div className="min-w-0"><div className="truncate text-[14px] font-semibold">{f.name}</div><div className="truncate text-[12px] text-muted-foreground">{[f.refNo, f.firmType, f.city].filter(Boolean).join(" · ")}</div>
-                        {(f.verifiedAt || f.managed) && <div className="mt-0.5 flex flex-wrap items-center gap-1.5">{f.verifiedAt && <span className="inline-flex h-5 items-center gap-1 rounded-full border border-[#BBE8CA] bg-[#E9F6EE] px-2 text-[11px] font-semibold text-[#15803D]">✓ {tr("Verified")}</span>}{f.managed && <ManagedBadge size="xs" shadow align="left" />}</div>}</div>
-                    </div>
-                    <div className="flex flex-wrap gap-1">{f.services.slice(0, 3).map((s) => <ServiceChip key={s} name={s} />)}{f.services.length > 3 && <span className="text-[12px] text-muted-foreground">+{f.services.length - 3}</span>}</div>
-                    <div className="text-[13px]">{st.n ? <><div className="font-semibold"><span className="text-[#F59E0B]">★</span> {st.avg.toFixed(1)}</div><div className="text-[12px] text-muted-foreground">{st.n} {tr(st.n === 1 ? "review" : "reviews")}</div></> : <span className="text-[12px] text-muted-foreground">{tr("No reviews yet")}</span>}</div>
-                    <div className="text-[13px]"><div>{band?.usd ?? "—"}</div><div className="text-[12px] text-muted-foreground">{f.teamSize ? `${f.teamSize} ${tr("people")}` : ""}</div></div>
-                    <div className="flex justify-end">{action(f)}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <FirmBrowseList items={shown} ratings={stat} action={(f) => action(f)} onOpen={openSplit} />
         )}
       </div>
 

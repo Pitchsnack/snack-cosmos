@@ -7,9 +7,10 @@ import { cn } from '@/lib/utils';
 import type { CardNdaStatus } from '@/lib/standard-card';
 import { LAST_LOGIN_LABEL, type LastLoginStep } from '@/lib/last-login';
 import { cardValue } from '@/lib/marketplace-contacts';
+import { OWNER_STATUS_LABEL, type OwnerStatus } from '@/lib/owner-status';
 
 export type StandardFigure = { label: string; value?: string | null; second?: string | null; /** Replaces the value text (e.g. a value with a "+n" badge). */ node?: ReactNode };
-export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, beforeName, figureLabel, footerDate, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip, hideRef, subtitleContent, titleContent, defaultExpanded, style }: {
+export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, beforeName, figureLabel, footerDate, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip, hideRef, subtitleContent, titleContent, defaultExpanded, style, ownerStatus, ownerStatusOnCover = true }: {
   title: string; subtitle?: string; refNo: string; place?: string | null; description?: string | null;
   cover: (children: ReactNode) => ReactNode; status?: CardNdaStatus; newDays?: number | null; managed?: boolean;
   topRight?: ReactNode; badges?: { label: string; financial?: boolean }[]; figures: StandardFigure[];
@@ -23,6 +24,10 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
   lastLogin?: LastLoginStep | null; lastLoginTooltip?: string;
   /** Leave "{ref} · {place}" off the cover (the advisor cover draws its own). */
   hideRef?: boolean; subtitleContent?: ReactNode; titleContent?: ReactNode; defaultExpanded?: boolean; style?: React.CSSProperties;
+  /** Own-profile presentation: publication status replaces NDA/actions and suppresses last login. */
+  ownerStatus?: OwnerStatus;
+  /** Firm cards turn this off because their centred logo can reach the top-left pill area. */
+  ownerStatusOnCover?: boolean;
 }) {
   const { t, language } = useTranslation();
   const [expanded, setExpanded] = useState(!!defaultExpanded);
@@ -65,7 +70,7 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
     e.currentTarget.querySelector<HTMLElement>('.standard-card-title-link')?.focus({ preventScroll: true });
     onOpen();
   };
-  return <article ref={article} data-standard-card data-expanded={expanded} data-connect-source={refNo} data-connect-type={sourceType}
+  return <article ref={article} data-standard-card data-expanded={expanded} data-owner-status={ownerStatus} data-connect-source={refNo} data-connect-type={sourceType}
     onClick={openFromCard}
     style={style}
     className={cn('standard-card', onOpen && 'standard-card-clickable', expanded && 'standard-card-open', selected && 'standard-card-selected', className)}>
@@ -73,11 +78,13 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
       {cover(<>
         <div ref={coverFit.box} className="pointer-events-none absolute inset-x-0 top-0 h-0" />
         <div className="standard-card-top">
-          {!hideStatus && <span ref={coverFit.left as React.RefObject<HTMLSpanElement>} className={cn('standard-card-status', `standard-card-status-${status}`)} title={statusTip}>
-            <StatusIcon aria-hidden /><span>{t(statusLabel)}</span>{newDays != null && <span className="standard-card-new">{t('NEW')}</span>}
-          </span>}
+          {ownerStatus
+            ? ownerStatusOnCover && <span ref={coverFit.left as React.RefObject<HTMLSpanElement>} className="standard-card-status standard-card-owner-status" data-status={ownerStatus}>{t(OWNER_STATUS_LABEL[ownerStatus])}</span>
+            : !hideStatus && <span ref={coverFit.left as React.RefObject<HTMLSpanElement>} className={cn('standard-card-status', `standard-card-status-${status}`)} title={statusTip}>
+              <StatusIcon aria-hidden /><span>{t(statusLabel)}</span>{newDays != null && <span className="standard-card-new">{t('NEW')}</span>}
+            </span>}
           {!hideRef && <span className="standard-card-ref" title={[refNo, place].filter(Boolean).join(' · ')}><span className="standard-card-ref-no">{refNo}</span>{place && <><span className="standard-card-ref-no">&nbsp;·&nbsp;</span><span className="standard-card-ref-place">{place}</span></>}</span>}
-          <div ref={coverFit.right} className="standard-card-tools">{managed && <ManagedBadge size="sm" hatOnly={coverFit.level >= 1} />}{topRight}</div>
+          <div ref={coverFit.right} className="standard-card-tools">{managed && <ManagedBadge size="sm" hatOnly={coverFit.level >= 1} />}{!ownerStatus && topRight}</div>
         </div>
         {!!badges?.length && <div className="standard-card-badges">{badges.map((b) => <span key={b.label} className="standard-card-badge">{b.financial ? <FileText aria-hidden /> : <CircleCheck aria-hidden />}{t(b.label)}</span>)}</div>}
       </>)}
@@ -102,7 +109,7 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
       </div>
       {expanded && <div className="standard-card-more">{tag}{more}</div>}
       <div className="standard-card-foot">
-        {(lastLogin || footerDate) && <span className="standard-card-last-login" title={lastLoginTooltip}>{lastLogin ? <><LogIn aria-hidden />{t(LAST_LOGIN_LABEL[lastLogin])}</> : footerDate}</span>}
+        {!ownerStatus && (lastLogin || footerDate) && <span className="standard-card-last-login" title={lastLoginTooltip}>{lastLogin ? <><LogIn aria-hidden />{t(LAST_LOGIN_LABEL[lastLogin])}</> : footerDate}</span>}
         <Button variant="unstyled" size="unstyled" className="standard-card-toggle" aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded((v) => !v)}>{t(expanded ? 'Show less' : 'Show more')}<ChevronDown aria-hidden /></Button>
       </div>
     </div>

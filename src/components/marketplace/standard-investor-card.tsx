@@ -10,13 +10,14 @@ import { cn } from '@/lib/utils';
 import type { LastLoginStep } from '@/lib/last-login';
 import type { SellerFavPrivate } from '@/lib/investor-browse.functions';
 import { preferredLanguageText } from '@/lib/bilingual-fields';
+import type { OwnerStatus } from '@/lib/owner-status';
 
 /**
  * The buyer card takes the seller card's shape: US$ ranges only on the
  * closed card (one line each), Investment focus as the one-line text row,
  * and Geography plus the baht ranges inside Show more.
  */
-export function StandardInvestorCard({ i, privateData, onClick, selected, topRight, className, tag, descriptionContent, hideStatus, exactFigures, lastLoginStep, wantBuy }: {
+export function StandardInvestorCard({ i, privateData, onClick, selected, topRight, className, tag, descriptionContent, hideStatus, exactFigures, lastLoginStep, wantBuy, ownerStatus }: {
   i: CardInvestor & { managed?: boolean; coverUrl?: string | null; status?: string; newDays?: number | null; lastLoginStep?: LastLoginStep | null };
   privateData?: Omit<SellerFavPrivate, 'ndaApprovedAt' | 'ndaValidUntil'> | null; onClick?: () => void; selected?: boolean; topRight?: ReactNode; className?: string; tag?: ReactNode;
   hideStatus?: boolean; exactFigures?: { figures: StandardFigure[]; fit: StandardFigure };
@@ -24,6 +25,7 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
   /** "Wants to buy: …" preview line under the investor type (the buyer editor's live card). */
   wantBuy?: ReactNode;
   lastLoginStep?: LastLoginStep | null;
+  ownerStatus?: OwnerStatus;
 }) {
   const { t, language } = useTranslation();
   const p = privateData;
@@ -65,7 +67,7 @@ export function StandardInvestorCard({ i, privateData, onClick, selected, topRig
   return <StandardBrowseCard title={name ? `${name} (${typeText})` : typeText}
     titleContent={name ? <span className="standard-investor-private-title"><span className="standard-investor-private-name">{name}</span><span className="standard-investor-private-type">({typeText})</span></span> : undefined}
     refNo={i.refNo} place={contactPlace(p?.city || i.city || p?.country || i.country, language)} description={description}
-    status={cardNdaStatus(i.status)} hideStatus={hideStatus} newDays={i.newDays} managed={i.managed} topRight={topRight} selected={selected} onOpen={onClick} className={cn('standard-investor-card', className)} sourceType={i.type ?? i.codeName} tag={tag}
+    status={cardNdaStatus(i.status)} hideStatus={hideStatus} newDays={i.newDays} managed={i.managed} topRight={topRight} selected={selected} onOpen={onClick} className={cn('standard-investor-card', className)} sourceType={i.type ?? i.codeName} tag={tag} ownerStatus={ownerStatus}
     lastLogin={lastLoginStep ?? i.lastLoginStep} lastLoginTooltip={t('When the buyer last logged in to PitchSnack')}
     cover={(children) => p ? <div className="standard-card-private-cover">{photo ? <img src={photo} alt="" /> : <div className="standard-card-logo">{p.logo_signed_url ? <img src={p.logo_signed_url} alt="" /> : initials}</div>}{children}</div> : <BuyerCover type={i.type} src={i.coverUrl}>{children}</BuyerCover>}
     badges={[...(i.verified ? [{ label: 'Verified investor' }] : []), ...(i.proofOfFunds ? [{ label: 'Proof of funds' }] : [])]}

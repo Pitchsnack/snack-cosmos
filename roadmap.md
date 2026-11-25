@@ -1,3 +1,9 @@
+# My Company uses Browse cards and rows
+- [x] Reuse each role's existing Browse adapter and shared card/row in Profiles, Grid, Split and List while preserving panels, tabs, selection, filters and ordering.
+- [x] Add one owner presentation for status, no star/last login/other-user actions, centred Show more and unchanged Managed by; omit the firm cover pill because a 240×96px logo can intersect its 24px area.
+- [x] Map latest saved draft values with Admin-published text taking precedence, switching to newly saved wording while live edits await review; no database or authorization changes.
+- [x] Ten render/parity tests plus focused seller/buyer/advisor regressions pass; preview build OK. Live My Company editing, EN/TH overlap and viewport measurements were not run under Dan's no-sign-in rule.
+
 # Tighter shared Browse cards
 - [x] Reduced the shared figures box to 115px at a 294px top offset, expanded the name/description space to 156px with measured whole-line descriptions, and centred the existing bottom row while keeping every closed card 451px.
 - [x] Preserved all adapters, cover content, actions and viewer-independent behavior; replaced Admin one-step custom previews with shared seller/buyer/advisor cards using existing authorised profile reads for exact figures and media without changing authorization.

@@ -14,11 +14,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StartupCard } from "@/components/startups/startup-card";
-import { StartupListItem } from "@/components/startups/startup-list-item";
-import { StartupRow } from "@/components/startups/startup-row";
-import { FavoriteSplitRow } from "@/components/startups/favorite-split-row";
-import { FavoriteListHeader, FavoriteListRow } from "@/components/startups/favorite-list-row";
+import { SellerOwnerCardData } from "@/components/my-business/seller-owner-card";
+import { useHiddenProfiles } from "@/hooks/use-hidden-profiles";
 import { StartupDetailPanel, StartupDetailEmpty } from "@/components/startups/startup-detail-panel";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui/dialog";
 import { ViewToggle } from "@/components/shared/view-toggle";
@@ -26,7 +23,6 @@ import { useStartups } from "@/hooks/use-startups";
 import { useFavoriteStartups } from "@/hooks/use-favorites";
 import { usePermissions, useSessionContext } from "@/hooks/use-session-context";
 import { PermissionGuard } from "@/components/permission-guard";
-import { PublicationStatusBadge } from "@/components/startups/publication-actions";
 import { selectMyStartups } from "@/lib/publication/my-startups-membership";
 import { cn } from "@/lib/utils";
 import { CompanyScrollLayout } from "@/components/my-business/company-scroll-layout";
@@ -102,6 +98,7 @@ function MyStartupsPageInner() {
   const favOnly = !!s.fav;
   const scrollReset = JSON.stringify([s.q,s.stage,s.sector,s.hq,s.ct,s.ptag,s.mtag,sort,favOnly]);
   const { ids: favIds } = useFavoriteStartups();
+  const { byStartup: hiddenByStartup } = useHiddenProfiles();
 
   const [modalId, setModalId] = useState<string | null>(s.edit === "startup" ? null : s.panel ?? null);
   useEffect(() => {
@@ -272,19 +269,8 @@ function MyStartupsPageInner() {
       </div>
 
       {isLoading && items.length === 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="rounded-lg border border-border bg-card p-4 shadow-card space-y-3">
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-5/6" />
-              <div className="flex gap-2">
-                <Skeleton className="h-5 w-12" />
-                <Skeleton className="h-5 w-16" />
-              </div>
-            </div>
-          ))}
+        <div className="standard-card-grid" aria-hidden="true">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[451.19px] rounded-[14px]" />)}
         </div>
       ) : items.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">
@@ -297,58 +283,21 @@ function MyStartupsPageInner() {
       ) : view === "profiles" ? (
         <MyBusinessProfiles items={items} openId={s.open ?? selected} resetKey={scrollReset} />
       ) : view === "grid" ? (
-        <div
-          className={cn(
-            "grid gap-4",
-            favOnly
-              ? "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-              : "sm:grid-cols-2 lg:grid-cols-3",
-          )}
-        >
-          {items.map((it) => (
-            <div key={it.id} className="relative">
-              <PublicationStatusBadge
-                startupRef={it.id}
-                className="absolute left-3 top-3 z-10 bg-background/95"
-              />
-              <StartupCard
-                s={it}
-                onClick={() => openStartup(it.id)}
-                compact={favOnly}
-              />
-            </div>
-          ))}
+        <div className="standard-card-grid">
+          {items.map((it) => <SellerOwnerCardData key={it.id} s={it} row={hiddenByStartup.get(it.id)} onSelect={() => openStartup(it.id)} />)}
         </div>
       ) : view === "list" ? (
-        favOnly ? (
-          <div className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
-            <FavoriteListHeader />
-            {items.map((it) => (
-              <FavoriteListRow key={it.id} s={it} onSelect={() => openStartup(it.id)} />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {items.map((it) => (
-              <div key={it.id} className="relative">
-                <PublicationStatusBadge
-                  startupRef={it.id}
-                  className="absolute right-3 top-3 z-10 bg-background/95"
-                />
-                <StartupRow s={it} onSelect={() => openStartup(it.id)} />
-              </div>
-            ))}
-          </div>
-        )
+        <div className="space-y-2">
+          {items.map((it) => <SellerOwnerCardData key={it.id} list s={it} row={hiddenByStartup.get(it.id)} onSelect={() => openStartup(it.id)} />)}
+        </div>
       ) : (
         <CompanyScrollLayout mode="split" resetKey={scrollReset} selectedKey={selected}
           className={favOnly ? "gap-4 lg:grid-cols-[minmax(260px,20rem)_1fr]" : undefined}
           listLabel={t("Your businesses")} panelLabel={items.find(i => i.id === selected)?.startup_name || t("My Company")}
           listClassName="space-y-1.5"
           list={items.map(it => <div key={it.id} data-company-selected={selected === it.id}>
-            {favOnly ? <FavoriteSplitRow s={it} selected={selected === it.id} onSelect={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })} />
-              : <StartupListItem s={it} selected={selected === it.id} onSelect={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })} />}
-          </div>)}
+            <SellerOwnerCardData s={it} row={hiddenByStartup.get(it.id)} selected={selected === it.id} onSelect={() => navigate({ search: (p: typeof s) => ({ ...p, selected: it.id }) })} />
+          </div>) }
           panel={<div className="min-w-0 rounded-lg border border-border bg-card p-6 shadow-sm">
             {selected ? <StartupDetailPanel id={selected} showPublication workspace="my-startups" /> : <StartupDetailEmpty />}
           </div>} />

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditInfoPopup } from "@/components/common/edit-info-popup";
-import { DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company-menu";
+import { DraftCompanyPanel } from "@/components/common/company-menu";
 import { applyAddCheck } from "@/lib/add-company-check.functions";
 import { AddCompanyCheck, type AddCheckYes } from "@/components/setup/add-company-check";
 import { addInvestorProfile, getBuyerInvestorById, listMyInvestorProfileIds } from "@/lib/buyer-investor.functions";
@@ -149,11 +149,10 @@ function ExtraProfile({ id, open, part, mode = "grid", view: controlledView, onV
   const iv = d.investor;
   const { p, org } = directoryCardData(d, id);
   if (part === "directory") {
-    return <BuyerDirectoryItem p={p} org={org} mode={mode} selected={false} ticketLabel={bandText(iv.ticket_band)} onClick={() => onSelect?.(id)} />;
+    return <BuyerDirectoryItem p={p} org={org} d={d} mode={mode} selected={false} ticketLabel={bandText(iv.ticket_band)} onClick={() => onSelect?.(id)} />;
   }
   const rel = (d.buyer.relation ?? null) as BuyerRelation | null;
   const prog = buyerProgressFor(rel, iv, d.buyer, d.people);
-  const individual = rel === "individual";
   const nm = iv.investor_name || (iv.investor_type ? typeName(iv.investor_type) : tr("New investor profile"));
   const openWizard = () => void navigate({ to: "/buyer/company/$id/setup", params: { id }, search: {} });
   const onItem = (key: BuyerItemKey) => {
@@ -170,8 +169,7 @@ function ExtraProfile({ id, open, part, mode = "grid", view: controlledView, onV
     <div ref={ref} data-company-selected={open} className={cn(!part && `grid rounded-[14px] ${CARD_COLUMN_GRID}`, open && !part && "ring-2 ring-accent/40 ring-offset-4 ring-offset-background")} style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       {part !== "panel" && <div role={part ? "button" : undefined} tabIndex={part ? 0 : undefined} onClick={() => onSelect?.(id)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect?.(id); } }}>
         {!iv.setup_done_at
-          ? <DraftCompanyCard role="buyer" name={nm} typeLine={iv.investor_type ? typeName(iv.investor_type) : null}
-              selected={part ? open : true} founded={individual ? null : iv.year_founded} size={individual ? null : iv.company_size_band} website={iv.website_url} />
+          ? <BuyerDirectoryItem p={p} org={org} d={d} mode="split" selected={part ? open : true} onClick={() => onSelect?.(id)} />
           : <BuyerFolderCard p={p} org={org} d={d} view={view} onView={setView} privateBody={<BuyerPrivateCardBody d={d} status={p.status} selected={open} />} />}
       </div>}
       {part !== "list" && (!iv.setup_done_at ? (

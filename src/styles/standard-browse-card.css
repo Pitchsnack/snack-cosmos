@@ -14,7 +14,7 @@
 @media (min-width:701px) { .standard-card-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (min-width:1240px) { .standard-card-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
 .standard-card { display:flex; flex-direction:column; min-width:0; overflow:hidden; border:1px solid var(--standard-edge); border-radius:14px; background:var(--card); color:var(--standard-ink); box-shadow:var(--standard-shadow); text-align:left; }
-.standard-card:not(.standard-card-open) { height:451px; }
+.standard-card:not(.standard-card-open) { height:451.19px; }
 .standard-card-selected { border-color:var(--accent); }
 .standard-card-cover { height:116px; flex:none; position:relative; }
 .standard-card-cover > div { height:100%; }
@@ -23,6 +23,12 @@
 .standard-card-status-hidden { background:var(--standard-white); border-color:var(--standard-hidden-edge); color:var(--standard-hidden-ink); }
 .standard-card-status-requested { background:var(--standard-request-bg); border-color:var(--standard-request-edge); color:var(--standard-request-ink); }
 .standard-card-status-approved,.standard-card-badge { background:var(--standard-green-bg); border-color:var(--standard-green-edge); color:var(--standard-green); }
+.standard-card-owner-status { background:var(--standard-chip); border-color:var(--standard-hidden-edge); color:var(--standard-hidden-ink); }
+.standard-card-owner-status[data-status="pending"] { background:var(--standard-request-bg); border-color:var(--standard-request-edge); color:var(--standard-request-ink); }
+.standard-card-owner-status[data-status="changes"],.standard-card-owner-status[data-status="live_edits_pending"] { background:var(--standard-fit); border-color:var(--standard-request-edge); color:var(--standard-fit-ink); }
+.standard-card-owner-status[data-status="rejected"] { background:color-mix(in srgb,var(--destructive) 10%,var(--card)); border-color:var(--destructive); color:var(--destructive); }
+.standard-card-owner-status[data-status="live"] { background:var(--standard-green-bg); border-color:var(--standard-green-edge); color:var(--standard-green); }
+.standard-row-owner-status { position:static; flex:none; }
 .standard-card-status:has(.standard-card-new) { padding-right:0; }
 .standard-card-new { display:inline-flex; align-self:stretch; align-items:center; margin-left:2px; padding:0 8px; background:var(--plan-seller); color:var(--accent-foreground); font-size:10.5px; font-weight:700; }
 .standard-card-top { position:absolute; top:10px; left:10px; right:10px; height:30px; display:flex; align-items:center; gap:8px; z-index:1; }

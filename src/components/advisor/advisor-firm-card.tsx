@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { LAST_LOGIN_LABEL, type LastLoginStep } from "@/lib/last-login";
 import { tr, useTranslation } from "@/i18n/language";
 import { preferredLanguageText } from "@/lib/bilingual-fields";
+import type { OwnerStatus } from "@/lib/owner-status";
 
 /** Advisor firm card: the investor public card's layout with firm content. */
 
@@ -123,7 +124,7 @@ function TwoPlus({ items }: { items: string[] }) {
 const empty = (text: string) => <span className="standard-card-value standard-card-empty">{text}</span>;
 
 /** The advisor firm card, built on the shared seller/buyer card: 116px cover, fixed text block, figures box and footer. */
-export function FirmCard({ f, wide, preview, selected, onClick, className, action, accent = "#F6A823", noStatus, lastLogin, cover }: {
+export function FirmCard({ f, wide, preview, selected, onClick, className, action, accent = "#F6A823", noStatus, lastLogin, cover, ownerStatus }: {
   f: AdvisorFirm; wide?: boolean; preview?: boolean; selected?: boolean; onClick?: () => void; className?: string;
   /** Send enquiry (or the status chip), shown full width inside Show more after Sectors. */
   action?: React.ReactNode; accent?: string; noStatus?: boolean;
@@ -131,6 +132,8 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
   lastLogin?: LastLoginStep | null;
   /** Replaces the cover (Admin's directory cover with its bookmark). */
   cover?: React.ReactNode;
+  /** Own firm: the shared owner rules apply, but the cover pill stays off the logo. */
+  ownerStatus?: OwnerStatus;
 }) {
   const { language } = useTranslation();
   const deal = dealBandLabels(f.dealBand);
@@ -157,7 +160,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
         ? <><span className="standard-card-star">★ {avg.toFixed(1)}</span> ({n})</>
         : <span className="standard-card-star">☆</span>}</>}
       description={preferredLanguageText(f.description, f.descriptionTh, language) || tr("No description yet.")}
-      cover={(children) => <div className="standard-advisor-cover">{cover ?? <FirmCover f={f} noStatus={noStatus} />}{children}</div>}
+      cover={(children) => <div className="standard-advisor-cover">{cover ?? <FirmCover f={f} noStatus={noStatus || !!ownerStatus} />}{children}</div>}
       figures={[
         { label: tr("Typical deal size"), value: deal?.usd ?? null, second: deal?.thb ?? null, node: deal ? undefined : empty(tr("Not added")) },
         { label: tr("Team size"), value: f.teamSize ? `${f.teamSize} ${tr("people")}` : null, node: f.teamSize ? undefined : empty(tr("Not added")) },
@@ -167,6 +170,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
       lastLogin={lastLogin ?? null}
       lastLoginTooltip={lastLogin ? `${tr(LAST_LOGIN_LABEL[lastLogin])} — ${tr("When the advisor last logged in to PitchSnack")}` : undefined}
       more={more} defaultExpanded={wide} selected={selected} onOpen={onClick}
+      ownerStatus={ownerStatus} ownerStatusOnCover={false}
       sourceType="advisor"
       style={selected ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}` } : undefined}
       className={cn("standard-advisor-card", noStatus && "advisor-browse-card", className)}

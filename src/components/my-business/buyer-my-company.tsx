@@ -13,7 +13,7 @@ import { EditInfoPopup } from "@/components/common/edit-info-popup";
 import { BuyerInvestorEdit, type Data } from "@/components/my-business/buyer-investor-edit";
 import { useOpenProfileEdit } from "@/components/my-business/profile-edit-popup";
 import { useNavigate } from "@tanstack/react-router";
-import { BadgeCheck, Check, ChevronDown, Clock, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, MapPin, Coins, ArrowRight, Send, Star, X } from "lucide-react";
+import { BadgeCheck, Check, ChevronDown, Clock, Info, Lock, Eye, MoreVertical, Pencil, Plus, Trash2, Search, RefreshCw, Send, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { FolderTab, Group, Intro, Ring, Row, RowLine } from "@/components/my-business/my-business-profiles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BuyerBrowseCard, BuyerCover, TypeIcon, shortCityTh, type CardPart } from "@/components/marketplace/buyer-browse-card";
+import { BuyerBrowseCard, TypeIcon, type CardPart } from "@/components/marketplace/buyer-browse-card";
+import { BuyerOwnerCardData } from "@/components/my-business/buyer-owner-card";
 import { getMyBuyerProfile, saveMyBuyerProfile, setBuyerListing, withdrawBuyerProfile } from "@/lib/buyer-profile.functions";
 import { registerBuyerCompany } from "@/lib/approvals-one-step.functions";
 import { startProfileEnrichment } from "@/lib/website-enrichment.functions";
@@ -36,7 +37,7 @@ import {
   type BuyerItemKey, type BuyerOrg, type BuyerProfile, type PublicBuyer,
 } from "@/lib/buyer-profile";
 import { cn } from "@/lib/utils";
-import { CompanyMenu, DraftCompanyCard, DraftCompanyPanel } from "@/components/common/company-menu";
+import { CompanyMenu, DraftCompanyPanel } from "@/components/common/company-menu";
 import type { DeleteDraftTarget } from "@/components/common/delete-draft";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { Flag } from "lucide-react";
@@ -231,8 +232,6 @@ export function BuyerMyCompany() {
   );
 
   if (iv && !iv.setup_done_at) {
-    const tone = typeTone(org.type);
-    const individual = inv.data?.buyer.relation === "individual";
     const nm = org.name || iv.investor_name || typeName(org.type);
     return (
       <div className="space-y-6">
@@ -246,8 +245,7 @@ export function BuyerMyCompany() {
         </div>
         {extras}
         <div className={`grid ${CARD_COLUMN_GRID}`} style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
-          <DraftCompanyCard role="buyer" name={nm} typeLine={org.type ? typeName(org.type) : null} typeClass={tone.fg}
-            founded={individual ? null : (iv as any).year_founded} size={individual ? null : (iv as any).company_size_band} website={iv.website_url} />
+          <BuyerDirectoryItem p={p} org={org} d={inv.data} mode="split" selected onClick={() => setView("public")} />
           <DraftCompanyPanel role="buyer" name={nm} banner={<SetupBanner n={prog.n} N={prog.N} onOpen={() => openWizard()} />}
             onEdit={() => openProfileEdit({ from: "public" })} onFinish={() => openWizard()}
             deleteDraft={{ kind: "investor", id: iv.id, invalidate: [KEY, ["buyer-investor"]] }} />
@@ -330,19 +328,19 @@ export function BuyerMyCompany() {
       ) : layout === "split" ? (
         <CompanyScrollLayout mode="split"
           listLabel={tr("Your investor profiles")} panelLabel={org.name || tr("My Company")} selectedKey={`${selectedExtra ?? p.user_id}:${view}`} resetKey={buyerScrollReset}
-          list={<div className="space-y-5">{extraList}<div data-company-selected={!selectedExtra} onClick={() => setSelectedExtra(null)}>{inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected onSelect={() => setView("private")} /> : <Skeleton className="h-[220px]" />}</div></div>}
+          list={<div className="space-y-5">{extraList}<div data-company-selected={!selectedExtra} onClick={() => setSelectedExtra(null)}><BuyerDirectoryItem p={p} org={org} d={inv.data} mode="split" selected onClick={() => setView("public")} /></div></div>}
           panel={extraPanel ?? <div className="min-w-0 rounded-lg border border-border bg-card p-5 shadow-sm">
             {view === "public" ? profilePanel : inv.data ? <BuyerPrivatePanel d={inv.data} view={view} onView={setView} /> : <Skeleton className="h-[520px]" />}
           </div>} />
       ) : layout === "grid" ? (
-        <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="standard-card-grid">
           {isAdmin && <AdminInvestorProfiles ids={extraIds} part="directory" mode="grid" onSelect={openInSplit} />}
-          <BuyerDirectoryItem p={p} org={org} mode="grid" selected={false} onClick={openProfile} />
+          <BuyerDirectoryItem p={p} org={org} d={inv.data} mode="grid" selected={false} onClick={openProfile} />
         </div>
       ) : (
         <div className="space-y-4">
           {isAdmin && <AdminInvestorProfiles ids={extraIds} part="directory" mode="list" onSelect={openInSplit} />}
-          <BuyerDirectoryItem p={p} org={org} mode="list" selected={false} onClick={openProfile} />
+          <BuyerDirectoryItem p={p} org={org} d={inv.data} mode="list" selected={false} onClick={openProfile} />
         </div>
       )}
       <Dialog open={newOpen} onOpenChange={setNewOpen}>
@@ -379,8 +377,6 @@ function useOwnCard(p: BuyerProfile, org: BuyerOrg, supplied?: Data) {
 /** Seller-style folder-tab card (Listing view / Exclusive view) for the investor profile. */
 export function BuyerFolderCard({ p, org, d, view, onView, privateBody }: { p: BuyerProfile; org: BuyerOrg; d?: Data; view: View; onView: (v: View) => void; privateBody: React.ReactNode }) {
   const shell = "overflow-hidden rounded-b-[14px] rounded-t-none border border-accent bg-card";
-  const { iv, props } = useOwnCard(p, org, d);
-  const managedIds = useManagedIds("investor", [iv?.id]);
   return (
     <div>
       <div role="tablist" className="relative z-10 h-[58px]">
@@ -388,7 +384,7 @@ export function BuyerFolderCard({ p, org, d, view, onView, privateBody }: { p: B
         <FolderTab side="right" active={view === "private"} icon={<Lock className="h-4 w-4 shrink-0" />} title={setupText("Exclusive view")} sub={setupText("Shared after NDA")} open tone="green" onClick={() => onView("private")} />
       </div>
       {view === "public" ? (
-        <BuyerBrowseCard {...props} managed={managedIds.has(iv?.id ?? "")} onClick={() => onView("public")} className="rounded-b-[14px] rounded-t-none border-accent" />
+        <BuyerOwnerCardData p={p} org={org} d={d} mode="split" selected onClick={() => onView("public")} className="rounded-b-[14px] rounded-t-none border-accent" />
       ) : (
         <div className={shell}>{privateBody}</div>
       )}
@@ -414,35 +410,10 @@ function BuyerProfilePanel({ p, org, view, setView, onItem, onEdit, pill }: {
   </div>;
 }
 
-export function BuyerDirectoryItem({ p, org, mode, selected, onClick, ticketLabel }: {
-  p: BuyerProfile; org: BuyerOrg; mode: ViewMode; selected: boolean; onClick: () => void; ticketLabel?: string | null;
+export function BuyerDirectoryItem({ p, org, d, mode, selected, onClick }: {
+  p: BuyerProfile; org: BuyerOrg; d?: Data; mode: ViewMode; selected: boolean; onClick: () => void; ticketLabel?: string | null;
 }) {
-  const name = org.name || typeName(org.type);
-  const initials = name.split(/\s+/).slice(0, 2).map((word) => word[0]?.toUpperCase()).join("");
-  const ticket = ticketLabel === undefined ? ticketRange(p.ticket_min, p.ticket_max) : ticketLabel;
-  return <Button type="button" variant="outline" onClick={onClick}
-    className={cn("group relative flex h-auto w-full items-start justify-start gap-3 whitespace-normal rounded-lg border-border bg-card p-3 text-left shadow-card hover:border-accent hover:bg-card", mode === "grid" ? "h-full min-h-[228px] flex-col" : mode === "split" ? "min-h-[180px] flex-col" : "min-h-[100px] flex-col md:flex-row md:items-center", selected && "border-accent ring-1 ring-accent/30")}>
-    <div className={cn("flex min-w-0 items-start gap-3", mode === "list" ? "w-full md:w-[280px] md:shrink-0" : "w-full")}>
-      <div className="flex h-12 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
-        {p.logo_url ? <img src={p.logo_url} alt="" className="h-full w-full object-contain" /> : <span className="text-xs font-semibold text-muted-foreground">{initials}</span>}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-semibold group-hover:text-accent">{name}</div>
-        <div className="mt-1 text-xs font-normal text-muted-foreground">{org.type ? tr(org.type) : <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</div>
-        <div className="mt-1"><StatusChip status={p.status} /></div>
-      </div>
-    </div>
-    <div className={cn("min-w-0 text-xs font-normal text-foreground/80", mode === "list" ? "hidden flex-1 md:block" : "w-full")}>
-      <p className="line-clamp-2">{p.private_description || p.description || p.headline || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</p>
-      <div className="mt-2 flex flex-wrap gap-1">
-        {p.sectors.length ? p.sectors.slice(0, 4).map((x) => <span key={x} className="rounded-full border border-transparent bg-muted/50 px-2 py-0.5 text-[10.5px] text-muted-foreground">{tr(x)}</span>) : <span className="text-[#9CA3AF]">{setupText("Sectors not added")}</span>}
-      </div>
-    </div>
-    <div className={cn("flex items-center gap-2 text-xs font-normal text-muted-foreground", mode === "list" ? "mt-auto w-full justify-between md:ml-auto md:mt-0 md:w-auto md:shrink-0" : "mt-auto w-full justify-between")}>
-      <span className="inline-flex items-center gap-1">{ticket ? <><Coins className="h-3 w-3" /> {ticket}</> : <><MapPin className="h-3 w-3" /> {[p.city, p.country].filter(Boolean).map((v) => shortCityTh(tr(v!))).join(", ") || <span className="text-[#9CA3AF]">{setupText("Not added")}</span>}</>}</span>
-      <ArrowRight className="h-3.5 w-3.5 text-accent" />
-    </div>
-  </Button>;
+  return <BuyerOwnerCardData p={p} org={org} d={d} mode={mode} selected={selected} onClick={onClick} />;
 }
 
 function Logo({ p, org, size }: { p: BuyerProfile; org: BuyerOrg; size: number }) {

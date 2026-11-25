@@ -1,5 +1,5 @@
 import { StandardListingCard } from "@/components/marketplace/standard-listing-card";
-import { ManagedBadge } from "@/components/common/managed-badge";
+import { ListingBrowseListRow } from "@/components/marketplace/browse-list-rows";
 import { PRICE_BANDS, bandInText } from "@/lib/asking-price";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -24,8 +24,7 @@ import { ListingDetail, NdaApprovedBadge, NdaButton, NdaRequestedBadge, SaveButt
 import { InvestorBrowse } from "@/components/marketplace/investor-browse";
 import { AdvisorBrowse } from "@/components/marketplace/advisor-marketplace";
 import { usePersona } from "@/hooks/use-marketplace";
-import { ListingPill, PublicListingCard } from "@/components/hidden-profile/public-listing-card";
-import { SectorArt } from "@/components/hidden-profile/bits";
+import { PublicListingCard } from "@/components/hidden-profile/public-listing-card";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
 import { ClosedListingCard } from "@/components/marketplace/plan-strip";
@@ -216,27 +215,9 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
         </div>
       ) : (
         <div className="space-y-2">
-          {items.map((item) => {
-            const l = item.listing;
-            return (
-              <div key={item.id} data-flight-src={item.id} role="button" tabIndex={0} onClick={() => setModalId(item.id)} onKeyDown={(e) => { if (e.key === "Enter") setModalId(item.id); }}
-                className="group flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card transition-all duration-200 hover:border-accent hover:shadow-[var(--shadow-elevated)]">
-                <SectorArt src={l.coverUrl} art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId} className="h-[54px] w-[96px] shrink-0 rounded-md" />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-accent">{l.headline || l.codeName}</div>
-                  <div className="truncate text-[12px] text-muted-foreground">
-                    {[l.verified && t("Verified company"), l.hasFinancials && t("Verified financials"), l.revenueBand, l.sector, l.location].filter(Boolean).join(" · ")}
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-1.5 max-[639px]:basis-full max-[639px]:justify-end">
-                  {tagOf(item.id)}
-                  {(() => { const n = ndaOf(item.id); return <ListingPill kind={n ?? "hidden"} newDays={l.newDays} />; })()}
-                  {l.managed && <ManagedBadge size="sm" />}
-                  {star(item.id)}
-                </div>
-              </div>
-            );
-          })}
+          {items.map((item) => <div key={item.id} data-flight-src={item.id}>
+            <ListingBrowseListRow l={item.listing} deal={item} nda={ndaOf(item.id)} tag={tagOf(item.id)} star={star(item.id)} onOpen={() => setModalId(item.id)} />
+          </div>)}
           {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} c={c} star={star(c.id)} />)}
         </div>
       )}

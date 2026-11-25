@@ -51,6 +51,8 @@ import { tr } from "@/i18n/language";
 import { CompanyMenu } from "@/components/common/company-menu";
 import { useSessionContext } from "@/hooks/use-session-context";
 import { FirmNotice } from "@/components/advisor/advisor-verification";
+import { FirmBrowseList } from "@/components/marketplace/browse-list-rows";
+import { advisorOwnerStatus } from "@/lib/owner-status";
 const DECLINED_TIP = "PitchSnack declined this firm. Write to support@pitchsnack.com.";
 
 export const ADVISOR_FIRMS_KEY = ["advisor-firms", "mine"] as const;
@@ -152,7 +154,7 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
           </Button>
         ) : (
           <CompanyScrollLayout listLabel={tr("Your firm profiles")} panelLabel={sel?.name || tr("My Company")} selectedKey={sel?.id} listClassName="space-y-4"
-            list={firms.map(f => <div key={f.id} data-company-selected={sel?.id === f.id}><FirmCard f={f} selected={sel?.id === f.id} onClick={() => setOpenId(f.id)} /></div>)}
+            list={firms.map(f => <div key={f.id} data-company-selected={sel?.id === f.id}><FirmCard f={f} ownerStatus={advisorOwnerStatus(f)} selected={sel?.id === f.id} onClick={() => setOpenId(f.id)} /></div>)}
             panel={sel && <FirmPanel f={sel} views={views?.[sel.id] ?? 0} onDeletedDraft={() => setOpenId(null)} />} />
         )}
       </div>
@@ -223,26 +225,15 @@ export function AdvisorMyCompany({ initialOpen }: { initialOpen?: string } = {})
       ) : mode === "profiles" || mode === "split" ? (
         <CompanyScrollLayout mode={mode} resetKey={resetKey} selectedKey={open?.id} listLabel={tr("Your firm profiles")} panelLabel={open?.name || tr("My Company")}
           listClassName="space-y-4"
-          list={list.map(f => <div key={f.id} data-company-selected={open?.id === f.id}><FirmCard f={f} selected={open?.id === f.id} onClick={() => setOpenId(f.id)} /></div>)}
+          list={list.map(f => <div key={f.id} data-company-selected={open?.id === f.id}><FirmCard f={f} ownerStatus={advisorOwnerStatus(f)} selected={open?.id === f.id} onClick={() => setOpenId(f.id)} /></div>)}
           panel={open && <FirmPanel f={open} views={views?.[open.id] ?? 0} onDeletedDraft={() => setOpenId(null)} />} />
       ) : mode === "grid" ? (
-        <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {list.map((f) => <FirmCard key={f.id} f={f} onClick={() => { setOpenId(f.id); setMode("profiles"); }} />)}
+        <div className="standard-card-grid">
+          {list.map((f) => <FirmCard key={f.id} f={f} ownerStatus={advisorOwnerStatus(f)} onClick={() => { setOpenId(f.id); setMode("profiles"); }} />)}
         </div>
       ) : (
-        <div className="divide-y divide-border rounded-[14px] border border-border bg-card">
-          {list.map((f) => (
-            <button key={f.id} type="button" onClick={() => { setOpenId(f.id); setMode("profiles"); }} className="flex w-full items-center gap-4 px-4 py-3 text-left hover:bg-muted/40">
-              <FirmLogo f={f} size={40} radius={10} ring={false} />
-              <div className="min-w-0 flex-1">
-                <div className="font-semibold">{f.name || "New firm profile"}</div>
-                <div className="text-[13px] text-muted-foreground">{f.refNo} · {f.firmType}{f.city ? ` · ${f.city}` : ""}</div>
-              </div>
-              <div className="hidden flex-wrap gap-1.5 md:flex">{f.services.slice(0, 3).map((s) => <ServiceChip key={s} name={s} />)}</div>
-              <StatusPill status={f.status} />
-            </button>
-          ))}
-        </div>
+        <FirmBrowseList items={list} ratings={Object.fromEntries(list.map((f) => [f.id, reviewStats(f.reviews)]))}
+          ownerStatus={advisorOwnerStatus} onOpen={(id) => { setOpenId(id); setMode("profiles"); }} />
       )}
     </div>
   );
