@@ -20,6 +20,8 @@ export type ReviewRow = {
 };
 
 export type OneStepReview = {
+  /** The same authorized firm projection used by Browse and every other FirmCard host. */
+  firm?: import("./advisor-firm").AdvisorFirm;
   credentials?: { id: string; licenceKey: string; name: string; note: string | null; status: "pending" | "verified" | "rejected" }[];
   registrationNo: string | null;
   dbd: StoreState;
@@ -397,6 +399,9 @@ export async function buyerReview(sb: any, p: any, inv: any, user: any, checked:
 /* ------------------------------------------------------------- advisors */
 
 export async function advisorReview(sb: any, f: any, owner: any, checked: string[]): Promise<OneStepReview> {
+  const { loadFirmCards } = await import("./advisor-firm.functions");
+  const [firm] = await loadFirmCards(sb, [f.id]);
+  if (!firm) throw new Error("Advisor firm not found");
   const { data: credentials, error: credentialError } = await sb.from("advisor_firm_credentials").select("id, licence_key, name, note, status").eq("firm_id", f.id).order("sort_order");
   if (credentialError) throw new Error(credentialError.message);
   const { facts: dbd, state: dbdState } = await dbdFromStore(sb, f.registration_no);
@@ -406,6 +411,7 @@ export async function advisorReview(sb: any, f: any, owner: any, checked: string
   const address = [f.addr_unit, f.addr_street, f.addr_subdistrict, f.addr_district, f.addr_province, f.addr_postal].filter(Boolean).join(", ") || null;
   const deal = f.deal_size_band ?? (f.deal_min_usd_m != null && f.deal_max_usd_m != null ? `US$${f.deal_min_usd_m}M – ${f.deal_max_usd_m}M` : null);
   return {
+    firm,
     credentials: (credentials ?? []).map((c: any) => ({ id: c.id, licenceKey: c.licence_key ?? "other", name: c.name, note: c.note, status: c.status })),
     registrationNo: f.registration_no ?? null,
     dbd: dbdState,

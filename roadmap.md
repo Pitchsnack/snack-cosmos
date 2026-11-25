@@ -1,3 +1,9 @@
+# Advisor firm card figures, rating line and shared Admin preview
+- [x] Keep the firm card at 451px with its 116px cover, 150px text block, 115px figures box at 288px and centred 47px bottom row; leave seller and buyer geometry unchanged.
+- [x] Restore the firm type/since/rating line under the name, omit only an empty rating, and fit five/four whole description lines under one/two-line names in English and Thai.
+- [x] Render Admin's advisor one-step preview and Directory split list through FirmCard; move Directory favourites outside the card, use one advisor selection colour and remove owner/status/preview/cover variations without changing data or authorization.
+- [x] Four card-rule tests, six seller-review tests, five registration-rule tests and four handler tests pass; TypeScript/build pass. Without signing in, the real component passes 12 EN/TH geometry cases at 1440/1024/390px (358px phone card), and the shared fixture passes 36 seller/buyer/firm cases. Three browser-only fixture screenshots delivered; protected Browse/Admin pages were not opened.
+
 # Browse card figures, description space and shared Admin preview
 - [x] Keep every closed shared seller/buyer/firm card at 451px, with a 150px text block, a 115px figures box beginning at 288px, 43/43/27px figure rows and a vertically centred 47px bottom area.
 - [x] Recalculate whole 20px description lines from rendered title/Wants to buy space in both languages and at every width; preserve full text in Show more/tooltips and move firm type/rating into Show more.

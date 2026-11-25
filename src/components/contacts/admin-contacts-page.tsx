@@ -117,5 +117,5 @@ function statusText(s: string, language: string) {
 function ContactCompanyCards({contactId}: {contactId:string}) {
   const fn = useServerFn(getAdminContactCards);
   const {data: cards} = useSuspenseQuery({queryKey:['admin-contact-cards',contactId], queryFn: () => fn({data:{contactId}}), staleTime: 30000});
-  return <div className="contact-company-cards space-y-3">{cards.map(c => c.kind === 'seller' ? <StandardListingCard key={c.id} l={c.listing} deal={c.deal} privateData={c.privateData} hideStatus /> : c.kind === 'buyer' ? <StandardInvestorCard key={c.id} i={c.card} privateData={c.privateData} exactFigures={c.exactFigures} hideStatus /> : c.firm ? <FirmCard key={c.id} f={c.firm} noStatus /> : null)}</div>;
+  return <div className="contact-company-cards space-y-3">{cards.map(c => c.kind === 'seller' ? <StandardListingCard key={c.id} l={c.listing} deal={c.deal} privateData={c.privateData} hideStatus /> : c.kind === 'buyer' ? <StandardInvestorCard key={c.id} i={c.card} privateData={c.privateData} exactFigures={c.exactFigures} hideStatus /> : c.firm ? <FirmCard key={c.id} f={c.firm} /> : null)}</div>;
 }

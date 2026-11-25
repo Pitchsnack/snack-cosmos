@@ -9,7 +9,7 @@ import { LAST_LOGIN_LABEL, type LastLoginStep } from '@/lib/last-login';
 import { cardValue } from '@/lib/marketplace-contacts';
 
 export type StandardFigure = { label: string; value?: string | null; second?: string | null; /** Replaces the value text (e.g. a value with a "+n" badge). */ node?: ReactNode };
-export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, beforeName, figureLabel, footerDate, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip, hideRef, subtitleContent, titleContent, defaultExpanded, style }: {
+export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, beforeName, figureLabel, footerDate, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip, hideRef, subtitleContent, titleContent, defaultExpanded, style, descriptionLines }: {
   title: string; subtitle?: string; refNo: string; place?: string | null; description?: string | null;
   cover: (children: ReactNode) => ReactNode; status?: CardNdaStatus; newDays?: number | null; managed?: boolean;
   topRight?: ReactNode; badges?: { label: string; financial?: boolean }[]; figures: StandardFigure[];
@@ -23,6 +23,8 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
   lastLogin?: LastLoginStep | null; lastLoginTooltip?: string;
   /** Leave "{ref} · {place}" off the cover (the advisor cover draws its own). */
   hideRef?: boolean; subtitleContent?: ReactNode; titleContent?: ReactNode; defaultExpanded?: boolean; style?: React.CSSProperties;
+  /** Closed-card fallback before ResizeObserver measures the rendered title and intervening rows. */
+  descriptionLines?: (titleLines: 1 | 2) => number;
 }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(!!defaultExpanded);
@@ -52,7 +54,7 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
     const fit = () => setLines(Math.max(0, Math.floor((box.getBoundingClientRect().bottom - d.getBoundingClientRect().top + 0.5) / 20)));
     const observer = new ResizeObserver(fit);
     observer.observe(box); if (nameRow.current) observer.observe(nameRow.current);
-    const want = box.querySelector<HTMLElement>('.standard-card-want'); if (want) observer.observe(want);
+    const intervening = box.querySelector<HTMLElement>('.standard-card-want, .standard-advisor-byline'); if (intervening) observer.observe(intervening);
     fit();
     document.fonts?.ready.then(fit);
     return () => observer.disconnect();
@@ -98,7 +100,7 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
         {subtitle && <p className="standard-card-subtitle" title={subtitle}>{subtitleContent ?? subtitle}</p>}
       </div>
       {afterName}
-      <p ref={descRef} className={cn('standard-card-description', lines == null && (twoLines ? 'standard-card-desc-3' : 'standard-card-desc-4'))} style={lines != null && !expanded ? (lines ? { WebkitLineClamp: lines } : { display: 'none' }) : undefined} title={description ?? undefined}>{descriptionContent ?? description}</p>
+      <p ref={descRef} className={cn('standard-card-description', lines == null && !descriptionLines && (twoLines ? 'standard-card-desc-3' : 'standard-card-desc-4'))} style={!expanded ? lines != null ? (lines ? { WebkitLineClamp: lines } : { display: 'none' }) : descriptionLines ? { WebkitLineClamp: descriptionLines(twoLines ? 2 : 1) } : undefined : undefined} title={description ?? undefined}>{descriptionContent ?? description}</p>
       </div>
       {figureLabel && <div className="standard-card-caption">{figureLabel}</div>}
       <div className="standard-card-figures">
