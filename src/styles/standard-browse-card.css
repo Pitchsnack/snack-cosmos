@@ -56,6 +56,10 @@
 .standard-card-after-name .standard-card-want { margin:0; }
 .standard-card-description { margin:8px 0 0; font-size:14px; line-height:20px; color:var(--standard-copy); display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden; }
 .standard-card-text-with-after .standard-card-description { margin-top:3px; }
+/* Investor cards: the description sits 6px under Wants to buy, in italics (same size, colour and line height). */
+.standard-investor-card .standard-card-text-with-after .standard-card-description { margin-top:6px; }
+.standard-investor-card .standard-card-description { font-style:italic; }
+.standard-investor-card .standard-card-after-name { margin-top:4px; }
 .standard-card-figures { border:1px solid var(--standard-line); border-radius:12px; overflow:hidden; background:var(--standard-box); }
 .standard-card-body > .standard-card-figures { flex:none; margin-top:8px; }
 article.standard-card .standard-card-body > .standard-card-figures::before { content:none; }

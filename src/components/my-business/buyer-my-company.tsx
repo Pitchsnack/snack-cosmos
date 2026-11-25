@@ -1,7 +1,7 @@
 import { CompanyScrollLayout } from "./company-scroll-layout";
 import { CARD_COLUMN_GRID } from "@/components/my-business/card-column";
 import { setupText, tr } from "@/i18n/language";
-import { buyerListingName } from "@/lib/buyer-listing-identity";
+import { buyerListingName, buyerWantFilled } from "@/lib/buyer-listing-identity";
 import { useTranslation } from "@/i18n/language";
 import { useManagedIds } from "@/hooks/use-managed-ids";
 import { OwnerHandoverBox } from "@/components/handover/owner-check";
@@ -591,7 +591,11 @@ export function PublicPanel({ p, org, d, investorId, pill, onEdit, onOpenEdit }:
             ? <Button size="sm" className="whitespace-normal bg-[#1E2A4A] text-center text-white hover:bg-[#101d43]" disabled={listing.isPending} onClick={() => listing.mutate("live")}>{setupText("List my company so that sellers can contact me")}</Button>
           : state === "draft" && !setupDone && iv
             ? <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => openWizard()}>{setupText("Finish setup to publish")}</Button>
-            : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />{setupText("Register your company")}</Button>}
+            : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => {
+                // What you want to buy is required: open it in Listing view instead of the review.
+                if (!buyerWantFilled((p as any).suggested_headline, (p as any).suggested_headline_th)) { openProfileEdit({ section: "want", from: "public" }); return; }
+                setFailures([]); setReviewOpen(true);
+              }}><Send className="mr-1.5 h-4 w-4" />{setupText("Register your company")}</Button>}
       </div>
       <ReviewCompanyDialog open={reviewOpen} role="buyer" data={reviewData} failures={failures} submitting={reg.isPending}
         onEdit={(section) => { setReviewOpen(false); openProfileEdit({ section: section === "company" ? "company" : "description", from: section === "company" ? "private" : "public" }); }}

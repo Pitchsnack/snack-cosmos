@@ -217,9 +217,12 @@ export const publishManaged = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       await sb.from("startups").update({ visibility: "Tenant" }).eq("id", data.id).eq("visibility", "Private");
     } else if (data.kind === "investor") {
-      const { data: bp } = await sb.from("buyer_profiles").select("user_id, live_since").eq("investor_id", data.id).maybeSingle();
+      const { data: bp } = await sb.from("buyer_profiles").select("user_id, live_since, suggested_headline, suggested_headline_th").eq("investor_id", data.id).maybeSingle();
       if (!bp) throw new Error("Open the profile in My Company once to set up its buyer listing first.");
-      const { error } = await sb.from("buyer_profiles").update({ status: "live", approval_status: "approved", live_since: bp.live_since ?? now, decided_at: now, decided_by: context.userId }).eq("user_id", bp.user_id);
+      // Wants to buy is required on every investor card; publish the buyer's text as written.
+      const want = (bp.suggested_headline ?? "").trim(), wantTh = (bp.suggested_headline_th ?? "").trim();
+      if (!want && !wantTh) throw new Error("Add What you want to buy (Listing view › Description & Mandate) before publishing.");
+      const { error } = await sb.from("buyer_profiles").update({ status: "live", approval_status: "approved", live_since: bp.live_since ?? now, decided_at: now, decided_by: context.userId, published_headline: want || null, published_headline_th: wantTh || null }).eq("user_id", bp.user_id);
       if (error) throw new Error(error.message);
     } else {
       const { data: f } = await sb.from("advisor_firms").select("live_since").eq("id", data.id).maybeSingle();

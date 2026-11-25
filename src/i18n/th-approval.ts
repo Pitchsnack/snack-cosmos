@@ -7,6 +7,7 @@ export const TH_APPROVAL: Record<string, string> = {
   "Saved. The review shows the new details.": "บันทึกแล้ว หน้าตรวจสอบแสดงข้อมูลใหม่แล้ว",
   "Review": "ตรวจสอบ",
   "Translation": "คำแปล",
+  "⚠ Missing: Wants to buy": "⚠ ยังขาด: ต้องการซื้อ",
   "{n} still need their Thai or English": "ยังขาดภาษาไทยหรือภาษาอังกฤษ {n} รายการ",
   "Every text is in both languages": "ทุกข้อความมีครบทั้งสองภาษาแล้ว",
   "Texts in": "ภาษาของข้อความ",

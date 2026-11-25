@@ -265,7 +265,7 @@ export const decideOneStep = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
 
     if (data.action === "approve" && data.kind !== "advisor") {
-      const missingText = buyerApprovalTextMissing(data.publishedName, data.publishedHeadline, data.kind);
+      const missingText = buyerApprovalTextMissing(data.publishedName, data.publishedHeadline, data.kind, data.publishedHeadlineTh);
       if (missingText) throw new Error(missingText);
     } else if (data.action !== "approve") {
       if (!data.reasons?.length) throw new Error("Choose at least one reason.");

@@ -112,6 +112,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
   const [dialog, setDialog] = useState<"approve" | "request_changes" | "decline" | null>(null);
   const [reasons, setReasons] = useState<string[]>([]), [note, setNote] = useState(t(DEFAULT_NOTE));
   const [invalid, setInvalid] = useState(false), [reasonError, setReasonError] = useState("");
+  const wantMissing = invalid && item.kind === "buyer" && !headline.trim() && !headlineTh.trim();
   const editBtn = useRef<HTMLButtonElement>(null);
 
   // A refetch (after Edit information's Save) brings new saved values: take them, and keep the published
@@ -198,7 +199,9 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
   });
   const check = useMutation({ mutationFn: (row: string) => mark({ data: { kind: item.kind, id: item.id, row } }), onSuccess: () => { toast.success(t("Marked checked.")); void qc.invalidateQueries({ queryKey: KEY }); }, onError: (e: Error) => toast.error(t(e.message)) });
   const open = (action: "approve" | "request_changes" | "decline") => {
-    if (action === "approve") { setInvalid(true); if (item.kind === "seller" && (!name.trim() || !headline.trim() && !headlineTh.trim())) return; }
+    if (action === "approve") { setInvalid(true); if (item.kind === "seller" && (!name.trim() || !headline.trim() && !headlineTh.trim())) return;
+      // Every investor card shows Wants to buy: publishing waits for the published text in either language.
+      if (item.kind === "buyer" && !headline.trim() && !headlineTh.trim()) { setTab("translation"); setTimeout(() => document.getElementById("os-published-want-en")?.focus(), 60); return; } }
     setReasons([]); setNote(t(DEFAULT_NOTE)); setReasonError(""); setDialog(action);
   };
   const submit = () => {
@@ -292,7 +295,7 @@ function ReviewPanel({ item, onDone, guard }: { item: OneStepItem; onDone: () =>
             const src = key === "company_name" ? "From About Company" : key === "address" ? "From the Address tab" : key === "person_name" || key === "person_title" ? "From My Profile" : null;
             return <tr key={key} className={st !== "both" && st !== "empty" ? "os-diff-row" : ""}>
               <td><b>{key === PUBLISHED ? t("Published headline") : rowLabel(row)}</b>{src && <small>{t(src)}</small>}</td>
-              <td data-label={t("English")}>{enEditable ? <textarea className="os-tr-box" rows={1} maxLength={row.list ? undefined : row.max} value={row.en} placeholder={t("Type the English")} onChange={e => setEn(e.target.value)} aria-label={`${rowLabel(row)} · English`} /> : row.list ? <ol className="os-tr-list">{row.en.split("\n").filter(x => x.trim()).map((x, i) => <li key={i}>{x}</li>)}</ol> : <span className="os-tr-en">{row.en}</span>}</td>
+              <td data-label={t("English")}>{enEditable ? <textarea id={key === PUBLISHED ? "os-published-want-en" : undefined} aria-invalid={key === PUBLISHED && wantMissing ? true : undefined} aria-describedby={key === PUBLISHED && wantMissing ? "os-published-want-missing" : undefined} className="os-tr-box" rows={1} maxLength={row.list ? undefined : row.max} value={row.en} placeholder={t("Type the English")} onChange={e => setEn(e.target.value)} aria-label={`${rowLabel(row)} · English`} /> : row.list ? <ol className="os-tr-list">{row.en.split("\n").filter(x => x.trim()).map((x, i) => <li key={i}>{x}</li>)}</ol> : <span className="os-tr-en">{row.en}</span>}{key === PUBLISHED && wantMissing && <p id="os-published-want-missing" className="buyer-description-error">{t("⚠ Missing: Wants to buy")}</p>}</td>
               <td data-label={t("Thai")}><textarea lang="th" className="os-tr-box" rows={1} maxLength={row.list ? undefined : row.max} value={row.th} placeholder={t(row.list ? "Type the Thai, one per line" : "Type the Thai")} onChange={e => setTh(e.target.value)} aria-label={`${rowLabel(row)} · Thai`} /></td>
               <td data-label={t("Result")}>{st === "both" ? <span className="os-result-ok"><Check size={14} />{t("In both")}</span> : st === "empty" ? <span className="os-muted">—</span> : <span className="os-result-warn"><TriangleAlert size={14} />{st === "no_en" ? t("No English yet") : row.list && nTh > 0 ? fill("{k} of {n} in Thai", { k: String(nTh), n: String(nEn) }) : t("No Thai yet")}</span>}</td>
             </tr>;

@@ -34,7 +34,7 @@ function BuyerCardPreviewFrame({ children }: { children: ReactNode }) {
   return <div className="buyer-preview-frame"><p className="buyer-preview-caption"><Eye aria-hidden />{L("What sellers see", "สิ่งที่ผู้ขายเห็น")}</p>{children}</div>;
 }
 
-export function BuyerDescriptionEditor({ i, value, onChange, forced, children, suggest, source, lang, want, onWant, tour, stacked = false, wantSource, hidePreview = false, onWantSuggest, idPrefix = "f-" }: { i: CardInvestor; value: string; onChange: (value: string) => void; forced?: boolean; children?: ReactNode; suggest?: () => void; source?: ReactNode; lang?: 'en' | 'th'; want: string; onWant: (value: string) => void; tour?: { open: boolean; close: (focusField: boolean) => void }; stacked?: boolean; wantSource?: ReactNode; hidePreview?: boolean; onWantSuggest?: () => void; idPrefix?: string }) {
+export function BuyerDescriptionEditor({ i, value, onChange, forced, children, suggest, source, lang, want, onWant, tour, stacked = false, wantSource, hidePreview = false, onWantSuggest, idPrefix = "f-", wantRequired = false, wantMissing = false }: { i: CardInvestor; value: string; onChange: (value: string) => void; forced?: boolean; children?: ReactNode; suggest?: () => void; source?: ReactNode; lang?: 'en' | 'th'; want: string; onWant: (value: string) => void; tour?: { open: boolean; close: (focusField: boolean) => void }; stacked?: boolean; wantSource?: ReactNode; hidePreview?: boolean; onWantSuggest?: () => void; idPrefix?: string; /** Shows the required mark (Edit information, Review & complete). */ wantRequired?: boolean; /** Empty in both languages: shows the Missing line. */ wantMissing?: boolean }) {
   const L = useTr();
   const [touched, setTouched] = useState(false);
   const problem = buyerDescriptionError(value);
@@ -73,17 +73,17 @@ export function BuyerDescriptionEditor({ i, value, onChange, forced, children, s
     {!hidePreview && <div className="buyer-preview-col"><div className="buyer-preview-sticky"><BuyerCardPreviewFrame><StandardInvestorCard i={i} descriptionContent={description} wantBuy={wantLine} className="buyer-editor-preview" /></BuyerCardPreviewFrame></div></div>}
     <div className="buyer-description-fields"><section data-edit-sec="want" className="buyer-description-field buyer-want-field">
       <div ref={setWantAnchor} className="buyer-want-anchor">
-      <FieldRow htmlFor={`${idPrefix}suggested_headline`} label={L('What you want to buy', 'สิ่งที่ท่านต้องการซื้อ')} after={<LangTag lang={lang} />} source={wantSource} suggest={onWantSuggest} right={<span className={wantOver ? 'text-destructive font-semibold' : ''}>{wantN} / {WANT_BUY_MAX}</span>}>
+      <FieldRow htmlFor={`${idPrefix}suggested_headline`} label={<>{L('What you want to buy', 'สิ่งที่ท่านต้องการซื้อ')}{wantRequired && <span className="ml-[3px] text-[12px] font-semibold text-[#B42318] relative -top-0.5" aria-hidden>*</span>}</>} after={<LangTag lang={lang} />} source={wantSource} suggest={onWantSuggest} right={<span className={wantOver ? 'text-destructive font-semibold' : ''}>{wantN} / {WANT_BUY_MAX}</span>}>
       <textarea ref={wantBox} id={`${idPrefix}suggested_headline`} lang={lang} rows={1} value={want} autoComplete="off"
         placeholder={L('e.g. Profitable logistics firm with its own distribution channel in main cities', 'เช่น บริษัทโลจิสติกส์ที่มีกำไร และมีช่องทางจัดจำหน่ายของตนเองในเมืองหลัก')}
         onChange={(e) => onWant(singleLineDescription(e.target.value))}
         onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
-        aria-invalid={wantOver} aria-describedby="buyer-want-help buyer-want-message"
+        aria-invalid={wantOver || wantMissing} aria-required={wantRequired || undefined} aria-describedby="buyer-want-help buyer-want-message"
         className={`buyer-want-input ${wantOver ? 'buyer-want-invalid' : ''}`} />
       </FieldRow>
       </div>
       <p id="buyer-want-help" className="buyer-description-help" style={tour?.open ? { visibility: 'hidden' } : undefined}>{L("Sellers see it on your card in Browse investors. Admin reviews it before it's published.", 'ผู้ขายจะเห็นข้อความนี้บนการ์ดของท่านในหน้าค้นหานักลงทุน ผู้ดูแลระบบจะตรวจสอบก่อนเผยแพร่')}</p>
-      <div id="buyer-want-message" aria-live="polite">{wantOver ? <p className="buyer-description-error">{L('Keep it to 80 characters.', 'โปรดเขียนไม่เกิน 80 ตัวอักษร')}</p> : null}</div>
+      <div id="buyer-want-message" aria-live="polite">{wantOver ? <p className="buyer-description-error">{L('Keep it to 80 characters.', 'โปรดเขียนไม่เกิน 80 ตัวอักษร')}</p> : wantMissing ? <p className="buyer-description-error">{L('⚠ Missing: What you want to buy', '⚠ ยังขาด: สิ่งที่ท่านต้องการซื้อ')}</p> : null}</div>
       {tour?.open && <WantTour anchor={wantAnchor} onClose={tour.close} />}
     </section><section data-edit-sec="description" className="buyer-description-field buyer-description-main-field">
       <FieldRow htmlFor={`${idPrefix}description`} label={<>{L('Description', 'คำอธิบาย')} <span className="buyer-label-explanation">{L('(1–2 sentences)', '(1–2 ประโยค)')}</span></>} after={<LangTag lang={lang} />} source={source} suggest={suggest} right={<span className={descriptionWords(value) > 25 ? 'text-destructive font-semibold' : ''}>{descriptionWords(value)} / 25 {L('words','คำ')}</span>}>
