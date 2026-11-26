@@ -202,7 +202,7 @@ export function InvestorBrowse() {
     const fav = favOf(i.id);
     const star = <StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />;
     return <FavViewCard key={i.id} side="seller" ndaTabs name={fav?.priv?.investor_name ?? i.codeName} hasPrivate={!!fav} view={viewOf(i.id)} open={open}
-      onView={(v) => { setView(i.id, v); onOpen(v); }}
+      onView={(v) => setView(i.id, v)}
       privateBody={fav?.priv ? <StandardInvestorCard i={cardInvestor(i)} privateData={fav.priv} ndaBadges onClick={() => onOpen("private")} topRight={star} /> : undefined}
       publicBody={<StandardInvestorCard i={cardInvestor(i)} tag={tagOf(i.id)} ndaBadges onClick={() => onOpen("public")} topRight={star} />} />;
   };

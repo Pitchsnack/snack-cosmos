@@ -103,7 +103,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
   const tabbed = (x: Teaser, open: boolean, onOpen: (v: FavView) => void) => {
     const fav = favOf(x.id);
     return <FavViewCard side="buyer" ndaTabs name={fav?.priv?.companyName ?? x.listing.codeName ?? x.listing.refNo ?? ""} hasPrivate={!!fav} view={viewOf(x.id)} open={open}
-      onView={(v) => { setView(x.id, v); onOpen(v); }}
+      onView={(v) => setView(x.id, v)}
       privateBody={fav?.priv ? <StandardListingCard l={x.listing} deal={x} status={ndaOf(x.id)} privateData={fav.priv} ndaBadges onSelect={() => onOpen("private")} topRight={star(x.id)} /> : undefined}
       publicBody={<StandardListingCard tag={tagOf(x.id)} l={x.listing} deal={x} status={ndaOf(x.id)} ndaBadges onSelect={() => onOpen("public")} topRight={star(x.id)} />} />;
   };

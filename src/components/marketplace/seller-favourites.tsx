@@ -177,7 +177,7 @@ export function SellerFavourites() {
           <div className="space-y-5">
             {items.map((f) => {
               const go = (v: FavView) => { setView(f.id, v); if (wide) setSelected(f.id); else setModalId(f.id); };
-              return card(f, wide && current?.id === f.id, go, go);
+              return card(f, wide && current?.id === f.id, go, (v) => setView(f.id, v));
             })}
           </div>
           {wide && current && (
