@@ -1,5 +1,5 @@
 import { useId, useRef } from "react";
-import { Eye, LockOpen } from "lucide-react";
+import { Eye, Lock, LockOpen } from "lucide-react";
 import { FolderTab } from "@/components/my-business/my-business-profiles";
 import { useTranslation } from "@/i18n/language";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ export type FavView = "private" | "public";
  * Favourites card: with an approved NDA, My Company's folder tabs (Exclusive view
  * left and in front by default, Listing view right); otherwise one public card.
  */
-export function FavViewCard({ name, hasPrivate, view, open, side, onView, privateBody, publicBody, reserveTabs }: {
+export function FavViewCard({ name, hasPrivate, view, open, side, onView, privateBody, publicBody, reserveTabs, ndaTabs }: {
   name: string;
   hasPrivate: boolean;
   view: FavView;
@@ -22,6 +22,8 @@ export function FavViewCard({ name, hasPrivate, view, open, side, onView, privat
   publicBody: React.ReactNode;
   /** Legacy caller option; all cards now use a real folder-tab row. */
   reserveTabs?: boolean;
+  /** Seller watchlist and the two Browse pages: both tabs on every card; Exclusive view greyed out and inert until the NDA is approved. */
+  ndaTabs?: boolean;
 }) {
   const { t } = useTranslation();
   const bodyId = useId();
@@ -34,16 +36,19 @@ export function FavViewCard({ name, hasPrivate, view, open, side, onView, privat
     if (e.key === "ArrowRight") { e.preventDefault(); go("public"); }
   };
   return (
-    <div className="@container">
+    <div className={cn("@container", ndaTabs && "standard-nda-tabs")} data-open={open || undefined}>
       <div role="tablist" aria-label={`${t("Views of")} ${name}`} onKeyDown={onKey} className="standard-watch-tabs relative z-10 h-[58px]">
+        {ndaTabs && !hasPrivate && <FolderTab side="left" active={false} open={open} tone="green" compactNarrow locked
+          icon={<Lock className="h-4 w-4 shrink-0" />} title={t("Exclusive view")} sub={t("After NDA approval")}
+          controls={bodyId} onClick={() => {}} />}
         {hasPrivate && <FolderTab side="left" active={v === "private"} open={open} tone="green" compactNarrow
           icon={<LockOpen className="h-4 w-4 shrink-0" />} title={t("Exclusive view")} sub={t("Shared under your NDA")}
           controls={bodyId} tabRef={(el) => { refs.current.private = el; }} onClick={() => onView("private")} />}
-        <FolderTab side={hasPrivate ? "right" : "left"} active={v === "public"} open={open} tone="indigo" compactNarrow
+        <FolderTab side={hasPrivate || ndaTabs ? "right" : "left"} active={v === "public"} open={open} tone="indigo" compactNarrow
           icon={<Eye className="h-4 w-4 shrink-0" />} title={t("Listing view")} sub={t(side === "advisor" ? "What everyone sees" : side === "buyer" ? "What every buyer sees" : "What every seller sees")}
           controls={bodyId} tabRef={(el) => { refs.current.public = el; }} onClick={() => onView("public")} />
       </div>
-      <div id={bodyId} role="tabpanel" className={cn("overflow-hidden rounded-b-[14px] rounded-t-none border bg-card", open ? "border-accent" : "border-border", strip)}>
+      <div id={bodyId} role="tabpanel" className={cn("standard-nda-body overflow-hidden rounded-b-[14px] rounded-t-none border bg-card", open ? "border-accent" : "border-border", strip)}>
         {v === "private" ? privateBody : publicBody}
       </div>
     </div>

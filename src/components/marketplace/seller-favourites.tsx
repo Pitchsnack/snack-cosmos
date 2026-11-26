@@ -95,9 +95,9 @@ export function SellerFavourites() {
     : f.status === "requested" ? <><Clock className="h-3 w-3 text-[#B45309]" />{t("NDA requested")}</> : undefined;
   const card = (f: SellerFavourite, open: boolean, onOpen: (v: FavView) => void, onView: (v: FavView) => void, reserve?: boolean) => (
     <FavViewCard key={f.id} side="seller" name={f.priv?.investor_name ?? f.codeName} hasPrivate={!!f.priv} view={viewOf(f)} open={open}
-      onView={onView} reserveTabs={reserve}
-      privateBody={f.priv ? <StandardInvestorCard i={f} privateData={f.priv} onClick={() => onOpen("private")} topRight={star(f)} /> : undefined}
-      publicBody={<StandardInvestorCard i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} onClick={() => onOpen("public")} topRight={star(f)} />} />
+      onView={onView} reserveTabs={reserve} ndaTabs
+      privateBody={f.priv ? <StandardInvestorCard i={f} privateData={f.priv} onClick={() => onOpen("private")} topRight={star(f)} ndaBadges /> : undefined}
+      publicBody={<StandardInvestorCard i={f} tag={matches[f.id] ? <MatchTag side="seller" /> : undefined} onClick={() => onOpen("public")} topRight={star(f)} ndaBadges />} />
   );
   const panel = (f: SellerFavourite) => {
     const v = viewOf(f);

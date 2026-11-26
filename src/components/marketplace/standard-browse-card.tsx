@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { ChevronDown, CircleCheck, Clock, EyeOff, FileText, LockOpen, LogIn } from 'lucide-react';
+import { ChevronDown, CircleCheck, Clock, EyeOff, FileText, Lock, LockOpen, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ManagedBadge, useCoverFit } from '@/components/common/managed-badge';
 import { useTranslation } from '@/i18n/language';
@@ -10,7 +10,7 @@ import { cardValue } from '@/lib/marketplace-contacts';
 import { OWNER_STATUS_LABEL, type OwnerStatus } from '@/lib/owner-status';
 
 export type StandardFigure = { label: string; value?: string | null; second?: string | null; /** Replaces the value text (e.g. a value with a "+n" badge). */ node?: ReactNode };
-export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, beforeName, figureLabel, footerDate, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip, hideRef, subtitleContent, titleContent, defaultExpanded, style, ownerStatus, ownerStatusOnCover = true }: {
+export function StandardBrowseCard({ title, subtitle, refNo, place, description, cover, status = 'hidden', hideStatus, newDays, managed, topRight, badges, figures, fit, focusRow, descriptionContent, afterName, beforeName, figureLabel, footerDate, textRow, more, selected, onOpen, className, sourceType, tag, lastLogin, lastLoginTooltip, hideRef, subtitleContent, titleContent, defaultExpanded, style, ownerStatus, ownerStatusOnCover = true, ndaBadges }: {
   title: string; subtitle?: string; refNo: string; place?: string | null; description?: string | null;
   cover: (children: ReactNode) => ReactNode; status?: CardNdaStatus; newDays?: number | null; managed?: boolean;
   topRight?: ReactNode; badges?: { label: string; financial?: boolean }[]; figures: StandardFigure[];
@@ -28,6 +28,8 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
   ownerStatus?: OwnerStatus;
   /** Firm cards turn this off because their centred logo can reach the top-left pill area. */
   ownerStatusOnCover?: boolean;
+  /** Seller watchlist and Browse pages: red NDA requested, and Required NDA in place of Name hidden. */
+  ndaBadges?: boolean;
 }) {
   const { t, language } = useTranslation();
   const [expanded, setExpanded] = useState(!!defaultExpanded);
@@ -55,8 +57,8 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
     document.fonts?.ready.then(fit);
     return () => observer.disconnect();
   }, [expanded, title, subtitle, description, language]);
-  const statusLabel = status === 'approved' ? 'NDA approved' : status === 'requested' ? 'NDA requested' : 'Name hidden';
-  const StatusIcon = status === 'approved' ? LockOpen : status === 'requested' ? Clock : EyeOff;
+  const statusLabel = status === 'approved' ? 'NDA approved' : status === 'requested' ? 'NDA requested' : ndaBadges ? 'Required NDA' : 'Name hidden';
+  const StatusIcon = status === 'approved' ? LockOpen : status === 'requested' ? Clock : ndaBadges ? Lock : EyeOff;
   const statusTip = newDays != null ? `${t(statusLabel)} · ${t('New, listed')} ${newDays} ${t(newDays === 1 ? 'day ago' : 'days ago')}` : t(statusLabel);
   const figure = (f: StandardFigure, highlight = false) => <dl className={cn('standard-card-cell', highlight && !!f.value && 'standard-card-fit')}>
     <dt title={t(f.label)}>{t(f.label)}</dt><dd>{f.node ?? <span className={cn('standard-card-value', !f.value && 'standard-card-empty')} title={[f.value, f.second].filter(Boolean).join(' · ') || undefined}>{f.value || t('Not stated')}</span>}{f.second && <span className="standard-card-second" title={f.second}>{f.second}</span>}</dd>
@@ -80,7 +82,7 @@ export function StandardBrowseCard({ title, subtitle, refNo, place, description,
         <div className="standard-card-top">
           {ownerStatus
             ? ownerStatusOnCover && <span ref={coverFit.left as React.RefObject<HTMLSpanElement>} className="standard-card-status standard-card-owner-status" data-status={ownerStatus}>{t(OWNER_STATUS_LABEL[ownerStatus])}</span>
-            : !hideStatus && <span ref={coverFit.left as React.RefObject<HTMLSpanElement>} className={cn('standard-card-status', `standard-card-status-${status}`)} title={statusTip}>
+            : !hideStatus && <span ref={coverFit.left as React.RefObject<HTMLSpanElement>} className={cn('standard-card-status', `standard-card-status-${status}`, ndaBadges && status !== 'approved' && 'standard-card-status-nda')} title={statusTip}>
               <StatusIcon aria-hidden /><span>{t(statusLabel)}</span>{newDays != null && <span className="standard-card-new">{t('NEW')}</span>}
             </span>}
           {!hideRef && <span className="standard-card-ref" title={[refNo, place].filter(Boolean).join(' · ')}><span className="standard-card-ref-no">{refNo}</span>{place && <><span className="standard-card-ref-no">&nbsp;·&nbsp;</span><span className="standard-card-ref-place">{place}</span></>}</span>}

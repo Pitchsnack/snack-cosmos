@@ -151,3 +151,23 @@ article.standard-card .standard-card-body > .standard-card-figures::before { con
 .standard-card-star { color:var(--standard-star); }
 .standard-card-star-zero { color:var(--standard-faint); }
 .standard-advisor-cover { position:relative; height:100%; }
+/* NDA tabs on Seller watchlist, Browse investors and Browse listings */
+.standard-card-status-requested.standard-card-status-nda { background:#FFFFFF; border-color:#F87171; color:#B91C1C; }
+.standard-card-status-hidden.standard-card-status-nda { background:#FEE2E2; border-color:#FCA5A5; color:#B91C1C; }
+.standard-nda-tabs .standard-watch-tabs button[aria-selected=false] { background:#FFFFFF; border-color:#DCDFE5; color:#4B5563; }
+.standard-nda-tabs .standard-watch-tabs button[data-locked] { background:#F3F4F6; border-color:#E3E6EB; color:#A3A9B4; cursor:not-allowed; }
+.standard-nda-tabs .standard-watch-tabs button[data-locked] svg { color:#B6BCC6; }
+.standard-nda-tabs .standard-watch-tabs button[data-locked] span span { color:#A3A9B4; }
+@media (hover:hover) and (pointer:fine) {
+  .standard-nda-tabs:not([data-open]):hover .standard-nda-body,
+  .standard-nda-tabs:not([data-open]):hover .standard-watch-tabs button[aria-selected=true],
+  .standard-nda-tabs .standard-watch-tabs button[aria-selected=false]:not([data-locked]):hover { border-color:#F6A823; }
+}
+@media (max-width:519px) {
+  .standard-nda-tabs .standard-watch-tabs button[aria-selected=true] { width:58%; padding-left:10px; padding-right:10px; }
+  .standard-nda-tabs .standard-watch-tabs button[aria-selected=false] { width:48%; }
+  .standard-nda-tabs .standard-watch-tabs button[aria-selected=false]:last-child { padding-left:calc(6% + 10px); padding-right:10px; }
+  .standard-nda-tabs .standard-watch-tabs button[aria-selected=false]:first-child { padding-right:calc(6% + 10px); padding-left:10px; }
+  .standard-nda-tabs .standard-watch-tabs button span span { font-size:13.5px; }
+  .standard-nda-tabs .standard-watch-tabs button span span + span { font-size:11px; }
+}

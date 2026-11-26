@@ -11,10 +11,10 @@ import { contactPlace, cardValue } from '@/lib/marketplace-contacts';
 import type { FavPrivate } from '@/lib/favourites.functions';
 import type { OwnerStatus } from '@/lib/owner-status';
 
-export function StandardListingCard({ l, deal, privateData, publicOnly, status, hideStatus, selected, onSelect, topRight, tag, className, discovery = false, afterTypeRow, figureLabel, footerDate, ownerStatus }: {
+export function StandardListingCard({ l, deal, privateData, publicOnly, status, hideStatus, selected, onSelect, topRight, tag, className, discovery = false, afterTypeRow, figureLabel, footerDate, ownerStatus, ndaBadges }: {
   l: PublicListing; deal?: ListingDeal; privateData?: Omit<FavPrivate, 'ndaApprovedAt' | 'ndaValidUntil'> | null; publicOnly?: boolean; status?: string | null; hideStatus?: boolean;
   selected?: boolean; onSelect?: () => void; topRight?: ReactNode; tag?: ReactNode; className?: string; discovery?: boolean;
-  afterTypeRow?: ReactNode; figureLabel?: string; footerDate?: string; ownerStatus?: OwnerStatus;
+  afterTypeRow?: ReactNode; figureLabel?: string; footerDate?: string; ownerStatus?: OwnerStatus; ndaBadges?: boolean;
 }) {
   const { t, language } = useTranslation();
   const p = privateData;
@@ -26,7 +26,7 @@ export function StandardListingCard({ l, deal, privateData, publicOnly, status, 
   const initials = p?.companyName.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const lt = listingText(l, language);
   return <StandardBrowseCard title={p?.companyName || lt.headline} subtitle={p ? lt.headline : undefined} refNo={l.refNo} place={contactPlace(p?.location || l.location?.replace(/, Thailand$/, ''),language)}
-    description={p ? p.description : lt.description} status={cardNdaStatus(status)} hideStatus={hideStatus} newDays={l.newDays} managed={l.managed} topRight={topRight} tag={tag} selected={selected} onOpen={onSelect} className={className} ownerStatus={ownerStatus}
+    description={p ? p.description : lt.description} status={cardNdaStatus(status)} hideStatus={hideStatus} newDays={l.newDays} managed={l.managed} topRight={topRight} tag={tag} selected={selected} onOpen={onSelect} className={className} ownerStatus={ownerStatus} ndaBadges={ndaBadges}
     lastLogin={discovery ? null : l.lastLoginStep} lastLoginTooltip={t('When the seller last logged in to PitchSnack')} beforeName={afterTypeRow} figureLabel={figureLabel} footerDate={footerDate}
     cover={(children) => p ? <div className="standard-card-private-cover">{p.photoUrl ? <img src={p.photoUrl} alt="" /> : <div className="standard-card-logo">{logo ? <img src={logo} alt="" /> : initials}</div>}{children}</div> : <SectorArt src={l.coverUrl} art={l.coverArt ?? l.sector} sector={l.sector} imageId={l.publicImageId} instantCached={discovery}>{children}</SectorArt>}
     badges={[...(l.certified ? [{ label: 'Certified' }] : []), ...(l.verified ? [{ label: 'Verified company' }] : []), ...(l.hasFinancials ? [{ label: 'Verified financials', financial: true }] : [])]}

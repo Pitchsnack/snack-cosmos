@@ -198,12 +198,14 @@ export function Row({ label, link, onClick, circle }: { label: string; link: str
 
 /* --------------------------- Left: tabbed card ---------------------------- */
 
-export function FolderTab({ active, open, side, icon, title, sub, tone, onClick, controls, tabRef, compactNarrow }: {
+export function FolderTab({ active, open, side, icon, title, sub, tone, onClick, controls, tabRef, compactNarrow, locked }: {
   active: boolean; open?: boolean; side: "left" | "right"; icon: React.ReactNode; title: string; sub: string; tone: "indigo" | "green"; onClick: () => void;
   /** Optional a11y wiring (Favourites): the panel id, and roving focus. */
   controls?: string; tabRef?: (el: HTMLButtonElement | null) => void;
   /** Tighter front-tab padding inside an @container narrower than 340px. */
   compactNarrow?: boolean;
+  /** Greyed-out, inert tab (Exclusive view before an approved NDA): shows its sub line behind. */
+  locked?: boolean;
 }) {
   return (
     <button
@@ -213,7 +215,11 @@ export function FolderTab({ active, open, side, icon, title, sub, tone, onClick,
       aria-selected={active}
       aria-controls={controls}
       tabIndex={controls ? (active ? 0 : -1) : undefined}
-      onClick={onClick}
+      aria-disabled={locked || undefined}
+      data-locked={locked || undefined}
+      title={locked ? sub : undefined}
+      onClick={locked ? (e) => { e.preventDefault(); e.stopPropagation(); } : onClick}
+      onKeyDown={locked ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); } } : undefined}
       className={cn(
         "absolute flex items-center overflow-hidden rounded-t-[12px] border border-b-0 text-left transition-[width,height,background-color] duration-200 ease-in-out",
         side === "left" ? "left-0" : "right-0",
@@ -229,7 +235,7 @@ export function FolderTab({ active, open, side, icon, title, sub, tone, onClick,
       {icon}
       <span className="min-w-0">
         <span className={cn("block truncate whitespace-nowrap text-[14px] leading-tight", active ? "font-bold" : "font-semibold")}>{setupText(title)}</span>
-        {active && (
+        {(active || locked) && (
           <span className={cn("mt-px block truncate whitespace-nowrap text-[11.5px] leading-snug",
             tone === "indigo" ? "text-indigo-700 dark:text-indigo-300" : "text-green-800 dark:text-green-400")}>{sub}</span>
         )}

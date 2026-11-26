@@ -1,4 +1,6 @@
 import { StandardInvestorCard } from "@/components/marketplace/standard-investor-card";
+import { FavViewCard, type FavView } from "@/components/marketplace/fav-view-card";
+import { PrivateInvestorPanel } from "@/components/marketplace/private-investor-panel";
 import { InvestorBrowseListRow } from "@/components/marketplace/browse-list-rows";
 import { ConnectButton } from "@/components/marketplace/connect-invite";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -191,6 +193,20 @@ export function InvestorBrowse() {
   const { data: favourites } = useQuery({ queryKey: ["seller-favourites"], queryFn: () => fetchFavourites() });
   const all = useMemo(() => (data ?? []) as PublicInvestor[], [data]);
   const cardInvestor = (i: PublicInvestor) => ({ ...i, status: favourites?.find((f) => f.id === i.id)?.status });
+  // Private fields come only from the watchlist reader's approved, valid NDA gate.
+  const favOf = (id: string) => { const f = favourites?.find((x) => x.id === id); return f?.priv ? f : null; };
+  const [views, setViews] = useState<Record<string, FavView>>({});
+  const viewOf = (id: string): FavView => (favOf(id) ? views[id] ?? "private" : "public");
+  const setView = (id: string, v: FavView) => setViews((m) => ({ ...m, [id]: v }));
+  const tabbed = (i: PublicInvestor, open: boolean, onOpen: (v: FavView) => void) => {
+    const fav = favOf(i.id);
+    const star = <StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />;
+    return <FavViewCard key={i.id} side="seller" ndaTabs name={fav?.priv?.investor_name ?? i.codeName} hasPrivate={!!fav} view={viewOf(i.id)} open={open}
+      onView={(v) => { setView(i.id, v); onOpen(v); }}
+      privateBody={fav?.priv ? <StandardInvestorCard i={cardInvestor(i)} privateData={fav.priv} ndaBadges onClick={() => onOpen("private")} topRight={star} /> : undefined}
+      publicBody={<StandardInvestorCard i={cardInvestor(i)} tag={tagOf(i.id)} ndaBadges onClick={() => onOpen("public")} topRight={star} />} />;
+  };
+  const privatePanel = (id: string) => { const fav = favOf(id); return fav && viewOf(id) === "private" ? <div className="min-h-0 flex-1 overflow-y-auto p-5 pr-12"><PrivateInvestorPanel f={fav} /></div> : null; };
 
   const { view, persist } = usePersistentView("ps-investor-browse-view", undefined);
   const { ids: savedIds, toggle: toggleSave } = useSavedInvestors();
@@ -295,7 +311,7 @@ export function InvestorBrowse() {
       ) : view === "grid" ? (
         items.length === 0 ? empty : (
           <div className="standard-card-grid">
-            {items.map((i) => <StandardInvestorCard key={i.id} i={cardInvestor(i)} tag={tagOf(i.id)} onClick={() => setModalId(i.id)} topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />)}
+            {items.map((i) => tabbed(i, false, (v) => { setView(i.id, v); setModalId(i.id); }))}
           </div>
         )
       ) : view === "split" ? (
@@ -304,15 +320,13 @@ export function InvestorBrowse() {
             className={cn("space-y-3 outline-none", splitFixed && "min-h-0 overflow-y-scroll pr-2 [scrollbar-gutter:stable]")}>
             {items.length === 0 ? empty : items.map((i) => (
               <div key={i.id} data-id={i.id}>
-                <StandardInvestorCard i={cardInvestor(i)} tag={tagOf(i.id)} selected={current?.id === i.id}
-                  onClick={() => setSelected(i.id)}
-                  topRight={<StarBtn saved={savedIds.has(i.id)} onClick={() => toggleSave(i.id)} />} />
+                {tabbed(i, current?.id === i.id, (v) => { setView(i.id, v); if (wide) setSelected(i.id); else setModalId(i.id); })}
               </div>
             ))}
           </div>
           {wide && (
             <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
-              {current ? (
+              {current ? privatePanel(current.id) ?? (
                 <InvestorDetail key={current.id} i={current} match={matches[current.id]} saved={savedIds.has(current.id)} onSave={() => toggleSave(current.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(current.id)} onClick={() => toggleSave(current.id)} /><ConnectButton big investorId={current.id} investorRef={current.refNo} /></div>} />
               ) : (
                 <p className="px-6 py-16 text-center text-sm text-muted-foreground">No investor selected. Widen or clear the filters to see investors.</p>
@@ -328,7 +342,7 @@ export function InvestorBrowse() {
       )}
       <Dialog open={!!modal} onOpenChange={(o) => !o && setModalId(null)}>
         <DialogContent className="max-h-[88vh] overflow-y-auto p-0 sm:max-w-[820px]">
-          {modal && <InvestorDetail key={modal.id} i={modal} match={matches[modal.id]} saved={savedIds.has(modal.id)} onSave={() => toggleSave(modal.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(modal.id)} onClick={() => toggleSave(modal.id)} /><ConnectButton big investorId={modal.id} investorRef={modal.refNo} /></div>} />}
+          {modal && (privatePanel(modal.id) ?? <InvestorDetail key={modal.id} i={modal} match={matches[modal.id]} saved={savedIds.has(modal.id)} onSave={() => toggleSave(modal.id)} actions={<div className="flex shrink-0 gap-2"><StarBtn saved={savedIds.has(modal.id)} onClick={() => toggleSave(modal.id)} /><ConnectButton big investorId={modal.id} investorRef={modal.refNo} /></div>} />)}
         </DialogContent>
       </Dialog>
     </div>

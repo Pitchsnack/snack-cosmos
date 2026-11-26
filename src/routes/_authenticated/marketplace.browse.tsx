@@ -1,4 +1,7 @@
 import { StandardListingCard } from "@/components/marketplace/standard-listing-card";
+import { FavViewCard, type FavView } from "@/components/marketplace/fav-view-card";
+import { PrivateListingPanel } from "@/components/marketplace/private-listing-panel";
+import { listFavourites } from "@/lib/favourites.functions";
 import { ListingBrowseListRow } from "@/components/marketplace/browse-list-rows";
 import { PRICE_BANDS, bandInText } from "@/lib/asking-price";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -90,6 +93,24 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
     setSent({ listingId: id, name: item?.listing.codeName || item?.listing.refNo || t("This listing"), invitationId: info?.invitationId ?? null, saved: savedIds.has(id) });
   };
   const invited = useInvitedListings();
+  // Private fields come only from the watchlist reader's approved, valid NDA gate.
+  const favFn = useServerFn(listFavourites);
+  const { data: favs } = useQuery({ queryKey: ["favourites", "list"], queryFn: () => favFn(), enabled: enabled && buyer });
+  const favOf = (id: string) => { const f = favs?.find((x) => x.id === id); return f?.priv ? f : null; };
+  const [views, setViews] = useState<Record<string, FavView>>({});
+  const viewOf = (id: string): FavView => (favOf(id) ? views[id] ?? "private" : "public");
+  const setView = (id: string, v: FavView) => setViews((m) => ({ ...m, [id]: v }));
+  const tabbed = (x: Teaser, open: boolean, onOpen: (v: FavView) => void) => {
+    const fav = favOf(x.id);
+    return <FavViewCard side="buyer" ndaTabs name={fav?.priv?.companyName ?? x.listing.codeName ?? x.listing.refNo ?? ""} hasPrivate={!!fav} view={viewOf(x.id)} open={open}
+      onView={(v) => { setView(x.id, v); onOpen(v); }}
+      privateBody={fav?.priv ? <StandardListingCard l={x.listing} deal={x} status={ndaOf(x.id)} privateData={fav.priv} ndaBadges onSelect={() => onOpen("private")} topRight={star(x.id)} /> : undefined}
+      publicBody={<StandardListingCard tag={tagOf(x.id)} l={x.listing} deal={x} status={ndaOf(x.id)} ndaBadges onSelect={() => onOpen("public")} topRight={star(x.id)} />} />;
+  };
+  const privatePanel = (id: string) => {
+    const fav = favOf(id);
+    return fav && viewOf(id) === "private" ? <PrivateListingPanel f={fav} code={[fav.listing.codeName, fav.listing.refNo].filter(Boolean).join(" · ")} /> : null;
+  };
   const star = (id: string) => <SaveButton square nda={!!ndaOf(id)} saved={savedIds.has(id)} onClick={() => toggleSave(id)} />;
   const badgeOf = (id: string) => { const n = ndaOf(id); return n === "approved" ? <NdaApprovedBadge /> : n === "requested" ? <NdaRequestedBadge /> : buyer && invited.has(id) ? <InvitedYouChip /> : undefined; };
   const raw = (data ?? []) as Array<Teaser | ClosedTeaser>;
@@ -183,7 +204,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
       ) : !ownOnly && view === "grid" ? (
         <div className="standard-card-grid">
           {items.map((t) => (
-            <div key={t.id} data-flight-src={t.id}><StandardListingCard tag={tagOf(t.id)} l={t.listing} deal={t} status={ndaOf(t.id)} onSelect={() => setModalId(t.id)} topRight={star(t.id)} /></div>
+            <div key={t.id} data-flight-src={t.id}>{tabbed(t, false, (v) => { setView(t.id, v); setModalId(t.id); })}</div>
           ))}
           {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} c={c} star={star(c.id)} />)}
         </div>
@@ -191,21 +212,20 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
         <div className={splitFixed ? "!shrink grid min-h-0 flex-1 grid-cols-[400px_minmax(0,1fr)] gap-[18px]" : "grid items-start gap-[18px] min-[1100px]:grid-cols-[400px_minmax(0,1fr)]"}>
           <div ref={listRef} className={splitFixed ? "min-h-0 space-y-3 overflow-y-scroll pr-2 [scrollbar-gutter:stable]" : "space-y-3"}>
             {items.map((t) => (
-              <div key={t.id} data-flight-src={t.id}><StandardListingCard
+              <div key={t.id} data-flight-src={t.id}>{ownOnly ? <StandardListingCard
                 tag={tagOf(t.id)}
                 l={t.listing}
                 deal={t}
                 selected={wide && current?.id === t.id}
                 onSelect={() => { if (wide) setSelected(t.id); else setModalId(t.id); }}
                 status={ndaOf(t.id)}
-                topRight={ownOnly ? undefined : star(t.id)}
-              /></div>
+              /> : tabbed(t, wide && current?.id === t.id, (v) => { setView(t.id, v); if (wide) setSelected(t.id); else setModalId(t.id); })}</div>
             ))}
             {!hasFilter && closedItems.map((c) => <ClosedListingCard key={c.id} c={c} star={star(c.id)} />)}
           </div>
           {wide && (
             <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
-              {current ? (
+              {current ? (!ownOnly && privatePanel(current.id)) || (
                 <BrowsePanel match={buyer ? matches[current.id] : undefined} t={current} ownOnly={!!ownOnly} invited={buyer && invited.has(current.id)} nda={ndaOf(current.id)} saved={savedIds.has(current.id)} onToggleSave={() => toggleSave(current.id)} onRequested={onRequested} />
               ) : (
                 <p className="py-16 text-center text-sm text-muted-foreground">{t("Select a listing to see the details.")}</p>
@@ -226,7 +246,7 @@ function BrowseListingsPage({ ownOnly, directId }: { ownOnly?: string | null; di
         <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-[820px]">
           {modal && (
             <div className="-m-6 flex flex-col">
-              <BrowsePanel match={buyer ? matches[modal.id] : undefined} t={modal} ownOnly={!!ownOnly} invited={buyer && invited.has(modal.id)} nda={ndaOf(modal.id)} saved={savedIds.has(modal.id)} onToggleSave={() => toggleSave(modal.id)} onRequested={onRequested} />
+              {(!ownOnly && privatePanel(modal.id)) || <BrowsePanel match={buyer ? matches[modal.id] : undefined} t={modal} ownOnly={!!ownOnly} invited={buyer && invited.has(modal.id)} nda={ndaOf(modal.id)} saved={savedIds.has(modal.id)} onToggleSave={() => toggleSave(modal.id)} onRequested={onRequested} />}
             </div>
           )}
         </DialogContent>

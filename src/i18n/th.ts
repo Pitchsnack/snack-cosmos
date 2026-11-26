@@ -598,6 +598,8 @@ export const TH: Record<string, string> = { ...TH_ADVISORS, ...TH_WIZARDS, ...TH
   "Views of": "มุมมองของ",
   "Shared under your NDA": "แชร์ภายใต้ NDA ของคุณ",
   "What every buyer sees": "สิ่งที่ผู้ซื้อทุกคนเห็น",
+  "After NDA approval": "หลังอนุมัติ NDA",
+  "Required NDA": "ต้องลงนาม NDA",
   "What every seller sees": "สิ่งที่ผู้ขายทุกคนเห็น",
   "What every buyer sees in Browse listings.": "สิ่งที่ผู้ซื้อทุกคนเห็นในหน้าเลือกดูรายการ",
   "What every seller sees in Browse investors.": "สิ่งที่ผู้ขายทุกคนเห็นในหน้าเลือกดูนักลงทุน",
