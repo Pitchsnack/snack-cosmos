@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { StartupCard } from "@/components/startups/startup-card";
+import { SellerOwnerCardData } from "@/components/my-business/seller-owner-card";
 import { StartupEditPopup } from "@/components/startups/startup-edit-popup";
 import { StartupListItem } from "@/components/startups/startup-list-item";
 import { StartupRow } from "@/components/startups/startup-row";
@@ -396,7 +397,8 @@ function StartupsPageInner() {
             ) : (
               <CreatedDirectoryRow key={it.id} active={createdId === it.id} onEdit={()=>navigate({search:(p:typeof s)=>({...p,editor:it.id})})}>
               <div className="space-y-1.5">
-                <StartupCard s={it} onClick={() => openStartup(it.id, { tab: "full" })} compact={favOnly} reportCount={isControl?(reportSummaries.data?.[it.id]?.ready??0):undefined} />
+                <SellerOwnerCardData s={it} row={byStartup.get(it.id)} onSelect={() => openStartup(it.id, { tab: "full" })} exclusive />
+                {isControl && <span className="hub-pill">Reports · {reportSummaries.data?.[it.id]?.ready ?? 0} of {REPORT_KEYS.length} ready</span>}
                 {orderByStartup.get(it.id) && (
                   <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground"><ReportChip o={orderByStartup.get(it.id)!} /></div>
                 )}

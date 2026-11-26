@@ -1,3 +1,4 @@
+import { useTranslation } from "@/i18n/language";
 import { StandardListingCard } from "@/components/marketplace/standard-listing-card";
 import { ListingBrowseListRow } from "@/components/marketplace/browse-list-rows";
 import { useAdminReview } from "@/components/my-business/admin-review-context";
@@ -56,7 +57,18 @@ export function sellerOwnerDeal(row: HiddenProfileRow | null | undefined): Listi
   return { dealType: r?.deal_type ?? null, askingPrice: null, priceBand: r?.asking_price_band ?? null };
 }
 
-export function SellerOwnerCard({ s, row, hasFinancials = false, coverUrl, managed = false, selected, onSelect, className }: {
+/** Exclusive view: the owner's own saved identity, as My watchlist shows it after an NDA. */
+export function sellerOwnerPrivate(s: StartupListItem, lang: "en" | "th" = "en") {
+  const desc = lang === "th" ? s.short_description_th || s.short_description : s.short_description || s.short_description_th;
+  const rev = s.last_year_revenue != null && s.last_year_revenue !== "" ? Number(s.last_year_revenue) : null;
+  return {
+    photoUrl: s.tile_image_signed_url, companyName: s.registered_name || s.startup_name, logoPath: s.logo_url && !/^https?:/i.test(s.logo_url) ? s.logo_url : null,
+    description: desc ?? null, employees: null, legalNameEn: s.english_name ?? null, legalNameTh: s.thai_name ?? null, regNo: null, website: s.website_url,
+    location: s.city, founded: s.year_founded != null ? String(s.year_founded) : null, fy: null, revenue: rev != null && Number.isFinite(rev) ? rev : null, netProfit: null, growthPct: null,
+  };
+}
+
+export function SellerOwnerCard({ s, row, hasFinancials = false, coverUrl, managed = false, selected, onSelect, className, exclusive = false }: {
   s: StartupListItem;
   row: HiddenProfileRow | null | undefined;
   hasFinancials?: boolean;
@@ -65,9 +77,11 @@ export function SellerOwnerCard({ s, row, hasFinancials = false, coverUrl, manag
   selected?: boolean;
   onSelect: () => void;
   className?: string;
+  exclusive?: boolean;
 }) {
+  const { language } = useTranslation();
   const listing = { ...sellerOwnerListing(s, row, hasFinancials, coverUrl), managed };
-  return <StandardListingCard l={listing} deal={sellerOwnerDeal(row)} publicOnly ownerStatus={sellerOwnerStatus(row)} selected={selected} onSelect={onSelect} className={className} />;
+  return <StandardListingCard l={listing} deal={sellerOwnerDeal(row)} publicOnly={!exclusive} privateData={exclusive ? sellerOwnerPrivate(s, language) : null} ownerStatus={sellerOwnerStatus(row)} selected={selected} onSelect={onSelect} className={className} />;
 }
 
 export function SellerOwnerListRow({ s, row, hasFinancials = false, coverUrl, managed = false, onOpen }: {
@@ -83,13 +97,14 @@ export function SellerOwnerListRow({ s, row, hasFinancials = false, coverUrl, ma
 }
 
 /** Existing authorised owner reads feed every seller My Company layout. */
-export function SellerOwnerCardData({ s, row, selected, onSelect, className, list = false }: {
+export function SellerOwnerCardData({ s, row, selected, onSelect, className, list = false, exclusive = false }: {
   s: StartupListItem;
   row: HiddenProfileRow | null | undefined;
   selected?: boolean;
   onSelect: () => void;
   className?: string;
   list?: boolean;
+  exclusive?: boolean;
 }) {
   const adminReview = useAdminReview();
   const managed = useManagedIds("startup", [s.id]);
@@ -101,5 +116,5 @@ export function SellerOwnerCardData({ s, row, selected, onSelect, className, lis
   const coverUrl = rawCover ? (/^https?:\/\//i.test(rawCover) ? rawCover : signedCover) : undefined;
   return list
     ? <SellerOwnerListRow s={s} row={row} hasFinancials={hasData} coverUrl={coverUrl} managed={managed.has(s.id)} onOpen={onSelect} />
-    : <SellerOwnerCard s={s} row={row} hasFinancials={hasData} coverUrl={coverUrl} managed={managed.has(s.id)} selected={selected} onSelect={onSelect} className={className} />;
+    : <SellerOwnerCard s={s} row={row} hasFinancials={hasData} coverUrl={coverUrl} managed={managed.has(s.id)} selected={selected} onSelect={onSelect} className={className} exclusive={exclusive} />;
 }

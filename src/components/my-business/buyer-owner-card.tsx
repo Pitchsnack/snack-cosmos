@@ -62,7 +62,21 @@ export function buyerOwnerInvestor(p: BuyerProfile, org: BuyerOrg, d?: Data, man
   };
 }
 
-export function BuyerOwnerCard({ p, org, d, managed = false, selected, onClick, className }: {
+/** Exclusive view: the buyer's own saved identity, as a seller's watchlist shows it after an NDA. */
+export function buyerOwnerPrivate(d: Data) {
+  const iv = d.investor;
+  return {
+    investor_name: iv.investor_name, investor_type: iv.investor_type, acts_for_types: iv.acts_for_types, country: iv.country, city: iv.city,
+    website_url: iv.website_url, linkedin_url: null, email: null, year_founded: iv.year_founded ?? null,
+    aum: iv.aum, min_ticket_size: iv.min_ticket_size, max_ticket_size: iv.max_ticket_size, revenue_min_m: null, revenue_max_m: null,
+    short_description: iv.short_description, long_description: null, private_description: d.buyer.private_description, private_description_th: d.buyer.private_description_th,
+    keywords: iv.keywords ?? [], investment_focus: iv.investment_focus, preferred_stages: iv.preferred_stages, preferred_industries: iv.preferred_industries,
+    logo_signed_url: iv.logo_signed_url, aum_band: iv.aum_band, ticket_band: iv.ticket_band, revenue_min_band: iv.revenue_min_band,
+    people: [], media: iv.media.map((m) => ({ slot: m.slot, image_signed_url: m.url })), linked_startups: [],
+  };
+}
+
+export function BuyerOwnerCard({ p, org, d, managed = false, selected, onClick, className, exclusive = false }: {
   p: BuyerProfile;
   org: BuyerOrg;
   d?: Data;
@@ -70,8 +84,9 @@ export function BuyerOwnerCard({ p, org, d, managed = false, selected, onClick, 
   selected?: boolean;
   onClick: () => void;
   className?: string;
+  exclusive?: boolean;
 }) {
-  return <StandardInvestorCard i={buyerOwnerInvestor(p, org, d, managed)} ownerStatus={buyerOwnerStatus({ ...p, approval_status: d?.buyer.approval_status ?? (p as BuyerWithPublished).approval_status })}
+  return <StandardInvestorCard i={buyerOwnerInvestor(p, org, d, managed)} privateData={exclusive && d ? buyerOwnerPrivate(d) : null} ownerStatus={buyerOwnerStatus({ ...p, approval_status: d?.buyer.approval_status ?? (p as BuyerWithPublished).approval_status })}
     selected={selected} onClick={onClick} className={className} />;
 }
 
@@ -86,7 +101,7 @@ export function BuyerOwnerListRow({ p, org, d, managed = false, onOpen }: {
 }
 
 /** Hook boundary shared by the primary buyer profile and Control's authorised extra profiles. */
-export function BuyerOwnerCardData({ p, org, d, mode, selected = false, onClick, className }: {
+export function BuyerOwnerCardData({ p, org, d, mode, selected = false, onClick, className, exclusive = false }: {
   p: BuyerProfile;
   org: BuyerOrg;
   d?: Data;
@@ -94,6 +109,7 @@ export function BuyerOwnerCardData({ p, org, d, mode, selected = false, onClick,
   selected?: boolean;
   onClick: () => void;
   className?: string;
+  exclusive?: boolean;
 }) {
   const own = useBuyerInvestor();
   const data = d ?? own.data;
@@ -102,5 +118,5 @@ export function BuyerOwnerCardData({ p, org, d, mode, selected = false, onClick,
   const managed = managedIds.has(id ?? "");
   return mode === "list"
     ? <BuyerOwnerListRow p={p} org={org} d={data} managed={managed} onOpen={onClick} />
-    : <BuyerOwnerCard p={p} org={org} d={data} managed={managed} selected={selected} onClick={onClick} className={className} />;
+    : <BuyerOwnerCard p={p} org={org} d={data} managed={managed} selected={selected} onClick={onClick} className={className} exclusive={exclusive} />;
 }

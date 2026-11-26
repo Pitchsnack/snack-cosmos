@@ -259,7 +259,7 @@ export function BuyerMyCompany() {
       <div className="space-y-6">
         <h1 className="text-3xl font-semibold tracking-tight">{setupText("My Company")}</h1>
         <CompanyScrollLayout listLabel={tr("Your investor profiles")} panelLabel={org.name || tr("My Company")} selectedKey={`${selectedExtra ?? p.user_id}:${view}`} resetKey={buyerScrollReset}
-          list={<div className="space-y-5">{extraList}<div data-company-selected={!selectedExtra} onClick={() => setSelectedExtra(null)}><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected /> : <Skeleton className="h-[260px]" />} /></div></div>} panel={extraPanel ?? rightPanel} />
+          list={<div className="space-y-5">{extraList}<div data-company-selected={!selectedExtra} onClick={() => setSelectedExtra(null)}><BuyerFolderCard p={p} org={org} view={view} onView={setView} /></div></div>} panel={extraPanel ?? rightPanel} />
         {edit && <EditDialog section={edit} p={p} org={org} onClose={() => setEdit(null)} />}
       </div>
     );
@@ -324,7 +324,7 @@ export function BuyerMyCompany() {
         <div className="rounded-lg border border-border bg-card py-16 text-center text-sm text-muted-foreground shadow-card">{setupText("No companies match your filters")}</div>
       ) : layout === "profiles" ? (
         <CompanyScrollLayout listLabel={tr("Your investor profiles")} panelLabel={org.name || tr("My Company")} selectedKey={`${selectedExtra ?? p.user_id}:${view}`} resetKey={buyerScrollReset}
-          list={<div className="space-y-5">{extraList}<div data-company-selected={!selectedExtra} onClick={() => setSelectedExtra(null)}><BuyerFolderCard p={p} org={org} view={view} onView={setView} privateBody={inv.data ? <BuyerPrivateCardBody d={inv.data} status={p.status} selected /> : <Skeleton className="h-[260px]" />} /></div></div>} panel={extraPanel ?? rightPanel} />
+          list={<div className="space-y-5">{extraList}<div data-company-selected={!selectedExtra} onClick={() => setSelectedExtra(null)}><BuyerFolderCard p={p} org={org} view={view} onView={setView} /></div></div>} panel={extraPanel ?? rightPanel} />
       ) : layout === "split" ? (
         <CompanyScrollLayout mode="split"
           listLabel={tr("Your investor profiles")} panelLabel={org.name || tr("My Company")} selectedKey={`${selectedExtra ?? p.user_id}:${view}`} resetKey={buyerScrollReset}
@@ -375,8 +375,7 @@ function useOwnCard(p: BuyerProfile, org: BuyerOrg, supplied?: Data) {
 }
 
 /** Seller-style folder-tab card (Listing view / Exclusive view) for the investor profile. */
-export function BuyerFolderCard({ p, org, d, view, onView, privateBody }: { p: BuyerProfile; org: BuyerOrg; d?: Data; view: View; onView: (v: View) => void; privateBody: React.ReactNode }) {
-  const shell = "overflow-hidden rounded-b-[14px] rounded-t-none border border-accent bg-card";
+export function BuyerFolderCard({ p, org, d, view, onView, privateBody }: { p: BuyerProfile; org: BuyerOrg; d?: Data; view: View; onView: (v: View) => void; privateBody?: React.ReactNode }) {
   return (
     <div>
       <div role="tablist" className="relative z-10 h-[58px]">
@@ -386,7 +385,7 @@ export function BuyerFolderCard({ p, org, d, view, onView, privateBody }: { p: B
       {view === "public" ? (
         <BuyerOwnerCardData p={p} org={org} d={d} mode="split" selected onClick={() => onView("public")} className="rounded-b-[14px] rounded-t-none border-accent" />
       ) : (
-        <div className={shell}>{privateBody}</div>
+        <BuyerOwnerCardData p={p} org={org} d={d} mode="split" selected onClick={() => onView("private")} className="rounded-b-[14px] rounded-t-none border-accent" exclusive />
       )}
     </div>
   );

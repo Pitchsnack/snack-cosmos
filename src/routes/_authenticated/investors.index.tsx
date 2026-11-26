@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { InvestorCard } from "@/components/investors/investor-card";
+import { DirectoryInvestorCard } from "@/components/my-business/directory-browse-cards";
 import { InvestorEditPopup, InvestorAddPopup } from "@/components/investors/investor-edit-popup";
 import { InvestorRow } from "@/components/investors/investor-row";
 import { InvestorListItem } from "@/components/investors/investor-list-item";
@@ -351,7 +352,7 @@ function InvestorsPageInner() {
                 onClick={() => navigate({ search: (prev: typeof s) => ({ ...prev, panel: it.id }) })}
               />
             ) : (
-              <InvestorCard
+              <DirectoryInvestorCard
                 key={it.id}
                 i={it}
                 onClick={() => navigate({ search: (prev: typeof s) => ({ ...prev, panel: it.id }) })}

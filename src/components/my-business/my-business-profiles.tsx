@@ -262,9 +262,7 @@ function BusinessCard({ s, view, onView }: { s: StartupListItem; view: View | nu
       {v === "public" ? (
         <SellerOwnerCardData s={s} row={row} selected={selected} onSelect={() => pick("public")} className="rounded-b-[14px] rounded-t-none" />
       ) : (
-        <div className={cn("overflow-hidden rounded-b-[14px] rounded-t-none border bg-card [&_.rounded-t-xl]:rounded-t-none [&>button]:rounded-none [&>button]:border-0 [&>button]:shadow-none", selected ? "border-accent" : "border-border")}>
-          <StartupCard s={s} onClick={() => pick("private")} />
-        </div>
+        <SellerOwnerCardData s={s} row={row} selected={selected} onSelect={() => pick("private")} className="rounded-b-[14px] rounded-t-none" exclusive />
       )}
     </div>
   );

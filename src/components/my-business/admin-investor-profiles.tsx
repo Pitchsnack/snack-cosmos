@@ -170,7 +170,7 @@ function ExtraProfile({ id, open, part, mode = "grid", view: controlledView, onV
       {part !== "panel" && <div role={part ? "button" : undefined} tabIndex={part ? 0 : undefined} onClick={() => onSelect?.(id)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect?.(id); } }}>
         {!iv.setup_done_at
           ? <BuyerDirectoryItem p={p} org={org} d={d} mode="split" selected={part ? open : true} onClick={() => onSelect?.(id)} />
-          : <BuyerFolderCard p={p} org={org} d={d} view={view} onView={setView} privateBody={<BuyerPrivateCardBody d={d} status={p.status} selected={open} />} />}
+          : <BuyerFolderCard p={p} org={org} d={d} view={view} onView={setView} />}
       </div>}
       {part !== "list" && (!iv.setup_done_at ? (
         <DraftCompanyPanel role="buyer" name={nm} banner={<SetupBanner n={prog.n} N={prog.N} onOpen={openWizard} />}
