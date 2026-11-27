@@ -3,7 +3,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowRight, Calendar, Check, Eye, GitBranch, Lock, MessageSquare, PhoneOff, UserX, Users, X } from "lucide-react";
+import { ArrowRight, Calendar, Check, Eye, GitBranch, Lock, MessageSquare, PhoneOff, UserX, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Reader } from "./pipeline-dialogs";
 import { STANDARD_NDA_TEXT } from "@/config/standard-nda";
@@ -145,7 +145,6 @@ export function ApprovedBox({ s, seller, onClose }: { s: ApprovalSummary; seller
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="nda-sign nda-approved" onOpenAutoFocus={(e) => { e.preventDefault(); go.current?.focus(); }} onClick={(e) => e.stopPropagation()}>
         <span className="nda-approved-tick" aria-hidden><Check size={22} /></span>
-        <button type="button" className="nda-x" aria-label={c("Close", "ปิด")} onClick={onClose}><X size={18} /></button>
         <DialogTitle className="nda-approved-title">{c(`NDA approved with ${name}`, `อนุมัติ NDA กับ ${name} แล้ว`)}</DialogTitle>
         <DialogDescription className="nda-approved-line">{seller ? c("Here's what has opened for both of you.", "สิ่งที่เปิดให้ทั้งสองฝ่ายแล้วมีดังนี้") : c(`The seller approved your NDA on ${day(s.approvedAt)}. Here's what has opened for both of you.`, `ผู้ขายอนุมัติ NDA ของท่านเมื่อ ${day(s.approvedAt)} สิ่งที่เปิดให้ทั้งสองฝ่ายแล้วมีดังนี้`)}</DialogDescription>
         <ul className="nda-approved-list">

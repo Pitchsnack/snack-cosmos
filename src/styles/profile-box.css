@@ -76,7 +76,6 @@
 }
 @media(prefers-reduced-motion:reduce) { .full-profile-header { transition: none; } }
 .pbox > button:last-child { display: none; }
-*:has(> .pbox) > div[data-state]:first-child { background: rgba(17, 24, 39, .45); backdrop-filter: none; }
 
 .pbox-head { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; padding: 22px 16px 16px 24px; align-items: start; }
 .pbox-avatar { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; object-fit: cover; color: #fff; font-size: 19px; font-weight: 700; }

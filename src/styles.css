@@ -749,3 +749,7 @@ html[lang=th] #buyer-edit-form [class*="tracking-"], html[lang=th] [data-mkt-vie
 .seller-wording-note svg { flex:none; margin-top:2px; }
 .seller-wording-note.tour-hidden { visibility:hidden; }
 @media (max-width:639px) { .seller-wording-input.is-headline { min-height:62px; } }
+
+/* Shared pop-up backdrop: page stays visible, softly blurred. */
+.ps-dialog-overlay{background:rgba(15,23,42,.45)}
+@supports (backdrop-filter:blur(4px)){.ps-dialog-overlay{background:rgba(15,23,42,.30);backdrop-filter:blur(4px)}}
