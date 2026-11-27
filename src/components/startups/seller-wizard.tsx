@@ -9,6 +9,7 @@ import { Lock, Check as CheckIcon, Sparkles, Loader2, Calendar, Users } from "lu
 import { firstBlockingStep, stepLocked } from "@/lib/setup-step-state";
 import { StepBar, MissedNote, type StepItem } from "@/components/common/step-bar";
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/PitchSnackLoader";
 import { WebsiteCheckLink } from "@/components/startups/website-check-link";
 import { SellerWebsiteFields, websiteMissing, type WebsiteField, type ReadingState } from "./seller-website-fields";
 import { strengthCount } from '@/lib/seller-strengths';
@@ -495,12 +496,15 @@ export function SellerWizard({
                   advance();
                 }}
                 className={cur.id === "web" ? "seller-action seller-action-primary" : "rounded-[10px] bg-primary px-6 py-3 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted"}>
-                {setupText(cur.id === "review" ? L("Finish setup","เสร็จสิ้นการตั้งค่า") : listingPreparing ? L("Writing…","กำลังเขียน…") : reading ? L("Reading…","กำลังอ่าน…") : full != null ? tr("Back to review") : tr("Continue"))}
+                {(reading || listingPreparing) && cur.id !== "review"
+                  ? <span className="ps-btn-loading"><ButtonLoading label={setupText(listingPreparing ? L("Writing…","กำลังเขียน…") : L("Reading…","กำลังอ่าน…"))} invert={cur.id === "web"} /></span>
+                  : setupText(cur.id === "review" ? L("Finish setup","เสร็จสิ้นการตั้งค่า") : full != null ? tr("Back to review") : tr("Continue"))}
 
               </Button>
             </div>
           </div>
           {cur.id === "web" && webExpanded && !reading && <p className="seller-website-left" aria-live="polite">{websiteMissing(d,th)}</p>}
+          {cur.id === "web" && !webExpanded && !isValidUrl(d.web) && <ContinueBlockedLine text={d.web.trim() ? L("To continue, enter a valid website address, or choose No company website.","กรอกที่อยู่เว็บไซต์ที่ถูกต้อง หรือเลือก ไม่มีเว็บไซต์บริษัท เพื่อดำเนินการต่อ") : L("To continue, enter your company website, or choose No company website.","กรอกเว็บไซต์บริษัท หรือเลือก ไม่มีเว็บไซต์บริษัท เพื่อดำเนินการต่อ")} />}
           {cur.id !== "web" && <ContinueBlockedLine text={blockedText} />}
         </div>
         {confirmExit && (
