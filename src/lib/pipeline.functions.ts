@@ -227,12 +227,15 @@ async function userNames(ids: string[]) {
 /** Seller or buyer pipeline, depending on persona. */
 export const listPipeline = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ as: z.enum(["seller", "buyer"]) }).parse(d))
+  .inputValidator((d) => z.object({ as: z.enum(["seller", "buyer"]), id: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = await admin();
     let rows: any[] = [];
     if (data.as === "buyer") {
-      const r = await sb.from("deal_pipelines").select("*").eq("buyer_user_id", context.userId).not("status", "in", "(declined,withdrawn)").order("updated_at", { ascending: false });
+      let query = sb.from("deal_pipelines").select("*").eq("buyer_user_id", context.userId).not("status", "in", "(declined,withdrawn)");
+      if (data.id) query = query.eq("id", data.id);
+      const r = await query.order("updated_at", { ascending: false });
+      if (data.id && r.error) throw new Error("Could not reload this deal");
       rows = r.data ?? [];
     } else {
       // Only businesses the caller owns (not every business an Admin can see).
@@ -240,7 +243,10 @@ export const listPipeline = createServerFn({ method: "GET" })
       const { data: su } = await sb.from("startup_users").select("startup_id").eq("user_id", context.userId);
       const ids = await (await import("@/lib/workspace-scope.server")).scopeStartupIds(context.userId, [...new Set([...(own ?? []), ...(su ?? [])].map((x: any) => x.startup_id as string))]);
       if (ids.length) {
-        const r = await sb.from("deal_pipelines").select("*").in("startup_id", ids).not("status", "in", "(declined,withdrawn)").order("updated_at", { ascending: false });
+        let query = sb.from("deal_pipelines").select("*").in("startup_id", ids).not("status", "in", "(declined,withdrawn)");
+        if (data.id) query = query.eq("id", data.id);
+        const r = await query.order("updated_at", { ascending: false });
+        if (data.id && r.error) throw new Error("Could not reload this deal");
         rows = r.data ?? [];
       }
     }

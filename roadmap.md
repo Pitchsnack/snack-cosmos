@@ -1,3 +1,8 @@
+# Instant Pipeline choices (Nov 27)
+- [x] Optimistically unlock, select and clear only the current deal; serialize row saves and preserve newer clicks during failures/refetches.
+- [x] Re-read the authorized single deal through listPipeline's optional id filter and quietly refresh list/count queries; preserve other card actions, other pages and all save handlers.
+- [x] 26 choice/read/control tests and 57 existing Pipeline regressions pass; automatic preview checks and diff checks pass. No sign-in, browser checks, screenshots or database writes; live behavior remains for Dan to check.
+
 # My Company uses Browse cards and rows
 - [x] Reuse each role's existing Browse adapter and shared card/row in Profiles, Grid, Split and List while preserving panels, tabs, selection, filters and ordering.
 - [x] Add one owner presentation for status, no star/last login/other-user actions, centred Show more and unchanged Managed by; omit the firm cover pill because a 240×96px logo can intersect its 24px area.

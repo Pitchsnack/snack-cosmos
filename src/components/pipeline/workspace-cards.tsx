@@ -275,7 +275,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
               {financial&&financialExpanded&&<FinancialReports p={p} seller={seller} onFold={()=>setFinancialExpanded(false)}/>}
               </div>;
             })}
-            {!wd&&<PostLoiStages p={p} seller={seller} onDone={refresh}/>}
+            {!wd&&<PostLoiStages p={p} seller={seller} onDone={refresh} instantChoices={financialOptional}/>}
           </div>
           <div className="flex items-center justify-between gap-3 px-5 pb-4 pt-2.5">
             {!pendingNda&&<WithdrawLink p={p} seller={seller} t={t} onDone={() => { refresh(); onEnded(); }} />}
