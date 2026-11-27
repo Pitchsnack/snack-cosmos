@@ -53,7 +53,7 @@ export const repairSellerListingTexts = createServerFn({ method: "POST" })
         const beforeEn = row.description?.trim() ?? "";
         const beforeTh = row.description_th?.trim() ?? "";
         const alreadySentences = row.description_story?.mode === "lines" && row.description_story_th?.mode === "lines";
-        const result = await ensureAutomaticSellerListing(sb, row.startup_id, creatorControl, context.userId);
+        const result = await ensureAutomaticSellerListing(sb, row.startup_id, creatorControl, context.userId, { upgradeLegacyDescription: true });
         if (!result) continue;
         if (alreadySentences) report.alreadySentences += 1;
         else if (result.legacyAutomaticDescription && (result.description !== beforeEn || result.descriptionTh !== beforeTh)) {

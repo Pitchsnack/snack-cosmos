@@ -10,6 +10,7 @@ import { firstBlockingStep, stepLocked } from "@/lib/setup-step-state";
 import { StepBar, MissedNote, type StepItem } from "@/components/common/step-bar";
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/PitchSnackLoader";
+import { createListingPrepareRunner, fillEmptyListingTexts, listingTextsMissing } from "@/lib/seller-listing-prepare";
 import { WebsiteCheckLink } from "@/components/startups/website-check-link";
 import { SellerWebsiteFields, websiteMissing, type WebsiteField, type ReadingState } from "./seller-website-fields";
 import { strengthCount } from '@/lib/seller-strengths';
@@ -113,6 +114,14 @@ export function SellerWizard({
   const [listingPreparing, setListingPreparing] = useState(false);
   const [listingPrepareError, setListingPrepareError] = useState<string | null>(null);
   const listingPrepared = useRef<string | null>(null);
+  // The busy state belongs to each run (always ends, 15-second limit), never to the screen's lifetime.
+  const listingRunner = useRef<ReturnType<typeof createListingPrepareRunner<Partial<SellerDraft>>> | null>(null);
+  if (!listingRunner.current) listingRunner.current = createListingPrepareRunner<Partial<SellerDraft>>({
+    onBusy: setListingPreparing,
+    onFailed: (failed) => setListingPrepareError(failed ? "failed" : null),
+    onPatch: (patch) => setD((current) => fillEmptyListingTexts(current, patch)),
+  });
+  const runListingPrepare = (draft: SellerDraft) => { if (prepareListing) void listingRunner.current?.run(() => prepareListing(draft)); };
   const [confirmExit, setConfirmExit] = useState(false);
   // A question opened from Review shows all its fields, even ones sign-up answered.
   const [full, setFull] = useState<number | null>(null);
@@ -161,16 +170,10 @@ export function SellerWizard({
   }, []);
   useEffect(() => {
     if (!prepareListing || !['founder','listing','review'].includes(cur.id) || listingPrepared.current === listingSourceSignature) return;
+    // Only fills empty texts: when the listing name, headline and description are all filled in, it doesn't run.
+    if (!listingTextsMissing(d)) return;
     listingPrepared.current = listingSourceSignature;
-    let live = true;
-    setListingPreparing(true);
-    setListingPrepareError(null);
-    void prepareListing(d).then((patch) => {
-      if (live) setD((current) => ({ ...current, ...patch }));
-    }).catch((error) => {
-      if (live) setListingPrepareError(error instanceof Error ? error.message : L('Could not write the listing text. Please try again.', 'ไม่สามารถเขียนข้อความประกาศได้ กรุณาลองอีกครั้ง'));
-    }).finally(() => { if (live) setListingPreparing(false); });
-    return () => { live = false; };
+    runListingPrepare(d);
   }, [cur.id, listingSourceSignature]); // eslint-disable-line react-hooks/exhaustive-deps
   const set = (patch: Partial<SellerDraft>) => setD((p) => ({ ...p, ...patch }));
   const setCompanyYear = (year: string) => setD((p) => ({ ...p, year, founders: syncFounderStoriesYear(p.founders ?? [], p.year, year) }));
@@ -366,7 +369,7 @@ export function SellerWizard({
       <p className="mt-3 text-[13px] text-muted-foreground">{L("PitchSnack checks the owner's name against your company's list of directors, and the year founded and the sales against your company's records.","PitchSnack ตรวจสอบชื่อเจ้าของกับรายชื่อกรรมการบริษัท และปีที่ก่อตั้งกับยอดขายตามข้อมูลบริษัทของท่าน")}</p>
     </>},
     listing: { t: L(...STEP_FULL.listing), h: L("Describe your business without naming it. Buyers see your listing name and headline first, and use them to decide whether to request an NDA.", "อธิบายธุรกิจของท่านโดยไม่เปิดเผยชื่อบริษัท ผู้ซื้อจะเห็นชื่อประกาศและพาดหัวของท่านเป็นอันดับแรก และใช้ข้อมูลนี้ตัดสินใจว่าจะส่งคำขอ NDA หรือไม่"),
-      body: <>{listingPreparing && <p role="status" className="mb-4 text-sm text-muted-foreground">{L('Writing your listing name, headline and description…', 'กำลังเขียนชื่อประกาศ หัวข้อ และคำอธิบาย…')}</p>}{listingPrepareError && <p role="alert" className="mb-4 text-sm text-destructive">{listingPrepareError}</p>}<SellerListingIdentity d={d} set={set} th={th} refNo={listingPreview?.refNo} cover={listingPreview?.cover} startupId={media?.startupId}/></> },
+      body: <>{listingPreparing && <p role="status" className="mb-4 text-sm text-muted-foreground">{L('Writing your listing name, headline and description…', 'กำลังเขียนชื่อประกาศ หัวข้อ และคำอธิบาย…')}</p>}<SellerListingIdentity d={d} set={set} th={th} refNo={listingPreview?.refNo} cover={listingPreview?.cover} startupId={media?.startupId}/></> },
     review: { t: tr("Review your answers"), h: tr("Next, we'll auto-fill the rest of your profile. You can edit everything afterwards."),
       body: (
         <div>
@@ -407,13 +410,13 @@ export function SellerWizard({
               </div>
             );
           })}
-        </div>
         {barKeys.includes('listing') && ([['Listing name', 'ชื่อประกาศ', d.listingName], ['Headline', 'หัวข้อ', th ? d.headlineTh || d.headline : d.headline || d.headlineTh], ['Description', 'คำอธิบาย', th ? d.descriptionTh || d.description : d.description || d.descriptionTh]] as const).map(([en, thai, value]) => <div className="seller-review-row" key={en}><span>{L(en, thai)}</span><b className={!value?.trim() ? 'text-destructive' : ''}>{value || L('Not answered', 'ยังไม่ได้ตอบ')}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === 'listing'))}>{tr('Edit')}</Button></div>)}
-        <div className="seller-review-row mt-5"><span>{L(...STEP_FULL.founder)}</span><b className={d.founders?.[0]?.full_name.trim() ? "" : "text-destructive"}>{d.founders?.filter(f => f.full_name.trim()).map(f => f.full_name).join(", ") || L("Not answered","ยังไม่ได้ตอบ")}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === "founder"))}>{ok.founder ? tr("Edit") : L("Answer","ตอบคำถาม")}</Button></div>
+        </div>
+        <h3 className="mb-2 mt-[22px] text-[14px] font-bold text-foreground">{L("About the founder", "เกี่ยวกับผู้ก่อตั้ง")}</h3>
+        <div className="overflow-hidden rounded-[10px] border border-border">
+        <div className="seller-review-row"><span>{L(...STEP_FULL.founder)}</span><b className={d.founders?.[0]?.full_name.trim() ? "" : "text-destructive"}>{d.founders?.filter(f => f.full_name.trim()).map(f => f.full_name).join(", ") || L("Not answered","ยังไม่ได้ตอบ")}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === "founder"))}>{ok.founder ? tr("Edit") : L("Answer","ตอบคำถาม")}</Button></div>
         <div className="seller-review-row"><span>{L("Contact email and phone", "อีเมลและเบอร์โทรศัพท์")}</span><b className={ok.founder ? "" : "text-destructive"}>{[d.founders?.[0]?.email, d.founders?.[0]?.phone].filter(Boolean).join(" · ") || L("Not answered","ยังไม่ได้ตอบ")}</b><Button variant="link" size="unstyled" onClick={() => editRow(STEPS.findIndex(x => x.id === "founder"))}>{ok.founder ? tr("Edit") : L("Answer","ตอบคำถาม")}</Button></div>
-        {blockers.length > 0 && (
-          <p className="mt-[18px] text-[13.5px] text-destructive">{L(`Answer ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][0] : STEP_SHORT[k][0]), false)} before you continue.`, `กรุณาตอบ ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][1] : STEP_SHORT[k][1]), true)} ก่อนไปต่อ`)}</p>
-        )}
+        </div>
         </div>
       ) },
   };
@@ -441,7 +444,8 @@ export function SellerWizard({
       (d.headline?.trim() || d.headlineTh?.trim()) && (sellerWordingCount(d.headline, "headline").over || sellerWordingCount(d.headlineTh, "headline").over) && L("Headline", "หัวข้อ"),
       (d.description?.trim() || d.descriptionTh?.trim()) && ((d.description?.length ?? 0) > 420 || (d.descriptionTh?.length ?? 0) > 420) && L("Description", "คำอธิบาย"),
     ].filter((x): x is string => !!x) : [];
-  const blockedText = reading || valid[cur.id] || cur.id === "review" ? null
+  const blockedText = reading || valid[cur.id] ? null
+    : cur.id === "review" ? (listingPreparing || !blockers.length ? null : L(`Answer ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][0] : STEP_SHORT[k][0]), false)} before you continue.`, `กรุณาตอบ ${joinNames(blockers.map((k) => (LISTING_KEYS as readonly string[]).includes(k) ? STEP_FULL[k][1] : STEP_SHORT[k][1]), true)} ก่อนไปต่อ`))
     : cur.id === "photos" ? (d.hasLogo ? continueBlockedLine([], lang, true) : null)
     : continueBlockedLine(missingNow.filter((field) => !invalidNow.includes(field)), lang, false, invalidNow);
 
@@ -464,7 +468,7 @@ export function SellerWizard({
         </div>
         <div className="seller-wizard-card rounded-[14px] border border-border px-6 pb-7 pt-8 sm:px-9 sm:pt-9">
           <div key={cur.id} ref={cardRef} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
-            <h2 ref={titleRef} tabIndex={-1} className="mb-1.5 outline-none text-2xl font-bold leading-snug tracking-normal text-foreground">{tr(q.t)}{(cur.id !== "web" || webExpanded && !reading && !readDone) && cur.id !== "lic" && <span aria-hidden className="ml-1 text-destructive">*</span>}</h2>
+            <h2 ref={titleRef} tabIndex={-1} className="mb-1.5 outline-none text-2xl font-bold leading-snug tracking-normal text-foreground">{tr(q.t)}{(cur.id !== "web" || webExpanded && !reading && !readDone) && cur.id !== "lic" && cur.id !== "review" && <span aria-hidden className="ml-1 text-destructive">*</span>}</h2>
             {q.h && <p className="mb-6 text-[14.5px] leading-relaxed text-muted-foreground">{tr(q.h)}</p>}
             {!q.h && <div className="mb-6" />}
             {q.body}
@@ -496,7 +500,7 @@ export function SellerWizard({
                   advance();
                 }}
                 className={cur.id === "web" ? "seller-action seller-action-primary" : "rounded-[10px] bg-primary px-6 py-3 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted"}>
-                {(reading || listingPreparing) && cur.id !== "review"
+                {(reading || listingPreparing)
                   ? <span className="ps-btn-loading"><ButtonLoading label={setupText(listingPreparing ? L("Writing…","กำลังเขียน…") : L("Reading…","กำลังอ่าน…"))} invert={cur.id === "web"} /></span>
                   : setupText(cur.id === "review" ? L("Finish setup","เสร็จสิ้นการตั้งค่า") : full != null ? tr("Back to review") : tr("Continue"))}
 
@@ -506,6 +510,12 @@ export function SellerWizard({
           {cur.id === "web" && webExpanded && !reading && <p className="seller-website-left" aria-live="polite">{websiteMissing(d,th)}</p>}
           {cur.id === "web" && !webExpanded && !isValidUrl(d.web) && <ContinueBlockedLine text={d.web.trim() ? L("To continue, enter a valid website address, or choose No company website.","กรอกที่อยู่เว็บไซต์ที่ถูกต้อง หรือเลือก ไม่มีเว็บไซต์บริษัท เพื่อดำเนินการต่อ") : L("To continue, enter your company website, or choose No company website.","กรอกเว็บไซต์บริษัท หรือเลือก ไม่มีเว็บไซต์บริษัท เพื่อดำเนินการต่อ")} />}
           {cur.id !== "web" && <ContinueBlockedLine text={blockedText} />}
+          {cur.id !== "web" && listingPrepareError && !listingPreparing && (
+            <p className="mt-2.5 text-right text-[13px] text-destructive max-sm:text-left" role="alert" data-listing-prepare-error>
+              {L("We couldn't write your listing texts.", "เราไม่สามารถเขียนข้อความประกาศของท่านได้")}{" "}
+              <Button variant="link" size="unstyled" type="button" className="text-destructive underline" onClick={() => runListingPrepare(d)}>{L("Try again", "ลองอีกครั้ง")}</Button>
+            </p>
+          )}
         </div>
         {confirmExit && (
           <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(17,24,39,.45)] p-4" onClick={() => setConfirmExit(false)}>

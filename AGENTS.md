@@ -71,3 +71,4 @@
 
 
 
+- Seller setup listing texts: seller-listing-prepare owns a per-run busy state with a 15s limit and fills only empty fields; ensureAutomaticSellerListing never rewrites saved texts (only Control repair opts into legacy upgrade), so Review can't freeze or overwrite seller wording.

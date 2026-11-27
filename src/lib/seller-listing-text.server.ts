@@ -24,12 +24,17 @@ function savedStory(value: unknown): DescriptionStory | null {
   return parsed.success ? parsed.data : null;
 }
 
-/** Fill only empty/protected listing fields from current answers and persist editable Description sentences. */
+/**
+ * Fill only empty listing fields from current answers. A saved listing name, headline or
+ * description (either language, any story mode) is never rewritten. The only exception is the
+ * Control repair's opt-in upgrade of text recognised as the retired generator's own output.
+ */
 export async function ensureAutomaticSellerListing(
   sb: any,
   startupId: string,
   control: boolean,
   updatedBy?: string,
+  options: { upgradeLegacyDescription?: boolean } = {},
 ): Promise<AutomaticSellerListingResult | null> {
   const [{ data: startup, error: startupError }, { data: current, error: listingError }] = await Promise.all([
     sb.from("startups").select(STARTUP_COLUMNS).eq("id", startupId).single(),
@@ -41,7 +46,7 @@ export async function ensureAutomaticSellerListing(
 
   const { suggestBusinessDescription, suggestCodeNames, suggestHeadline } = await import("./public-listing");
   const { capGeneratedListingText } = await import("./listing-text-translations");
-  const { resolveSellerListingTextSave } = await import("./seller-listing-save.server");
+  const { cleanListingTextTranslations } = await import("./listing-text-translations");
   const source = startup as ListingSource;
   const savedEn = savedStory(current.description_story);
   const savedTh = savedStory(current.description_story_th);
@@ -49,18 +54,44 @@ export async function ensureAutomaticSellerListing(
   const descriptionEmpty = !clean(current.description) && !clean(current.description_th);
   // The retired generator is used only to recognise its own output during the one-time upgrade.
   const legacyText = suggestBusinessDescription(source);
-  const legacyAutomaticDescription = !savedEn && !savedTh && !!legacyText && clean(current.description) === clean(legacyText);
-  const sentenceMode = descriptionEmpty || legacyAutomaticDescription || (savedEn?.mode === "lines" && savedTh?.mode === "lines");
+  const legacyAutomaticDescription = !!options.upgradeLegacyDescription && !savedEn && !savedTh && !!legacyText && clean(current.description) === clean(legacyText);
+  const fillDescription = descriptionEmpty || legacyAutomaticDescription;
   const handover = { stays: current.owner_stays as "yes" | "no" | null, months: current.handover_months as number | null };
-  const storyEn = initialDescriptionStory(sentenceMode ? "" : current.description, savedEn, "en", source, handover);
-  const storyTh = initialDescriptionStory(sentenceMode ? "" : current.description_th, savedTh, "th", source, handover);
-  const resolved = await resolveSellerListingTextSave(current, {
-    headline: headlineEmpty ? capGeneratedListingText("headline", "en", suggestHeadline(source)) : undefined,
-    description: sentenceMode ? composeDescription(storyEn) : undefined,
-    descriptionTh: sentenceMode ? composeDescription(storyTh) : undefined,
-    descriptionStory: storyEn,
-    descriptionStoryTh: storyTh,
-  });
+  const kept = {
+    headline: clean(current.headline), headlineTh: clean(current.headline_th),
+    description: clean(current.description), descriptionTh: clean(current.description_th),
+    stories: savedEn && savedTh ? { en: savedEn, th: savedTh } : null,
+    translations: cleanListingTextTranslations(current.listing_text_translations),
+  };
+  let resolved = kept;
+  if (fillDescription) {
+    const { resolveSellerListingTextSave } = await import("./seller-listing-save.server");
+    const storyEn = initialDescriptionStory("", savedEn, "en", source, handover);
+    const storyTh = initialDescriptionStory("", savedTh, "th", source, handover);
+    resolved = await resolveSellerListingTextSave(current, {
+      headline: headlineEmpty ? capGeneratedListingText("headline", "en", suggestHeadline(source)) : undefined,
+      description: composeDescription(storyEn),
+      descriptionTh: composeDescription(storyTh),
+      descriptionStory: storyEn,
+      descriptionStoryTh: storyTh,
+    });
+  } else if (headlineEmpty) {
+    const { planListingTextSave } = await import("./listing-text-translations");
+    const { resolveListingTextPlan } = await import("./listing-text-translations.server");
+    const headline = await resolveListingTextPlan(planListingTextSave(
+      { ...current, translations: current.listing_text_translations },
+      { headline: capGeneratedListingText("headline", "en", suggestHeadline(source)) },
+    ));
+    resolved = {
+      ...kept,
+      headline: headline.headline,
+      headlineTh: headline.headlineTh,
+      translations: [
+        ...headline.translations.filter((item) => item.field === "headline"),
+        ...kept.translations.filter((item) => item.field !== "headline"),
+      ],
+    };
+  }
 
   const patch: Record<string, unknown> = {};
   const filled: string[] = [];
@@ -69,13 +100,17 @@ export async function ensureAutomaticSellerListing(
     patch[column] = after;
     filled.push(column);
   };
-  put("headline", clean(current.headline), resolved.headline);
-  put("headline_th", clean(current.headline_th), resolved.headlineTh);
-  put("description", clean(current.description), resolved.description);
-  put("description_th", clean(current.description_th), resolved.descriptionTh);
-  put("description_story", current.description_story, resolved.stories?.en ?? null);
-  put("description_story_th", current.description_story_th, resolved.stories?.th ?? null);
-  put("listing_text_translations", current.listing_text_translations, resolved.translations);
+  if (headlineEmpty) {
+    put("headline", clean(current.headline), resolved.headline);
+    put("headline_th", clean(current.headline_th), resolved.headlineTh);
+  }
+  if (fillDescription) {
+    put("description", clean(current.description), resolved.description);
+    put("description_th", clean(current.description_th), resolved.descriptionTh);
+    put("description_story", current.description_story, resolved.stories?.en ?? null);
+    put("description_story_th", current.description_story_th, resolved.stories?.th ?? null);
+  }
+  if (headlineEmpty || fillDescription) put("listing_text_translations", cleanListingTextTranslations(current.listing_text_translations), resolved.translations);
 
   const nameColumn = control ? "code_name" : "suggested_listing_name";
   let name = String(current[nameColumn] ?? "").trim();
