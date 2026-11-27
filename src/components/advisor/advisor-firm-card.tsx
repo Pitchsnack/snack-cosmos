@@ -172,7 +172,7 @@ export function FirmCard({ f, wide, preview, selected, onClick, className, actio
       more={more} defaultExpanded={wide} selected={selected} onOpen={onClick}
       ownerStatus={ownerStatus} ownerStatusOnCover={false}
       sourceType="advisor"
-      style={selected ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}` } : undefined}
+      style={selected ? { borderColor: accent } : undefined}
       className={cn("standard-advisor-card", noStatus && "advisor-browse-card", className)}
     />
   );

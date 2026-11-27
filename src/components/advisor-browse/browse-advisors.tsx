@@ -292,7 +292,11 @@ export function BrowseAdvisorsPage({ side, firmParam, enquire }: { side: Side; f
   const viewed = useRef(new Set<string>());
   useEffect(() => { if (current && canAct && view === "split" && !viewed.current.has(current.id)) { viewed.current.add(current.id); viewFn({ data: { firmId: current.id } }).catch(() => {}); } }, [current?.id, canAct, view]);
 
-  const openSplit = (id: string) => { setSel(id); persist("split"); };
+  const [popId, setPopId] = useState<string | null>(null);
+  const popFirm = popId ? firms.find((f) => f.id === popId) : undefined;
+  /** Grid/List: open the firm in a pop-up; the view and saved view stay unchanged. */
+  const openPop = (id: string) => setPopId(id);
+  useEffect(() => { if (popFirm && canAct && !viewed.current.has(popFirm.id)) { viewed.current.add(popFirm.id); viewFn({ data: { firmId: popFirm.id } }).catch(() => {}); } }, [popFirm?.id, canAct]);
   const onListKey = (e: React.KeyboardEvent) => {
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
     e.preventDefault();
@@ -417,7 +421,7 @@ export function BrowseAdvisorsPage({ side, firmParam, enquire }: { side: Side; f
           <div className="standard-card-grid">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[380px] rounded-[14px]" />)}</div>
         ) : shown.length === 0 ? empty : view === "grid" ? (
           <div className="standard-card-grid">
-            {shown.map((f) => <FirmCard key={f.id} f={f} noStatus accent={ACCENT[side]} onClick={() => openSplit(f.id)} action={cardAction(f)} lastLogin={f.lastLoginStep} />)}
+            {shown.map((f) => <FirmCard key={f.id} f={f} noStatus accent={ACCENT[side]} onClick={() => openPop(f.id)} action={cardAction(f)} lastLogin={f.lastLoginStep} />)}
           </div>
         ) : view === "split" ? (
           <div className={splitFixed ? "grid min-h-0 flex-1 grid-cols-[372px_minmax(0,1fr)] gap-5" : "grid items-start gap-5 min-[1100px]:grid-cols-[372px_minmax(0,1fr)]"}>
@@ -432,10 +436,16 @@ export function BrowseAdvisorsPage({ side, firmParam, enquire }: { side: Side; f
             {wide && <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">{current ? panel(current) : null}</div>}
           </div>
         ) : (
-          <FirmBrowseList items={shown} ratings={stat} action={(f) => action(f)} onOpen={openSplit} />
+          <FirmBrowseList items={shown} ratings={stat} action={(f) => action(f)} onOpen={openPop} />
         )}
       </div>
 
+      <Dialog open={!!popFirm} onOpenChange={(o) => !o && setPopId(null)}>
+        <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-[820px]">
+          <DialogTitle className="sr-only">{popFirm?.name ?? ""}</DialogTitle>
+          {popFirm && <div className="flex flex-col">{panel(popFirm)}</div>}
+        </DialogContent>
+      </Dialog>
       {intro && canAct && data && <IntroBoxes step={intro.step} setStep={(s) => setIntro({ ...intro, step: s })} alone={intro.alone} me={data.me} firm={tipFirm} onClose={closeIntro} />}
       {enq && data && <SendEnquiryDialog firm={{ id: enq.firm.id, name: enq.firm.name, services: enq.firm.services }} me={data.me} service={enq.service} onClose={() => setEnq(null)} onOpenMessages={(k) => { setEnq(null); toMessages(k); }} />}
     </div>
