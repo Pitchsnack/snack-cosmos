@@ -5,7 +5,7 @@ import { approvalDate } from "@/lib/approval-date";
 import { useTranslation } from "@/i18n/language";
 import type { ApprovalRole } from "@/lib/approval-notices.functions";
 
-/** Sent for approval: the three-step tracker shown right after Register your company. */
+/** Sent for approval: the three-step tracker shown right after Post your profile online. */
 export function SentForApprovalDialog({ open, role, onClose }: { open: boolean; role: ApprovalRole; onClose: () => void }) {
   const { t, language } = useTranslation();
   const doneRef = useRef<HTMLButtonElement>(null);

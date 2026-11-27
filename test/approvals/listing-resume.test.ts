@@ -59,7 +59,7 @@ describe("seller listing resume", () => {
   });
   it.each([{ ...approved, live_snapshot: null }, { ...approved, approval_status: "draft" }])("never publishes an unapproved listing", async (row) => {
     const x = setup(row);
-    await expect(restoreApprovedListing(x.sb, "listing", "seller", x.getAdmin, x.log)).rejects.toThrow("Register your company instead");
+    await expect(restoreApprovedListing(x.sb, "listing", "seller", x.getAdmin, x.log)).rejects.toThrow("Post your profile online instead");
     expect(x.getAdmin).not.toHaveBeenCalled();
   });
 });

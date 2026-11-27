@@ -70,7 +70,7 @@ export function BuyOrderDetails({ card: rawCard, persona, applyCtx, onClose, onA
               {persona !== "seller" ? c("Only sellers apply to buy orders. You can share it with someone whose business may fit.", "เฉพาะผู้ขายที่สมัครประกาศซื้อได้ คุณสามารถแชร์ให้คนที่มีธุรกิจที่อาจเหมาะได้")
                 : applyCtx?.state === "approved" ? c("Your company is approved: you can apply.", "บริษัทของคุณได้รับการอนุมัติแล้ว: คุณสมัครได้")
                 : applyCtx?.state === "pending" ? c("PitchSnack is checking your company, usually within 1 business day. You can apply once it’s approved.", "PitchSnack กำลังตรวจสอบบริษัทของคุณ โดยปกติภายใน 1 วันทำการ คุณสมัครได้เมื่อได้รับอนุมัติ")
-                : <>{c("To apply, set up your company on My Company and click Register your company. PitchSnack checks it, usually within 1 business day.", "หากต้องการสมัคร ให้ตั้งค่าบริษัทในบริษัทของฉัน แล้วกดลงทะเบียนบริษัท PitchSnack จะตรวจสอบ โดยปกติภายใน 1 วันทำการ")}
+                : <>{c("To apply, set up your company on My Company and click Post your profile online. PitchSnack checks it, usually within 1 business day.", "หากต้องการสมัคร ให้ตั้งค่าบริษัทในบริษัทของฉัน แล้วกดโพสโปรไฟล์ออนไลน์ PitchSnack จะตรวจสอบ โดยปกติภายใน 1 วันทำการ")}
                   <div className="mt-2"><Link to="/my-startups" className="bw-sharedgo"><Building className="h-3.5 w-3.5" />{c("Go to My Company", "ไปที่บริษัทของฉัน")}</Link></div></>}
             </div></div>
           )}

@@ -18,8 +18,8 @@ export type ReviewCompanyData = {
 };
 
 /**
- * Register your company's review pop-up: three numbered sections, a tick box,
- * Back to edit and Register your company.
+ * Post your profile online's review pop-up: three numbered sections, a tick box,
+ * Back to edit and Post your profile online.
  */
 export function ReviewCompanyDialog({ open, role, data, failures, submitting, onEdit, onSubmit, onClose }: {
   open: boolean;
@@ -122,7 +122,7 @@ export function ReviewCompanyDialog({ open, role, data, failures, submitting, on
           <div className="ap-btnrow">
             <button type="button" className="ap-btn ap-line" onClick={() => onEdit("description")}><Pencil className="h-4 w-4" />{t("Back to edit")}</button>
             <button type="button" className="ap-btn ap-navy" disabled={!tick || submitting} onClick={onSubmit}>
-              <Send className="h-4 w-4" />{t("Register your company")}
+              <Send className="h-4 w-4" />{t("Post your profile online")}
             </button>
           </div>
         </div>

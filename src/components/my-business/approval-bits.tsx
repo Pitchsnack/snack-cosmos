@@ -99,7 +99,7 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
             ? <span>{t("Fix what PitchSnack asked with Edit information, then register again.")}</span>
             : state === "paused"
               ? <span>{t("Hidden from Browse listings since {date}.").replace("{date}", approvalDate((profile as any).unpublished_at ?? profile.updated_at, language))}</span>
-              : <span><b className="font-semibold text-foreground">Draft</b> · not live yet. Register once: PitchSnack checks your company and publishes your listing together.</span>}
+              : <span><b className="font-semibold text-foreground">Draft</b> · not live yet. Post once: PitchSnack checks your company and publishes your listing together.</span>}
       <span className="flex flex-col items-end gap-1">
         {state === "live"
           ? <>
@@ -110,7 +110,7 @@ export function ApprovalFooter({ profile }: { profile: HiddenProfileRow }) {
             ? <span className="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3.5 text-[13.5px] font-semibold text-[#1D4ED8]"><Clock className="h-4 w-4" />{t("Pending approval")}</span>
             : state === "paused"
               ? <Button size="sm" className="whitespace-normal bg-[#1E2A4A] text-center text-white hover:bg-[#101d43]" disabled={doResume.isPending} onClick={() => doResume.mutate()}>{t("List my company so that buyers can contact me")}</Button>
-              : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />{t("Register your company")}</Button>}
+              : <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#101d43]" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />{t("Post your profile online")}</Button>}
       </span>
       <ReviewCompanyDialog open={reviewOpen} role="seller" data={reviewData} failures={failures} submitting={doSubmit.isPending}
         onEdit={(section) => { setReviewOpen(false); openEdit(profile.startup_id, section === "company" ? "private" : "public", section === "company" ? "about" : "description"); }} onSubmit={() => doSubmit.mutate()} onClose={() => setReviewOpen(false)} />

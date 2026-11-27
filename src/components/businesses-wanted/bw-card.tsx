@@ -160,7 +160,7 @@ export function ApplyButton({ ctx, onApply, size }: { ctx: ApplyContext | undefi
     return <Button variant="unstyled" type="button" className={cn("bw-btn bw-amber", size)} onClick={onApply}><Send className="h-4 w-4" />{c("Apply", "สมัคร")}</Button>;
   const why = ctx?.state === "pending"
     ? c("Your account is pending approval. You can apply once PitchSnack approves it.", "บัญชีของคุณกำลังรอการอนุมัติ คุณจะสมัครได้เมื่อ PitchSnack อนุมัติแล้ว")
-    : c("Register your company first. You can apply once PitchSnack approves it.", "ลงทะเบียนบริษัทของคุณก่อน คุณจะสมัครได้เมื่อ PitchSnack อนุมัติแล้ว");
+    : c("Post your profile online first. You can apply once PitchSnack approves it.", "โพสโปรไฟล์ออนไลน์ของคุณก่อน คุณจะสมัครได้เมื่อ PitchSnack อนุมัติแล้ว");
   return (
     <span className="relative flex flex-1">
       <button type="button" aria-disabled="true" className={cn("bw-btn bw-locked", size)} onMouseEnter={() => setTip(true)} onMouseLeave={() => setTip(false)} onFocus={() => setTip(true)} onBlur={() => setTip(false)} onClick={() => setTip((v) => !v)}>

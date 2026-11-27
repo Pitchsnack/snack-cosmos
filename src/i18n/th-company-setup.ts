@@ -399,7 +399,7 @@ export const TH_COMPANY_SETUP: Record<string, string> = {
   "Identity check:": "ตรวจสอบตัวตน:", "Identity check passed": "ผ่านการตรวจสอบตัวตน",
   "· no firm name, website or contact details in the public text.": "· ไม่มีชื่อบริษัท เว็บไซต์ หรือข้อมูลติดต่อในข้อความสาธารณะ",
   "· remove them in Edit public view.": "· ลบออกในแก้ไขมุมมองสาธารณะ",
-  "· not live yet. Register once: PitchSnack checks your firm and publishes your profile together.": "· ยังไม่เผยแพร่ ลงทะเบียนครั้งเดียวเพื่อให้ PitchSnack ตรวจสอบบริษัทและเผยแพร่โปรไฟล์ของท่านพร้อมกัน",
+  "· not live yet. Post once: PitchSnack checks your firm and publishes your profile together.": "· ยังไม่เผยแพร่ โพสครั้งเดียวเพื่อให้ PitchSnack ตรวจสอบบริษัทและเผยแพร่โปรไฟล์ของท่านพร้อมกัน",
   "Save profile": "บันทึกโปรไฟล์", "Your changes are saved.": "บันทึกการเปลี่ยนแปลงของท่านแล้ว",
   "Sectors not added": "ยังไม่ได้เพิ่มอุตสาหกรรม", "🔒 After NDA": "🔒 หลัง NDA",
   "e.g. Family office backing profitable Thai companies with succession or growth plans": "เช่น บริษัทบริหารการลงทุนของครอบครัวที่สนับสนุนบริษัทไทยที่มีกำไรและมีแผนสืบทอดหรือเติบโต",

@@ -13,7 +13,7 @@ export async function restoreApprovedListing(
   if (!p) throw new Error("Listing not found");
   if (p.approval_status === "live") return { ok: true, alreadyLive: true };
   if (p.approval_status !== "unpublished" || !p.live_snapshot)
-    throw new Error("This listing can't go live again from here. Register your company instead.");
+    throw new Error("This listing can't go live again from here. Post your profile online instead.");
   const pub = p.live_snapshot.public ?? {};
   const sbAdmin = await getAdmin();
   const { data: changed, error } = await sbAdmin.from("hidden_profiles").update({

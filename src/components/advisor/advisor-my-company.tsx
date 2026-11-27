@@ -352,7 +352,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
   const svcBtn = useRef<HTMLButtonElement>(null);
   const addrBtn = useRef<HTMLButtonElement>(null);
   const [busy, setBusy] = useState(false);
-  // One-step approval: Register your company opens the review pop-up.
+  // One-step approval: Post your profile online opens the review pop-up.
   const registerFn = useServerFn(registerAdvisorFirm);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [sentOpen, setSentOpen] = useState(false);
@@ -566,7 +566,7 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
         ) : f.verification?.state === "more_info" || f.verification?.state === "declined" ? (
           <>
             <span>{setupText("Fix what PitchSnack asked with Edit information, then register again.")}</span>
-            <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />{setupText("Register your company")}</Button>
+            <Button size="sm" className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90" onClick={() => { setFailures([]); setReviewOpen(true); }}><Send className="mr-1.5 h-4 w-4" />{setupText("Post your profile online")}</Button>
           </>
         ) : f.status === "paused" ? (
           <>
@@ -575,8 +575,8 @@ export function FirmPanel({ f, client, views, onDeletedDraft }: { f: AdvisorFirm
           </>
         ) : (
           <>
-            <span><b className="font-semibold text-foreground">{setupText("Draft")}</b>{setupText("· not live yet. Register once: PitchSnack checks your firm and publishes your profile together.")}{!complete && <> <span className="text-muted-foreground">{setupText("Finish the checklist first.")}</span></>}</span>
-            <Button size="sm" disabled={!complete} title={complete ? undefined : "Complete the checklist first"} onClick={() => { setFailures([]); setReviewOpen(true); }} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90"><Send className="mr-1.5 h-4 w-4" />{setupText("Register your company")}</Button>
+            <span><b className="font-semibold text-foreground">{setupText("Draft")}</b>{setupText("· not live yet. Post once: PitchSnack checks your firm and publishes your profile together.")}{!complete && <> <span className="text-muted-foreground">{setupText("Finish the checklist first.")}</span></>}</span>
+            <Button size="sm" disabled={!complete} title={complete ? undefined : "Complete the checklist first"} onClick={() => { setFailures([]); setReviewOpen(true); }} className="bg-[#1E2A4A] text-white hover:bg-[#1E2A4A]/90"><Send className="mr-1.5 h-4 w-4" />{setupText("Post your profile online")}</Button>
           </>
         )}
       </div>

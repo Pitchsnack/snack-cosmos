@@ -484,7 +484,7 @@ export function PublicPanel({ p, org, d, investorId, pill, onEdit, onOpenEdit }:
     void navigate({ to: "/buyer/company/$id/setup", params: { id: iv.id }, search: q ? { q } : {} });
   };
   const since = p.status === "live" && p.live_since ? `Live since ${fmtDateL(p.live_since, language)}` : p.status === "paused" ? `Paused since ${fmtDateL(p.updated_at ?? p.live_since ?? new Date().toISOString(), language)}` : "Not published yet";
-  // One-step approval: Register your company opens the review pop-up.
+  // One-step approval: Post your profile online opens the review pop-up.
   const registerFn = useServerFn(registerBuyerCompany);
   const startEnrichment = useServerFn(startProfileEnrichment);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -552,7 +552,7 @@ export function PublicPanel({ p, org, d, investorId, pill, onEdit, onOpenEdit }:
             ? <span>{setupText("Hidden from Browse investors since")} {fmtDateL(p.updated_at ?? p.live_since ?? new Date().toISOString(), language)}.</span>
             : !setupDone && iv
               ? <span>{setupText("Finish setting up your profile to publish it.")}</span>
-              : <span><b className="font-semibold text-foreground">{setupText("Draft")}</b>{setupText("· not live yet. Register once: PitchSnack checks your firm and publishes your profile together.")}</span>}
+              : <span><b className="font-semibold text-foreground">{setupText("Draft")}</b>{setupText("· not live yet. Post once: PitchSnack checks your firm and publishes your profile together.")}</span>}
         {state === "live"
           ? <Button variant="outline" size="sm" onClick={() => setWithdrawOpen(true)}>{setupText("Remove your company profile from listing")}</Button>
           : state === "pending"
@@ -565,7 +565,7 @@ export function PublicPanel({ p, org, d, investorId, pill, onEdit, onOpenEdit }:
                 // What you want to buy is required: open it in Listing view instead of the review.
                 if (!buyerWantFilled((p as any).suggested_headline, (p as any).suggested_headline_th)) { openProfileEdit({ section: "want", from: "public" }); return; }
                 setFailures([]); setReviewOpen(true);
-              }}><Send className="mr-1.5 h-4 w-4" />{setupText("Register your company")}</Button>}
+              }}><Send className="mr-1.5 h-4 w-4" />{setupText("Post your profile online")}</Button>}
       </div>
       <ReviewCompanyDialog open={reviewOpen} role="buyer" data={reviewData} failures={failures} submitting={reg.isPending}
         onEdit={(section) => { setReviewOpen(false); openProfileEdit({ section: section === "company" ? "company" : "description", from: section === "company" ? "private" : "public" }); }}

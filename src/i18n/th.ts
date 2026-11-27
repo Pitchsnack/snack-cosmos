@@ -711,7 +711,7 @@ export const TH: Record<string, string> = { ...TH_ADVISORS, ...TH_WIZARDS, ...TH
   "The information is accurate and I'm authorised to list this business.": "ข้อมูลถูกต้อง และฉันได้รับอนุญาตให้ลงประกาศกิจการนี้",
   "The information is accurate and I'm authorised to act for this firm.": "ข้อมูลถูกต้อง และฉันได้รับอนุญาตให้ดำเนินการแทนบริษัทนี้",
   "Back to edit": "กลับไปแก้ไข",
-  "Register your company": "ลงทะเบียนบริษัทของท่าน",
+  "Post your profile online": "โพสโปรไฟล์ออนไลน์ของท่าน",
   "Before you register:": "ก่อนลงทะเบียน:",
   "Remove your company profile from listing": "นำโปรไฟล์บริษัทของท่านออกจากประกาศ",
   "List my company so that sellers can contact me": "ลงประกาศบริษัทของฉันเพื่อให้ผู้ขายติดต่อได้",

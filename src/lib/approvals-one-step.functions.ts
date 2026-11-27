@@ -600,7 +600,7 @@ export const paidReportsCount = createServerFn({ method: "GET" })
 
 /* ================================================================ register */
 
-/** Register your company — buyer: profile + verification move together. */
+/** Post your profile online — buyer: profile + verification move together. */
 export const registerBuyerCompany = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid().optional() }).parse(d))
@@ -654,7 +654,7 @@ export const registerBuyerCompany = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Register your company — advisor: verification request replaces Submit for verification + Publish. */
+/** Post your profile online — advisor: verification request replaces Submit for verification + Publish. */
 export const registerAdvisorFirm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ firmId: z.string().uuid() }).parse(d))
