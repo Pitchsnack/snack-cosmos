@@ -1,4 +1,5 @@
 # Decisions
+- Pipeline keeps nav mounted, shares intent caches, and defers details and reports.
 - Businesses Wanted DTOs own privacy/access; scoped filters and `.bw-form` own layout, public input styles stay under `.bw` to avoid collisions. Cover pills/personas use tokens; browser-safe defaults own sector wording.
 - Marketplace Contacts shares role UI; list/card reads recheck active NDA and owner/view access before shared projection, keeping Admin access separate.
 - Admin contacts use Control+Admin directory access and user-keyed admin_contact_notes; lazy company DTOs adapt shared cards without viewer controls. Shared Admin projections preserve marketplace privacy.

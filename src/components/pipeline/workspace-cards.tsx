@@ -1,3 +1,5 @@
+import {KeepMountedDetails} from './keep-mounted-details';
+import type {PipelineReportSummary} from '@/lib/pipeline-performance';
 import {FinancialReports} from './financial-reports';
 import {financialStageComplete, optionalStageComplete, paymentConfirmationPending} from '@/lib/pipeline-report-state';
 import type {HubData} from '@/lib/reports-hub';
@@ -51,14 +53,15 @@ function day(s: string | null) {
 function initials(s: string) {
   return s.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
 }
-function Avatar({ name, tone = "violet", logoUrl }: { name: string; tone?: "violet" | "orange"; logoUrl?: string | null }) {
-  const [broken, setBroken] = useState(false);
-  if (logoUrl && !broken) {
+export function Avatar({ name, tone = "violet", logoUrl, logoFallbackUrl }: { name: string; tone?: "violet" | "orange"; logoUrl?: string | null; logoFallbackUrl?: string | null }) {
+  const [failed, setFailed] = useState<string[]>([]);
+  const src = [logoUrl, logoFallbackUrl].find(url => url && !failed.includes(url));
+  if (src) {
     return (
       <img
-        src={logoUrl}
+        src={src}
         alt={name}
-        onError={() => setBroken(true)}
+        onError={() => setFailed(urls => [...urls, src])}
         className="h-11 w-11 shrink-0 rounded-[10px] border border-border bg-white object-contain"
       />
     );
@@ -116,7 +119,7 @@ function Stepper({ cur, t, endedOn, financialDone=false, financialOptional=false
   );
 }
 
-export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, onStar, chatPopup=false, reports, financialOptional=false }: { reports?:HubData; financialOptional?:boolean; starred?: boolean; onStar?: () => void; p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void; onEnded: () => void; t: T; chatPopup?:boolean }) {
+export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, onStar, chatPopup=false, reportSummary, financialOptional=false }: { reportSummary?:PipelineReportSummary; financialOptional?:boolean; starred?: boolean; onStar?: () => void; p: PipelineRow; seller: boolean; open: boolean; onToggle: () => void; onEnded: () => void; t: T; chatPopup?:boolean }) {
   const withdrawNda = useServerFn(withdrawNdaRequest);
   const [reviewNda,setReviewNda]=useState(false);
   const [withdrawConfirm,setWithdrawConfirm]=useState(false);
@@ -150,7 +153,10 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
 
   const turn=loiTurn(p,seller?"seller":"buyer");
   const reviewLoi = turn==="review";
-  const adv = useAdvisorContactRow(p.id, !!p.contactAt, !!p.paymentAt, t);
+  const openedBefore=useRef(open);
+  if(open)openedBefore.current=true;
+  const adv = useAdvisorContactRow(p.id, openedBefore.current && !!p.contactAt, !!p.paymentAt, t);
+  const stageRows=()=>{
   const rows: [string, string | null, React.ReactNode, React.ReactNode?][] = [
     ["NDA", p.ndaApprovedAt, `${t("Approved by")} ${seller ? t("you") : t("the seller")} · ${t("requested")} ${day(p.ndaRequestedAt)}`,
       <>
@@ -202,6 +208,8 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
     rows.splice(0, rows.length, ...ended.slice(0, Math.max(1, wd.step + 1)));
     void by;
   }
+  return rows;
+  };
 
   return (
     <div id={`deal-${p.id}`} className={cn("overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-card transition-shadow hover:border-[#D9DCE2]", open && "shadow-[0_6px_20px_rgba(16,24,40,.06)]")}>
@@ -211,7 +219,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
         <div className="[&>*]:!h-10 [&>*]:!w-10 [&>*]:!text-[14px]">
           {wd
             ? <span className="grid place-items-center rounded-full bg-gradient-to-b from-[#A3A9B6] to-[#7C8496] font-bold text-white">{p.counterparty.name.split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join("").toUpperCase()}</span>
-            : pendingNda ? <span className="pipeline-request-tile">{initials(p.counterparty.name)}</span> : <Avatar name={p.counterparty.name} tone={seller ? "violet" : "orange"} logoUrl={p.counterparty.logoUrl} />}
+            : pendingNda ? <span className="pipeline-request-tile">{initials(p.counterparty.name)}</span> : <Avatar name={p.counterparty.name} tone={seller ? "violet" : "orange"} logoUrl={p.counterparty.logoUrl} logoFallbackUrl={p.counterparty.logoFallbackUrl} />}
         </div>
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2 whitespace-nowrap">
@@ -222,7 +230,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
           <div className="deal-header-chips">
             <span className="hub-pill" data-tone="muted">{t('Step')} {cur+1} · {t(STEPS[cur])}</span>
             <DealCompanyChip name={p.ownCompanyName} />
-            {!wd && p.ndaApprovedAt && (!p.ndaExpiresAt || Date.parse(p.ndaExpiresAt)>Date.now()) && <PipelineReportsButton pipelineId={p.id} seller={seller}/>}
+            {!wd && p.ndaApprovedAt && (!p.ndaExpiresAt || Date.parse(p.ndaExpiresAt)>Date.now()) && <PipelineReportsButton pipelineId={p.id} seller={seller} summaryOnly summary={reportSummary}/>}
           </div>
           <div className="truncate text-[12.5px] text-[#6B7280]">
             {[p.counterparty.sub, p.loiAmount ? `${(p.loiFrom??"buyer")===(seller?"seller":"buyer")?t(seller?"your price":"your offer"):t((p.loiFrom??"buyer")==="seller"?"seller’s price":"offer")} ${money(p.loiAmount)}` : null].filter(Boolean).join(" · ")}
@@ -250,6 +258,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
       {!wd && <DealAgreements p={p} seller={seller} onNda={() => setDlg('nda')} onLoi={() => setDlg('loi')} />}
       <div className={cn("grid transition-[grid-template-rows] duration-[250ms] ease-in-out motion-reduce:transition-none", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden" inert={!open || undefined}>
+          <KeepMountedDetails open={open}>{()=>{const rows=stageRows();return <>
           {wd && <EndedBox w={wd} p={p} seller={seller} t={t} />}
           <div className="mx-5 border-t border-[#F0F1F4]">
             {(wd?rows:rows.slice(0,3)).map(([label, date, text, action]) => {
@@ -263,7 +272,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
                 <div className="loi-stage-actions">{action}{financial&&<Button variant="ghost" size="icon" aria-label={t(financialExpanded?"Hide the Financial & Valuation reports":"Show the Financial & Valuation reports")} aria-expanded={financialExpanded} onClick={()=>setFinancialExpanded(v=>!v)}><ChevronDown size={16} className={financialExpanded?"rotate-180":""}/></Button>}{label==="Letter of intent"&&!wd&&<Button variant="ghost" size="icon" aria-label={t("Show steps")} aria-expanded={loiExpanded} onClick={()=>setLoiExpanded(v=>!v)}><ChevronDown size={16} className={loiExpanded?"rotate-180":""}/></Button>}</div>{label==="Letter of intent"&&loiExpanded&&!wd&&!completed&&<LoiTimeline p={p} seller={seller}/>}
               </div>
               {completed&&label==="Letter of intent"&&loiExpanded&&<div className="pipeline-completed-steps" onClick={e=>{if(!(e.target as HTMLElement).closest("button,a")&&!window.getSelection()?.toString())setLoiExpanded(false);}}><LoiTimeline p={p} seller={seller}/></div>}
-              {financial&&financialExpanded&&<FinancialReports p={p} hub={reports} seller={seller} onFold={()=>setFinancialExpanded(false)}/>}
+              {financial&&financialExpanded&&<FinancialReports p={p} seller={seller} onFold={()=>setFinancialExpanded(false)}/>}
               </div>;
             })}
             {!wd&&<PostLoiStages p={p} seller={seller} onDone={refresh}/>}
@@ -272,6 +281,7 @@ export function TrackingCard({ p, seller, open, onToggle, onEnded, t, starred, o
             {!pendingNda&&<WithdrawLink p={p} seller={seller} t={t} onDone={() => { refresh(); onEnded(); }} />}
             <button className="text-[12.5px] font-semibold text-[#2563EB]" onClick={() => setHistOpen(true)}>{t("Activity")}</button>
           </div>
+          </>;}}</KeepMountedDetails>
         </div>
       </div>
       {reviewNda&&<ReviewInvestorDialog pipelineId={p.id} onClose={()=>{setReviewNda(false);refresh();}}/>}

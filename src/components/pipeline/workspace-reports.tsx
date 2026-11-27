@@ -7,15 +7,15 @@ import {STEPS} from '@/lib/pipeline-state';
 import {ReportsHub} from '@/components/reports/reports-hub';
 import {useHubCopy} from '@/components/reports/hub-copy';
 import type {PipelineRow} from '@/lib/pipeline.functions';
-import type {HubData} from '@/lib/reports-hub';
+import type {PipelineReportSummary} from '@/lib/pipeline-performance';
 
 /** Reports waiting on this user: buyer = shared reports not opened yet; seller = buyer requests. */
-function waiting(p:PipelineRow,seller:boolean,hub:HubData|undefined){
+function waiting(p:PipelineRow,seller:boolean,hub:PipelineReportSummary|undefined){
  if(!hub)return 0;
- return seller?hub.rows.filter(r=>r.audience.some(a=>a.state==='asked')).length:hub.rows.filter(r=>r.buyerState==='shared'&&!r.openedAt).length;
+ return hub.waitingCount;
 }
 
-function DealSelector({deals,seller,reports,value,onPick}:{deals:PipelineRow[];seller:boolean;reports:Record<string,HubData>;value:string;onPick:(id:string)=>void}){
+function DealSelector({deals,seller,reports,value,onPick}:{deals:PipelineRow[];seller:boolean;reports:Record<string,PipelineReportSummary>;value:string;onPick:(id:string)=>void}){
  const {t}=useTranslation();const {c}=useHubCopy();
  const [open,setOpen]=useState(false);const [active,setActive]=useState(0);
  const btn=useRef<HTMLButtonElement>(null);const box=useRef<HTMLDivElement>(null);

@@ -345,3 +345,10 @@
 - [x] Reuse the two-pane picker for every seller sector editor, including Admin and financial matching.
 - [x] Add required bilingual selected/empty states and preserve saving and setup wizards.
 - [x] Ten focused tests passed; Admin Automotive save/read-back verified in English/Thai and the test seller restored to Commerce; preview build OK.
+
+## Faster Pipeline tabs (Nov 27)
+- [x] Shared intent query prefetch and persistent navigation.
+- [x] Retained lazy card interiors and first-render opening.
+- [x] One authorized report-summary request and transformed logos with original fallback.
+- [x] 60-second visibility-aware review refresh and code-only regression tests.
+- [x] Report available request-log evidence and verification limitations; no sign-in or stored changes.

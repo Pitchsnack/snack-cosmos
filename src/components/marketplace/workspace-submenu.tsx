@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { RailTip } from '@/components/marketplace/rail-tip';
 import { usePersona } from '@/hooks/use-marketplace';
+import { usePipelinePrefetch } from '@/hooks/use-pipeline-prefetch';
 
 type SubmenuItem = { to: string; label: string; current: boolean; suffix?: ReactNode };
 type Props = {
@@ -24,6 +25,7 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
 }: Props) {
   const path = useRouterState({ select: s => s.location.pathname });
   const { persona } = usePersona();
+  const prefetch = usePipelinePrefetch();
   const [open, setOpen] = useState(active);
   const [fly, setFly] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -102,7 +104,7 @@ export function WorkspaceSubmenu({ id, label, heading, groupLabel, icon: Icon, d
         event.preventDefault(); setFly(false); trigger.current?.focus();
       }
     }}>
-    {items.map(item => <Link key={item.to} to={item.to} activeOptions={{ exact: true }} className="pipeline-sub-link"
+    {items.map(item => <Link key={item.to} to={item.to} preload={id === 'pipeline' ? 'intent' : false} onMouseEnter={()=>{if(id==='pipeline')prefetch(item.to);}} onFocus={()=>{if(id==='pipeline')prefetch(item.to);}} onTouchStart={()=>{if(id==='pipeline')prefetch(item.to);}} activeOptions={{ exact: true }} className="pipeline-sub-link"
       data-flight-target={id === 'pipeline' && item.to.endsWith('/invitations') ? 'invitations' : undefined}
       aria-current={item.current ? 'page' : undefined}
       onClick={() => { setFly(false); focusPage(item.to); }}><span>{item.label}</span>{item.suffix}</Link>)}

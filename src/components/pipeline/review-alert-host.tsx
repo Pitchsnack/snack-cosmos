@@ -5,6 +5,7 @@ import {listMyInvitations,listSellerInvitations,type BuyerInvitation,type Seller
 import {pipelineOpen} from '@/lib/pipeline-pages';
 import {useIsMarketplace,usePersona,type Persona} from '@/hooks/use-marketplace';
 import {PipelineReviewAlert} from './review-alert';
+import {PIPELINE_REVIEW_REFRESH} from '@/lib/pipeline-performance';
 
 export function showPipelineReviewAlert(isMarket:boolean,locked:Persona|null,persona:Persona){
  return persona!=='advisor'&&(isMarket||locked==='seller'||locked==='buyer');
@@ -13,8 +14,8 @@ export function showPipelineReviewAlert(isMarket:boolean,locked:Persona|null,per
 export function GlobalPipelineReviewAlert(){
  const isMarket=useIsMarketplace();const {persona,locked}=usePersona();const seller=persona==='seller';const enabled=showPipelineReviewAlert(isMarket,locked,persona);
  const list=useServerFn(listPipeline),buyerInv=useServerFn(listMyInvitations),sellerInv=useServerFn(listSellerInvitations);
- const deals=useQuery({queryKey:['pipeline',persona],queryFn:()=>list({data:{as:seller?'seller':'buyer'}}),enabled,retry:false,refetchInterval:5000});
- const invites=useQuery<(BuyerInvitation|SellerInvitation)[]>({queryKey:['invitations',seller?'seller':'buyer'],queryFn:()=>seller?sellerInv():buyerInv(),enabled,retry:false,refetchInterval:5000});
+ const deals=useQuery({queryKey:['pipeline',persona],queryFn:()=>list({data:{as:seller?'seller':'buyer'}}),enabled,retry:false,...PIPELINE_REVIEW_REFRESH});
+ const invites=useQuery<(BuyerInvitation|SellerInvitation)[]>({queryKey:['invitations',seller?'seller':'buyer'],queryFn:()=>seller?sellerInv():buyerInv(),enabled,retry:false,...PIPELINE_REVIEW_REFRESH});
  if(!enabled)return null;
  return <PipelineReviewAlert key={persona} rows={(deals.data??[]).filter(pipelineOpen)} invitations={invites.data??[]} seller={seller}/>;
 }

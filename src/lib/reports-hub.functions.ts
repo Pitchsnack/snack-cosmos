@@ -5,6 +5,10 @@ import {REPORT_KEYS,HUB_NAMES,hubNdaActive,valuationCanGenerate,type HubKey} fro
 const scope=z.object({mode:z.enum(['buyer','seller','admin']),companyId:z.string().uuid().optional(),pipelineId:z.string().uuid().optional()});
 const keyed=scope.extend({key:z.enum(REPORT_KEYS)});
 
+export const getPipelineReportSummaries=createServerFn({method:'GET'}).middleware([requireSupabaseAuth]).inputValidator(d=>z.object({as:z.enum(['buyer','seller'])}).parse(d)).handler(async({data,context})=>{
+  const {pipelineReportSummaries}=await import('./pipeline-report-summary.server');return pipelineReportSummaries(context,data.as);
+});
+
 export const getReportsHub=createServerFn({method:'GET'}).middleware([requireSupabaseAuth]).inputValidator(d=>scope.parse(d)).handler(async({data,context})=>{
   const {hubData}=await import('./reports-hub.server');return hubData(context,data.mode,data.companyId,data.pipelineId);
 });

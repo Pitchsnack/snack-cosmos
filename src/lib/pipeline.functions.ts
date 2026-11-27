@@ -96,7 +96,7 @@ export type PipelineRow = {
   exclusivityUntil: string | null;
   updatedAt: string;
   parties: { sellerCompany: string; codeName: string | null; buyerOrg: string; buyerName: string | null; sellerName: string | null };
-  counterparty: { name: string; sub: string; person: string | null; verified: boolean; logoUrl: string | null };
+  counterparty: { name: string; sub: string; person: string | null; verified: boolean; logoUrl: string | null; logoFallbackUrl?: string | null };
   askingPrice: number | null;
   /** Active seller share (null when none / revoked). */
   share: { financials: boolean; valuation: boolean; allowDownload: boolean; sharedAt: string } | null;
@@ -264,12 +264,12 @@ export const listPipeline = createServerFn({ method: "GET" })
     const ownerMap = Object.fromEntries((owners ?? []).map((o: any) => [o.startup_id, o.owning_agent_user_id]));
     // Logos live in private storage; one batched signing call.
     const logoPaths = (sts ?? []).map((s: any) => s.logo_url).filter((p: any): p is string => !!p && !/^https?:\/\//.test(p));
-    const signedLogos: Record<string, string> = {};
+    const {signPipelineLogos}=await import("./pipeline-logo.server");
     const [names, signedRes] = await Promise.all([
       userNames([...new Set([...buyerIds, ...Object.values(ownerMap), ...rows.map((r) => r.loi_accepted_by).filter(Boolean)])] as string[]),
-      data.as === "buyer" && logoPaths.length ? sb.storage.from("pipeline-valuation").createSignedUrls(logoPaths, 3600) : Promise.resolve({ data: [] as any[] }),
+      data.as === "buyer" && logoPaths.length ? signPipelineLogos(sb.storage.from("pipeline-valuation"), logoPaths) : Promise.resolve({} as Record<string,{small:string;original:string}>),
     ]);
-    for (const d of (signedRes as any).data ?? []) if (d.path && d.signedUrl) signedLogos[d.path] = d.signedUrl;
+    const signedLogos=signedRes;
     const bvMap: Record<string, any> = Object.fromEntries((bvs ?? []).map((b: any) => [b.user_id, { ...b }]));
     // The linked Investors Directory row is the source of truth for name and type.
     if (buyerIds.length) {
@@ -319,7 +319,8 @@ export const listPipeline = createServerFn({ method: "GET" })
         person: null,
         verified: true,
         // Identity stays hidden until the seller approves the NDA.
-        logoUrl: revealed && st.logo_url ? (signedLogos[st.logo_url] ?? (/^https?:\/\//.test(st.logo_url) ? st.logo_url : null)) : null,
+        logoFallbackUrl: revealed && st.logo_url ? signedLogos[st.logo_url]?.original ?? null : null,
+        logoUrl: revealed && st.logo_url ? (signedLogos[st.logo_url]?.small ?? (/^https?:\/\//.test(st.logo_url) ? st.logo_url : null)) : null,
       }, asking, parties, names);
     });
     const dk: Record<string, Awaited<ReturnType<typeof deliveredKinds>>> = {};
